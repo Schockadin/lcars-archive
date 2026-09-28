@@ -4,17 +4,23 @@ export interface SessionSynopsisBlockInput {
   body: string;
 }
 
+export function addOneDayToSynopsisDate(date: string | null | undefined): string {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return "";
+
+  const [year, month, day] = date.split("-").map(Number);
+  const parsedDate = new Date(Date.UTC(year, month - 1, day));
+  if (parsedDate.toISOString().slice(0, 10) !== date) return "";
+  parsedDate.setUTCDate(parsedDate.getUTCDate() + 1);
+  return parsedDate.toISOString().slice(0, 10);
+}
+
 export function defaultSessionSynopsisDate(
   missionStartedAt: string | null | undefined,
   blocks: Pick<SessionSynopsisBlockInput, "ingameDate" | "endDate">[],
 ): string {
   const lastBlock = blocks.at(-1);
   const baseDate = lastBlock?.endDate || lastBlock?.ingameDate || missionStartedAt;
-  if (!baseDate || !/^\d{4}-\d{2}-\d{2}$/.test(baseDate)) return "";
-
-  const [year, month, day] = baseDate.split("-").map(Number);
-  const nextDate = new Date(Date.UTC(year, month - 1, day + 1));
-  return nextDate.toISOString().slice(0, 10);
+  return lastBlock ? addOneDayToSynopsisDate(baseDate) : (baseDate ?? "");
 }
 
 export function sessionSynopsisHeading(

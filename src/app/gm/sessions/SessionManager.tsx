@@ -4,7 +4,10 @@ import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
-import { defaultSessionSynopsisDate } from "@/lib/sessionSynopsis";
+import {
+  addOneDayToSynopsisDate,
+  defaultSessionSynopsisDate,
+} from "@/lib/sessionSynopsis";
 import { PlusIcon, TrashIcon } from "@/lib/icons";
 import type {
   GameSession,
@@ -110,7 +113,15 @@ export function SessionContextFields({
                     setBlocks((current) =>
                       current.map((item, i) =>
                         i === index
-                          ? { ...item, ingameDate: event.target.value }
+                          ? {
+                              ...item,
+                              ingameDate: event.target.value,
+                              endDate:
+                                !item.endDate ||
+                                item.endDate === addOneDayToSynopsisDate(item.ingameDate)
+                                  ? addOneDayToSynopsisDate(event.target.value)
+                                  : item.endDate,
+                            }
                           : item,
                       ),
                     )
@@ -155,18 +166,21 @@ export function SessionContextFields({
           aria-label="Zusammenfassungsblock hinzufügen"
           title="Zusammenfassungsblock hinzufügen"
           onClick={() =>
-            setBlocks((current) => [
-              ...current,
-              {
-                key: crypto.randomUUID(),
-                ingameDate: defaultSessionSynopsisDate(
-                  missions.find((mission) => `mission:${mission.id}` === missionChoice)?.startedAt,
-                  current,
-                ),
-                endDate: "",
-                body: "",
-              },
-            ])
+            setBlocks((current) => {
+              const ingameDate = defaultSessionSynopsisDate(
+                missions.find((mission) => `mission:${mission.id}` === missionChoice)?.startedAt,
+                current,
+              );
+              return [
+                ...current,
+                {
+                  key: crypto.randomUUID(),
+                  ingameDate,
+                  endDate: addOneDayToSynopsisDate(ingameDate),
+                  body: "",
+                },
+              ];
+            })
           }
         ><PlusIcon /></button>
       </fieldset>
