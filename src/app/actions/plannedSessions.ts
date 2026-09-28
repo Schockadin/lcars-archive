@@ -66,7 +66,6 @@ export async function createPlannedSessionAction(
   const user = await requireGM();
   const parsed = parsePlannedSession(formFields(formData));
   if (!parsed.ok) return { error: parsed.error };
-
   const characterIds = await allowedCharacters(parsed.characterIds);
   if (characterIds === null) {
     return { error: "Mindestens eine ausgewählte Figur ist nicht (mehr) aktiv." };
@@ -184,6 +183,11 @@ export async function updatePlannedSessionAction(
 
   const parsed = parsePlannedSession(formFields(formData));
   if (!parsed.ok) return { error: parsed.error };
+  const existing = await getPlannedSession(id);
+  if (!existing) return { error: "Termin nicht gefunden." };
+  if (existing.gameSessionId !== null && existing.missionId !== parsed.missionId) {
+    return { error: "Die Mission einer bereits eingetragenen Session kann nicht geändert werden." };
+  }
 
   const characterIds = await allowedCharacters(parsed.characterIds);
   if (characterIds === null) {
