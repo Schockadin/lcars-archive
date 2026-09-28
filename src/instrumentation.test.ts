@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { dispatchInstrumentation } from "./instrumentation";
 
 const { logServerError } = vi.hoisted(() => ({ logServerError: vi.fn() }));
 vi.mock("@/lib/errorLog", () => ({ logServerError }));
@@ -43,6 +44,24 @@ describe("onRequestError", () => {
     await onRequestError(error, request, context);
 
     expect(logServerError).not.toHaveBeenCalled();
+  });
+});
+
+describe("runtime-spezifische Instrumentation", () => {
+  it("lädt das Node-Bootstrap-Modul für den Node-Runtime", () => {
+    const loadNodeInstrumentation = vi.fn();
+
+    dispatchInstrumentation("nodejs", loadNodeInstrumentation);
+
+    expect(loadNodeInstrumentation).toHaveBeenCalledOnce();
+  });
+
+  it("lädt das Node-Bootstrap-Modul nicht für die Edge-Runtime", () => {
+    const loadNodeInstrumentation = vi.fn();
+
+    dispatchInstrumentation("edge", loadNodeInstrumentation);
+
+    expect(loadNodeInstrumentation).not.toHaveBeenCalled();
   });
 });
 

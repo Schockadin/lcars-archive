@@ -22,14 +22,24 @@ import { type Instrumentation } from "next";
 // instrumentation.node → db.ts) im Edge-Modulgraphen, und `next dev` brach
 // mit „Can't resolve 'net'" ab (der Produktions-Build lief trotzdem durch).
 export function register(): void {
-  if (process.env.NEXT_RUNTIME === "edge") {
+  dispatchInstrumentation(process.env.NEXT_RUNTIME, () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Next dokumentiert require() für runtime-spezifische Instrumentation.
+    require("./instrumentation.node-runtime");
+  });
+}
+
+export function dispatchInstrumentation(
+  runtime: string | undefined,
+  loadNodeInstrumentation: () => void,
+): void {
+  if (runtime === "edge") {
     return;
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Next dokumentiert require() für runtime-spezifische Instrumentation.
-    const nodeInstrumentation = require("./instrumentation.node") as {
-      register: () => void;
-    };
-    nodeInstrumentation.register();
+    // Next lädt das runtime-spezifische Modul über require(). Seine
+    // Initialisierung läuft beim Laden des Moduls. Das Modul nicht über ein
+    // erwartetes `register`-Export aufrufen: Netlify/Next kann den Export in
+    // der gebündelten Server-Instrumentation anders interop'en.
+    loadNodeInstrumentation();
   }
 }
 
