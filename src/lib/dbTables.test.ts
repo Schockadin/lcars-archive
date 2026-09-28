@@ -147,6 +147,7 @@ describe("scripts/schema.sql lässt sich lesen", () => {
     expect(schema.get("mission_logs")?.references.has("game_sessions")).toBe(
       true,
     );
+    expect(schema.get("game_sessions")?.references.has("missions")).toBe(true);
   });
 });
 

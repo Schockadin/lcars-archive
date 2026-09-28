@@ -6,9 +6,11 @@ import {
   deleteGameSession,
   updateGameSession,
   listActiveCharactersForAp,
+  listSessionMissions,
   setSessionLogbooks,
 } from "@/lib/gameSessions";
 import { validateGameSessionInput } from "@/lib/gameSessionFormat";
+import { revalidateMission } from "@/lib/revalidate";
 import {
   getPlannedSession,
   linkPlannedSession,
@@ -38,6 +40,8 @@ export async function createSessionAction(
     characterIds: formData.getAll("characterIds").map(String),
   });
   if (!parsed.ok) return { error: parsed.error };
+  const sessionContext = await readSessionContext(formData);
+  if ("error" in sessionContext) return { error: sessionContext.error };
 
   // Nur Charaktere gutschreiben, die auch wirklich gutschreibbar sind — ein
   // manipuliertes Formular soll keine fremde, zurückgezogene oder gelöschte
@@ -56,9 +60,12 @@ export async function createSessionAction(
 
   await createGameSession({
     ...parsed.value,
+    missionId: sessionContext.missionId,
+    outcome: sessionContext.outcome,
     characterIds,
     createdByUserId: user.id,
   });
+  revalidateMission(sessionContext.missionSlug);
 
   revalidatePath("/gm/sessions");
   revalidatePath("/gm/ap");
@@ -215,6 +222,8 @@ export async function recordPlannedSessionAction(
     characterIds: formData.getAll("characterIds").map(String),
   });
   if (!parsed.ok) return { error: parsed.error };
+  const sessionContext = await readSessionContext(formData);
+  if ("error" in sessionContext) return { error: sessionContext.error };
 
   // Wie beim Anlegen von Hand: nur aktive, gutschreibbare Akten kommen aufs
   // Konto.
@@ -232,9 +241,12 @@ export async function recordPlannedSessionAction(
 
   const sessionId = await createGameSession({
     ...parsed.value,
+    missionId: sessionContext.missionId,
+    outcome: sessionContext.outcome,
     characterIds,
     createdByUserId: user.id,
   });
+  revalidateMission(sessionContext.missionSlug);
   await linkPlannedSession(plannedId, sessionId);
 
   revalidatePath("/gm/sessions");
@@ -249,4 +261,26 @@ export async function recordPlannedSessionAction(
         ? `Termin eingetragen, je ${perCharacter} AP an ${characterIds.length} Charaktere gebucht.`
         : "Termin eingetragen.",
   };
+}
+
+async function readSessionContext(
+  formData: FormData,
+): Promise<
+  | { missionId: number; missionSlug: string; outcome: string }
+  | { error: string }
+> {
+  const missionId = Number(formData.get("missionId"));
+  const outcome = String(formData.get("outcome") ?? "").trim();
+  if (!Number.isInteger(missionId) || missionId <= 0) {
+    return { error: "Bitte eine Mission auswählen." };
+  }
+  if (!outcome || outcome.length > 12_000) {
+    return { error: "Bitte beschreiben, was passiert ist (maximal 12.000 Zeichen)." };
+  }
+  const missions = await listSessionMissions();
+  const mission = missions.find((item) => item.id === missionId);
+  if (!mission) {
+    return { error: "Die ausgewählte Mission ist nicht verfügbar." };
+  }
+  return { missionId, missionSlug: mission.slug, outcome };
 }

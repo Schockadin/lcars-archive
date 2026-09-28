@@ -158,7 +158,7 @@
   background: var(--timeline-color, var(--lcars-primary));
   color: var(--lcars-ink-dark);
   border-radius: 4px 14px 14px 4px;
-  overflow: hidden;
+  overflow: visible;
   transition: filter 120ms;
 }
 /* Die ganze Karte ist anklickbar, nicht nur der Titel — aber NICHT als
@@ -221,6 +221,41 @@
   align-items: center;
   gap: 8px;
 }
+.timeline-card-actions {
+  position: relative;
+  z-index: 2;
+  margin-left: auto;
+}
+.timeline-card-more {
+  width: 32px;
+  height: 32px;
+  font-size: 23px;
+  line-height: 1;
+}
+.timeline-card-menu {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  right: 0;
+  display: flex;
+  min-width: 180px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 8px;
+  background: var(--lcars-surface);
+  color: var(--lcars-ink);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 24%);
+}
+.timeline-card-menu-link {
+  display: block;
+  padding: 8px 10px;
+  color: inherit;
+  text-decoration: none;
+}
+.timeline-card-menu .follow-share-wrapper { align-self: stretch; }
+.timeline-card-menu .follow-share-wrapper > button { width: 100%; }
 .timeline-card-title {
   font-family: var(--lcars-font-sans);
   font-size: 19px;

@@ -78,7 +78,7 @@ function stripStats(metadata: CharacterMetadata): CharacterMetadata {
 // einen Zeitstempel pro Zeile.
 export type CharacterListItem = Pick<
   Character,
-  "id" | "slug" | "name" | "status" | "metadata" | "updated_at"
+  "id" | "slug" | "name" | "status" | "metadata" | "updated_at" | "player_id" | "is_draft"
 > & {
   // Das Vorschaubild der Karte (siehe ChronoCard): das Portrait der Figur,
   // ersatzweise ihr erstes hochgeladenes Bild. null, wenn es beides nicht
@@ -91,7 +91,7 @@ export type CharacterListItem = Pick<
 
 interface CharacterListRow extends Pick<
   Character,
-  "id" | "slug" | "name" | "status" | "metadata" | "updated_at" | "portrait"
+  "id" | "slug" | "name" | "status" | "metadata" | "updated_at" | "portrait" | "player_id" | "is_draft"
 > {
   // Erstes hochgeladenes Bild der Figur (content_images), falls sie kein
   // Portrait hat.
@@ -104,6 +104,7 @@ export async function getCharacterListItems(): Promise<CharacterListItem[]> {
   cacheLife("max");
   const rows = await sql<CharacterListRow[]>`
         SELECT c.id, c.slug, c.name, c.status, c.metadata, c.updated_at,
+               c.player_id, c.is_draft,
                c.portrait,
                img.id AS image_id
         FROM characters c

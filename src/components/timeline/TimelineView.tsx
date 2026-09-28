@@ -32,6 +32,7 @@ import ManualEventForm from "./ManualEventForm";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
 import ModalOverlay from "@/components/ModalOverlay";
 import ContentImageGallery from "@/components/ContentImageGallery";
+import ContentCardMenu from "@/components/timeline/ContentCardMenu";
 
 // Die Chronologie als Zeitstrahl: links Datum und Schiene, rechts die
 // Ereigniskarte. Aufbau nach dem Entwurf (Jahresleiste, Monats-Trenner,
@@ -427,6 +428,7 @@ export default function TimelineView({
                     )}
                     <EventRow
                       event={event}
+                      currentUserId={currentUserId}
                       onOpenManual={() => setManualDetail(event)}
                       endDate={
                         scope === "missions" && event.href
@@ -509,10 +511,12 @@ export default function TimelineView({
 // steht nur, was ein Ereignis von einem Datenbank-Eintrag unterscheidet.
 function EventRow({
   event,
+  currentUserId,
   endDate,
   onOpenManual,
 }: {
   event: TimelineEvent;
+  currentUserId: number | null;
   // Nur im Umfang „Missionen" gesetzt: dann trägt die Karte den Zeitraum des
   // Einsatzes statt des Datums seines Beginns.
   endDate?: string;
@@ -533,6 +537,27 @@ function EventRow({
         // Ein von Hand eingetragenes Ereignis hat keinen Inhalt, auf den zu
         // zeigen wäre — dann steht der Titel als reiner Text.
         href={event.href ?? undefined}
+        actions={
+          event.href && event.contentId != null ? (
+            <ContentCardMenu
+              contentType={event.contentType ?? (
+                event.sourceType === "mission_log"
+                  ? "mission_log"
+                  : event.sourceType === "character"
+                    ? "character"
+                    : event.sourceType === "mission"
+                      ? "mission"
+                      : "archive_entry"
+              )}
+              id={event.contentId}
+              ownerUserId={event.ownerUserId ?? null}
+              currentUserId={currentUserId}
+              isDraft={event.isDraft ?? false}
+              title={event.sourceTitle}
+              href={event.href}
+            />
+          ) : undefined
+        }
         onActivate={event.origin === "manual" ? onOpenManual : undefined}
         ariaLabel={
           event.date

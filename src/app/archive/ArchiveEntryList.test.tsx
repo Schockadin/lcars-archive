@@ -11,6 +11,8 @@ function entry(
 ): ArchiveEntryPreview {
   return {
     id,
+    ownerUserId: null,
+    isDraft: false,
     slug: `e-${id}`,
     title,
     category,

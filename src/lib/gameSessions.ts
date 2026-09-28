@@ -4,6 +4,7 @@ import postgres from "postgres";
 import sql from "@/lib/db";
 import type { ApReason } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
+import { appendSessionSynopsis } from "@/lib/sessionSynopsis";
 import type { AdvancementRules } from "@/lib/advancement";
 
 // Client-Parameter für Aufrufe innerhalb einer bestehenden Transaktion —
@@ -22,6 +23,8 @@ export interface GameSession {
   id: number;
   sessionDate: string;
   title: string;
+  missionId: number | null;
+  missionTitle: string | null;
   sessionAp: number;
   bonusAp: number;
   // Rohtext (Markdown), wie er gespeichert ist — das Formular arbeitet damit.
@@ -45,7 +48,8 @@ export async function listGameSessions(): Promise<GameSession[]> {
   const rows = await sql<Omit<GameSession, "notesHtml">[]>`
     SELECT s.id,
            s.session_date::text AS "sessionDate",
-           s.title, s.session_ap AS "sessionAp", s.bonus_ap AS "bonusAp",
+           s.title, s.mission_id AS "missionId", m.title AS "missionTitle",
+           s.session_ap AS "sessionAp", s.bonus_ap AS "bonusAp",
            s.notes,
            u.name AS "createdByName",
            s.created_at::text AS "createdAt",
@@ -54,6 +58,7 @@ export async function listGameSessions(): Promise<GameSession[]> {
            COALESCE(e.total_ap, 0)::int AS "totalAp",
            COALESCE(l.logbook_count, 0)::int AS "logbookCount"
     FROM game_sessions s
+    LEFT JOIN missions m ON m.id = s.mission_id
     LEFT JOIN users u ON u.id = s.created_by
     LEFT JOIN (
       SELECT session_id, SUM(amount) AS total_ap
@@ -83,6 +88,21 @@ export async function listGameSessions(): Promise<GameSession[]> {
   return rows.map((r, index) => ({ ...r, notesHtml: html[index] }));
 }
 
+export interface SessionMissionOption {
+  id: number;
+  title: string;
+  slug: string;
+}
+
+export async function listSessionMissions(): Promise<SessionMissionOption[]> {
+  return sql<SessionMissionOption[]>`
+    SELECT id, title, slug
+    FROM missions
+    WHERE deleted_at IS NULL AND is_draft = false
+    ORDER BY title
+  `;
+}
+
 // Charaktere, denen eine Session gutgeschrieben werden kann: aktive, nicht
 // gelöschte Spielercharaktere. Ohne verknüpften Account (NPCs der
 // Spielleitung) gibt es niemanden, der die AP ausgeben könnte — deshalb
@@ -108,6 +128,8 @@ export async function listActiveCharactersForAp(): Promise<ActiveCharacter[]> {
 export interface CreateGameSessionInput {
   sessionDate: string;
   title: string;
+  missionId: number;
+  outcome: string;
   sessionAp: number;
   bonusAp: number;
   notes: string;
@@ -124,10 +146,31 @@ export async function createGameSession(
 ): Promise<number> {
   return sql.begin(async (tx) => {
     const [session] = await tx<{ id: number }[]>`
-      INSERT INTO game_sessions (session_date, title, session_ap, bonus_ap, notes, created_by)
-      VALUES (${input.sessionDate}, ${input.title}, ${input.sessionAp},
+      INSERT INTO game_sessions (session_date, mission_id, title, session_ap, bonus_ap, notes, created_by)
+      VALUES (${input.sessionDate}, ${input.missionId}, ${input.title}, ${input.sessionAp},
               ${input.bonusAp}, ${input.notes}, ${input.createdByUserId})
       RETURNING id
+    `;
+
+    const [mission] = await tx<{ sourceMarkdown: string | null }[]>`
+      SELECT source_md AS "sourceMarkdown"
+      FROM missions
+      WHERE id = ${input.missionId} AND deleted_at IS NULL AND is_draft = false
+      FOR UPDATE
+    `;
+    if (!mission) throw new Error("Mission für diese Session nicht gefunden.");
+    const synopsis = appendSessionSynopsis(
+      mission.sourceMarkdown,
+      input.sessionDate,
+      input.outcome,
+    );
+    const synopsisHtml = await markdownToHtml(synopsis);
+    await tx`
+      UPDATE missions
+      SET source_md = ${synopsis},
+          metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('body', ${synopsisHtml}),
+          updated_at = NOW()
+      WHERE id = ${input.missionId}
     `;
 
     // Teilnehmende festhalten — auch wenn es (noch) keine AP gibt: die

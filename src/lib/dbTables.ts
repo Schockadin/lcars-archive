@@ -120,7 +120,8 @@ export const DB_TABLE_COLUMNS = {
     "created_at", "updated_at",
   ],
   game_sessions: [
-    "id", "session_date", "title", "session_ap", "bonus_ap", "notes",
+    "id", "session_date", "mission_id", "title", "session_ap", "bonus_ap",
+    "notes",
     "created_by", "created_at", "updated_at",
   ],
   game_session_characters: ["session_id", "character_id"],
@@ -246,15 +247,12 @@ export function isViewableTable(value: string): value is TableName {
 // Fremdschlüssel aus scripts/schema.sql und prüft die Reihenfolge nach.
 export const BACKUP_TABLES = [
   // ── Inhalte ──────────────────────────────────────────────────────
-  // game_sessions gehört inhaltlich in den Block „Kampagne und Regelwerk"
-  // weiter unten, steht aber hier ganz vorn: mission_logs.session_id und
-  // character_ap_entries.session_id zeigen darauf. Weiter unten stehend
-  // scheiterte der Restore jeder Runde, die Logbücher oder AP-Gutschriften
-  // einer Spielsitzung zugeordnet hat.
-  "game_sessions",
   "characters",
   "character_documents",
   "missions",
+  // Sessions referenzieren Missionen und werden wiederum von Logs/AP-Einträgen
+  // referenziert — daher zwischen diesen Tabellen.
+  "game_sessions",
   "mission_participants",
   "mission_logs",
   "archive_entries",

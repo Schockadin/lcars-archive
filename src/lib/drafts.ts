@@ -44,6 +44,8 @@ export interface DraftItem {
   // Der ausdrückliche Bearbeiten-Stift im DraftPanel bleibt ein direkter Weg
   // in den Editor; nur die große Inhaltskarte führt auf die Leseseite.
   editHref: string;
+  // Das inhaltliche Datum eines Missionslogs, falls eingetragen.
+  logDate?: string | null;
 }
 
 interface DraftRow {
@@ -54,6 +56,7 @@ interface DraftRow {
   updated_at: string;
   mission_slug: string | null;
   dialogue_open: boolean | null;
+  log_date: string | null;
 }
 
 export async function getOwnDrafts(userId: number): Promise<DraftItem[]> {
@@ -62,7 +65,8 @@ export async function getOwnDrafts(userId: number): Promise<DraftItem[]> {
       'mission_log' AS kind, logs.id, logs.slug, logs.title,
       logs.updated_at::text AS updated_at,
       missions.slug AS mission_slug,
-      NULL::boolean AS dialogue_open
+      NULL::boolean AS dialogue_open,
+      logs.log_date::text AS log_date
     FROM mission_logs logs
     JOIN missions ON missions.id = logs.mission_id
     WHERE logs.owner_user_id = ${userId}
@@ -78,7 +82,8 @@ export async function getOwnDrafts(userId: number): Promise<DraftItem[]> {
       CASE WHEN category = 'dialogue' THEN 'dialogue' ELSE 'archive_entry' END,
       id, slug, title, updated_at::text,
       NULL::text AS mission_slug,
-      dialogue_open
+      dialogue_open,
+      NULL::text AS log_date
     FROM archive_entries
     WHERE owner_user_id = ${userId} AND is_draft = true AND deleted_at IS NULL
 
@@ -87,7 +92,8 @@ export async function getOwnDrafts(userId: number): Promise<DraftItem[]> {
     SELECT
       'mission', id, slug, title, updated_at::text,
       NULL::text AS mission_slug,
-      NULL::boolean AS dialogue_open
+      NULL::boolean AS dialogue_open,
+      NULL::text AS log_date
     FROM missions
     WHERE owner_user_id = ${userId} AND is_draft = true AND deleted_at IS NULL
 
@@ -102,6 +108,7 @@ export async function getOwnDrafts(userId: number): Promise<DraftItem[]> {
     updatedAt: row.updated_at,
     href: draftContentHref(row),
     editHref: draftEditHref(row.kind, row.id),
+    logDate: row.log_date,
   }));
 }
 

@@ -1,0 +1,2 @@
+ALTER TABLE game_sessions
+  ADD COLUMN IF NOT EXISTS mission_id INT REFERENCES missions(id) ON DELETE SET NULL;

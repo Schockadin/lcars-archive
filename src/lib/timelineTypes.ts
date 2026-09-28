@@ -123,6 +123,11 @@ export interface TimelineEvent {
   origin: TimelineOrigin;
   sourceType: TimelineSourceType;
   sourceTitle: string;
+  // Owner-Aktionen im Kartenmenü; bei freien Ereignissen fehlt die Quelle.
+  contentId?: number;
+  ownerUserId?: number | null;
+  isDraft?: boolean;
+  contentType?: "character" | "mission" | "mission_log" | "archive_entry" | "dialogue";
   // Wohin die Karte führt — null bei einem von Hand eingetragenen Ereignis:
   // es hat keinen Inhalt, auf den zu zeigen wäre (origin "manual").
   href: string | null;

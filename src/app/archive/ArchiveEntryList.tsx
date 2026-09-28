@@ -111,7 +111,7 @@ export default function ArchiveEntryList({
                       {letter}
                     </h2>
                   )}
-                  <ArchiveEntryRow entry={entry} />
+                  <ArchiveEntryRow entry={entry} currentUserId={userId ?? null} />
                 </Fragment>
               );
             })}

@@ -30,6 +30,7 @@ export default async function CharakterePage() {
       <PageMeta title="Charaktere" section="characters" />
       <CharacterPage
         characters={characters}
+        currentUserId={viewer?.userId ?? null}
         canCreate={canCreate}
         help={
           <HelpButton title="Charaktere" tutorial="seiten-im-ueberblick">

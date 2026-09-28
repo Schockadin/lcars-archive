@@ -5,6 +5,7 @@ import {
   listGameSessions,
   listActiveCharactersForAp,
   listAssignableLogbooks,
+  listSessionMissions,
 } from "@/lib/gameSessions";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import SessionManager from "./SessionManager";
@@ -23,13 +24,15 @@ export const metadata: Metadata = {
 export default async function GmSessionsPage() {
   await requireGM();
 
-  const [sessions, characters, logbooks, rules, planned] = await Promise.all([
-    listGameSessions(),
-    listActiveCharactersForAp(),
-    listAssignableLogbooks(),
-    getAdvancementRules(),
-    listAllPlannedSessions(),
-  ]);
+  const [sessions, characters, logbooks, rules, planned, missions] =
+    await Promise.all([
+      listGameSessions(),
+      listActiveCharactersForAp(),
+      listAssignableLogbooks(),
+      getAdvancementRules(),
+      listAllPlannedSessions(),
+      listSessionMissions(),
+    ]);
 
   // Serverseitig gebildet, damit Formular-Vorbelegung und Server-Render
   // dasselbe Datum zeigen. Europe/Berlin statt UTC: auf Netlify läuft die
@@ -57,6 +60,7 @@ export default async function GmSessionsPage() {
           <PlannedSessionManager
             sessions={planned}
             characters={characters}
+            missions={missions}
             defaultSessionAp={rules.apPerSession}
           />
 
@@ -70,6 +74,7 @@ export default async function GmSessionsPage() {
           <SessionManager
             sessions={sessions}
             characters={characters}
+            missions={missions}
             logbooks={logbooks}
             defaultSessionAp={rules.apPerSession}
             apPerLogbook={rules.apPerLogbook}

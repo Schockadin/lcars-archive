@@ -25,6 +25,8 @@ import {
 } from "@/lib/plannedSessionFormat";
 import type { PlannedSession } from "@/lib/plannedSessionTypes";
 import type { ActiveCharacter } from "@/lib/gameSessions";
+import type { SessionMissionOption } from "@/lib/gameSessions";
+import { SessionContextFields } from "./SessionManager";
 
 // Die anstehenden Spieltermine — angekündigt von der Spielleitung, mit den
 // Zu- und Absagen der Runde daneben.
@@ -166,11 +168,13 @@ function defaultMoment(): string {
 function RecordSessionModal({
   session,
   characters,
+  missions,
   defaultSessionAp,
   onClose,
 }: {
   session: PlannedSession;
   characters: ActiveCharacter[];
+  missions: SessionMissionOption[];
   defaultSessionAp: number;
   onClose: () => void;
 }) {
@@ -195,6 +199,10 @@ function RecordSessionModal({
           value={session.scheduledAt.slice(0, 10)}
         />
         <input type="hidden" name="title" value={session.title} />
+        <SessionContextFields
+          missions={missions}
+          idPrefix={`record-session-${session.id}`}
+        />
         <div className="flex flex-wrap items-end gap-[8px]">
           <label className="flex flex-col gap-[4px]">
             <span className="lcars-eyebrow">Session-AP</span>
@@ -257,10 +265,12 @@ function RecordSessionModal({
 function PlannedSessionRow({
   session,
   characters,
+  missions,
   defaultSessionAp,
 }: {
   session: PlannedSession;
   characters: ActiveCharacter[];
+  missions: SessionMissionOption[];
   defaultSessionAp: number;
 }) {
   const [edit, setEdit] = useState(false);
@@ -349,6 +359,7 @@ function PlannedSessionRow({
         <RecordSessionModal
           session={session}
           characters={characters}
+          missions={missions}
           defaultSessionAp={defaultSessionAp}
           onClose={() => setRecord(false)}
         />
@@ -361,10 +372,12 @@ function PlannedSessionRow({
 export default function PlannedSessionManager({
   sessions,
   characters,
+  missions,
   defaultSessionAp,
 }: {
   sessions: PlannedSession[];
   characters: ActiveCharacter[];
+  missions: SessionMissionOption[];
   defaultSessionAp: number;
 }) {
   const [state, formAction, pending] = useActionState<
@@ -423,6 +436,7 @@ export default function PlannedSessionManager({
               key={s.id}
               session={s}
               characters={characters}
+              missions={missions}
               defaultSessionAp={defaultSessionAp}
             />
           ))}

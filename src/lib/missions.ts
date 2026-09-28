@@ -453,6 +453,27 @@ export async function updateMissionContent(
   return rows[0] ?? null;
 }
 
+// Der Missions-Owner kann eine Mission aus dem Kartenmenü zurückziehen oder
+// wieder veröffentlichen. Das UPDATE ist owner-gescoped; GMs ohne Ownership
+// brauchen weiterhin die Moderations-Action.
+export async function setOwnMissionDraft(
+  userId: number,
+  missionId: number,
+  isDraft: boolean,
+): Promise<{ slug: string; title: string; sourceMarkdown: string | null } | null> {
+  const rows = await sql<
+    { slug: string; title: string; sourceMarkdown: string | null }[]
+  >`
+    UPDATE missions
+    SET is_draft = ${isDraft}, updated_at = NOW()
+    WHERE id = ${missionId} AND owner_user_id = ${userId}
+      AND deleted_at IS NULL
+    RETURNING slug, title, source_md AS "sourceMarkdown"
+  `;
+  if (rows[0]) syncEmbeddingDraft("mission", missionId, isDraft);
+  return rows[0] ?? null;
+}
+
 // Benachrichtigt alle Abonnenten einer Mission (content_follows, target_type
 // 'mission'), dass sich etwas an ihr geändert hat — analog
 // notifyCharacterSubscribers in characters.ts. Gerufen von beiden

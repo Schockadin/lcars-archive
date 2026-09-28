@@ -168,12 +168,9 @@ export default function ContentEditor<FieldName extends string>({
         />
       </FormField>
 
-      {/* Neue Inhalte: Autolinking standardmäßig aktiv (siehe AutoLinkCheckbox);
-          beim Bearbeiten bleibt es aus. */}
-      <AutoLinkCheckbox
-        idPrefix={idPrefix}
-        defaultChecked={mode === "create"}
-      />
+      {/* Autolinking startet bei neuen und bearbeiteten Inhalten aktiviert;
+          wer es nicht möchte, kann es vor dem Speichern ausschalten. */}
+      <AutoLinkCheckbox idPrefix={idPrefix} defaultChecked />
 
       <SubmitButton pending={pending} pendingLabel={submitPendingLabel}>
         {submitLabel}

@@ -149,9 +149,31 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: "1.59",
     title: "Netlify-Datenbank für Deploy Previews",
-    // Technische Datenbankanbindung und Migration, ohne neue Funktionen für
-    // Spielende oder Spielleitung.
-    items: [],
+    items: [
+      {
+        text: "Automatische Verlinkung startet jetzt auch beim Bearbeiten eines Inhalts; Aliase werden in Genitivformen erkannt und Wikilinks zeigen eine Kurzvorschau.",
+        category: "inhalte",
+        tutorial: "verlinkung",
+      },
+      {
+        text: "Chronologie, Datenbank und Charakterübersicht bieten ein Kartenmenü zum Teilen; eigene Einträge lassen sich dort auch bearbeiten, löschen und veröffentlichen oder als Entwurf zurückziehen.",
+        category: "inhalte",
+      },
+      {
+        text: "Auf dem Dashboard sehen Charakterbesitzer die verfügbaren Abenteuerpunkte direkt bei ihren Charakteren.",
+        category: "charaktere",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Missionslog-Entwürfe zeigen ihr Log-Datum, wenn eines eingetragen ist.",
+        category: "inhalte",
+      },
+      {
+        text: "Beim Eintragen einer Session wählt die Spielleitung die Mission aus und ergänzt einen datierten Bericht in deren Zusammenfassung.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+    ],
   },
   {
     version: "1.58",

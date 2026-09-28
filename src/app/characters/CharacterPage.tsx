@@ -14,6 +14,7 @@ import {
 import { characterHref } from "@/lib/contentRoutes";
 import { PlusIcon } from "@/lib/icons";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
+import ContentCardMenu from "@/components/timeline/ContentCardMenu";
 
 // Die Charakterliste (/characters) — dieselbe Liste wie Chronologie und
 // Datenbank: Schiene mit Punkt (ChronoRow, ohne Datumsspalte), Aktenkarte
@@ -62,10 +63,12 @@ type SortMode = "status" | "generation";
 
 export default function CharacterPage({
   characters,
+  currentUserId = null,
   canCreate = false,
   help,
 }: {
   characters: CharacterListItem[];
+  currentUserId?: number | null;
   // Der fertige Hilfe-Knopf samt Anleitung, von der Seite gereicht (siehe
   // help/HelpButton.tsx). Als Prop und nicht hier gebaut, damit der
   // Anleitungstext server-gerendert bleibt und nicht im Browser-Bündel dieser
@@ -168,6 +171,7 @@ export default function CharacterPage({
                         <CharacterCard
                           character={character}
                           color={group.color}
+                          currentUserId={currentUserId}
                         />
                       </ChronoRow>
                     ))}
@@ -192,9 +196,11 @@ export default function CharacterPage({
 function CharacterCard({
   character,
   color,
+  currentUserId,
 }: {
   character: CharacterListItem;
   color: string;
+  currentUserId: number | null;
 }) {
   const m = character.metadata;
   const affiliation = [
@@ -212,6 +218,17 @@ function CharacterCard({
       tag={m.rank ? (RANK_MAP[m.rank] ?? m.rank) : undefined}
       title={character.name}
       href={characterHref(character.slug)}
+      actions={
+        <ContentCardMenu
+          contentType="character"
+          id={character.id}
+          ownerUserId={character.player_id}
+          currentUserId={currentUserId}
+          isDraft={character.is_draft}
+          title={character.name}
+          href={characterHref(character.slug)}
+        />
+      }
       ariaLabel={m.rank ? `${character.name} — ${m.rank}` : character.name}
       meta={
         <>

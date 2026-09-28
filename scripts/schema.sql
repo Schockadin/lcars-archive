@@ -831,6 +831,7 @@ CREATE INDEX IF NOT EXISTS idx_talents_category ON talents(category);
 CREATE TABLE IF NOT EXISTS game_sessions (
   id           SERIAL PRIMARY KEY,
   session_date DATE NOT NULL,
+  mission_id   INT REFERENCES missions(id) ON DELETE SET NULL,
   title        TEXT NOT NULL DEFAULT '',
   session_ap   INT NOT NULL DEFAULT 0 CHECK (session_ap >= 0),
   bonus_ap     INT NOT NULL DEFAULT 0 CHECK (bonus_ap >= 0),
@@ -839,6 +840,8 @@ CREATE TABLE IF NOT EXISTS game_sessions (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE game_sessions
+  ADD COLUMN IF NOT EXISTS mission_id INT REFERENCES missions(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_game_sessions_date ON game_sessions(session_date DESC);
 
 -- ---------------------------------------------------------------------------

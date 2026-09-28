@@ -180,6 +180,30 @@
   color: var(--lcars-tertiary-ink);
   text-decoration: underline;
 }
+.lcars-wikilink[data-preview] {
+  position: relative;
+}
+.lcars-wikilink[data-preview]:hover::after,
+.lcars-wikilink[data-preview]:focus-visible::after {
+  content: attr(data-preview);
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  bottom: calc(100% + 8px);
+  width: min(320px, 75vw);
+  padding: 10px 12px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 8px;
+  background: var(--lcars-surface);
+  color: var(--lcars-ink);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 24%);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+  text-decoration: none;
+  white-space: normal;
+  pointer-events: none;
+}
 .lcars-link-text {
   cursor: pointer;
 }

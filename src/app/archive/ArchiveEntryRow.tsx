@@ -8,12 +8,14 @@ import ArchiveEntryCard from "./ArchiveEntryCard";
 // Perioden darüber in ArchiveEntryList.
 export default function ArchiveEntryRow({
   entry,
+  currentUserId,
 }: {
   entry: ArchiveEntryPreview;
+  currentUserId: number | null;
 }) {
   return (
     <ChronoRow color={CATEGORY_CONFIG[entry.category].color}>
-      <ArchiveEntryCard entry={entry} />
+      <ArchiveEntryCard entry={entry} currentUserId={currentUserId} />
     </ChronoRow>
   );
 }

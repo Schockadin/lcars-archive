@@ -8,6 +8,7 @@ import type {
   GameSession,
   ActiveCharacter,
   SessionLogbook,
+  SessionMissionOption,
 } from "@/lib/gameSessions";
 import {
   createSessionAction,
@@ -19,15 +20,64 @@ import {
 
 const initialState: SessionFormState = {};
 
+export function SessionContextFields({
+  missions,
+  idPrefix,
+}: {
+  missions: SessionMissionOption[];
+  idPrefix: string;
+}) {
+  return (
+    <div className="flex flex-col gap-[8px]">
+      <label className="flex flex-col gap-[4px]">
+        <span className="lcars-eyebrow">Zugehörige Mission</span>
+        <select
+          name="missionId"
+          required
+          defaultValue=""
+          className="lcars-input rounded-full"
+        >
+          <option value="" disabled>
+            Mission auswählen
+          </option>
+          {missions.map((mission) => (
+            <option key={mission.id} value={mission.id}>
+              {mission.title}
+            </option>
+          ))}
+        </select>
+      </label>
+      {missions.length === 0 && (
+        <p className="lcars-empty-state">
+          Es gibt keine veröffentlichte Mission zur Auswahl.
+        </p>
+      )}
+      <div className="flex flex-col gap-[4px]">
+        <label htmlFor={`${idPrefix}-outcome`} className="lcars-eyebrow">
+          Was ist passiert? (wird an die Missionszusammenfassung angehängt)
+        </label>
+        <MarkdownEditor
+          id={`${idPrefix}-outcome`}
+          name="outcome"
+          required
+          rows={6}
+        />
+      </div>
+    </div>
+  );
+}
+
 // Anlegen: Datum, Titel, AP-Beträge, Teilnehmende und Notizen. Die
 // Teilnehmenden sind vorausgewählt — die Regel lautet „alle aktiven
 // Charaktere", wer gefehlt hat, wird abgewählt.
 function NewSessionForm({
   characters,
+  missions,
   defaultSessionAp,
   today,
 }: {
   characters: ActiveCharacter[];
+  missions: SessionMissionOption[];
   defaultSessionAp: number;
   today: string;
 }) {
@@ -85,6 +135,8 @@ function NewSessionForm({
           />
         </label>
       </div>
+
+      <SessionContextFields missions={missions} idPrefix="new-session" />
 
       <fieldset className="flex flex-col gap-[6px]">
         <legend className="lcars-eyebrow">Gutschreiben an</legend>
@@ -255,6 +307,11 @@ function SessionRow({
         <span className="flex-1 min-w-[180px]">
           {session.title || "Ohne Titel"}
         </span>
+        {session.missionTitle && (
+          <span className="text-lcars-ink-dim text-[12px]">
+            {session.missionTitle}
+          </span>
+        )}
         <span className="stat-ap-amount">
           {session.sessionAp}
           {session.bonusAp > 0 && ` + ${session.bonusAp}`} AP
@@ -428,6 +485,7 @@ function SessionRow({
 export default function SessionManager({
   sessions,
   characters,
+  missions,
   logbooks,
   defaultSessionAp,
   apPerLogbook,
@@ -435,6 +493,7 @@ export default function SessionManager({
 }: {
   sessions: GameSession[];
   characters: ActiveCharacter[];
+  missions: SessionMissionOption[];
   // Logbücher zur Zuordnung: die bereits zugeordneten plus alle noch freien.
   logbooks: SessionLogbook[];
   defaultSessionAp: number;
@@ -453,6 +512,7 @@ export default function SessionManager({
         <div className="pt-[12px]">
           <NewSessionForm
             characters={characters}
+            missions={missions}
             defaultSessionAp={defaultSessionAp}
             today={today}
           />

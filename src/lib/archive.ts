@@ -226,6 +226,8 @@ export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
   const rows = await sql<ArchiveEntryRow[]>`
       SELECT
         a.id,
+        a.owner_user_id AS "ownerUserId",
+        a.is_draft AS "isDraft",
         a.slug,
         a.title,
         a.category,

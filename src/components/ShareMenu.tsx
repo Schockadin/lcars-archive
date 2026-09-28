@@ -14,10 +14,12 @@ import type { ExportContentType } from "@/lib/contentExport";
 // solange eine URL existiert).
 export default function ShareMenu({
   title,
+  href,
   exportType,
   exportSlug,
 }: {
   title: string;
+  href?: string;
   exportType?: ExportContentType;
   exportSlug?: string;
 }) {
@@ -38,7 +40,7 @@ export default function ShareMenu({
 
   async function handleCopyLink() {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(new URL(href ?? window.location.href, window.location.origin).toString());
       showToast("Link kopiert!", { kind: "success" });
     } catch {
       showToast("Link konnte nicht kopiert werden.", { kind: "error" });
@@ -50,7 +52,7 @@ export default function ShareMenu({
   // Rendern — sonst würde die Server-seitige erste Renderpassage einer
   // Client-Komponente crashen (kein window dort).
   function handleShareWhatsApp() {
-    const text = `${title} ${window.location.href}`;
+    const text = `${title} ${new URL(href ?? window.location.href, window.location.origin).toString()}`;
     window.open(
       `https://wa.me/?text=${encodeURIComponent(text)}`,
       "_blank",
