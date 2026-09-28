@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import MissionLogOverview from "./MissionLogOverview";
 import type { MissionLogListItem } from "@/types/missions";
 
@@ -33,6 +33,7 @@ function renderOverview(
     <MissionLogOverview
       missionSlug="deneb-iv"
       logs={LOGS}
+      synopsisBlocks={[]}
       canCreateLog={false}
       {...props}
     />,
@@ -52,16 +53,14 @@ describe("MissionLogOverview", () => {
   it("trägt Überschrift und Anzahl", () => {
     renderOverview();
 
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Logbücher" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/3 Logbücher/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Missionschronik" })).toBeInTheDocument();
+    expect(screen.getByText(/3 Logs · 0 Synopsis-Blöcke/)).toBeInTheDocument();
   });
 
   it("zählt ein einzelnes Logbuch im Singular", () => {
     renderOverview({ logs: [log(1, "Allein")] });
 
-    expect(screen.getByText(/^1 Logbuch/)).toBeInTheDocument();
+    expect(screen.getByText(/1 Log · 0 Synopsis-Block/)).toBeInTheDocument();
   });
 
   it("verlinkt jede Karte auf das Logbuch in dieser Mission", () => {
@@ -79,52 +78,16 @@ describe("MissionLogOverview", () => {
     expect(screen.getAllByText("11.09.2400").length).toBeGreaterThan(0);
   });
 
-  it("gruppiert von Haus aus nach Autor", () => {
-    const { container } = renderOverview();
-
-    const groups = [...container.querySelectorAll(".timeline-period")].map(
-      (node) => node.textContent,
-    );
-    expect(groups).toEqual(["T'Lara · 2", "Marcus Hale · 1"]);
-    expect(screen.getByText(/nach Autor gruppiert/)).toBeInTheDocument();
-  });
-
-  it("sortiert auf Wunsch nach Datum — neueste zuerst", () => {
-    const { container } = renderOverview();
-    const datum = screen.getByRole("button", { name: /Datum/ });
-
-    // Die Option trägt defaultDir="desc": beim Datum eines Logbuchs ist das
-    // Neueste gemeint, nicht das Älteste (LcarsSortSwitch startet sonst
-    // aufsteigend).
-    fireEvent.click(datum);
+  it("ordnet Logs und Synopsisblöcke gemeinsam chronologisch absteigend", () => {
+    const { container } = renderOverview({
+      logs: [log(1, "Log eins", "T'Lara", "2234-12-20"), log(2, "Log zwei", "T'Lara", "2234-12-21")],
+      synopsisBlocks: [{ id: 7, sessionId: 8, sessionTitle: "Session 8", ingameDate: "2234-12-20", endDate: null, body: "Zwischenfall", bodyHtml: "<p>Zwischenfall</p>" }],
+    });
     expect(container.querySelectorAll(".timeline-period")).toHaveLength(0);
-    expect(
-      [...container.querySelectorAll(".timeline-card-title")].map(
-        (node) => node.textContent,
-      ),
-    ).toEqual(["Nachspiel", "Rückzug", "Erster Kontakt"]);
-    expect(screen.getByText(/neueste zuerst/)).toBeInTheDocument();
-
-    // Ein weiterer Klick dreht die Richtung um.
-    fireEvent.click(datum);
-    expect(
-      [...container.querySelectorAll(".timeline-tag")].map(
-        (node) => node.textContent,
-      ),
-    ).toEqual(["S-01", "S-02", "S-03"]);
-    expect(screen.getByText(/älteste zuerst/)).toBeInTheDocument();
-  });
-
-  it("nennt den Autor in der Datums-Ansicht, nicht in den Gruppen", () => {
-    const { container } = renderOverview();
-
-    // Gruppiert steht der Name schon in der Überschrift.
-    expect(container.querySelector(".timeline-card-meta")).toBeNull();
-
-    fireEvent.click(screen.getByRole("button", { name: /Datum/ }));
-    expect(container.querySelector(".timeline-card-meta")).toHaveTextContent(
-      "Autor",
-    );
+    expect(container.querySelectorAll(".timeline-card")).toHaveLength(3);
+    expect([...container.querySelectorAll(".timeline-card-title")].map((node) => node.textContent)).toEqual(["Log zwei", "Log eins", "Session 8"]);
+    expect(screen.getByText("Session 8")).toBeInTheDocument();
+    expect(screen.getAllByText("20.12.2234").length).toBeGreaterThan(0);
   });
 
   it("bietet „Neues Log“ nur an, wenn der Betrachter teilnimmt", () => {
@@ -138,13 +101,10 @@ describe("MissionLogOverview", () => {
     );
   });
 
-  it("sagt Bescheid, wenn es keine Logbücher gibt", () => {
+  it("sagt Bescheid, wenn es keine Logs oder Synopsis-Einträge gibt", () => {
     const { container } = renderOverview({ logs: [] });
 
-    expect(
-      screen.getByText("Keine Logs zu dieser Mission erfasst."),
-    ).toHaveClass("lcars-empty-state");
-    // Ohne Einträge gibt es nichts zu sortieren.
+    expect(screen.getByText("Noch keine Logs oder Synopsis-Einträge vorhanden.")).toHaveClass("lcars-empty-state");
     expect(container.querySelector(".mission-sort")).toBeNull();
   });
 });

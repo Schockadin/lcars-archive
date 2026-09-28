@@ -23,6 +23,7 @@ import { listNotes } from "@/lib/contentNotes";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import MissionBookLink from "./MissionBookLink";
 import { missionHref } from "@/lib/contentRoutes";
+import { listMissionSynopsisBlocks } from "@/lib/gameSessions";
 interface Props {
   params: Promise<{ missionSlug: string }>;
   searchParams: Promise<{ activateFollow?: string }>;
@@ -90,6 +91,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
     mentions,
     notes,
     logs,
+    synopsisBlocks,
     characters,
     participantIds,
   ] = await Promise.all([
@@ -101,6 +103,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
     // Die Logbücher dieser Mission — bis zum Redesign lagen sie im Layout,
     // das die schmale Navigationsschiene daneben gerendert hat.
     getLogsByMissionId(mission.id),
+    listMissionSynopsisBlocks(mission.id),
     viewer ? getCharactersForUser(viewer.userId) : Promise.resolve([]),
     viewer ? getMissionParticipantIds(mission.id) : Promise.resolve([]),
   ]);
@@ -120,6 +123,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
       <MissionLogOverview
         missionSlug={mission.slug}
         logs={logs}
+        synopsisBlocks={synopsisBlocks}
         canCreateLog={canCreateLog}
       />
 

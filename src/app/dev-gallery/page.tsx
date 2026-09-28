@@ -658,6 +658,7 @@ export default function DevGalleryPage() {
         <MissionLogOverview
           missionSlug="demo-mission"
           logs={DEMO_MISSION_LOGS}
+          synopsisBlocks={[]}
           canCreateLog
         />
       </section>

@@ -11,7 +11,6 @@ const valid = {
   title: "  Der Nebel von Cygnus IV  ",
   sessionAp: "1",
   bonusAp: "0",
-  notes: "  Erstkontakt  ",
   characterIds: ["3", "7"],
 };
 
@@ -40,7 +39,6 @@ describe("validateGameSessionInput", () => {
         title: "Der Nebel von Cygnus IV",
         sessionAp: 1,
         bonusAp: 0,
-        notes: "Erstkontakt",
         characterIds: [3, 7],
       },
     });

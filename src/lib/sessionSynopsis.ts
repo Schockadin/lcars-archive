@@ -1,8 +1,26 @@
-export function appendSessionSynopsis(
-  current: string | null,
-  sessionDate: string,
-  outcome: string,
+export interface SessionSynopsisBlockInput {
+  ingameDate: string;
+  endDate: string | null;
+  body: string;
+}
+
+export function sessionSynopsisHeading(
+  ingameDate: string,
+  endDate: string | null,
 ): string {
-  const section = `## Session vom ${sessionDate}\n\n${outcome.trim()}`;
-  return [current?.trim(), section].filter(Boolean).join("\n\n");
+  return endDate
+    ? `## Synopsis ${ingameDate}–${endDate}`
+    : `## Synopsis ${ingameDate}`;
+}
+
+export function buildMissionSynopsisMarkdown(
+  blocks: SessionSynopsisBlockInput[],
+): string {
+  return blocks
+    .filter((block) => block.body.trim())
+    .map(
+      (block) =>
+        `${sessionSynopsisHeading(block.ingameDate, block.endDate)}\n\n${block.body.trim()}`,
+    )
+    .join("\n\n");
 }

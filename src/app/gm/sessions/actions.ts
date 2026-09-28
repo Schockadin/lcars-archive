@@ -10,6 +10,9 @@ import {
   setSessionLogbooks,
 } from "@/lib/gameSessions";
 import { validateGameSessionInput } from "@/lib/gameSessionFormat";
+import { isIsoDate } from "@/lib/gameSessionFormat";
+import { missionSlugExists } from "@/lib/missions";
+import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
 import {
   getPlannedSession,
@@ -36,7 +39,6 @@ export async function createSessionAction(
     title: String(formData.get("title") ?? ""),
     sessionAp: String(formData.get("sessionAp") ?? ""),
     bonusAp: String(formData.get("bonusAp") ?? ""),
-    notes: String(formData.get("notes") ?? ""),
     characterIds: formData.getAll("characterIds").map(String),
   });
   if (!parsed.ok) return { error: parsed.error };
@@ -60,8 +62,9 @@ export async function createSessionAction(
 
   await createGameSession({
     ...parsed.value,
-    missionId: sessionContext.missionId,
-    outcome: sessionContext.outcome,
+    missionId: sessionContext.missionId!,
+    newMission: sessionContext.newMission,
+    synopsisBlocks: sessionContext.synopsisBlocks,
     characterIds,
     createdByUserId: user.id,
   });
@@ -94,6 +97,7 @@ export async function deleteSessionAction(
 
   const deleted = await deleteGameSession(id);
   if (!deleted) return { error: "Session nicht gefunden." };
+  if (deleted) revalidateMission(deleted);
 
   revalidatePath("/gm/sessions");
   revalidatePath("/gm/ap");
@@ -103,7 +107,7 @@ export async function deleteSessionAction(
   };
 }
 
-// Eine eingetragene Session korrigieren — Datum, Titel, AP-Beträge, Notizen
+// Eine eingetragene Session korrigieren — Datum, Titel, AP-Beträge, Synopsisblöcke
 // und Teilnehmende. Die Gutschriften werden dabei mitgezogen (siehe
 // updateGameSession): eine Korrektur, die die Konten nicht mitnimmt, wäre
 // keine.
@@ -122,10 +126,11 @@ export async function updateSessionAction(
     title: String(formData.get("title") ?? ""),
     sessionAp: String(formData.get("sessionAp") ?? ""),
     bonusAp: String(formData.get("bonusAp") ?? ""),
-    notes: String(formData.get("notes") ?? ""),
     characterIds: formData.getAll("characterIds").map(String),
   });
   if (!parsed.ok) return { error: parsed.error };
+  const sessionContext = await readSessionContext(formData, false);
+  if ("error" in sessionContext) return { error: sessionContext.error };
 
   // Wie beim Anlegen: nur aktive, gutschreibbare Akten kommen aufs Konto.
   const allowed = new Set(
@@ -143,10 +148,14 @@ export async function updateSessionAction(
   const updated = await updateGameSession({
     id,
     ...parsed.value,
+    missionId: sessionContext.missionId!,
+    synopsisBlocks: sessionContext.synopsisBlocks,
     characterIds,
     actingUserId: user.id,
   });
   if (!updated) return { error: "Session nicht gefunden." };
+  revalidateMission(updated.missionSlug);
+  if (updated.oldMissionSlug) revalidateMission(updated.oldMissionSlug);
 
   revalidatePath("/gm/sessions");
   revalidatePath("/gm/ap");
@@ -190,7 +199,7 @@ export async function setSessionLogbooksAction(
 }
 
 // Aus einem angekündigten Termin wird die gespielte Session: Datum, Titel und
-// die eingeplanten Figuren stehen schon, im Fenster kommen AP-Beträge, Notizen
+// die eingeplanten Figuren stehen schon, im Fenster kommen AP-Beträge und Synopsisblöcke
 // und die letzte Korrektur der Teilnehmerliste dazu.
 //
 // Danach zeigt der Termin auf die gebuchte Session (linkPlannedSession) und
@@ -218,7 +227,6 @@ export async function recordPlannedSessionAction(
     title: String(formData.get("title") ?? ""),
     sessionAp: String(formData.get("sessionAp") ?? ""),
     bonusAp: String(formData.get("bonusAp") ?? ""),
-    notes: String(formData.get("notes") ?? ""),
     characterIds: formData.getAll("characterIds").map(String),
   });
   if (!parsed.ok) return { error: parsed.error };
@@ -242,7 +250,8 @@ export async function recordPlannedSessionAction(
   const sessionId = await createGameSession({
     ...parsed.value,
     missionId: sessionContext.missionId,
-    outcome: sessionContext.outcome,
+    newMission: sessionContext.newMission,
+    synopsisBlocks: sessionContext.synopsisBlocks,
     characterIds,
     createdByUserId: user.id,
   });
@@ -265,22 +274,56 @@ export async function recordPlannedSessionAction(
 
 async function readSessionContext(
   formData: FormData,
+  allowNewMission = true,
 ): Promise<
-  | { missionId: number; missionSlug: string; outcome: string }
+  | {
+      missionId?: number;
+      missionSlug: string;
+      newMission?: { slug: string; title: string; ownerUserId: number };
+      synopsisBlocks: { ingameDate: string; endDate: string | null; body: string }[];
+    }
   | { error: string }
 > {
-  const missionId = Number(formData.get("missionId"));
-  const outcome = String(formData.get("outcome") ?? "").trim();
-  if (!Number.isInteger(missionId) || missionId <= 0) {
-    return { error: "Bitte eine Mission auswählen." };
+  const missionChoice = String(formData.get("missionChoice") ?? "");
+  let missionId: number | undefined;
+  let missionSlug: string;
+  let newMission: { slug: string; title: string; ownerUserId: number } | undefined;
+  if (missionChoice === "new" && allowNewMission) {
+    const title = String(formData.get("newMissionTitle") ?? "").trim();
+    const slug = slugifyBase(title);
+    if (!title || title.length > 200 || !slug) {
+      return { error: "Bitte einen gültigen Titel für die neue Mission angeben." };
+    }
+    if (await missionSlugExists(slug)) {
+      return { error: "Eine Mission mit diesem Titel existiert bereits. Bitte den Titel anpassen." };
+    }
+    missionSlug = slug;
+    newMission = { slug, title, ownerUserId: (await requireGM()).id };
+  } else {
+    const rawId = missionChoice.startsWith("mission:") ? missionChoice.slice(8) : "";
+    missionId = Number(rawId);
+    if (!Number.isInteger(missionId) || missionId <= 0) {
+      return { error: "Bitte eine Mission auswählen." };
+    }
+    const mission = (await listSessionMissions()).find((item) => item.id === missionId);
+    if (!mission) return { error: "Die ausgewählte Mission ist nicht verfügbar." };
+    missionSlug = mission.slug;
   }
-  if (!outcome || outcome.length > 12_000) {
-    return { error: "Bitte beschreiben, was passiert ist (maximal 12.000 Zeichen)." };
+
+  const dates = formData.getAll("synopsisDate").map((value) => String(value).trim());
+  const endDates = formData.getAll("synopsisEndDate").map((value) => String(value).trim());
+  const texts = formData.getAll("synopsisText").map((value) => String(value).trim());
+  if (dates.length !== endDates.length || dates.length !== texts.length || dates.length > 20) {
+    return { error: "Die Zusammenfassungsblöcke sind ungültig." };
   }
-  const missions = await listSessionMissions();
-  const mission = missions.find((item) => item.id === missionId);
-  if (!mission) {
-    return { error: "Die ausgewählte Mission ist nicht verfügbar." };
+  const synopsisBlocks: { ingameDate: string; endDate: string | null; body: string }[] = [];
+  for (let i = 0; i < dates.length; i++) {
+    const [ingameDate, endDate, body] = [dates[i], endDates[i], texts[i]];
+    if (!ingameDate && !endDate && !body) continue;
+    if (!isIsoDate(ingameDate)) return { error: `Bitte ein gültiges Ingame-Datum für Block ${i + 1} angeben.` };
+    if (endDate && (!isIsoDate(endDate) || endDate < ingameDate)) return { error: `Das Enddatum in Block ${i + 1} muss nach dem Startdatum liegen.` };
+    if (!body || body.length > 12_000) return { error: `Bitte Text für Block ${i + 1} angeben (maximal 12.000 Zeichen).` };
+    synopsisBlocks.push({ ingameDate, endDate: endDate || null, body });
   }
-  return { missionId, missionSlug: mission.slug, outcome };
+  return { missionId, missionSlug, newMission, synopsisBlocks };
 }

@@ -4,7 +4,6 @@
 // Der Datenzugriff liegt in src/lib/gameSessions.ts.
 
 export const SESSION_TITLE_MAX = 200;
-export const SESSION_NOTES_MAX = 10000;
 export const SESSION_AP_MAX = 999;
 
 export interface GameSessionInput {
@@ -12,7 +11,6 @@ export interface GameSessionInput {
   title: string;
   sessionAp: number;
   bonusAp: number;
-  notes: string;
   characterIds: number[];
 }
 
@@ -47,7 +45,6 @@ export function validateGameSessionInput(raw: {
   title: string;
   sessionAp: string;
   bonusAp: string;
-  notes: string;
   characterIds: string[];
 }): GameSessionValidation {
   const sessionDate = raw.sessionDate.trim();
@@ -65,19 +62,14 @@ export function validateGameSessionInput(raw: {
   const bonusAp = parseAp(raw.bonusAp, "Bonus-AP");
   if (typeof bonusAp === "string") return { ok: false, error: bonusAp };
 
-  const notes = raw.notes.trim();
-  if (notes.length > SESSION_NOTES_MAX) {
-    return { ok: false, error: `Notizen zu lang (max. ${SESSION_NOTES_MAX} Zeichen).` };
-  }
-
   // Duplikate raus: ein doppelt geschicktes Feld würde denselben Charakter
   // sonst zweimal gutgeschrieben bekommen.
   const characterIds = [...new Set(raw.characterIds.map(Number))];
   if (characterIds.some((id) => !Number.isInteger(id))) {
     return { ok: false, error: "Ungültige Charakterauswahl." };
   }
-  // Eine Session ohne Teilnehmende ist erlaubt (reiner Notizeintrag), aber
-  // dann darf es auch nichts zu verteilen geben — sonst gingen die AP
+  // Eine Session ohne Teilnehmende ist erlaubt, aber dann darf es auch
+  // nichts zu verteilen geben — sonst gingen die AP
   // kommentarlos ins Leere.
   if (characterIds.length === 0 && sessionAp + bonusAp > 0) {
     return {
@@ -88,6 +80,6 @@ export function validateGameSessionInput(raw: {
 
   return {
     ok: true,
-    value: { sessionDate, title, sessionAp, bonusAp, notes, characterIds },
+    value: { sessionDate, title, sessionAp, bonusAp, characterIds },
   };
 }

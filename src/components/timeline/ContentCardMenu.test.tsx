@@ -3,19 +3,13 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import ContentCardMenu from "./ContentCardMenu";
 
 vi.mock("@/components/ShareMenu", () => ({
-  default: ({ href }: { href: string }) => (
-    <button type="button" data-share-href={href}>
-      Teilen
-    </button>
+  default: ({ menuItems }: { menuItems?: boolean }) => (
+    menuItems ? <><button role="menuitem">Link kopieren</button><button role="menuitem">Per WhatsApp teilen</button></> : <button>Teilen</button>
   ),
 }));
 
-vi.mock("@/app/user/content/ContentStateSelect", () => ({
-  default: () => <button type="button">Entwurf/Veröffentlicht</button>,
-}));
-
 vi.mock("@/app/user/content/DeleteOwnContentButton", () => ({
-  default: () => <button type="button">Löschen</button>,
+  default: () => <button role="menuitem">Löschen</button>,
 }));
 
 const props = {
@@ -33,10 +27,8 @@ describe("ContentCardMenu", () => {
     render(<ContentCardMenu {...props} />);
     fireEvent.click(screen.getByRole("button", { name: "Weitere Aktionen" }));
 
-    expect(screen.getByRole("button", { name: "Teilen" })).toHaveAttribute(
-      "data-share-href",
-      "/archive/station",
-    );
+    expect(screen.getByRole("menuitem", { name: "Link kopieren" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Per WhatsApp teilen" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Bearbeiten" })).toBeNull();
   });
 
@@ -48,7 +40,7 @@ describe("ContentCardMenu", () => {
       "href",
       "/user/archive/42/edit",
     );
-    expect(screen.getByRole("button", { name: "Entwurf/Veröffentlicht" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Löschen" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Als Entwurf" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Löschen" })).toBeInTheDocument();
   });
 });

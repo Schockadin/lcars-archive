@@ -164,7 +164,7 @@ function defaultMoment(): string {
 }
 
 // Aus dem Termin wird die gespielte Session: Zeitpunkt, Titel und Besetzung
-// stehen schon, hier kommen AP und Notizen dazu.
+// stehen schon, hier kommen AP und optionale Synopsisblöcke dazu.
 function RecordSessionModal({
   session,
   characters,
@@ -236,21 +236,6 @@ function RecordSessionModal({
           }
           legend="Gutschreiben an"
         />
-
-        <div className="flex flex-col gap-[4px]">
-          <label
-            htmlFor={`record-notes-${session.id}`}
-            className="lcars-eyebrow"
-          >
-            Notizen (optional)
-          </label>
-          <MarkdownEditor
-            id={`record-notes-${session.id}`}
-            name="notes"
-            rows={8}
-            defaultValue={session.notes}
-          />
-        </div>
 
         <SubmitButton pending={pending} pendingLabel="Wird gebucht…">
           Session eintragen

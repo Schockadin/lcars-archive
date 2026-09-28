@@ -416,19 +416,9 @@ export async function updateMissionContent(
     endedAt: string | null;
     tags: string[];
     teaser: string | null;
-    bodyMarkdown: string;
     isDraft: boolean;
-    // Siehe createMission oben — Opt-in "Automatisch verlinken".
-    bodyHtml?: string;
   },
-  // Nur für die Versionshistorie (siehe contentRevisions.ts).
-  editorId: number | null = null,
 ): Promise<UpdateMissionResult | null> {
-  await recordRevision("mission", missionId, editorId, input.bodyMarkdown);
-
-  const bodyHtml =
-    input.bodyHtml ?? (await renderContentHtml(input.bodyMarkdown));
-
   const rows = await sql<UpdateMissionResult[]>`
     WITH old AS (SELECT is_draft, title FROM missions WHERE id = ${missionId})
     UPDATE missions m
@@ -437,8 +427,7 @@ export async function updateMissionContent(
       status     = ${input.status},
       started_at = ${input.startedAt},
       ended_at   = ${input.endedAt},
-      metadata   = ${sql.json({ tags: input.tags, body: bodyHtml, teaser: input.teaser })},
-      source_md  = ${input.bodyMarkdown},
+      metadata   = COALESCE(m.metadata, '{}'::jsonb) || ${sql.json({ tags: input.tags, teaser: input.teaser })},
       is_draft   = ${input.isDraft},
       updated_at = NOW()
     FROM old

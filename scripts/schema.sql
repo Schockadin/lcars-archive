@@ -844,6 +844,25 @@ ALTER TABLE game_sessions
   ADD COLUMN IF NOT EXISTS mission_id INT REFERENCES missions(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_game_sessions_date ON game_sessions(session_date DESC);
 
+-- Automatisch aufgebaute Synopsis-Blöcke. Neue Blöcke gehören zu einer
+-- Session; session_id bleibt für die aus früheren Missions-Synopsen
+-- übernommenen Bestandsblöcke NULL.
+CREATE TABLE IF NOT EXISTS mission_synopsis_blocks (
+  id           SERIAL PRIMARY KEY,
+  mission_id   INT NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+  session_id   INT REFERENCES game_sessions(id) ON DELETE CASCADE,
+  block_order  INT NOT NULL DEFAULT 0,
+  ingame_date  DATE NOT NULL,
+  end_date     DATE,
+  body_md      TEXT NOT NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CHECK (end_date IS NULL OR end_date >= ingame_date)
+);
+CREATE INDEX IF NOT EXISTS idx_mission_synopsis_blocks_chronology
+  ON mission_synopsis_blocks(mission_id, ingame_date DESC, end_date DESC, id);
+CREATE INDEX IF NOT EXISTS idx_mission_synopsis_blocks_session
+  ON mission_synopsis_blocks(session_id);
+
 -- ---------------------------------------------------------------------------
 -- game_session_characters
 -- ---------------------------------------------------------------------------

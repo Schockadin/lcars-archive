@@ -1,11 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import ShareMenu from "@/components/ShareMenu";
-import ContentStateSelect from "@/app/user/content/ContentStateSelect";
 import DeleteOwnContentButton from "@/app/user/content/DeleteOwnContentButton";
 import { contentEditHref } from "@/lib/contentRoutes";
-import type { VisibilityContentType } from "@/app/user/content/actions";
+import {
+  setContentStateAction,
+  type VisibilityContentType,
+} from "@/app/user/content/actions";
 
 type CardContentType = VisibilityContentType;
 
@@ -27,7 +29,9 @@ export default function ContentCardMenu({
   href: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const isOwner = currentUserId != null && ownerUserId === currentUserId;
+  const [pending, startTransition] = useTransition();
   const editType =
     contentType === "mission_log"
       ? "missionLog"
@@ -40,40 +44,58 @@ export default function ContentCardMenu({
     <div className="timeline-card-actions">
       <button
         type="button"
-        className="lcars-icon-btn timeline-card-more"
+        className="timeline-card-more"
         aria-label="Weitere Aktionen"
         title="Weitere Aktionen"
+        aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        <span aria-hidden="true">⋯</span>
+        <span aria-hidden="true">⋮</span>
       </button>
       {open && (
-        <div className="timeline-card-menu" role="group" aria-label="Aktionen">
-          <ShareMenu title={title} href={href} />
+        <div className="timeline-card-menu" role="menu" aria-label="Aktionen">
+          <ShareMenu title={title} href={href} menuItems />
           {isOwner && (
             <>
               <Link
                 className="timeline-card-menu-link"
                 href={contentEditHref(editType, id)}
+                role="menuitem"
                 onClick={() => setOpen(false)}
               >
                 Bearbeiten
               </Link>
               {visibilityType && (
-                <ContentStateSelect
-                  contentType={visibilityType}
-                  id={id}
-                  isDraft={isDraft}
-                />
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="timeline-card-menu-link"
+                  disabled={pending}
+                  onClick={() => {
+                    startTransition(async () => {
+                      const result = await setContentStateAction(
+                        visibilityType,
+                        id,
+                        isDraft ? "published" : "draft",
+                      );
+                      if (result.error) setActionError(result.error);
+                      else setOpen(false);
+                    });
+                  }}
+                >
+                  {isDraft ? "Veröffentlichen" : "Als Entwurf"}
+                </button>
               )}
               <DeleteOwnContentButton
                 contentType={contentType}
                 id={id}
                 onOptimisticDelete={() => {}}
+                textAction
               />
             </>
           )}
+          {actionError && <p className="px-[10px] text-[12px] text-lcars-quinary-ink" role="alert">{actionError}</p>}
         </div>
       )}
     </div>

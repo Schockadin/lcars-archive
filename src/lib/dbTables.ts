@@ -124,6 +124,10 @@ export const DB_TABLE_COLUMNS = {
     "notes",
     "created_by", "created_at", "updated_at",
   ],
+  mission_synopsis_blocks: [
+    "id", "mission_id", "session_id", "block_order", "ingame_date",
+    "end_date", "body_md", "created_at",
+  ],
   game_session_characters: ["session_id", "character_id"],
   planned_sessions: [
     "id", "scheduled_at", "title", "location", "notes", "created_by",
@@ -253,6 +257,8 @@ export const BACKUP_TABLES = [
   // Sessions referenzieren Missionen und werden wiederum von Logs/AP-Einträgen
   // referenziert — daher zwischen diesen Tabellen.
   "game_sessions",
+  // Sitzungs-Synopsen referenzieren Mission und Session.
+  "mission_synopsis_blocks",
   "mission_participants",
   "mission_logs",
   "archive_entries",

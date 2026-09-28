@@ -22,7 +22,6 @@ import { logCaughtError } from "@/lib/errorLog";
 import { getUserSubscribersForSlugs, notifyContentChange } from "@/lib/follows";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
-import { autoLinkMarkdown } from "@/lib/autolink";
 import { syncAutolinksAfterRename } from "@/lib/autolinkSync";
 import {
   sendMissionParticipantEmail,
@@ -245,25 +244,13 @@ export async function missionAction(
     .map((v) => Number(v))
     .filter((n) => Number.isInteger(n));
 
-  let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
-  if (!bodyMarkdown && !isDraft) {
-    return { error: "Bitte eine Zusammenfassung schreiben." };
-  }
+  // Mission bodies are derived from session synopsis blocks. Keep the current
+  // generated text available for notification previews, while the editor
+  // deliberately sends no body field.
+  const existingMission = isEdit ? await getMissionById(missionId!) : null;
+  const bodyMarkdown = existingMission?.sourceMarkdown ?? "";
 
   const statusValue = status as (typeof VALID_STATUSES)[number];
-
-  // Opt-in "Automatisch verlinken" — Selbstausschluss nur beim Bearbeiten
-  // nötig (sonst könnte der Titel im eigenen Text auf sich selbst verlinken).
-  let bodyHtml: string | undefined;
-  if (bodyMarkdown && formData.get("autoLink") === "on") {
-    const selfExclusion = isEdit ? await getMissionById(missionId!) : null;
-    const linked = await autoLinkMarkdown(
-      bodyMarkdown,
-      selfExclusion ? { type: "mission", slug: selfExclusion.slug } : undefined,
-    );
-    bodyMarkdown = linked.sourceMd;
-    bodyHtml = linked.html;
-  }
 
   if (isEdit) {
     const result = await updateMissionContent(missionId!, {
@@ -273,9 +260,7 @@ export async function missionAction(
       endedAt: endedAtRaw || null,
       tags,
       teaser,
-      bodyMarkdown,
       isDraft,
-      bodyHtml,
     });
     if (!result) {
       return { error: "Mission nicht gefunden." };
@@ -371,7 +356,7 @@ export async function missionAction(
     teaser,
     bodyMarkdown,
     isDraft,
-    bodyHtml,
+    bodyHtml: "",
     ownerUserId: user.id,
   });
   revalidateMission(result.slug);

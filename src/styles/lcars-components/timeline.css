@@ -222,15 +222,33 @@
   gap: 8px;
 }
 .timeline-card-actions {
-  position: relative;
+  position: absolute;
+  top: 6px;
+  right: 8px;
   z-index: 2;
-  margin-left: auto;
 }
 .timeline-card-more {
-  width: 32px;
-  height: 32px;
-  font-size: 23px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 20px;
   line-height: 1;
+  cursor: pointer;
+}
+.timeline-card-more:hover,
+.timeline-card-more:focus-visible {
+  background: transparent;
+  color: inherit;
+  opacity: 0.72;
+  outline: 1px solid currentColor;
+  outline-offset: 2px;
 }
 .timeline-card-menu {
   position: absolute;
@@ -250,12 +268,24 @@
 }
 .timeline-card-menu-link {
   display: block;
+  width: 100%;
   padding: 8px 10px;
+  border: 0;
+  background: transparent;
   color: inherit;
+  font: inherit;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
 }
-.timeline-card-menu .follow-share-wrapper { align-self: stretch; }
-.timeline-card-menu .follow-share-wrapper > button { width: 100%; }
+.timeline-card-menu-link:hover,
+.timeline-card-menu-link:focus-visible {
+  background: rgb(0 0 0 / 8%);
+  outline: none;
+}
+.timeline-card-menu-link--danger {
+  color: var(--lcars-quinary-ink);
+}
 .timeline-card-title {
   font-family: var(--lcars-font-sans);
   font-size: 19px;

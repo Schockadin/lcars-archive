@@ -48,10 +48,13 @@ async function setup() {
     sessionDate: "2399-01-01",
     title: "Erste Session",
     missionId: mission.id,
-    outcome: "Die Crew erreicht das Ziel.",
+    synopsisBlocks: [{
+      ingameDate: "2399-01-01",
+      endDate: null,
+      body: "Die Crew erreicht das Ziel.",
+    }],
     sessionAp: 0,
     bonusAp: 0,
-    notes: "",
     characterIds: [character.id],
     createdByUserId: gm.id,
   });
@@ -73,6 +76,41 @@ async function setup() {
 }
 
 describe("setSessionLogbooks", () => {
+  it("legt eine neue Mission zusammen mit der Session an", async () => {
+    const gm = await insertUser({ role: "gm" });
+    const sessionId = await createGameSession({
+      sessionDate: "2399-02-01",
+      title: "Neue Mission",
+      newMission: {
+        slug: `session-created-${gm.id}`,
+        title: "Aus der Session angelegte Mission",
+        ownerUserId: gm.id,
+      },
+      synopsisBlocks: [{
+        ingameDate: "2399-02-01",
+        endDate: "2399-02-03",
+        body: "Die Mission beginnt.",
+      }],
+      sessionAp: 0,
+      bonusAp: 0,
+      characterIds: [],
+      createdByUserId: gm.id,
+    });
+    const [saved] = await sql<{ missionId: number }[]>`
+      SELECT mission_id AS "missionId" FROM game_sessions WHERE id = ${sessionId}
+    `;
+    expect(saved.missionId).toBeGreaterThan(0);
+  });
+
+  it("speichert datierte Synopsisblöcke und erzeugt daraus die Missions-Synopsis", async () => {
+    const { mission } = await setup();
+    const [saved] = await sql<{ sourceMarkdown: string }[]>`
+      SELECT source_md AS "sourceMarkdown" FROM missions WHERE id = ${mission.id}
+    `;
+    expect(saved.sourceMarkdown).toContain("## Synopsis 2399-01-01");
+    expect(saved.sourceMarkdown).toContain("Die Crew erreicht das Ziel.");
+  });
+
   it("bucht die Logbuch-AP beim Zuordnen und nimmt sie beim Lösen zurück", async () => {
     const { gm, sessionId, log } = await setup();
 
@@ -101,10 +139,9 @@ describe("setSessionLogbooks", () => {
       sessionDate: "2399-01-08",
       title: "Zweite Session",
       missionId: mission.id,
-      outcome: "Die Crew setzt ihre Reise fort.",
+      synopsisBlocks: [],
       sessionAp: 0,
       bonusAp: 0,
-      notes: "",
       characterIds: [character.id],
       createdByUserId: gm.id,
     });

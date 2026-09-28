@@ -1,10 +1,13 @@
 import "server-only";
-import { markdownToHtml } from "@/lib/markdown";
+import { renderContentHtml } from "@/lib/autolink";
 import postgres from "postgres";
 import sql from "@/lib/db";
 import type { ApReason } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
-import { appendSessionSynopsis } from "@/lib/sessionSynopsis";
+import {
+  buildMissionSynopsisMarkdown,
+  type SessionSynopsisBlockInput,
+} from "@/lib/sessionSynopsis";
 import type { AdvancementRules } from "@/lib/advancement";
 
 // Client-Parameter für Aufrufe innerhalb einer bestehenden Transaktion —
@@ -27,10 +30,6 @@ export interface GameSession {
   missionTitle: string | null;
   sessionAp: number;
   bonusAp: number;
-  // Rohtext (Markdown), wie er gespeichert ist — das Formular arbeitet damit.
-  notes: string;
-  // Derselbe Text als bereinigtes HTML für die zusammengeklappte Vorschau.
-  notesHtml: string;
   createdByName: string | null;
   createdAt: string;
   // Wie vielen Charakteren wurde gutgeschrieben und wie viele AP insgesamt.
@@ -42,15 +41,27 @@ export interface GameSession {
   // Wem sie gutgeschrieben wurde — das Bearbeiten-Formular hakt daraus seine
   // Teilnehmer-Auswahl vor.
   characterIds: number[];
+  synopsisBlocks: GameSessionSynopsisBlock[];
+}
+
+export interface GameSessionSynopsisBlock extends SessionSynopsisBlockInput {
+  id: number;
+  blockOrder: number;
+}
+
+export interface MissionSynopsisBlock extends SessionSynopsisBlockInput {
+  id: number;
+  sessionId: number | null;
+  sessionTitle: string | null;
+  bodyHtml: string;
 }
 
 export async function listGameSessions(): Promise<GameSession[]> {
-  const rows = await sql<Omit<GameSession, "notesHtml">[]>`
+  const rows = await sql<GameSession[]>`
     SELECT s.id,
            s.session_date::text AS "sessionDate",
            s.title, s.mission_id AS "missionId", m.title AS "missionTitle",
            s.session_ap AS "sessionAp", s.bonus_ap AS "bonusAp",
-           s.notes,
            u.name AS "createdByName",
            s.created_at::text AS "createdAt",
            COALESCE(p.character_count, 0)::int AS "characterCount",
@@ -81,11 +92,75 @@ export async function listGameSessions(): Promise<GameSession[]> {
     ORDER BY s.session_date DESC, s.id DESC
   `;
 
-  // Notizen sind Markdown; für die zusammengeklappte Vorschau in
-  // /gm/sessions wird daraus HTML. Die Liste ist kurz (eine Kampagne hat
-  // Dutzende Sessions, nicht Tausende).
-  const html = await Promise.all(rows.map((r) => markdownToHtml(r.notes)));
-  return rows.map((r, index) => ({ ...r, notesHtml: html[index] }));
+  const ids = rows.map((row) => row.id);
+  const blockRows = ids.length
+    ? await sql<
+        {
+          id: number;
+          session_id: number;
+          block_order: number;
+          ingame_date: string;
+          end_date: string | null;
+          body_md: string;
+        }[]
+      >`
+        SELECT id, session_id, block_order, ingame_date::text AS ingame_date,
+               end_date::text AS end_date, body_md
+        FROM mission_synopsis_blocks
+        WHERE session_id = ANY(${sql.array(ids, 23)})
+        ORDER BY session_id, block_order, id
+      `
+    : [];
+  const blocksBySession = new Map<number, GameSessionSynopsisBlock[]>();
+  for (const row of blockRows) {
+    const blocks = blocksBySession.get(row.session_id) ?? [];
+    blocks.push({
+      id: row.id,
+      blockOrder: row.block_order,
+      ingameDate: row.ingame_date,
+      endDate: row.end_date,
+      body: row.body_md,
+    });
+    blocksBySession.set(row.session_id, blocks);
+  }
+  return rows.map((r) => ({
+    ...r,
+    synopsisBlocks: blocksBySession.get(r.id) ?? [],
+  }));
+}
+
+export async function listMissionSynopsisBlocks(
+  missionId: number,
+): Promise<MissionSynopsisBlock[]> {
+  const rows = await sql<
+    {
+      id: number;
+      session_id: number | null;
+      session_title: string | null;
+      ingame_date: string;
+      end_date: string | null;
+      body_md: string;
+    }[]
+  >`
+    SELECT b.id, b.session_id, s.title AS session_title,
+           b.ingame_date::text AS ingame_date, b.end_date::text AS end_date,
+           b.body_md
+    FROM mission_synopsis_blocks b
+    LEFT JOIN game_sessions s ON s.id = b.session_id
+    WHERE b.mission_id = ${missionId}
+    ORDER BY b.ingame_date DESC, b.id DESC
+  `;
+  return Promise.all(
+    rows.map(async (row) => ({
+      id: row.id,
+      sessionId: row.session_id,
+      sessionTitle: row.session_title,
+      ingameDate: row.ingame_date,
+      endDate: row.end_date,
+      body: row.body_md,
+      bodyHtml: await renderContentHtml(row.body_md),
+    })),
+  );
 }
 
 export interface SessionMissionOption {
@@ -128,11 +203,11 @@ export async function listActiveCharactersForAp(): Promise<ActiveCharacter[]> {
 export interface CreateGameSessionInput {
   sessionDate: string;
   title: string;
-  missionId: number;
-  outcome: string;
+  missionId?: number;
+  newMission?: { slug: string; title: string; ownerUserId: number };
+  synopsisBlocks: SessionSynopsisBlockInput[];
   sessionAp: number;
   bonusAp: number;
-  notes: string;
   characterIds: number[];
   createdByUserId: number;
 }
@@ -144,34 +219,40 @@ export interface CreateGameSessionInput {
 export async function createGameSession(
   input: CreateGameSessionInput,
 ): Promise<number> {
-  return sql.begin(async (tx) => {
-    const [session] = await tx<{ id: number }[]>`
-      INSERT INTO game_sessions (session_date, mission_id, title, session_ap, bonus_ap, notes, created_by)
-      VALUES (${input.sessionDate}, ${input.missionId}, ${input.title}, ${input.sessionAp},
-              ${input.bonusAp}, ${input.notes}, ${input.createdByUserId})
-      RETURNING id
-    `;
+  const { sessionId, missionId } = await sql.begin(async (tx) => {
+    let missionId = input.missionId;
+    if (input.newMission) {
+      const [createdMission] = await tx<{ id: number }[]>`
+        INSERT INTO missions (
+          slug, title, status, started_at, ended_at, metadata, source_md,
+          owner_user_id, is_draft, updated_at
+        ) VALUES (
+          ${input.newMission.slug}, ${input.newMission.title}, 'active',
+          NULL, NULL,
+          ${tx.json({ tags: [], body: "", teaser: null })},
+          '', ${input.newMission.ownerUserId}, false, NOW()
+        )
+        RETURNING id
+      `;
+      missionId = createdMission.id;
+    }
+    if (!missionId) throw new Error("Für die Session ist eine Mission erforderlich.");
 
-    const [mission] = await tx<{ sourceMarkdown: string | null }[]>`
-      SELECT source_md AS "sourceMarkdown"
-      FROM missions
-      WHERE id = ${input.missionId} AND deleted_at IS NULL AND is_draft = false
+    const [mission] = await tx<{ id: number }[]>`
+      SELECT id FROM missions
+      WHERE id = ${missionId} AND deleted_at IS NULL AND is_draft = false
       FOR UPDATE
     `;
     if (!mission) throw new Error("Mission für diese Session nicht gefunden.");
-    const synopsis = appendSessionSynopsis(
-      mission.sourceMarkdown,
-      input.sessionDate,
-      input.outcome,
-    );
-    const synopsisHtml = await markdownToHtml(synopsis);
-    await tx`
-      UPDATE missions
-      SET source_md = ${synopsis},
-          metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('body', ${synopsisHtml}),
-          updated_at = NOW()
-      WHERE id = ${input.missionId}
+
+    const [session] = await tx<{ id: number }[]>`
+      INSERT INTO game_sessions (session_date, mission_id, title, session_ap, bonus_ap, notes, created_by)
+      VALUES (${input.sessionDate}, ${missionId}, ${input.title}, ${input.sessionAp},
+              ${input.bonusAp}, '', ${input.createdByUserId})
+      RETURNING id
     `;
+
+    await replaceSessionSynopsisBlocks(tx, session.id, missionId, input.synopsisBlocks);
 
     // Teilnehmende festhalten — auch wenn es (noch) keine AP gibt: die
     // automatische Logbuch-AP braucht später diese Liste.
@@ -201,8 +282,46 @@ export async function createGameSession(
       }
     }
 
-    return session.id;
+    return { sessionId: session.id, missionId };
   });
+  await syncMissionSynopsis(missionId);
+  return sessionId;
+}
+
+async function replaceSessionSynopsisBlocks(
+  tx: SqlClient,
+  sessionId: number,
+  missionId: number,
+  blocks: SessionSynopsisBlockInput[],
+): Promise<void> {
+  await tx`DELETE FROM mission_synopsis_blocks WHERE session_id = ${sessionId}`;
+  for (const [blockOrder, block] of blocks.entries()) {
+    await tx`
+      INSERT INTO mission_synopsis_blocks
+        (mission_id, session_id, block_order, ingame_date, end_date, body_md)
+      VALUES (${missionId}, ${sessionId}, ${blockOrder}, ${block.ingameDate},
+              ${block.endDate}, ${block.body})
+    `;
+  }
+}
+
+async function syncMissionSynopsis(missionId: number): Promise<void> {
+  const rows = await sql<SessionSynopsisBlockInput[]>`
+    SELECT ingame_date::text AS "ingameDate",
+           end_date::text AS "endDate", body_md AS body
+    FROM mission_synopsis_blocks
+    WHERE mission_id = ${missionId}
+    ORDER BY ingame_date DESC, id DESC
+  `;
+  const sourceMarkdown = buildMissionSynopsisMarkdown(rows);
+  const bodyHtml = sourceMarkdown ? await renderContentHtml(sourceMarkdown) : "";
+  await sql`
+    UPDATE missions
+    SET source_md = ${sourceMarkdown},
+        metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{body}', to_jsonb(${bodyHtml}::text)),
+        updated_at = NOW()
+    WHERE id = ${missionId}
+  `;
 }
 
 // Session zurücknehmen. Die Gutschriften verschwinden per ON DELETE CASCADE
@@ -210,14 +329,23 @@ export async function createGameSession(
 // Bereits ausgegebene AP holt das nicht zurück; der Kontostand kann dadurch
 // rechnerisch negativ werden, was die Spielleitung im Journal sieht und mit
 // einer Korrekturbuchung geradeziehen kann.
-export async function deleteGameSession(id: number): Promise<boolean> {
-  const rows =
-    await sql`DELETE FROM game_sessions WHERE id = ${id} RETURNING id`;
-  return rows.length > 0;
+export async function deleteGameSession(id: number): Promise<string | null> {
+  const [deleted] = await sql<{ missionId: number | null }[]>`
+    DELETE FROM game_sessions
+    WHERE id = ${id}
+    RETURNING mission_id AS "missionId"
+  `;
+  if (!deleted) return null;
+  if (deleted.missionId == null) return "";
+  const [mission] = await sql<{ slug: string }[]>`
+    SELECT slug FROM missions WHERE id = ${deleted.missionId}
+  `;
+  await syncMissionSynopsis(deleted.missionId);
+  return mission?.slug ?? "";
 }
 
 // Eine eingetragene Session vollständig korrigieren: Datum, Titel, AP-Beträge,
-// Notizen und Teilnehmende. Die Gutschriften der Session werden dabei neu
+// Synopsisblöcke und Teilnehmende. Die Gutschriften der Session werden dabei neu
 // geschrieben statt fortgeschrieben — die alten `session`- und `bonus`-
 // Buchungen dieser Session fallen weg, die neuen entstehen aus den frischen
 // Beträgen und der frischen Teilnehmerliste. Das ist der einzige Weg, der
@@ -235,30 +363,54 @@ export interface UpdateGameSessionInput {
   id: number;
   sessionDate: string;
   title: string;
+  missionId: number;
+  synopsisBlocks: SessionSynopsisBlockInput[];
   sessionAp: number;
   bonusAp: number;
-  notes: string;
   characterIds: number[];
   actingUserId: number;
 }
 
 export async function updateGameSession(
   input: UpdateGameSessionInput,
-): Promise<boolean> {
+): Promise<{
+  oldMissionId: number | null;
+  oldMissionSlug: string | null;
+  missionSlug: string;
+} | null> {
   // Vor der Transaktion laden: src/lib/db.ts hält nur EINE Connection, eine
   // Abfrage über den globalen Client währenddessen würde blockieren.
   const rules = await getAdvancementRules();
 
-  return sql.begin(async (tx) => {
+  const result = await sql.begin(async (tx) => {
+    const [existing] = await tx<{ missionId: number | null }[]>`
+      SELECT mission_id AS "missionId"
+      FROM game_sessions WHERE id = ${input.id} FOR UPDATE
+    `;
+    if (!existing) return null;
+    const [mission] = await tx<{ slug: string }[]>`
+      SELECT slug FROM missions
+      WHERE id = ${input.missionId} AND deleted_at IS NULL AND is_draft = false
+      FOR UPDATE
+    `;
+    if (!mission) throw new Error("Mission für diese Session nicht gefunden.");
+
     const rows = await tx<{ id: number }[]>`
       UPDATE game_sessions
-      SET session_date = ${input.sessionDate}, title = ${input.title},
+      SET session_date = ${input.sessionDate}, mission_id = ${input.missionId},
+          title = ${input.title},
           session_ap = ${input.sessionAp}, bonus_ap = ${input.bonusAp},
-          notes = ${input.notes}, updated_at = NOW()
+          updated_at = NOW()
       WHERE id = ${input.id}
       RETURNING id
     `;
-    if (rows.length === 0) return false;
+    if (rows.length === 0) return null;
+    await replaceSessionSynopsisBlocks(
+      tx,
+      input.id,
+      input.missionId,
+      input.synopsisBlocks,
+    );
 
     // Teilnehmerliste neu setzen.
     await tx`
@@ -301,8 +453,25 @@ export async function updateGameSession(
     // Logbuch-AP an die neue Teilnehmerliste angleichen (idempotent).
     await syncSessionLogbookAp(input.id, input.actingUserId, rules, tx);
 
-    return true;
+    let oldMissionSlug: string | null = null;
+    if (existing.missionId != null && existing.missionId !== input.missionId) {
+      const [oldMission] = await tx<{ slug: string }[]>`
+        SELECT slug FROM missions WHERE id = ${existing.missionId}
+      `;
+      oldMissionSlug = oldMission?.slug ?? null;
+    }
+    return {
+      oldMissionId: existing.missionId,
+      oldMissionSlug,
+      missionSlug: mission.slug,
+    };
   });
+  if (!result) return null;
+  if (result.oldMissionId != null && result.oldMissionId !== input.missionId) {
+    await syncMissionSynopsis(result.oldMissionId);
+  }
+  await syncMissionSynopsis(input.missionId);
+  return result;
 }
 
 // ── Logbücher an Sessions ──────────────────────────────────────────────

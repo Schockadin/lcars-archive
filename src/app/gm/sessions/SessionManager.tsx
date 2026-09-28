@@ -23,51 +23,146 @@ const initialState: SessionFormState = {};
 export function SessionContextFields({
   missions,
   idPrefix,
+  initialMissionId,
+  allowNewMission = true,
+  initialBlocks = [],
 }: {
   missions: SessionMissionOption[];
   idPrefix: string;
+  initialMissionId?: number | null;
+  allowNewMission?: boolean;
+  initialBlocks?: GameSession["synopsisBlocks"];
 }) {
+  const [missionChoice, setMissionChoice] = useState(
+    initialMissionId ? `mission:${initialMissionId}` : "",
+  );
+  const [blocks, setBlocks] = useState(() => initialBlocks.map((block, index) => ({
+    key: `${idPrefix}-${index}`,
+    ingameDate: block.ingameDate,
+    endDate: block.endDate ?? "",
+    body: block.body,
+  })));
   return (
     <div className="flex flex-col gap-[8px]">
       <label className="flex flex-col gap-[4px]">
         <span className="lcars-eyebrow">Zugehörige Mission</span>
         <select
-          name="missionId"
+          name="missionChoice"
           required
-          defaultValue=""
+          value={missionChoice}
+          onChange={(event) => setMissionChoice(event.target.value)}
           className="lcars-input rounded-full"
         >
           <option value="" disabled>
             Mission auswählen
           </option>
           {missions.map((mission) => (
-            <option key={mission.id} value={mission.id}>
+            <option key={mission.id} value={`mission:${mission.id}`}>
               {mission.title}
             </option>
           ))}
+          {allowNewMission && (
+            <option value="new">Neue Mission anlegen…</option>
+          )}
         </select>
       </label>
-      {missions.length === 0 && (
+      {missions.length === 0 && !allowNewMission && (
         <p className="lcars-empty-state">
           Es gibt keine veröffentlichte Mission zur Auswahl.
         </p>
       )}
-      <div className="flex flex-col gap-[4px]">
-        <label htmlFor={`${idPrefix}-outcome`} className="lcars-eyebrow">
-          Was ist passiert? (wird an die Missionszusammenfassung angehängt)
+      {missionChoice === "new" && (
+        <label className="flex flex-col gap-[4px]">
+          <span className="lcars-eyebrow">Titel der neuen Mission</span>
+          <input
+            name="newMissionTitle"
+            required
+            maxLength={200}
+            className="lcars-input rounded-full"
+          />
         </label>
-        <MarkdownEditor
-          id={`${idPrefix}-outcome`}
-          name="outcome"
-          required
-          rows={6}
-        />
-      </div>
+      )}
+      <fieldset className="flex flex-col gap-[8px]">
+        <legend className="lcars-eyebrow">Zusammenfassung (optional)</legend>
+        {blocks.map((block, index) => (
+          <div
+            key={block.key}
+            className="flex flex-col gap-[6px] rounded-lg border border-[var(--lcars-ink-dim)]/30 p-[8px]"
+          >
+            <div className="flex flex-wrap gap-[8px]">
+              <label className="flex flex-col gap-[4px]">
+                <span className="lcars-eyebrow">Ingame-Datum</span>
+                <input
+                  type="date"
+                  name="synopsisDate"
+                  required
+                  value={block.ingameDate}
+                  onChange={(event) =>
+                    setBlocks((current) =>
+                      current.map((item, i) =>
+                        i === index
+                          ? { ...item, ingameDate: event.target.value }
+                          : item,
+                      ),
+                    )
+                  }
+                  className="lcars-input rounded-full"
+                />
+              </label>
+              <label className="flex flex-col gap-[4px]">
+                <span className="lcars-eyebrow">Enddatum (optional)</span>
+                <input
+                  type="date"
+                  name="synopsisEndDate"
+                  value={block.endDate}
+                  onChange={(event) =>
+                    setBlocks((current) =>
+                      current.map((item, i) =>
+                        i === index
+                          ? { ...item, endDate: event.target.value }
+                          : item,
+                      ),
+                    )
+                  }
+                  className="lcars-input rounded-full"
+                />
+              </label>
+              <button
+                type="button"
+                className="lcars-pill-btn--outline self-end"
+                onClick={() =>
+                  setBlocks((current) => current.filter((_, i) => i !== index))
+                }
+              >
+                Block entfernen
+              </button>
+            </div>
+            <MarkdownEditor id={`${idPrefix}-synopsis-${index}`} name="synopsisText" rows={6} defaultValue={block.body} />
+          </div>
+        ))}
+        <button
+          type="button"
+          className="lcars-pill-btn--outline self-start"
+          onClick={() =>
+            setBlocks((current) => [
+              ...current,
+              {
+                key: crypto.randomUUID(),
+                ingameDate: "",
+                endDate: "",
+                body: "",
+              },
+            ])
+          }
+        >
+          Zusammenfassungsblock hinzufügen
+        </button>
+      </fieldset>
     </div>
   );
 }
 
-// Anlegen: Datum, Titel, AP-Beträge, Teilnehmende und Notizen. Die
+// Anlegen: Datum, Titel, AP-Beträge, Teilnehmende und optionale Synopsisblöcke. Die
 // Teilnehmenden sind vorausgewählt — die Regel lautet „alle aktiven
 // Charaktere", wer gefehlt hat, wird abgewählt.
 function NewSessionForm({
@@ -169,14 +264,6 @@ function NewSessionForm({
         )}
       </fieldset>
 
-      <div className="flex flex-col gap-[4px]">
-        <label htmlFor="new-session-notes" className="lcars-eyebrow">
-          Notizen (optional)
-        </label>
-        {/* Markdown wie in den übrigen Textfeldern des Projekts. */}
-        <MarkdownEditor id="new-session-notes" name="notes" rows={10} />
-      </div>
-
       <button
         type="submit"
         disabled={pending}
@@ -263,12 +350,14 @@ function SessionLogbookForm({
 function SessionRow({
   session,
   characters,
+  missions,
   logbooks,
   apPerLogbook,
 }: {
   session: GameSession;
   // Auswahl für „Gutschreiben an" — dieselbe Liste wie beim Anlegen.
   characters: ActiveCharacter[];
+  missions: SessionMissionOption[];
   logbooks: SessionLogbook[];
   apPerLogbook: number;
 }) {
@@ -368,6 +457,14 @@ function SessionRow({
               </label>
             </div>
 
+            <SessionContextFields
+              missions={missions}
+              idPrefix={`session-${session.id}`}
+              initialMissionId={session.missionId}
+              allowNewMission={false}
+              initialBlocks={session.synopsisBlocks}
+            />
+
             <fieldset className="flex flex-col gap-[6px]">
               <legend className="lcars-eyebrow">Gutschreiben an</legend>
               {characters.length === 0 ? (
@@ -404,20 +501,6 @@ function SessionRow({
               )}
             </fieldset>
 
-            <div className="flex flex-col gap-[4px]">
-              <label
-                htmlFor={`session-${session.id}-notes`}
-                className="lcars-eyebrow"
-              >
-                Notizen
-              </label>
-              <MarkdownEditor
-                id={`session-${session.id}-notes`}
-                name="notes"
-                rows={10}
-                defaultValue={session.notes}
-              />
-            </div>
             <p className="text-lcars-ink-dim text-[12px]">
               Eingetragen von {session.createdByName ?? "unbekannt"}. Beim
               Speichern werden die Gutschriften dieser Session neu gebucht:
@@ -457,14 +540,6 @@ function SessionRow({
             </button>
           </form>
         </>
-      )}
-
-      {!open && session.notes && (
-        // Zweizeilige Vorschau des Markdown-Textes (siehe listGameSessions).
-        <div
-          className="text-lcars-ink-dim mission-body line-clamp-2 text-[13px]"
-          dangerouslySetInnerHTML={{ __html: session.notesHtml }}
-        />
       )}
 
       <FormError message={state.error ?? deleteState.error} />
@@ -530,6 +605,7 @@ export default function SessionManager({
                 key={session.id}
                 session={session}
                 characters={characters}
+                missions={missions}
                 logbooks={logbooks}
                 apPerLogbook={apPerLogbook}
               />

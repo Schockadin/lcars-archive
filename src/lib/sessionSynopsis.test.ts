@@ -1,21 +1,43 @@
 import { describe, expect, it } from "vitest";
-import { appendSessionSynopsis } from "./sessionSynopsis";
+import { buildMissionSynopsisMarkdown, sessionSynopsisHeading } from "./sessionSynopsis";
 
-describe("appendSessionSynopsis", () => {
-  it("hängt den Session-Bericht datiert an den bestehenden Synopsis-Text", () => {
+describe("Session-Synopsis-Blöcke", () => {
+  it("formatiert einzelne Daten und Datumsbereiche", () => {
     expect(
-      appendSessionSynopsis(
-        "Bisherige Zusammenfassung",
+      sessionSynopsisHeading(
         "2401-08-03",
-        "Die Crew erreichte den Außenposten.",
+        null,
       ),
-    ).toBe(
-      "Bisherige Zusammenfassung\n\n## Session vom 2401-08-03\n\nDie Crew erreichte den Außenposten.",
+    ).toBe("## Synopsis 2401-08-03");
+    expect(sessionSynopsisHeading("2401-08-03", "2401-08-07")).toBe(
+      "## Synopsis 2401-08-03–2401-08-07",
     );
   });
 
-  it("legt eine Zusammenfassung an, wenn noch kein Synopsis-Text vorhanden ist", () => {
-    expect(appendSessionSynopsis(null, "2401-08-03", "Ereignis."))
-      .toBe("## Session vom 2401-08-03\n\nEreignis.");
+  it("baut die Missionszusammenfassung aus mehreren Session-Blöcken", () => {
+    expect(
+      buildMissionSynopsisMarkdown([
+        {
+          ingameDate: "2401-08-03",
+          endDate: null,
+          body: " Die Crew erreichte den Außenposten. ",
+        },
+        {
+          ingameDate: "2401-08-04",
+          endDate: "2401-08-06",
+          body: "Verhandlungen beginnen.",
+        },
+      ]),
+    ).toBe(
+      "## Synopsis 2401-08-03\n\nDie Crew erreichte den Außenposten.\n\n## Synopsis 2401-08-04–2401-08-06\n\nVerhandlungen beginnen.",
+    );
+  });
+
+  it("überspringt leere optionale Zusammenfassungen", () => {
+    expect(
+      buildMissionSynopsisMarkdown([
+        { ingameDate: "2401-08-03", endDate: null, body: "  " },
+      ]),
+    ).toBe("");
   });
 });

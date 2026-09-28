@@ -10,7 +10,6 @@ import {
   missionMetadataFields,
 } from "../../_shared/missionHeadFields";
 import MissionParticipantsField from "../../_shared/MissionParticipantsField";
-import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
 import ContentEditor from "@/components/ContentEditor/ContentEditor";
 import type { CharacterParticipantOption } from "@/lib/characters";
 
@@ -52,12 +51,9 @@ export default function EditMissionForm({
         idPrefix="edit-mission"
         draftScope={`mission:${mission.id}`}
         bodyLabel="Zusammenfassung"
-        bodyHint={<MarkdownFormatHint />}
-        bodyDefaultValue={mission.sourceMarkdown ?? ""}
-        bodyRequired
-        bodyLarge
+        bodyHidden
+        bodyHiddenMessage={<p className="lcars-empty-state">Die Missionszusammenfassung entsteht automatisch aus den Zusammenfassungsblöcken eingetragener Sessions.</p>}
         draftDefaultValue={mission.isDraft}
-        insertImage={{ contentType: "mission", contentId: mission.id }}
         extraHeadSlot={
           <MissionParticipantsField
             idPrefix="edit-mission"

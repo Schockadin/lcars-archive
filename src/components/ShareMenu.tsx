@@ -17,11 +17,15 @@ export default function ShareMenu({
   href,
   exportType,
   exportSlug,
+  menuItems = false,
 }: {
   title: string;
   href?: string;
   exportType?: ExportContentType;
   exportSlug?: string;
+  // In einem übergeordneten Aktions-Dropdown stehen die Teilen-Aktionen
+  // direkt als Textzeilen, ohne ein zweites Menü öffnen zu müssen.
+  menuItems?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -69,6 +73,49 @@ export default function ShareMenu({
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Ziel ist KEINE Next-Seite, sondern ein Datei-Download (Content-Disposition: attachment). router.push() würde hier eine Client-Navigation auf eine Route versuchen, die gar keine Seite rendert; der Download bliebe aus.
     window.location.href = `/api/export/${format}?type=${encodeURIComponent(exportType)}&slug=${encodeURIComponent(exportSlug)}`;
     setOpen(false);
+  }
+
+  if (menuItems) {
+    return (
+      <>
+        <button
+          type="button"
+          role="menuitem"
+          className="timeline-card-menu-link"
+          onClick={handleCopyLink}
+        >
+          Link kopieren
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          className="timeline-card-menu-link"
+          onClick={handleShareWhatsApp}
+        >
+          Per WhatsApp teilen
+        </button>
+        {exportType && exportSlug && (
+          <>
+            <button
+              type="button"
+              role="menuitem"
+              className="timeline-card-menu-link"
+              onClick={() => handleExport("markdown")}
+            >
+              Als Markdown exportieren
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className="timeline-card-menu-link"
+              onClick={() => handleExport("pdf")}
+            >
+              Als PDF exportieren
+            </button>
+          </>
+        )}
+      </>
+    );
   }
 
   return (

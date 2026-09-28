@@ -5,8 +5,6 @@ import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import type { Viewer } from "@/lib/visibility";
 import type { FollowState } from "@/app/actions/follows";
 import ContentActionsPanel from "@/components/ContentActionsPanel";
-import ContentBody from "@/components/ContentBody";
-import { ChronoPanel } from "@/components/timeline/ChronoCard";
 import ContentDetailHeader, {
   ContentChip,
   ContentChipList,
@@ -77,21 +75,6 @@ export default function MissionSynopsis({
         ]}
       />
 
-      {/* Read-only: Die Zusammenfassung wird seit v1.34 im vollen Editor
-          unter /user/missions/[missionId]/edit bearbeitet (dorthin springt
-          der Stift in ActionsMenu) — dort hängen Titel, Zeitraum, Status und
-          Teilnehmer mit dran, die der frühere Inline-Editor nicht kannte. */}
-      <ChronoPanel
-        label="Zusammenfassung"
-        open
-        className="mission-synopsis-panel"
-      >
-        {mission.metadata.body ? (
-          <ContentBody html={mission.metadata.body} />
-        ) : (
-          <p className="lcars-empty-state">Keine Zusammenfassung vorhanden</p>
-        )}
-      </ChronoPanel>
       <ContentActionsPanel
         viewer={viewer}
         owners={owners}
