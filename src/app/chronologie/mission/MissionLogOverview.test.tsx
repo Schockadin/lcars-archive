@@ -94,7 +94,7 @@ describe("MissionLogOverview", () => {
   it("ordnet Logs und Synopsisblöcke gemeinsam chronologisch absteigend", () => {
     const { container } = renderOverview({
       logs: [log(1, "Log eins", "T'Lara", "2234-12-20"), log(2, "Log zwei", "T'Lara", "2234-12-21")],
-      synopsisBlocks: [{ id: 7, sessionId: 8, sessionTitle: "Session 8", ingameDate: "2234-12-20", endDate: null, body: "Zwischenfall", bodyHtml: "<p>Zwischenfall</p>" }],
+      synopsisBlocks: [{ id: 7, sessionId: 8, sessionTitle: "Session 8", ingameDate: "2234-12-20", body: "Zwischenfall", bodyHtml: "<p>Zwischenfall</p>" }],
     });
     expect(container.querySelectorAll(".timeline-period")).toHaveLength(0);
     expect(container.querySelectorAll(".timeline-card")).toHaveLength(3);

@@ -50,7 +50,6 @@ async function setup() {
     missionId: mission.id,
     synopsisBlocks: [{
       ingameDate: "2399-01-01",
-      endDate: null,
       body: "Die Crew erreicht das Ziel.",
     }],
     sessionAp: 0,
@@ -99,7 +98,6 @@ describe("setSessionLogbooks", () => {
       },
       synopsisBlocks: [{
         ingameDate: "2399-02-01",
-        endDate: "2399-02-03",
         body: "Die Mission beginnt.",
       }],
       sessionAp: 0,

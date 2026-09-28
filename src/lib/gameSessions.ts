@@ -102,12 +102,11 @@ export async function listGameSessions(): Promise<GameSession[]> {
           session_id: number;
           block_order: number;
           ingame_date: string;
-          end_date: string | null;
           body_md: string;
         }[]
       >`
         SELECT id, session_id, block_order, ingame_date::text AS ingame_date,
-               end_date::text AS end_date, body_md
+               body_md
         FROM mission_synopsis_blocks
         WHERE session_id = ANY(${sql.array(ids, 23)})
         ORDER BY session_id, block_order, id
@@ -120,7 +119,6 @@ export async function listGameSessions(): Promise<GameSession[]> {
       id: row.id,
       blockOrder: row.block_order,
       ingameDate: row.ingame_date,
-      endDate: row.end_date,
       body: row.body_md,
     });
     blocksBySession.set(row.session_id, blocks);
@@ -140,12 +138,11 @@ export async function listMissionSynopsisBlocks(
       session_id: number | null;
       session_title: string | null;
       ingame_date: string;
-      end_date: string | null;
       body_md: string;
     }[]
   >`
     SELECT b.id, b.session_id, s.title AS session_title,
-           b.ingame_date::text AS ingame_date, b.end_date::text AS end_date,
+           b.ingame_date::text AS ingame_date,
            b.body_md
     FROM mission_synopsis_blocks b
     LEFT JOIN game_sessions s ON s.id = b.session_id
@@ -158,7 +155,6 @@ export async function listMissionSynopsisBlocks(
       sessionId: row.session_id,
       sessionTitle: row.session_title,
       ingameDate: row.ingame_date,
-      endDate: row.end_date,
       body: row.body_md,
       bodyHtml: await renderContentHtml(row.body_md),
     })),
@@ -313,17 +309,16 @@ async function replaceSessionSynopsisBlocks(
   for (const [blockOrder, block] of blocks.entries()) {
     await tx`
       INSERT INTO mission_synopsis_blocks
-        (mission_id, session_id, block_order, ingame_date, end_date, body_md)
+        (mission_id, session_id, block_order, ingame_date, body_md)
       VALUES (${missionId}, ${sessionId}, ${blockOrder}, ${block.ingameDate},
-              ${block.endDate}, ${block.body})
+              ${block.body})
     `;
   }
 }
 
 async function syncMissionSynopsis(missionId: number): Promise<void> {
   const rows = await sql<SessionSynopsisBlockInput[]>`
-    SELECT ingame_date::text AS "ingameDate",
-           end_date::text AS "endDate", body_md AS body
+    SELECT ingame_date::text AS "ingameDate", body_md AS body
     FROM mission_synopsis_blocks
     WHERE mission_id = ${missionId}
     ORDER BY ingame_date DESC, id DESC

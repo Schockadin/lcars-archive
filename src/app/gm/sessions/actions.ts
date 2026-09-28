@@ -282,7 +282,7 @@ async function readSessionContext(
       missionId?: number;
       missionSlug: string;
       newMission?: { slug: string; title: string; ownerUserId: number };
-      synopsisBlocks: { ingameDate: string; endDate: string | null; body: string }[];
+      synopsisBlocks: { ingameDate: string; body: string }[];
     }
   | { error: string }
 > {
@@ -313,19 +313,17 @@ async function readSessionContext(
   }
 
   const dates = formData.getAll("synopsisDate").map((value) => String(value).trim());
-  const endDates = formData.getAll("synopsisEndDate").map((value) => String(value).trim());
   const texts = formData.getAll("synopsisText").map((value) => String(value).trim());
-  if (dates.length !== endDates.length || dates.length !== texts.length || dates.length > 20) {
+  if (dates.length !== texts.length || dates.length > 20) {
     return { error: "Die Zusammenfassungsblöcke sind ungültig." };
   }
-  const synopsisBlocks: { ingameDate: string; endDate: string | null; body: string }[] = [];
+  const synopsisBlocks: { ingameDate: string; body: string }[] = [];
   for (let i = 0; i < dates.length; i++) {
-    const [ingameDate, endDate, body] = [dates[i], endDates[i], texts[i]];
-    if (!ingameDate && !endDate && !body) continue;
+    const [ingameDate, body] = [dates[i], texts[i]];
+    if (!ingameDate && !body) continue;
     if (!isIsoDate(ingameDate)) return { error: `Bitte ein gültiges Ingame-Datum für Block ${i + 1} angeben.` };
-    if (endDate && (!isIsoDate(endDate) || endDate < ingameDate)) return { error: `Das Enddatum in Block ${i + 1} muss nach dem Startdatum liegen.` };
     if (!body || body.length > 12_000) return { error: `Bitte Text für Block ${i + 1} angeben (maximal 12.000 Zeichen).` };
-    synopsisBlocks.push({ ingameDate, endDate: endDate || null, body });
+    synopsisBlocks.push({ ingameDate, body });
   }
   return { missionId, missionSlug, newMission, synopsisBlocks };
 }

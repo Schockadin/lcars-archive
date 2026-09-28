@@ -54,7 +54,7 @@ export default function MissionLogOverview({
               ariaLabel="Inhaltsverzeichnis der Missionschronik"
               headings={synopsisBlocks.map((block) => ({
                 id: `mission-synopsis-${block.id}`,
-                text: `${block.sessionTitle ?? "Session-Zusammenfassung"} · ${fmtDate(block.ingameDate)}${block.endDate ? `–${fmtDate(block.endDate)}` : ""}`,
+                text: `${block.sessionTitle ?? "Session-Zusammenfassung"} · ${fmtDate(block.ingameDate)}`,
               }))}
             />
           </LcarsCollapsiblePanel>
@@ -101,7 +101,7 @@ export default function MissionLogOverview({
                     color={CONTENT_TYPE_COLOR.mission}
                     tag="Synopsis"
                     title={entry.block.sessionTitle ?? "Session-Zusammenfassung"}
-                    date={`${fmtDate(entry.block.ingameDate)}${entry.block.endDate ? `–${fmtDate(entry.block.endDate)}` : ""}`}
+                    date={fmtDate(entry.block.ingameDate)}
                   >
                     <div
                       className="mission-body"

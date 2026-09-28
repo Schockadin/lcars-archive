@@ -4,10 +4,7 @@ import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
-import {
-  addOneDayToSynopsisDate,
-  defaultSessionSynopsisDate,
-} from "@/lib/sessionSynopsis";
+import { defaultSessionSynopsisDate } from "@/lib/sessionSynopsis";
 import { PlusIcon, TrashIcon } from "@/lib/icons";
 import type {
   GameSession,
@@ -46,7 +43,6 @@ export function SessionContextFields({
   const [blocks, setBlocks] = useState(() => initialBlocks.map((block, index) => ({
     key: `${idPrefix}-${index}`,
     ingameDate: block.ingameDate,
-    endDate: block.endDate ?? "",
     body: block.body,
   })));
   return (
@@ -116,30 +112,7 @@ export function SessionContextFields({
                           ? {
                               ...item,
                               ingameDate: event.target.value,
-                              endDate:
-                                !item.endDate ||
-                                item.endDate === addOneDayToSynopsisDate(item.ingameDate)
-                                  ? addOneDayToSynopsisDate(event.target.value)
-                                  : item.endDate,
                             }
-                          : item,
-                      ),
-                    )
-                  }
-                  className="lcars-input rounded-full"
-                />
-              </label>
-              <label className="flex flex-col gap-[4px]">
-                <span className="lcars-eyebrow">Enddatum (optional)</span>
-                <input
-                  type="date"
-                  name="synopsisEndDate"
-                  value={block.endDate}
-                  onChange={(event) =>
-                    setBlocks((current) =>
-                      current.map((item, i) =>
-                        i === index
-                          ? { ...item, endDate: event.target.value }
                           : item,
                       ),
                     )
@@ -176,7 +149,6 @@ export function SessionContextFields({
                 {
                   key: crypto.randomUUID(),
                   ingameDate,
-                  endDate: addOneDayToSynopsisDate(ingameDate),
                   body: "",
                 },
               ];
