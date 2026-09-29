@@ -63,11 +63,9 @@ export function GmCampaignGuide() {
           ohne Gutschrift und keine Gutschrift ohne Abschluss entsteht.
         </p>
         <p>
-          Ganz unten steht die <strong>Missionsverwaltung</strong>: alle
-          Missionen mit Bearbeiten, Löschen und der Zuordnung einer
-          Besitzerin/eines Besitzers pro Zeile. Sie löste den früheren Menüpunkt
-          „Missionen“ ab; die Adresse <strong>/gm/missions</strong> bleibt als
-          Direktlink erreichbar.
+          Die <strong>Missionsübersicht</strong> liegt im Leitungs-Menü unter
+          „Missionen“. Dort lassen sich Missionen verwalten und pro Mission die
+          zugehörigen Termine, Sessions und Summary-Blöcke bearbeiten.
         </p>
       </GuideSection>
     </GuideBody>

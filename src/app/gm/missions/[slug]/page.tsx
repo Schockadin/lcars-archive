@@ -96,6 +96,7 @@ export default async function GmMissionDetailPage({
           />
 
           <MissionSummaryBlocks
+            missionSlug={mission.slug}
             missionTitle={mission.title}
             blocks={summaryBlocks}
           />

@@ -45,6 +45,12 @@ const GM_ITEMS: NavMenuItem[] = [
     group: "Kampagne",
   },
   {
+    href: "/gm/missions",
+    label: "Missionen",
+    permission: "gm.access",
+    group: "Kampagne",
+  },
+  {
     href: "/gm/sessions",
     label: "Sessions",
     permission: "gm.access",

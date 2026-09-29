@@ -317,6 +317,37 @@ async function replaceSessionSynopsisBlocks(
   }
 }
 
+export async function updateMissionSynopsisBlock(input: {
+  id: number;
+  missionId: number;
+  ingameDate: string;
+  body: string;
+}): Promise<boolean> {
+  const [updated] = await sql<{ id: number }[]>`
+    UPDATE mission_synopsis_blocks
+    SET ingame_date = ${input.ingameDate}, body_md = ${input.body}
+    WHERE id = ${input.id} AND mission_id = ${input.missionId}
+    RETURNING id
+  `;
+  if (!updated) return false;
+  await syncMissionSynopsis(input.missionId);
+  return true;
+}
+
+export async function deleteMissionSynopsisBlock(
+  id: number,
+  missionId: number,
+): Promise<boolean> {
+  const [deleted] = await sql<{ id: number }[]>`
+    DELETE FROM mission_synopsis_blocks
+    WHERE id = ${id} AND mission_id = ${missionId}
+    RETURNING id
+  `;
+  if (!deleted) return false;
+  await syncMissionSynopsis(missionId);
+  return true;
+}
+
 async function syncMissionSynopsis(missionId: number): Promise<void> {
   const rows = await sql<SessionSynopsisBlockInput[]>`
     SELECT ingame_date::text AS "ingameDate", body_md AS body

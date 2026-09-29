@@ -2,9 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
-import { listAllUsers } from "@/lib/users";
 import { getAllCharactersForAdmin } from "@/lib/characters";
-import { getAllMissionsForGmOverview } from "@/lib/missions";
 import { getIngameYearInfo } from "@/lib/campaign";
 import { listApBalances } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
@@ -12,7 +10,6 @@ import {
   listCompletableMissions,
   listActiveCharactersForAp,
 } from "@/lib/gameSessions";
-import AdminMissionsBrowser from "../missions/AdminMissionsBrowser";
 import IngameYearForm from "./IngameYearForm";
 import ApAwardPanel from "./ApAwardPanel";
 import MissionApPanel from "./MissionApPanel";
@@ -24,10 +21,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// GM-oder-admin — die Kampagnen-Seite: Ingame-Jahr, AP-Vergabe,
-// Missionsabschluss und die Missionsverwaltung an einem Ort (sie löste den
-// früheren Menüpunkt "Missionen" ab, /gm/missions bleibt als Direktlink
-// erreichbar).
+// GM-oder-admin — die Kampagnen-Seite: Ingame-Jahr, AP-Vergabe und
+// Missionsabschluss. Die Missionsübersicht und ihre Verwaltung liegen separat
+// unter /gm/missions.
 //
 // Die Zuordnung der Charaktere zu Konten stand hier ebenfalls, seit es dafür
 // keinen eigenen Menüpunkt mehr gab. Sie steht jetzt wieder unter
@@ -37,18 +33,14 @@ export default async function AdminCampaignPage() {
   await requireGM();
 
   const [
-    users,
     characters,
-    missions,
     ingameYearInfo,
     apBalances,
     rules,
     completableMissions,
     apCharacterOptions,
   ] = await Promise.all([
-    listAllUsers(),
     getAllCharactersForAdmin(),
-    getAllMissionsForGmOverview(),
     getIngameYearInfo(),
     listApBalances(),
     getAdvancementRules(),
@@ -66,8 +58,6 @@ export default async function AdminCampaignPage() {
     name: c.name,
     available: balanceByCharacter.get(c.id) ?? 0,
   }));
-
-  const missionUserOptions = users.map((u) => ({ id: u.id, name: u.name }));
 
   return (
     <>
@@ -119,13 +109,6 @@ export default async function AdminCampaignPage() {
             />
           </section>
 
-          <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary-ink">Missionen</h2>
-            <AdminMissionsBrowser
-              missions={missions}
-              users={missionUserOptions}
-            />
-          </section>
         </div>
       </article>
     </>

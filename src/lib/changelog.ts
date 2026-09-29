@@ -174,7 +174,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "spielleitung-admins",
       },
       {
-        text: "In der Missionsverwaltung lassen sich die Sessions einer Mission samt Summary-Blöcken gebündelt ansehen und bearbeiten.",
+        text: "Die Missionsverwaltung ist über das Leitungs-Menü erreichbar; pro Mission lassen sich geplante und gespielte Sessions sowie Summary-Blöcke bearbeiten und Summary-Blöcke löschen.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },

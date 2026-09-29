@@ -117,6 +117,16 @@ describe("HeaderUserNav: Gliederung des Leitungs-Menüs", () => {
       "Inhalte",
     ]);
   });
+
+  it("führt im Leitungs-Menü direkt zur Missionsverwaltung", () => {
+    render(<HeaderUserNav permissions={["gm.access"]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Leitung/ }));
+    expect(screen.getByRole("link", { name: "Missionen" })).toHaveAttribute(
+      "href",
+      "/gm/missions",
+    );
+  });
 });
 
 // Die Anleitung steht seit v1.39 im Menü statt im Footer — als Link mit
