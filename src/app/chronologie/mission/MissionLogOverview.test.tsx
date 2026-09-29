@@ -136,7 +136,7 @@ describe("MissionLogOverview", () => {
     expect([...container.querySelectorAll(".lcars-toc-link")].map((item) => item.textContent)).toContain("Synopsis");
   });
 
-  it("öffnet Session-Inhalte standardmäßig und steuert sie mit Textzeichen neben dem ToC", () => {
+  it("steuert Session-Inhalte mit einem wechselnden Textbutton neben dem ToC", () => {
     const { container } = renderOverview({ synopsisBlocks: [7, 8].map((id) => ({
       id, sessionId: 1, missionSessionNumber: 1, missionBlockNumber: id,
       ingameDate: `2234-12-0${id}`, body: "Bericht", bodyHtml: "<p>Bericht</p>",
@@ -144,22 +144,28 @@ describe("MissionLogOverview", () => {
     const panels = [...container.querySelectorAll<HTMLDetailsElement>("[data-session-panel]")];
     expect(panels).toHaveLength(2);
     expect(panels.every((panel) => panel.open)).toBe(true);
-    const close = screen.getByRole("button", { name: "Alle Session-Panels schließen" });
-    const open = screen.getByRole("button", { name: "Alle Session-Panels öffnen" });
-    expect(close).toHaveTextContent("−");
-    expect(open).toHaveTextContent("+");
-    expect(open.querySelector("svg")).toBeNull();
-    expect(open).not.toHaveClass("lcars-icon-btn");
-    fireEvent.click(close);
+    const toggle = screen.getByRole("button", { name: "Alle Session-Panels schließen" });
+    expect(screen.getAllByRole("button", { name: /Alle Session-Panels/ })).toHaveLength(1);
+    expect(toggle).toHaveTextContent("−");
+    expect(toggle.querySelector("svg")).toBeNull();
+    expect(toggle).not.toHaveClass("lcars-icon-btn");
+    fireEvent.click(toggle);
     expect(panels.every((panel) => !panel.open)).toBe(true);
-    fireEvent.click(open);
+    expect(toggle).toHaveTextContent("+");
+    expect(toggle).toHaveAccessibleName("Alle Session-Panels öffnen");
+    fireEvent.click(toggle);
     expect(panels.every((panel) => panel.open)).toBe(true);
-    fireEvent.click(close);
+    expect(toggle).toHaveTextContent("−");
+    fireEvent.click(toggle);
     const target = container.querySelector<HTMLElement>("#mission-synopsis-7")!;
     target.scrollIntoView = vi.fn();
     fireEvent.click(container.querySelector(".lcars-toc-link")!);
     expect(target.querySelector("details")).toHaveAttribute("open");
     expect(container.querySelector("#mission-synopsis-8 details")).not.toHaveAttribute("open");
+    expect(toggle).toHaveTextContent("+");
+    fireEvent.click(toggle);
+    expect(panels.every((panel) => panel.open)).toBe(true);
+    expect(toggle).toHaveTextContent("−");
   });
 
   it("erhält eine alte Synopsis, wenn noch keine Session-Blöcke vorhanden sind", () => {

@@ -174,7 +174,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "spielleitung-admins",
       },
       {
-        text: "Die Chronologie bietet einen eigenen Bereich für Sessions. Zusammenfassungsblöcke lassen sich dort und in der Missionschronik einzeln oder gemeinsam auf- und zuklappen.",
+        text: "Die Chronologie bietet einen eigenen Bereich für Sessions mit einzeln aufklappbaren Zusammenfassungsblöcken. In der Missionschronik lassen sich alle Blöcke zusätzlich gemeinsam über einen wechselnden Plus-/Minus-Button öffnen und schließen.",
         category: "inhalte",
         tutorial: "chronologie",
       },

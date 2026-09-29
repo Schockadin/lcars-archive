@@ -129,10 +129,10 @@ export function PublicChronologyGuide() {
         </p>
         <p>
           Unter <strong>Sessions</strong> findest du die datierten Zusammenfassungsblöcke
-          der Missionen. Ihre Inhalte sind zunächst aufgeklappt. Mit <strong>+</strong>{" "}
-          und <strong>−</strong> rechts neben dem Inhaltsverzeichnis öffnest oder
-          schließt du alle Session-Panels gemeinsam. Das funktioniert auch in der
-          Missionschronik; ein Sprung über das Inhaltsverzeichnis öffnet den gewählten
+          der Missionen. Ihre Inhalte sind zunächst aufgeklappt und lassen sich einzeln schließen.
+          In der Missionschronik öffnet <strong>+</strong> rechts neben dem Inhaltsverzeichnis
+          alle Session-Panels und wechselt zu <strong>−</strong>. Ein Klick darauf schließt
+          alle Panels wieder. Ein Sprung über das Inhaltsverzeichnis öffnet den gewählten
           Block. Am Ende der Missionschronik steht die vollständige <strong>Synopsis</strong>{" "}
           mit dem jeweiligen Datum als Zwischenüberschrift.
         </p>

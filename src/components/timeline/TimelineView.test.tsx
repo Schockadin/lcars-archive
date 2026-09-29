@@ -188,7 +188,7 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
 });
 
 describe("TimelineView – Sessions", () => {
-  it("zeigt datierte Blöcke mit Missionslink und gemeinsam steuerbaren Panels", () => {
+  it("zeigt datierte Blöcke ohne Inhaltsverzeichnis oder Sammelsteuerung", () => {
     const { container } = render(<TimelineView initialCategory="session" events={[
       ...EVENTS,
       ...[7, 8].map((id) => event({
@@ -203,17 +203,11 @@ describe("TimelineView – Sessions", () => {
     const panels = [...container.querySelectorAll<HTMLDetailsElement>("[data-session-panel]")];
     expect(panels.every((panel) => panel.open)).toBe(true);
     expect(container.querySelector('a[href$="#mission-synopsis-7"]')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Alle Session-Panels schließen" }));
-    expect(panels.every((panel) => !panel.open)).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "Alle Session-Panels öffnen" }));
-    expect(panels.every((panel) => panel.open)).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "Alle Session-Panels schließen" }));
-    const target = container.querySelector<HTMLElement>("#timeline-session-8")!;
-    target.scrollIntoView = vi.fn();
-    fireEvent.click(container.querySelector(".lcars-toc-link")!);
-    expect(panels[0].open).toBe(true);
-    expect(panels[1].open).toBe(false);
-    expect(target.scrollIntoView).toHaveBeenCalled();
+    expect(container.querySelector(".lcars-toc")).toBeNull();
+    expect(screen.queryByRole("button", { name: /Alle Session-Panels/ })).toBeNull();
+    fireEvent.change(screen.getByLabelText("Umfang der Chronologie"), { target: { value: "all" } });
+    expect(container.querySelector(".lcars-toc")).toBeNull();
+    expect(screen.queryByRole("button", { name: /Alle Session-Panels/ })).toBeNull();
   });
 });
 

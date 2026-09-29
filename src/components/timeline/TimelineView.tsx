@@ -3,8 +3,6 @@ import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   LcarsSortSwitch,
   LcarsListFilterInput,
-  LcarsCollapsiblePanel,
-  LcarsToc,
   type SortDir,
 } from "@/components/lcars";
 import ChronoRow from "@/components/timeline/ChronoRow";
@@ -36,7 +34,7 @@ import { HelpTitleRow } from "@/components/help/HelpHeading";
 import ModalOverlay from "@/components/ModalOverlay";
 import ContentImageGallery from "@/components/ContentImageGallery";
 import ContentCardMenu from "@/components/timeline/ContentCardMenu";
-import { SessionPanelControls, SessionSummaryPanel, useSessionPanels } from "./SessionPanels";
+import { SessionSummaryPanel, useSessionPanels } from "./SessionPanels";
 
 // Die Chronologie als Zeitstrahl: links Datum und Schiene, rechts die
 // Ereigniskarte. Aufbau nach dem Entwurf (Jahresleiste, Monats-Trenner,
@@ -217,7 +215,6 @@ export default function TimelineView({
       ),
     [events, query, category, person, year, scope, sortDir],
   );
-  const visibleSessions = visible.filter(isSessionEvent);
 
   // Zurück/Vorwärts: die Art steht in der Adresse, also von dort lesen. Nur
   // der Zustand wird gesetzt — die Seite bleibt stehen, sonst ginge beim
@@ -413,26 +410,6 @@ export default function TimelineView({
                   {y}
                 </button>
               ))}
-            </div>
-          )}
-
-          {visibleSessions.length > 0 && (
-            <div className="mb-[16px] flex items-start gap-[8px]">
-              <div className="min-w-0 flex-1">
-                <LcarsCollapsiblePanel title="Inhaltsverzeichnis" storageId="chronology:session-toc">
-                  <LcarsToc title="Sessions" ariaLabel="Inhaltsverzeichnis der Sessions"
-                    headings={visibleSessions.map((event) => ({
-                      id: `timeline-session-${event.sessionBlockId}`,
-                      text: `${fmtDate(event.date)} · ${event.sourceTitle}`,
-                    }))}
-                    onJump={(id) => {
-                      const event = visibleSessions.find((item) => `timeline-session-${item.sessionBlockId}` === id);
-                      if (event) panels.setOpen(event.id, true);
-                    }}
-                  />
-                </LcarsCollapsiblePanel>
-              </div>
-              <SessionPanelControls onExpand={() => panels.setAll(true)} onCollapse={() => panels.setAll(false)} />
             </div>
           )}
 

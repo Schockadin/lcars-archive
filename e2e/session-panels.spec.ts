@@ -1,24 +1,38 @@
 import { test, expect } from "@playwright/test";
 
-for (const fixture of ["timeline-sessions", "mission-session-panels"]) {
-  test(`${fixture}: Session-Panels lassen sich einzeln und gemeinsam bedienen`, async ({ page }) => {
+test("Allgemeine Chronologie: einzelne Panels ohne ToC oder Sammelbutton", async ({ page }) => {
+  await page.goto("/dev-gallery");
+  const view = page.locator("#timeline-sessions");
+  await expect(view.locator(".lcars-toc")).toHaveCount(0);
+  await expect(view.getByRole("button", { name: /Alle Session-Panels/ })).toHaveCount(0);
+  await expect(view.locator("[data-session-panel][open]")).toHaveCount(2);
+  await view.locator("[data-session-panel] summary").first().click();
+  await expect(view.locator("[data-session-panel][open]")).toHaveCount(1);
+  await view.locator("[data-session-panel] summary").first().click();
+  await expect(view.locator("[data-session-panel][open]")).toHaveCount(2);
+});
+
+test("Missionschronik: ein Textbutton wechselt zwischen Öffnen und Schließen", async ({ page }) => {
     await page.goto("/dev-gallery");
-    const view = page.locator(`#${fixture}`);
+    const view = page.locator("#mission-session-panels");
     const panels = view.locator("[data-session-panel]");
     await expect(panels).toHaveCount(2);
     await expect(view.locator("[data-session-panel][open]")).toHaveCount(2);
     const close = view.getByRole("button", { name: "Alle Session-Panels schließen" });
     const open = view.getByRole("button", { name: "Alle Session-Panels öffnen" });
-    await expect(open).toHaveText("+");
+    await expect(view.getByRole("button", { name: /Alle Session-Panels/ })).toHaveCount(1);
+    await expect(open).toHaveCount(0);
     await expect(close).toHaveText("−");
-    await expect(open.locator("svg")).toHaveCount(0);
+    await expect(close.locator("svg")).toHaveCount(0);
     await close.click();
+    await expect(close).toHaveCount(0);
+    await expect(open).toHaveText("+");
     await expect(view.locator("[data-session-panel][open]")).toHaveCount(0);
     await panels.first().locator("summary").click();
     await expect(panels.first()).toHaveAttribute("open", "");
-    await close.click();
-    await expect(view.locator("[data-session-panel][open]")).toHaveCount(0);
+    await expect(open).toHaveText("+");
     await open.click();
+    await expect(close).toHaveText("−");
     await expect(view.locator("[data-session-panel][open]")).toHaveCount(2);
     await panels.first().locator("summary").click();
     await expect(panels.first()).not.toHaveAttribute("open");
@@ -28,8 +42,7 @@ for (const fixture of ["timeline-sessions", "mission-session-panels"]) {
     await view.locator(".lcars-toc-link").first().click();
     await expect(panels.first()).toHaveAttribute("open", "");
     await expect(panels.last()).not.toHaveAttribute("open");
-  });
-}
+});
 
 test("Komplettsynopsis zeigt Datum ohne Synopsis-Präfix", async ({ page }) => {
   await page.goto("/dev-gallery");

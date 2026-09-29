@@ -76,7 +76,7 @@ export default function MissionLogOverview({
             />
           </LcarsCollapsiblePanel>
           </div>
-          {synopsisBlocks.length > 0 && <SessionPanelControls onExpand={() => panels.setAll(true)} onCollapse={() => panels.setAll(false)} />}
+          {synopsisBlocks.length > 0 && <SessionPanelControls allOpen={panels.allOpen} onToggle={() => panels.setAll(!panels.allOpen)} />}
         </div>
       )}
 
