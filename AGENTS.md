@@ -35,6 +35,12 @@ The version number is as follows: <MajorVersion>.<MinorVersion>.<Subversion>
 
 Always make sure to keep the Body of the recent open Pull Request updated. Add a new section for each commit.
 
+# SQL Migration Files
+
+Migration files named scripts/migrate-pr##.sql must not contain explicit
+BEGIN or COMMIT statements. Leave transaction handling to the migration runner
+or operator that applies the file.
+
 # The public changelog (/changelog)
 
 `src/lib/changelog.ts` holds one entry per Major.Minor version (i.e. one entry per merged Pull Request, not per commit) and powers the public `/changelog` page, rendered as a bulleted list (one `<li>` per item — not a single paragraph). Whenever a Pull Request is opened or merged (i.e. whenever `version.ts`'s Minor number changes), add a new entry to that array — `items` is a short list of end-user-facing German bullet points written for a campaign player/GM, not a developer changelog.

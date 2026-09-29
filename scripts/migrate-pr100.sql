@@ -8,8 +8,6 @@
 -- werden einmalig vergeben und vorhandene Missions-Synopsen nur übernommen,
 -- wenn die Mission noch keine Synopsis-Blöcke hat.
 
-BEGIN;
-
 ALTER TABLE game_sessions
   ADD COLUMN IF NOT EXISTS mission_id INT REFERENCES missions(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS mission_session_number INTEGER;
@@ -116,5 +114,3 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_game_sessions_mission_number
 CREATE UNIQUE INDEX IF NOT EXISTS idx_planned_sessions_mission_number
   ON planned_sessions (mission_id, mission_session_number)
   WHERE mission_id IS NOT NULL AND mission_session_number IS NOT NULL;
-
-COMMIT;
