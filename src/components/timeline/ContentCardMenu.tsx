@@ -8,6 +8,7 @@ import {
   setContentStateAction,
   type VisibilityContentType,
 } from "@/app/user/content/actions";
+import type { ExportContentType } from "@/lib/contentExport";
 
 type CardContentType = VisibilityContentType;
 
@@ -40,6 +41,11 @@ export default function ContentCardMenu({
         ? "archiveEntry"
         : contentType;
   const visibilityType: VisibilityContentType | null = contentType;
+  const exportType: ExportContentType =
+    contentType === "dialogue" ? "archive_entry" : contentType;
+  const exportSlug = decodeURIComponent(
+    href.split(/[?#]/, 1)[0].split("/").filter(Boolean).at(-1) ?? "",
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -75,7 +81,13 @@ export default function ContentCardMenu({
       </button>
       {open && (
         <div className="timeline-card-menu" role="menu" aria-label="Aktionen">
-          <ShareMenu title={title} href={href} menuItems />
+          <ShareMenu
+            title={title}
+            href={href}
+            exportType={exportType}
+            exportSlug={exportSlug}
+            menuItems
+          />
           {isOwner && (
             <>
               <Link

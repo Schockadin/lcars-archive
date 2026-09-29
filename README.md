@@ -54,7 +54,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Markdown in allen Freitextfeldern** — der `MarkdownEditor` (Toolbar +
   Rohtext/Vorschau) steht nicht nur an den Content-Formularen, sondern auch an
   Notizen, eigenen Regeln, Talent- und Schwerpunkt-Beschreibungen,
-  Session-Notizen, der Notiz eines angekündigten Spieltermins, der
+  Session-Zusammenfassungsblöcken, der Notiz eines angekündigten Spieltermins,
+  der
   Beschreibung eines von Hand eingetragenen Chronologie-Ereignisses und den
   Gesprächs-Formularen; sein `rows`-Prop setzt die
   Höhe in Zeilen statt in Pixeln (Notizen und Regeln: 10). Die zugehörigen
@@ -545,19 +546,27 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   - `/gm/rules` — eigene Regeln der Runde für den Spickzettel (Name,
     Regeltext, Reihenfolge). Hier ist jede Regel löschbar.
 - **Session-Planer** — die Spielleitung kündigt Termine an (`/gm/sessions`,
-  Knopf „Termin ankündigen" über der Terminliste, Formular im Fenster), alle
-  Angemeldeten sehen sie auf der Startseite und sagen zu oder ab. Der Zeitpunkt
+  Knopf „Termin ankündigen" über der Terminliste, Formular im Fenster) und
+  ordnet sie einer Mission zu; eine neue Mission lässt sich dort ebenfalls
+  anlegen. Der Titel entsteht aus Missionsname und laufender Nummer. Alle
+  Angemeldeten sehen Termine auf der Startseite und sagen zu oder ab. Der
+  Zeitpunkt
   ist **ein** `datetime-local`-Feld (Datum und Uhrzeit gehören zusammen), und
   zu jedem Termin gehört eine **Besetzung** (`planned_session_characters`, alle
   aktiven Figuren vorausgewählt). Ist der Abend gespielt, macht der Knopf
   **„Session eintragen"** am Termin daraus in einem Schritt die Nachbuchung:
-  ein Fenster fragt AP-Beträge, Notizen und die letzte Korrektur der Besetzung
-  ab, legt die `game_sessions`-Zeile samt Gutschriften an und hängt sie über
+  ein Fenster fragt AP-Beträge, datierte Zusammenfassungsblöcke und die letzte
+  Korrektur der Besetzung ab, legt die `game_sessions`-Zeile samt Gutschriften
+  an und hängt sie über
   `planned_sessions.game_session_id` an den Termin. Der Termin bleibt stehen —
   er trägt die Zusagen —, verschwindet aber von der Startseite; wird die
   Session zurückgenommen, steht er per `ON DELETE SET NULL` wieder als offen
   da. Von Hand nachtragen lässt sich weiterhin alles, was ohne Ankündigung
   gespielt wurde: „Session nachtragen" darunter, zugeklappt.
+
+  Zusammenfassungsblöcke werden automatisch in die Missions-Synopsis übernommen
+  und chronologisch mit den Missionslogs angezeigt. Das Inhaltsverzeichnis der
+  Missionschronik bietet Sprungmarken zu den Session-Blöcken.
 
   Zwei eigene Tabellen (`planned_sessions`,
   `planned_session_rsvps`): `game_sessions` ist die **Nachbuchung** einer

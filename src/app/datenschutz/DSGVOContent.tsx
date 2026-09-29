@@ -105,12 +105,14 @@ export default function DSGVOContent({ year }: { year: number }) {
           zurückgenommenen Steigerungen werden als Gutschrift gebucht und
           zusätzlich am Charakter vermerkt, bis sie beim erneuten Abschließen
           wieder angewandt werden. Ebenso werden gespielte{" "}
-          <strong>Sessions</strong> mit Datum, Titel, Notizen und
-          Teilnehmerliste gespeichert. Diese Angaben sind für Spielleitung und
-          die jeweilige Person einsehbar und dienen ausschließlich dem
+          <strong>Sessions</strong> mit Datum, zugehöriger Mission, automatisch
+          gebildetem Titel, AP-Buchungen und Teilnehmerliste gespeichert. Die
+          Spielleitung kann dazu mehrere datierte Zusammenfassungsblöcke
+          erfassen; sie erscheinen in der Chronik der Mission. Die
+          Teilnehmerzuordnung wird mit dem Charakter entfernt, die Session und
+          ihre Missionschronik bleiben bestehen. Diese Angaben dienen dem
           Kampagnenbetrieb (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO —
-          Erfüllung des Nutzungsverhältnisses der Kampagne). Mit dem Charakter
-          werden sie gelöscht.
+          Erfüllung des Nutzungsverhältnisses der Kampagne).
         </p>
         <p>
           Zu einem eigenen Charakter können angemeldete Personen zusätzlich
@@ -277,6 +279,16 @@ export default function DSGVOContent({ year }: { year: number }) {
           >
             cloudflare.com/privacypolicy
           </a>
+        </p>
+        <p>
+          Zusätzlich kann die Administration ein vollständiges PostgreSQL-
+          Backup mit den lokalen Client-Werkzeugen erstellen. Dabei werden
+          Datenbankinhalte und Nutzerkonten auf den Rechner der ausführenden
+          Person übertragen und dort als Datei gespeichert; die Anwendung lädt
+          diese Datei nicht zu einem weiteren Dienst hoch. Das Backup enthält
+          besonders schützenswerte Daten, darunter Kontodaten und
+          Kampagneninhalte, und muss entsprechend sicher aufbewahrt und bei
+          Bedarf lokal gelöscht werden.
         </p>
 
         <h2>3. E-Mail-Versand</h2>

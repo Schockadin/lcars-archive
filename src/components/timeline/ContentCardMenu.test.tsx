@@ -3,8 +3,27 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import ContentCardMenu from "./ContentCardMenu";
 
 vi.mock("@/components/ShareMenu", () => ({
-  default: ({ menuItems }: { menuItems?: boolean }) => (
-    menuItems ? <><button role="menuitem">Link kopieren</button><button role="menuitem">Per WhatsApp teilen</button></> : <button>Teilen</button>
+  default: ({
+    menuItems,
+    exportType,
+    exportSlug,
+  }: {
+    menuItems?: boolean;
+    exportType?: string;
+    exportSlug?: string;
+  }) => (
+    menuItems ? (
+      <>
+        <button role="menuitem">Link kopieren</button>
+        <button role="menuitem">Per WhatsApp teilen</button>
+        {exportType && exportSlug && (
+          <>
+            <button role="menuitem">Als Markdown exportieren</button>
+            <button role="menuitem">Als PDF exportieren</button>
+          </>
+        )}
+      </>
+    ) : <button>Teilen</button>
   ),
 }));
 
@@ -29,6 +48,8 @@ describe("ContentCardMenu", () => {
 
     expect(screen.getByRole("menuitem", { name: "Link kopieren" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Per WhatsApp teilen" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Als Markdown exportieren" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Als PDF exportieren" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Bearbeiten" })).toBeNull();
   });
 

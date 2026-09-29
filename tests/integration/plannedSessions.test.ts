@@ -41,21 +41,6 @@ describe("Session-Planer", () => {
     expect((await getPlannedSession(second))?.title).toBe("Nebel von Ceti 2");
   });
 
-  it("vergibt fortlaufende Nummern je Mission", async () => {
-    const gm = await insertUser();
-    const mission = await insertMission({ title: "Nebel von Ceti" });
-    const first = await createPlannedSession(
-      { scheduledAt: inTagen(4), missionId: mission.id, location: "", notes: "", characterIds: [] },
-      gm.id,
-    );
-    const second = await createPlannedSession(
-      { scheduledAt: inTagen(8), missionId: mission.id, location: "", notes: "", characterIds: [] },
-      gm.id,
-    );
-    expect((await getPlannedSession(first))?.title).toBe("Nebel von Ceti 1");
-    expect((await getPlannedSession(second))?.title).toBe("Nebel von Ceti 2");
-  });
-
   it("führt anstehende Termine, den nächsten zuerst", async () => {
     const gm = await insertUser();
     await createPlannedSession(

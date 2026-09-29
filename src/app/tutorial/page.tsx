@@ -194,16 +194,13 @@ export default function TutorialPage() {
               </p>
               <p>
                 Die <strong>Missionsseite</strong> selbst zeigt oben Status,
-                Zeitraum und die beteiligten Figuren, darunter die{" "}
-                <strong>Zusammenfassung</strong> des Einsatzes — sie lässt sich
-                über die Zeile „Zusammenfassung“ ein- und ausklappen, wenn du
-                gleich zu den Berichten willst. Darunter steht die{" "}
-                <strong>Übersicht ihrer Logbücher</strong> — dieselbe Liste wie
-                hier in der Chronologie, von Haus aus nach{" "}
-                <strong>Autor</strong> gruppiert, auf Wunsch nach{" "}
-                <strong>Datum</strong> geordnet. Ein Klick öffnet den
-                Einsatzbericht; von dort führt der Link oben links zurück zur
-                Mission.
+                Zeitraum und die beteiligten Figuren. In der{" "}
+                <strong>Missionschronik</strong> stehen datierte Logs und die
+                Zusammenfassungsblöcke gespielter Sessions gemeinsam, neueste
+                zuerst. Das Inhaltsverzeichnis lässt sich einklappen und springt
+                direkt zu den Zusammenfassungsblöcken. Ein Klick auf ein Log
+                öffnet den Einsatzbericht; von dort führt der Link oben links
+                zurück zur Mission.
               </p>
               <p>
                 Einträge <strong>ohne Datum</strong> gehen dabei nicht verloren:
@@ -687,6 +684,14 @@ export default function TutorialPage() {
                 Inhalt noch ändert.
               </p>
               <p>
+                In den Listen der <strong>Chronologie</strong>,{" "}
+                <strong>Datenbank</strong> und{" "}
+                <strong>Charakterübersicht</strong> findest du die Aktionen im
+                Drei-Punkte-Menü oben rechts an der Karte. Alle können dort den
+                Inhalt teilen; Eigentümer:innen können zusätzlich bearbeiten,
+                veröffentlichen oder als Entwurf zurückziehen und löschen.
+              </p>
+              <p>
                 Auf der <strong>Seite einer Mission</strong> steht angemeldet
                 der Knopf <strong>„Missionsakte (PDF)“</strong>: er packt genau
                 diese Mission in eine Datei — Titelblatt mit Zeitraum, Status
@@ -727,6 +732,17 @@ export default function TutorialPage() {
                 <strong>„Ich kann nicht“</strong> sagst du zu oder ab — du
                 kannst es dir jederzeit anders überlegen, die neue Antwort
                 ersetzt die alte. Wer zugesagt hat, steht am Termin.
+              </p>
+              <p>
+                Jeder angekündigte Termin gehört zu einer Mission. Sein Titel
+                entsteht automatisch aus Missionsname und laufender Nummer;
+                beim Ankündigen kann die Spielleitung auch direkt eine neue
+                Mission anlegen. Nach dem Abend wird aus dem Termin eine
+                gespielte Session. Dabei kann die Spielleitung mehrere
+                Zusammenfassungsblöcke erfassen, jeweils mit Ingame-Datum und
+                Text. Sie erscheinen chronologisch zwischen den Missionslogs;
+                das Inhaltsverzeichnis der Missionschronik springt direkt zu den
+                einzelnen Blöcken.
               </p>
               <p>
                 Ist einer deiner Charaktere für den Termin{" "}
@@ -982,9 +998,9 @@ export default function TutorialPage() {
                 Inhaltsformularen, sondern auch an den kleineren Textfeldern:{" "}
                 <strong>Notizen</strong> und Kommentare, eigenen{" "}
                 <strong>Regeln</strong>, Talent- und Schwerpunkt-Beschreibungen,{" "}
-                <strong>Session-Notizen</strong> sowie Antworten und Nachrichten
-                in Gesprächen. Überall dort wird der Text beim Anzeigen auch als
-                Markdown dargestellt — im PDF-Spickzettel werden Auszeichnungen
+                <strong>Session-Zusammenfassungsblöcke</strong> sowie Antworten
+                und Nachrichten in Gesprächen. Überall dort wird der Text beim
+                Anzeigen auch als Markdown dargestellt — im PDF-Spickzettel werden Auszeichnungen
                 auf ihren Text zurückgeführt, Listen bleiben Listen.
               </p>
               <p>
@@ -1032,6 +1048,12 @@ export default function TutorialPage() {
                 geschrieben ist. Dasselbe zeigt dir schon der{" "}
                 <strong>Vorschau</strong>-Umschalter über dem Textfeld, bevor du
                 speicherst.
+              </p>
+              <p>
+                Die automatische Verlinkung erkennt bei Aliasen auch übliche
+                Genitivformen. Bei einem Wikilink zeigt ein kurzer Hover über
+                den Verweis eine Textvorschau des Ziels, sofern dort eine
+                Zusammenfassung oder Beschreibung hinterlegt ist.
               </p>
               <p>
                 Wer sich das Tippen der Klammern sparen will, nutzt beim
