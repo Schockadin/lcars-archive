@@ -169,7 +169,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "inhalte",
       },
       {
-        text: "Beim Eintragen einer Session ergänzt die Spielleitung datierte Zusammenfassungsblöcke. Die Blöcke werden missionenweit fortlaufend nummeriert und in der Missionschronik als Sessions angezeigt.",
+        text: "Beim Eintragen einer Session ergänzt die Spielleitung datierte Zusammenfassungsblöcke, die chronologisch zwischen den Logbüchern erscheinen und über ihr Datum im Inhaltsverzeichnis erreichbar sind.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },
@@ -199,7 +199,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "spielleitung-admins",
       },
       {
-        text: "Die Spielleitung verwaltet Sessions und Zusammenfassungsblöcke direkt in der Missionsübersicht; AP-Vergabe, Konten und Verlauf sind unter AP gebündelt. Die Missionsbearbeitung ist in diese Detailseite umgezogen.",
+        text: "Die Session-Übersicht zeigt durchsuchbare Karten nach Mission gruppiert. Jede Session hat eine eigene Detailseite mit Teilnehmenden, AP und bearbeitbaren Zusammenfassungsblöcken. Die Missionsdetailseite bündelt weiterhin Sessions und Missionseditor; AP-Vergabe, Konten und Verlauf liegen unter AP.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },

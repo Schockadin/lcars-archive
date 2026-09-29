@@ -103,7 +103,7 @@ export default async function GmMissionDetailPage({
               defaultSessionAp={rules.apPerSession}
               today={today}
               showCreateForm={false}
-              showFilters={false}
+              view="inline"
               sessionsHeading="Gespielte Sessions"
             />
           </section>

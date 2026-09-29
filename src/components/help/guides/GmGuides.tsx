@@ -85,15 +85,15 @@ export function GmSessionsGuide() {
         figure={<SessionsFigure />}
       >
         <p>
-          Mit <strong>„Termin ankündigen“</strong> setzt du den nächsten
-          Spielabend an: Zeitpunkt, Ort, eine Notiz und wer mitspielt — alle
+          Unter <strong>„Kampagne“ → „Termin planen“</strong> setzt du den nächsten
+          Spielabend an: Zeitpunkt, Mission, Ort und wer mitspielt — alle
           aktiven Figuren sind vorausgewählt. Der Termin erscheint danach auf
           der Startseite aller Beteiligten, die dort zu- oder absagen können.
         </p>
         <p>
           Liegt er in der Zukunft, geht die Ankündigung zusätzlich als{" "}
           <strong>Mail und Push</strong> an die Spielenden der eingeplanten
-          Figuren — mit Zeitpunkt, Ort und deiner Notiz. Abonnieren muss dafür
+          Figuren — mit Zeitpunkt und Ort. Abonnieren muss dafür
           niemand etwas; die Rückmeldung im Formular nennt, wie viele Personen
           tatsächlich erreicht wurden.
         </p>
@@ -104,8 +104,8 @@ export function GmSessionsGuide() {
           Ist der Abend gespielt, macht <strong>„Session eintragen“</strong> am
           Termin daraus in einem Schritt die Nachbuchung: ein Fenster fragt
           Session-AP, Bonus-AP und Zusammenfassungsblöcke ab, übernimmt Datum
-          und Besetzung und bucht die AP. Der Termin bleibt mit seinen Zusagen in
-          der Liste stehen, verschwindet aber von der Startseite.
+          und Besetzung und bucht die AP. Danach erscheint die gespielte Session
+          unter „Sessions“ und der Termin verschwindet aus den offenen Terminen.
         </p>
         <p>
           Ohne vorherigen Termin geht es genauso von Hand:{" "}
@@ -119,6 +119,14 @@ export function GmSessionsGuide() {
         <p>
           Die Vorbelegung der Session-AP kommt aus dem Regelwerk unter{" "}
           <strong>„Kampagne“ → „Steigerungsregeln“</strong>.
+        </p>
+        <p>
+          Die Karten der gespielten Sessions sind nach Mission gruppiert und
+          nach Mission, Datum oder Zusammenfassung durchsuchbar. Ein Klick
+          öffnet die Detailseite mit AP, Teilnehmenden und Summary-Blöcken.
+          Über den Stift bearbeitest du die Session und ihre Blöcke; einzelne
+          Blöcke lassen sich im Formular entfernen. Die Missionschronik zeigt
+          die Blöcke mit ihrem Ingame-Datum als Titel und Sprungmarke.
         </p>
       </GuideSection>
     </GuideBody>

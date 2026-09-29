@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import MissionLogOverview from "./MissionLogOverview";
 import type { MissionLogListItem } from "@/types/missions";
@@ -100,10 +100,15 @@ describe("MissionLogOverview", () => {
     });
     expect(container.querySelectorAll(".timeline-period")).toHaveLength(0);
     expect(container.querySelectorAll(".timeline-card")).toHaveLength(3);
-    expect([...container.querySelectorAll(".timeline-card-title")].map((node) => node.textContent)).toEqual(["Log zwei", "Log eins", "Session: 20.12.2234 - Eintrag 8"]);
-    expect(screen.getByText("Session: 20.12.2234 - Eintrag 8")).toBeInTheDocument();
+    expect([...container.querySelectorAll(".timeline-card-title")].map((node) => node.textContent)).toEqual(["Log zwei", "Log eins", "20.12.2234"]);
+    expect(screen.queryByText("Session: 20.12.2234 - Eintrag 8")).not.toBeInTheDocument();
     expect([...container.querySelectorAll(".timeline-tag")].map((node) => node.textContent)).toContain("Session");
-    expect([...container.querySelectorAll(".lcars-toc-link")].map((node) => node.textContent)).toContain("Eintrag 8");
+    const tocEntry = container.querySelector(".lcars-toc-link")!;
+    expect(tocEntry).toHaveTextContent("20.12.2234");
+    const summary = container.querySelector<HTMLElement>("#mission-synopsis-7")!;
+    summary.scrollIntoView = vi.fn();
+    fireEvent.click(tocEntry);
+    expect(summary.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
     expect(screen.getAllByText("20.12.2234").length).toBeGreaterThan(0);
   });
 

@@ -1,13 +1,12 @@
 "use client";
-import { useActionState, useMemo, useState } from "react";
-import Link from "next/link";
+import { useActionState, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import ModalOverlay from "@/components/ModalOverlay";
+import SessionsBrowser from "./SessionsBrowser";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
 import { defaultSessionSynopsisDate } from "@/lib/sessionSynopsis";
-import { missionEditHref } from "@/lib/contentRoutes";
 import { fmtDate } from "@/lib/missionFormat";
 import { CheckIcon, PencilIcon, TrashIcon } from "@/lib/icons";
 import type {
@@ -97,7 +96,8 @@ export function SessionContextFields({
         {blocks.map((block, index) => (
           <div
             key={block.key}
-            className="flex flex-col gap-[6px] rounded-lg border border-[var(--lcars-ink-dim)]/30 p-[8px]"
+            id={`${idPrefix}-synopsis-block-${index}`}
+            className="scroll-mt-24 flex flex-col gap-[6px] rounded-lg border border-[var(--lcars-ink-dim)]/30 p-[8px]"
           >
             <div className="flex flex-wrap gap-[8px]">
               <label className="flex flex-col gap-[4px]">
@@ -268,15 +268,17 @@ function NewSessionForm({
   );
 }
 
-function SessionRow({
+export function SessionDetails({
   session,
   characters,
   missions,
+  detailPage = false,
 }: {
   session: GameSession;
   // Auswahl für „Gutschreiben an" — dieselbe Liste wie beim Anlegen.
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
+  detailPage?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -288,31 +290,37 @@ function SessionRow({
     initialState,
   );
 
+  const summaries = session.synopsisBlocks.length > 0 ? (
+    <div className="flex flex-col gap-[8px]">
+      {detailPage && <h2 className="text-lcars-primary-ink">Summary-Blöcke</h2>}
+      {session.synopsisBlocks.map((block, index) => (
+        <article key={block.id} id={`summary-${block.id}`} className="scroll-mt-24 rounded-lg border border-[var(--lcars-ink-dim)]/25 p-[10px]">
+          <div className="flex flex-wrap items-baseline justify-between gap-[8px]">
+            <h3 className="font-semibold">Session: {fmtDate(block.ingameDate)} - Eintrag {block.missionBlockNumber}</h3>
+            <span className="lcars-eyebrow">{fmtDate(block.ingameDate)}</span>
+          </div>
+          <div className="mission-body" dangerouslySetInnerHTML={{ __html: block.bodyHtml }} />
+          <a className="lcars-icon-btn mt-[6px] inline-flex" aria-label="Summary-Block bearbeiten" title="Summary-Block bearbeiten" href={`#session-${session.id}-synopsis-block-${index}`} onClick={() => setOpen(true)}><PencilIcon /></a>
+        </article>
+      ))}
+    </div>
+  ) : null;
+
   return (
     <div
       id={`session-${session.id}`}
       className="scroll-mt-24 flex flex-col gap-[6px] border-b border-[var(--lcars-ink-dim)]/30 pb-[8px]"
     >
-      {session.synopsisBlocks.length > 0 && (
-        <div className="flex flex-col gap-[8px]">
-          {session.synopsisBlocks.map((block) => (
-            <article key={block.id} id={`summary-${block.id}`} className="scroll-mt-24 rounded-lg border border-[var(--lcars-ink-dim)]/25 p-[10px]">
-              <div className="flex flex-wrap items-baseline justify-between gap-[8px]">
-                <h3 className="font-semibold">Session: {fmtDate(block.ingameDate)} - Eintrag {block.missionBlockNumber}</h3>
-                <span className="lcars-eyebrow">{fmtDate(block.ingameDate)}</span>
-              </div>
-              <div className="mission-body" dangerouslySetInnerHTML={{ __html: block.bodyHtml }} />
-              {session.missionSlug && <Link className="lcars-icon-btn mt-[6px] inline-flex" aria-label="Summary-Block bearbeiten" title="Summary-Block bearbeiten" href={`${missionEditHref(session.missionSlug)}#summary-${block.id}`}><PencilIcon /></Link>}
-            </article>
-          ))}
-        </div>
-      )}
       <button
         type="button"
-        className="flex flex-wrap items-center gap-[8px] text-left"
+        className={detailPage ? "lcars-icon-btn self-start" : "flex flex-wrap items-center gap-[8px] text-left"}
         aria-expanded={open}
+        aria-controls={`session-editor-${session.id}`}
+        aria-label={detailPage ? "Session bearbeiten" : undefined}
+        title={detailPage ? "Session bearbeiten" : undefined}
         onClick={() => setOpen((v) => !v)}
       >
+        {detailPage ? <PencilIcon /> : <>
         {/* Auf-/Zuklapp-Anzeige links wie bei den DataRow-Akkordeons — dreht
             sich, wenn die Session-Details offen sind. */}
         <span
@@ -342,11 +350,16 @@ function SessionRow({
         <span className="text-lcars-ink-dim text-[13px]">
           {session.characterCount} Charaktere · {session.totalAp} AP gesamt
         </span>
+        </>}
       </button>
 
       {open && (
         <>
-          <form action={formAction} className="flex flex-col gap-[8px]">
+          <form
+            id={`session-editor-${session.id}`}
+            key={JSON.stringify([session.sessionDate, session.sessionAp, session.bonusAp, session.missionId, session.characterIds, session.synopsisBlocks])}
+            action={formAction} className="scroll-mt-24 flex flex-col gap-[8px]"
+          >
             <input type="hidden" name="id" value={session.id} />
             <div className="flex flex-wrap items-end gap-[8px]">
               <label className="flex flex-col gap-[4px]">
@@ -431,7 +444,7 @@ function SessionRow({
               geänderte Beträge und Teilnehmende schlagen also unmittelbar auf
               die Konten durch. Bereits ausgegebene AP holt das nicht zurück —
               ein Konto kann dadurch rechnerisch ins Minus laufen und ist dann
-              unter „Kampagne“ mit einer Korrekturbuchung geradezuziehen.
+              unter „AP“ mit einer Korrekturbuchung geradezuziehen.
             </p>
             <div className="flex flex-wrap gap-[8px]">
               <button
@@ -447,6 +460,7 @@ function SessionRow({
 
           <form action={deleteAction}>
             <input type="hidden" name="id" value={session.id} />
+            {detailPage && <input type="hidden" name="returnToSessions" value="true" />}
             <button
               type="submit"
               disabled={deletePending}
@@ -462,16 +476,20 @@ function SessionRow({
         </>
       )}
 
+      {detailPage && session.synopsisBlocks.length === 0 && (
+        <p className="lcars-empty-state">Für diese Session gibt es noch keine Summary-Blöcke.</p>
+      )}
       <FormError message={state.error ?? deleteState.error} />
       {(state.success ?? deleteState.success) && (
         <FormSuccess>{state.success ?? deleteState.success}</FormSuccess>
       )}
+      {summaries}
     </div>
   );
 }
 
-// Sessions der Spielleitung: oben das (zugeklappte) Nachtragen von Hand,
-// darunter die Liste der bisherigen Sessions zum Aufklappen.
+// Sessions der Spielleitung: Nachtragen im Modal, darunter Missionsgruppen
+// mit Karten. Die Missionsverwaltung verwendet die eingebetteten Editoren.
 //
 // Der übliche Weg ist der Knopf „Session eintragen" am angekündigten Termin
 // (PlannedSessionManager) — er bringt Datum, Mission und Besetzung schon mit.
@@ -484,7 +502,7 @@ export default function SessionManager({
   defaultSessionAp,
   today,
   showCreateForm = true,
-  showFilters = true,
+  view = "cards",
   sessionsHeading = "Bisherige Sessions",
 }: {
   sessions: GameSession[];
@@ -496,19 +514,10 @@ export default function SessionManager({
   // hydrieren-Warnungen erzeugen).
   today: string;
   showCreateForm?: boolean;
-  showFilters?: boolean;
+  view?: "cards" | "inline";
   sessionsHeading?: string;
 }) {
-  const [sessionFilter, setSessionFilter] = useState("");
-  const [missionFilter, setMissionFilter] = useState("");
   const [showCreate, setShowCreate] = useState(false);
-  const filteredSessions = useMemo(() => sessions.filter((session) => {
-    const missionMatch = !missionFilter || String(session.missionId ?? "") === missionFilter;
-    const q = sessionFilter.trim().toLocaleLowerCase("de");
-    const textMatch = !q || [session.title, session.missionTitle, session.sessionDate, ...session.synopsisBlocks.map((block) => block.body)]
-      .some((value) => value?.toLocaleLowerCase("de").includes(q));
-    return missionMatch && textMatch;
-  }), [sessions, missionFilter, sessionFilter]);
   return (
     <div className="flex flex-col gap-[24px]">
       {showCreateForm && (
@@ -525,22 +534,18 @@ export default function SessionManager({
         </div>
       )}
 
-      <section className="flex flex-col gap-[12px]">
+      {view === "cards" ? <SessionsBrowser sessions={sessions} /> : <section className="flex flex-col gap-[12px]">
         <h2 className="text-lcars-primary-ink">{sessionsHeading}</h2>
-        {showFilters && <div className="flex flex-wrap gap-[8px]">
-          <label className="flex min-w-[220px] flex-1 flex-col gap-[4px]"><span className="lcars-eyebrow">Session suchen</span><input className="lcars-input rounded-full" type="search" value={sessionFilter} onChange={(event) => setSessionFilter(event.target.value)} placeholder="Titel, Datum oder Zusammenfassung" /></label>
-          <label className="flex min-w-[220px] flex-1 flex-col gap-[4px]"><span className="lcars-eyebrow">Mission filtern</span><select className="lcars-input rounded-full" value={missionFilter} onChange={(event) => setMissionFilter(event.target.value)}><option value="">Alle Missionen</option>{missions.map((mission) => <option key={mission.id} value={mission.id}>{mission.title}</option>)}</select></label>
-        </div>}
-        {filteredSessions.length === 0 ? (
+        {sessions.length === 0 ? (
           <p className="lcars-empty-state">Noch keine Session eingetragen.</p>
         ) : (
           <div className="flex flex-col gap-[8px]">
-            {filteredSessions.map((session) => (
-              <SessionRow key={session.id} session={session} characters={characters} missions={missions} />
+            {sessions.map((session) => (
+              <SessionDetails key={session.id} session={session} characters={characters} missions={missions} />
             ))}
           </div>
         )}
-      </section>
+      </section>}
     </div>
   );
 }

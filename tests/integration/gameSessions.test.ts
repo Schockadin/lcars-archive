@@ -15,6 +15,8 @@ vi.mock("next/cache", () => ({
 import sql from "@/lib/db";
 import {
   createGameSession,
+  getGameSession,
+  listCharactersForSessionEdit,
   listActiveSessionMissions,
   listMissionSynopsisBlocks,
   listSessionMissions,
@@ -80,6 +82,24 @@ async function setup() {
 }
 
 describe("Sessions", () => {
+  it("lädt eine einzelne Session samt Teilnehmenden und Zusammenfassungsblöcken", async () => {
+    const { sessionId, character, mission } = await setup();
+    const session = await getGameSession(sessionId);
+    expect(session).toMatchObject({ id: sessionId, missionId: mission.id, characterIds: [character.id] });
+    expect(session?.synopsisBlocks).toHaveLength(1);
+    expect(session?.synopsisBlocks[0]).toMatchObject({ ingameDate: "2399-01-01", missionBlockNumber: 1 });
+    expect(await getGameSession(-1)).toBeNull();
+  });
+
+  it("behält inaktive Teilnehmende in der Bearbeitung, bietet fremde inaktive Figuren aber nicht an", async () => {
+    const { sessionId, character, player } = await setup();
+    const other = await insertCharacter({ playerId: player.id });
+    await sql`UPDATE characters SET status = 'retired' WHERE id IN (${character.id}, ${other.id})`;
+    const options = await listCharactersForSessionEdit(sessionId);
+    expect(options.some((item) => item.id === character.id)).toBe(true);
+    expect(options.some((item) => item.id === other.id)).toBe(false);
+  });
+
   it("bietet zur Terminplanung nur aktive veröffentlichte Missionen an", async () => {
     const active = await insertMission({ title: "Laufende Mission" });
     const completed = await insertMission({ title: "Abgeschlossene Mission" });

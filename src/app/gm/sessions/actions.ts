@@ -1,11 +1,13 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireGM } from "@/lib/dal";
 import {
   createGameSession,
   deleteGameSession,
   updateGameSession,
   listActiveCharactersForAp,
+  listCharactersForSessionEdit,
   listSessionMissions,
 } from "@/lib/gameSessions";
 import { validateGameSessionInput } from "@/lib/gameSessionFormat";
@@ -94,12 +96,18 @@ export async function deleteSessionAction(
   if (!Number.isInteger(id)) return { error: "Ungültige Session." };
 
   const deleted = await deleteGameSession(id);
-  if (!deleted) return { error: "Session nicht gefunden." };
-  if (deleted) revalidateMission(deleted);
+  if (deleted === null) return { error: "Session nicht gefunden." };
+  if (deleted) {
+    revalidateMission(deleted);
+    revalidatePath(`/gm/missions/${encodeURIComponent(deleted)}`);
+  }
 
   revalidatePath("/gm/sessions");
+  revalidatePath(`/gm/sessions/${id}`);
   revalidatePath("/gm/ap");
   revalidatePath("/gm/campaign");
+  revalidatePath("/");
+  if (formData.get("returnToSessions") === "true") redirect("/gm/sessions");
   return {
     success: "Session zurückgenommen, die Gutschriften wurden storniert.",
   };
@@ -129,9 +137,9 @@ export async function updateSessionAction(
   const sessionContext = await readSessionContext(formData, false);
   if ("error" in sessionContext) return { error: sessionContext.error };
 
-  // Wie beim Anlegen: nur aktive, gutschreibbare Akten kommen aufs Konto.
+  // Bestehende Teilnehmende behalten ihre Gutschrift auch nach dem Ruhestand.
   const allowed = new Set(
-    (await listActiveCharactersForAp()).map((character) => character.id),
+    (await listCharactersForSessionEdit(id)).map((character) => character.id),
   );
   const characterIds = parsed.value.characterIds.filter((cid) =>
     allowed.has(cid),
@@ -153,8 +161,11 @@ export async function updateSessionAction(
   if (!updated) return { error: "Session nicht gefunden." };
   revalidateMission(updated.missionSlug);
   if (updated.oldMissionSlug) revalidateMission(updated.oldMissionSlug);
+  revalidatePath(`/gm/missions/${encodeURIComponent(updated.missionSlug)}`);
+  if (updated.oldMissionSlug) revalidatePath(`/gm/missions/${encodeURIComponent(updated.oldMissionSlug)}`);
 
   revalidatePath("/gm/sessions");
+  revalidatePath(`/gm/sessions/${id}`);
   revalidatePath("/gm/ap");
   revalidatePath("/gm/campaign");
   return {

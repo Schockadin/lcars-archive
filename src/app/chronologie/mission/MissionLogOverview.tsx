@@ -59,7 +59,7 @@ export default function MissionLogOverview({
               headings={[
                 ...synopsisBlocks.map((block) => ({
                   id: `mission-synopsis-${block.id}`,
-                  text: `Eintrag ${block.missionBlockNumber}`,
+                  text: fmtDate(block.ingameDate),
                 })),
                 ...(fullSynopsisHtml
                   ? [{ id: "mission-full-synopsis", text: "Synopsis" }]
@@ -109,7 +109,7 @@ export default function MissionLogOverview({
                   <ChronoCard
                     color={CONTENT_TYPE_COLOR.mission}
                     tag="Session"
-                    title={`Session: ${fmtDate(entry.block.ingameDate)} - Eintrag ${entry.block.missionBlockNumber}`}
+                    title={fmtDate(entry.block.ingameDate)}
                     date={fmtDate(entry.block.ingameDate)}
                   >
                     <div

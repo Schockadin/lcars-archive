@@ -16,6 +16,8 @@ const GESCHUETZT = [
   "/user/dialogues/new",
   "/gm",
   "/gm/gruppe",
+  "/gm/sessions",
+  "/gm/sessions/1",
   "/gm/talents",
   "/gm/focuses",
   "/gm/rules",

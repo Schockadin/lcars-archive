@@ -59,6 +59,15 @@ export interface MissionSynopsisBlock extends SessionSynopsisBlockInput {
 }
 
 export async function listGameSessions(): Promise<GameSession[]> {
+  return readGameSessions();
+}
+
+export async function getGameSession(id: number): Promise<GameSession | null> {
+  const [session] = await readGameSessions(id);
+  return session ?? null;
+}
+
+async function readGameSessions(id?: number): Promise<GameSession[]> {
   const rows = await sql<GameSession[]>`
     SELECT s.id,
            s.session_date::text AS "sessionDate",
@@ -86,6 +95,7 @@ export async function listGameSessions(): Promise<GameSession[]> {
       FROM game_session_characters
       GROUP BY session_id
     ) p ON p.session_id = s.id
+    ${id === undefined ? sql`` : sql`WHERE s.id = ${id}`}
     ORDER BY s.session_date DESC, s.id DESC
   `;
 
@@ -323,6 +333,23 @@ export async function createGameSession(
   });
   await syncMissionSynopsis(missionId);
   return sessionId;
+}
+
+// Bereits gutgeschriebene Figuren bleiben bei Korrekturen auswählbar, auch
+// wenn sie inzwischen inaktiv sind. Sonst würde Speichern ihre AP entfernen.
+export async function listCharactersForSessionEdit(sessionId: number): Promise<ActiveCharacter[]> {
+  return sql<ActiveCharacter[]>`
+    SELECT c.id, c.name, u.name AS "playerName"
+    FROM characters c
+    LEFT JOIN users u ON u.id = c.player_id
+    WHERE (c.deleted_at IS NULL AND c.is_draft = false
+           AND c.status = 'active' AND c.player_id IS NOT NULL)
+       OR EXISTS (
+         SELECT 1 FROM game_session_characters p
+         WHERE p.session_id = ${sessionId} AND p.character_id = c.id
+       )
+    ORDER BY c.name
+  `;
 }
 
 async function replaceSessionSynopsisBlocks(
