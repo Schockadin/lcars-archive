@@ -415,7 +415,7 @@ export default function UserContentBrowser({
                   />
                 ) : undefined
               }
-              editHref={missionEditHref(m.id)}
+              editHref={missionEditHref(m.slug)}
               deleteButton={
                 <DeleteOwnContentButton
                   contentType="mission"

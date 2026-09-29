@@ -1,10 +1,13 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
+import Link from "next/link";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
 import { defaultSessionSynopsisDate } from "@/lib/sessionSynopsis";
+import { missionEditHref } from "@/lib/contentRoutes";
+import { fmtDate } from "@/lib/missionFormat";
 import { PlusIcon, TrashIcon } from "@/lib/icons";
 import type {
   GameSession,
@@ -365,6 +368,20 @@ function SessionRow({
       id={`session-${session.id}`}
       className="scroll-mt-24 flex flex-col gap-[6px] border-b border-[var(--lcars-ink-dim)]/30 pb-[8px]"
     >
+      {session.synopsisBlocks.length > 0 && (
+        <div className="flex flex-col gap-[8px]">
+          {session.synopsisBlocks.map((block) => (
+            <article key={block.id} id={`summary-${block.id}`} className="scroll-mt-24 rounded-lg border border-[var(--lcars-ink-dim)]/25 p-[10px]">
+              <div className="flex flex-wrap items-baseline justify-between gap-[8px]">
+                <h3 className="font-semibold">{session.missionTitle ?? "Mission"} - Eintrag {session.missionSessionNumber ?? "?"}</h3>
+                <span className="lcars-eyebrow">{fmtDate(block.ingameDate)}</span>
+              </div>
+              <div className="mission-body" dangerouslySetInnerHTML={{ __html: block.bodyHtml }} />
+              {session.missionSlug && <Link className="lcars-back-link mt-[6px] inline-block" href={`${missionEditHref(session.missionSlug)}#summary-${block.id}`}>Bearbeiten</Link>}
+            </article>
+          ))}
+        </div>
+      )}
       <button
         type="button"
         className="flex flex-wrap items-center gap-[8px] text-left"
@@ -550,6 +567,7 @@ export default function SessionManager({
   today,
   showCreateForm = true,
   sessionsHeading = "Bisherige Sessions",
+  groupByMission = false,
 }: {
   sessions: GameSession[];
   characters: ActiveCharacter[];
@@ -564,7 +582,27 @@ export default function SessionManager({
   today: string;
   showCreateForm?: boolean;
   sessionsHeading?: string;
+  groupByMission?: boolean;
 }) {
+  const [sessionFilter, setSessionFilter] = useState("");
+  const [missionFilter, setMissionFilter] = useState("");
+  const filteredSessions = useMemo(() => sessions.filter((session) => {
+    const missionMatch = !missionFilter || String(session.missionId ?? "") === missionFilter;
+    const q = sessionFilter.trim().toLocaleLowerCase("de");
+    const textMatch = !q || [session.title, session.missionTitle, session.sessionDate, ...session.synopsisBlocks.map((block) => block.body)]
+      .some((value) => value?.toLocaleLowerCase("de").includes(q));
+    return missionMatch && textMatch;
+  }), [sessions, missionFilter, sessionFilter]);
+  const groupedSessions = useMemo(() => {
+    const groups = new Map<string, { title: string; sessions: GameSession[] }>();
+    for (const session of filteredSessions) {
+      const key = String(session.missionId ?? "none");
+      const group = groups.get(key) ?? { title: session.missionTitle ?? "Ohne Mission", sessions: [] };
+      group.sessions.push(session);
+      groups.set(key, group);
+    }
+    return [...groups.entries()];
+  }, [filteredSessions]);
   return (
     <div className="flex flex-col gap-[24px]">
       {showCreateForm && (
@@ -585,19 +623,19 @@ export default function SessionManager({
 
       <section className="flex flex-col gap-[12px]">
         <h2 className="text-lcars-primary-ink">{sessionsHeading}</h2>
-        {sessions.length === 0 ? (
+        {groupByMission && <div className="flex flex-wrap gap-[8px]">
+          <label className="flex min-w-[220px] flex-1 flex-col gap-[4px]"><span className="lcars-eyebrow">Session suchen</span><input className="lcars-input rounded-full" type="search" value={sessionFilter} onChange={(event) => setSessionFilter(event.target.value)} placeholder="Titel, Datum oder Zusammenfassung" /></label>
+          <label className="flex min-w-[220px] flex-1 flex-col gap-[4px]"><span className="lcars-eyebrow">Mission filtern</span><select className="lcars-input rounded-full" value={missionFilter} onChange={(event) => setMissionFilter(event.target.value)}><option value="">Alle Missionen</option>{missions.map((mission) => <option key={mission.id} value={mission.id}>{mission.title}</option>)}</select></label>
+        </div>}
+        {filteredSessions.length === 0 ? (
           <p className="lcars-empty-state">Noch keine Session eingetragen.</p>
         ) : (
           <div className="flex flex-col gap-[8px]">
-            {sessions.map((session) => (
-              <SessionRow
-                key={session.id}
-                session={session}
-                characters={characters}
-                missions={missions}
-                logbooks={logbooks}
-                apPerLogbook={apPerLogbook}
-              />
+            {groupByMission ? groupedSessions.map(([key, group]) => <details key={key} className="lcars-details">
+              <summary className="lcars-details-summary"><span className="lcars-data-row-chevron" aria-hidden="true" /><span className="font-semibold">{group.title}</span><span className="text-lcars-ink-dim text-[13px]"> · {group.sessions.length}</span></summary>
+              <div className="mt-[12px] flex flex-col gap-[8px]">{group.sessions.map((session) => <SessionRow key={session.id} session={session} characters={characters} missions={missions} logbooks={logbooks} apPerLogbook={apPerLogbook} />)}</div>
+            </details>) : filteredSessions.map((session) => (
+              <SessionRow key={session.id} session={session} characters={characters} missions={missions} logbooks={logbooks} apPerLogbook={apPerLogbook} />
             ))}
           </div>
         )}

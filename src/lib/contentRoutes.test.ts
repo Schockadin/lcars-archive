@@ -71,10 +71,9 @@ describe("contentRoutes", () => {
     ).toBe("https://example.test/archive/beta");
   });
 
-  it("adressiert die Bearbeitungsseiten über die ID, nicht den Slug", () => {
-    // Der Slug wandert mit dem Titel; die Bearbeitungsseite soll bleiben.
+  it("adressiert Missionen über ihre GM-Detailseite", () => {
     expect(characterEditHref(7)).toBe("/user/characters/7");
-    expect(missionEditHref(7)).toBe("/user/missions/7/edit");
+    expect(missionEditHref("deneb-iv")).toBe("/gm/missions/deneb-iv");
     expect(missionLogEditHref(7)).toBe("/user/mission-logs/7/edit");
     expect(archiveEditHref(7)).toBe("/user/archive/7/edit");
   });
@@ -92,7 +91,9 @@ describe("contentRoutes", () => {
     // ALLE vier Typen in den vollen Editor — vorher klappten drei davon nur
     // einen Inline-Editor für den Fließtext auf.
     expect(contentEditHref("character", 7)).toBe(characterEditHref(7));
-    expect(contentEditHref("mission", 7)).toBe(missionEditHref(7));
+    expect(contentEditHref("mission", 7, "deneb-iv")).toBe(
+      missionEditHref("deneb-iv"),
+    );
     expect(contentEditHref("missionLog", 7)).toBe(missionLogEditHref(7));
     expect(contentEditHref("archiveEntry", 7)).toBe(archiveEditHref(7));
   });

@@ -79,6 +79,7 @@ export default async function GmSessionsPage() {
             defaultSessionAp={rules.apPerSession}
             apPerLogbook={rules.apPerLogbook}
             today={today}
+            groupByMission
           />
         </div>
       </article>

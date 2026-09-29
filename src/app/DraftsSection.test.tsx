@@ -85,7 +85,7 @@ const MISSION: DraftItem = {
   title: "Stille Grenze",
   updatedAt: "2401-05-10T10:00:00Z",
   href: "/chronologie/mission/stille-grenze",
-  editHref: "/user/missions/3/edit",
+  editHref: "/gm/missions/stille-grenze",
 };
 
 describe("DraftsSection", () => {

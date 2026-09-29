@@ -17,7 +17,7 @@ function menuButtons(): string[] {
   return screen
     .getAllByRole("button")
     .map((button) => button.textContent ?? "")
-    .filter((label) => label === "Leitung" || label === "Admin");
+    .filter((label) => label === "Regeln" || label === "Leitung" || label === "Admin");
 }
 
 function menuEintraege(): string[] {
@@ -25,9 +25,9 @@ function menuEintraege(): string[] {
 }
 
 describe("HeaderUserNav: getrennte Staff-Menüs", () => {
-  it("zeigt einem reinen GM nur das Leitungs-Menü", () => {
+  it("zeigt einem GM das Leitungs-Menü und mit Leserecht das Regel-Menü", () => {
     render(<HeaderUserNav permissions={["gm.access", "users.browse"]} />);
-    expect(menuButtons()).toEqual(["Leitung"]);
+    expect(menuButtons()).toEqual(["Regeln", "Leitung"]);
   });
 
   it("zeigt einer reinen Administration nur das Admin-Menü", () => {
@@ -39,7 +39,7 @@ describe("HeaderUserNav: getrennte Staff-Menüs", () => {
     render(
       <HeaderUserNav permissions={["gm.access", "admin.access", "users.manage"]} />,
     );
-    expect(menuButtons()).toEqual(["Leitung", "Admin"]);
+    expect(menuButtons()).toEqual(["Regeln", "Leitung", "Admin"]);
   });
 
   it("zeigt einem reinen db-admin nur das Admin-Menü (DB-Recht genügt)", () => {
@@ -47,9 +47,9 @@ describe("HeaderUserNav: getrennte Staff-Menüs", () => {
     expect(menuButtons()).toEqual(["Admin"]);
   });
 
-  it("zeigt ohne Staff-Rechte gar kein Staff-Menü", () => {
+  it("zeigt ohne Staff-Rechte nur das Regel-Menü, wenn Leserecht besteht", () => {
     render(<HeaderUserNav permissions={["content.follow", "users.browse"]} />);
-    expect(menuButtons()).toEqual([]);
+    expect(menuButtons()).toEqual(["Regeln"]);
   });
 });
 
@@ -116,6 +116,14 @@ describe("HeaderUserNav: Gliederung des Leitungs-Menüs", () => {
       "Regelwerk",
       "Inhalte",
     ]);
+  });
+
+  it("bietet Spielenden den Regelkatalog und weitere Regeln in einem Dropdown", () => {
+    render(<HeaderUserNav permissions={["users.browse"]} />);
+    fireEvent.click(screen.getByRole("button", { name: /Regeln/ }));
+    expect(menuEintraege()).toEqual(["Weitere Regeln", "Schwerpunkte", "Talente"]);
+    expect(screen.getByRole("link", { name: "Schwerpunkte" })).toHaveAttribute("href", "/user/rules/focuses");
+    expect(screen.getByRole("link", { name: "Talente" })).toHaveAttribute("href", "/user/rules/talents");
   });
 
   it("führt im Leitungs-Menü direkt zur Missionsverwaltung", () => {

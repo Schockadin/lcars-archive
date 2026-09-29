@@ -59,7 +59,7 @@ export async function completeMissionAction(
   if (!result.ok) return { error: result.error };
 
   revalidateMission(result.slug);
-  revalidatePath("/gm/campaign");
+  revalidatePath("/gm/ap");
   revalidatePath("/gm/ap");
 
   return {

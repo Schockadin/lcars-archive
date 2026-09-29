@@ -107,7 +107,7 @@ export async function getOwnDrafts(userId: number): Promise<DraftItem[]> {
     title: row.title,
     updatedAt: row.updated_at,
     href: draftContentHref(row),
-    editHref: draftEditHref(row.kind, row.id),
+    editHref: draftEditHref(row.kind, row.id, row.slug),
     logDate: row.log_date,
   }));
 }
@@ -121,9 +121,9 @@ function draftContentHref(row: DraftRow): string {
   return archiveHref(row.slug);
 }
 
-function draftEditHref(kind: string, id: number): string {
+function draftEditHref(kind: string, id: number, slug: string): string {
   if (kind === "mission_log") return missionLogEditHref(id);
-  if (kind === "mission") return missionEditHref(id);
+  if (kind === "mission") return missionEditHref(slug);
   // Gespräch und Datenbank-Eintrag teilen sich den Editor — beide sind ein
   // archive_entry.
   return archiveEditHref(id);

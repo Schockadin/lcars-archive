@@ -230,7 +230,11 @@ export default function ActionsMenu({
             immer so, wie es jetzt alle tun. */}
         {!hideEdit && canEditContent && (
           <Link
-            href={contentEditHref(contentType, content.id)}
+            href={contentEditHref(
+              contentType,
+              content.id,
+              contentType === "mission" ? content.slug : undefined,
+            )}
             className="lcars-icon-btn self-start"
             aria-label="Bearbeiten"
             title="Bearbeiten"

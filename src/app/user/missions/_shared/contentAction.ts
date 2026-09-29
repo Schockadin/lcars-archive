@@ -189,7 +189,7 @@ async function notifyMissionParticipants(
 // Vereint createMissionAction + updateMissionAction (vorher new/actions.ts +
 // [missionId]/edit/actions.ts) zu einer Action für ContentEditor — Branch auf
 // Vorhandensein von missionId statt zwei fast identischer Funktionen.
-// deleteMissionAction bleibt separat in edit/actions.ts (eigener Zweck,
+// deleteMissionAction bleibt separat im GM-Missionsdetail (eigener Zweck,
 // nicht Teil von create/update).
 export async function missionAction(
   _state: MissionFormState,
@@ -331,8 +331,8 @@ export async function missionAction(
         });
       }
     }
-    // Nach dem Speichern auf die Missionsseite — wie beim Anlegen (unten).
-    redirect(missionHref(result.slug));
+    // Bearbeitungen liegen gesammelt im GM-Missionsbereich.
+    redirect(`/gm/missions/${encodeURIComponent(result.slug)}`);
   }
 
   // Slug-Vergabe + Uniqueness-Check nur beim Anlegen — beim Bearbeiten ist

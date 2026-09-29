@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
 import {
   listApLedger,
   listApAccountSummaries,
   AP_LEDGER_LIMIT,
+  listApBalances,
 } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
+import { listActiveCharactersForAp, listCompletableMissions } from "@/lib/gameSessions";
 import ApLedgerTable from "./ApLedgerTable";
-import AdvancementRulesForm from "./AdvancementRulesForm";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmApGuide } from "@/components/help/guides/GmGuides";
+import ApAwardPanel from "../campaign/ApAwardPanel";
+import MissionApPanel from "../campaign/MissionApPanel";
 
 export const metadata: Metadata = {
   title: "AP",
@@ -24,11 +26,16 @@ export const metadata: Metadata = {
 export default async function GmApPage() {
   await requireGM();
 
-  const [accounts, ledger, rules] = await Promise.all([
+  const [accounts, ledger, rules, balances, characters, missions] = await Promise.all([
     listApAccountSummaries(),
     listApLedger(),
     getAdvancementRules(),
+    listApBalances(),
+    listActiveCharactersForAp(),
+    listCompletableMissions(),
   ]);
+  const balanceById = new Map(balances.map((entry) => [entry.characterId, entry.available]));
+  const awardCharacters = characters.map((character) => ({ ...character, available: balanceById.get(character.id) ?? 0 }));
 
   return (
     <>
@@ -45,7 +52,13 @@ export default async function GmApPage() {
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary-ink">Kontostände</h2>
+            <h2 className="text-lcars-primary-ink">AP vergeben</h2>
+            <ApAwardPanel characters={awardCharacters} rules={rules} />
+            <h3 className="text-lcars-primary-ink">Mission abschließen</h3>
+            <MissionApPanel missions={missions} characters={characters} defaultMissionAp={rules.apPerMission} />
+          </section>
+          <section className="flex flex-col gap-[12px]">
+            <h2 className="text-lcars-primary-ink">AP-Konten</h2>
             {accounts.length === 0 ? (
               <p className="lcars-empty-state">Noch keine AP vergeben.</p>
             ) : (
@@ -75,10 +88,7 @@ export default async function GmApPage() {
               </div>
             )}
             <p className="text-lcars-ink-dim text-[13px]">
-              Vergeben wird unter <Link href="/gm/sessions">Sessions</Link> (an
-              alle Beteiligten auf einmal) oder unter{" "}
-              <Link href="/gm/campaign">Kampagne</Link> (einzeln, auch als
-              Korrektur).
+              Für Sammelvergaben an alle Beteiligten nutze die Session-Erfassung.
             </p>
           </section>
 
@@ -96,7 +106,7 @@ export default async function GmApPage() {
                 style={{ margin: "0 4px 0 2px" }}
                 aria-hidden="true"
               />
-              <h2 className="inline text-lcars-primary-ink">Alle Buchungen</h2>
+              <h2 className="inline text-lcars-primary-ink">Vergabe-Historie</h2>
               <span className="text-lcars-ink-dim text-[13px]">
                 {" "}
                 · {ledger.length} Einträge
@@ -107,16 +117,6 @@ export default async function GmApPage() {
             </div>
           </details>
 
-          <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary-ink">Regelwerk</h2>
-            <p className="text-lcars-ink-dim text-[13px]">
-              Gilt ab sofort für alle Charakterbögen: Kosten der Steigerungen,
-              Budgets der Ersterschaffung und die Vorbelegung der Vergabe.
-              Bereits gebuchte AP bleiben unberührt — nur was künftig gesteigert
-              wird, rechnet mit den neuen Zahlen.
-            </p>
-            <AdvancementRulesForm rules={rules} />
-          </section>
         </div>
       </article>
     </>

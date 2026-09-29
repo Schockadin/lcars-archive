@@ -18,14 +18,16 @@ export default function MissionSummaryBlocks({
   missionSlug,
   missionTitle,
   blocks,
+  showHeading = true,
 }: {
   missionSlug: string;
   missionTitle: string;
   blocks: MissionSynopsisBlock[];
+  showHeading?: boolean;
 }) {
   return (
     <section className="flex flex-col gap-[12px]">
-      <h2 className="text-lcars-primary-ink">Summary-Blöcke</h2>
+      {showHeading && <h2 className="text-lcars-primary-ink">Summary-Blöcke</h2>}
       {blocks.length === 0 ? (
         <p className="lcars-empty-state">
           Für diese Mission gibt es noch keine Summary-Blöcke.
@@ -67,6 +69,7 @@ function MissionSummaryBlockRow({
 
   return (
     <li
+      id={`summary-${block.id}`}
       className="rounded-lg border border-[var(--lcars-ink-dim)]/30 p-[12px]"
     >
       <div className="mb-[6px] flex flex-wrap items-baseline justify-between gap-[8px]">

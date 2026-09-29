@@ -85,7 +85,7 @@ const GM_ITEMS: NavMenuItem[] = [
     group: "Regelwerk",
   },
   {
-    href: "/gm/rules",
+    href: "/gm/campaign/rules",
     label: "Regeln",
     permission: "gm.access",
     group: "Regelwerk",
@@ -382,6 +382,11 @@ export default function HeaderUserNav({
     { href: "/user/content", label: "Meine Inhalte" },
     { href: "/user", label: "Einstellungen" },
   ];
+  const playerRulesItems = visibleItems([
+    { href: "/user/rules", label: "Weitere Regeln", permission: "users.browse" },
+    { href: "/user/rules/focuses", label: "Schwerpunkte", permission: "users.browse" },
+    { href: "/user/rules/talents", label: "Talente", permission: "users.browse" },
+  ], permissions);
 
   const gmItems = visibleItems(GM_ITEMS, permissions);
   const adminItems = visibleItems(ADMIN_ITEMS, permissions);
@@ -399,9 +404,17 @@ export default function HeaderUserNav({
         label="Profil"
         icon={<ProfileNavIcon />}
         items={profileItems}
-        active={pathname === "/user" || pathname.startsWith("/user/")}
+        active={pathname === "/user" || (pathname.startsWith("/user/") && !pathname.startsWith("/user/rules"))}
         placement={placement}
       />
+
+      {playerRulesItems.length > 0 && <NavDropdown
+        label="Regeln"
+        icon={<ProfileNavIcon />}
+        items={playerRulesItems}
+        active={pathname.startsWith("/user/rules")}
+        placement={placement}
+      />}
 
       {gmItems.length > 0 && (
         <NavDropdown

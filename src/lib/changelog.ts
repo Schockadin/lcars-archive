@@ -174,7 +174,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "spielleitung-admins",
       },
       {
-        text: "Die Missionsverwaltung ist über das Leitungs-Menü erreichbar; pro Mission lassen sich geplante und gespielte Sessions sowie Summary-Blöcke bearbeiten und Summary-Blöcke löschen.",
+        text: "Die Missionsverwaltung ist über das Leitungs-Menü erreichbar; pro Mission lassen sich gespielte Sessions und deren Summary-Blöcke bearbeiten oder löschen.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },
@@ -190,6 +190,16 @@ export const CHANGELOG: ChangelogEntry[] = [
       },
       {
         text: "Angekündigte Termine gehören zu einer Mission und erhalten fortlaufende Namen; in der Missionschronik führen Sprungmarken direkt zu den Session-Zusammenfassungen.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Die Spielleitung verwaltet Sessions und Zusammenfassungsblöcke direkt in der Missionsübersicht; AP-Vergabe, Konten und Verlauf sind unter AP gebündelt. Die Missionsbearbeitung ist in diese Detailseite umgezogen.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Spielende können Hausregeln lesen und die Talent- sowie Schwerpunktkataloge durchsuchen.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },

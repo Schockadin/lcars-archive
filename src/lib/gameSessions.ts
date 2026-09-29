@@ -28,6 +28,7 @@ export interface GameSession {
   title: string;
   missionId: number | null;
   missionTitle: string | null;
+  missionSlug: string | null;
   missionSessionNumber: number | null;
   sessionAp: number;
   bonusAp: number;
@@ -48,6 +49,7 @@ export interface GameSession {
 export interface GameSessionSynopsisBlock extends SessionSynopsisBlockInput {
   id: number;
   blockOrder: number;
+  bodyHtml: string;
 }
 
 export interface MissionSynopsisBlock extends SessionSynopsisBlockInput {
@@ -62,6 +64,7 @@ export async function listGameSessions(): Promise<GameSession[]> {
     SELECT s.id,
            s.session_date::text AS "sessionDate",
            s.title, s.mission_id AS "missionId", m.title AS "missionTitle",
+           m.slug AS "missionSlug",
            s.mission_session_number AS "missionSessionNumber",
            s.session_ap AS "sessionAp", s.bonus_ap AS "bonusAp",
            u.name AS "createdByName",
@@ -120,6 +123,7 @@ export async function listGameSessions(): Promise<GameSession[]> {
       blockOrder: row.block_order,
       ingameDate: row.ingame_date,
       body: row.body_md,
+      bodyHtml: await renderContentHtml(row.body_md),
     });
     blocksBySession.set(row.session_id, blocks);
   }

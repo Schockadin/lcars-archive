@@ -2,17 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
-import { getAllCharactersForAdmin } from "@/lib/characters";
 import { getIngameYearInfo } from "@/lib/campaign";
-import { listApBalances } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
-import {
-  listCompletableMissions,
-  listActiveCharactersForAp,
-} from "@/lib/gameSessions";
 import IngameYearForm from "./IngameYearForm";
-import ApAwardPanel from "./ApAwardPanel";
-import MissionApPanel from "./MissionApPanel";
+import AdvancementRulesForm from "../ap/AdvancementRulesForm";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmCampaignGuide } from "@/components/help/guides/GmGuides";
 
@@ -32,32 +25,9 @@ export const metadata: Metadata = {
 export default async function AdminCampaignPage() {
   await requireGM();
 
-  const [
-    characters,
-    ingameYearInfo,
-    apBalances,
-    rules,
-    completableMissions,
-    apCharacterOptions,
-  ] = await Promise.all([
-    getAllCharactersForAdmin(),
-    getIngameYearInfo(),
-    listApBalances(),
-    getAdvancementRules(),
-    listCompletableMissions(),
-    listActiveCharactersForAp(),
+  const [ingameYearInfo, rules] = await Promise.all([
+    getIngameYearInfo(), getAdvancementRules(),
   ]);
-
-  // Kontostände in EINER Abfrage geholt und hier zugeordnet — sonst wäre es
-  // eine Abfrage je Charakter.
-  const balanceByCharacter = new Map(
-    apBalances.map((row) => [row.characterId, row.available]),
-  );
-  const apCharacters = characters.map((c) => ({
-    id: c.id,
-    name: c.name,
-    available: balanceByCharacter.get(c.id) ?? 0,
-  }));
 
   return (
     <>
@@ -78,36 +48,17 @@ export default async function AdminCampaignPage() {
             <IngameYearForm info={ingameYearInfo} />
           </section>
 
-          <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary-ink">Erfahrungspunkte (AP)</h2>
-            <p className="text-lcars-ink-dim text-[13px]">
-              Je {rules.apPerSession} AP für eine gespielte Session und{" "}
-              {rules.apPerLogbook} AP für ein geschriebenes Logbuch; die Beträge
-              stellt die Spielleitung unter „AP“ ein. Eine ganze Session
-              schreibt man am besten unter „Sessions“ auf einmal gut — mit
-              verknüpftem Logbuch kommt die Logbuch-AP dort automatisch dazu. AP
-              für einen Missionsabschluss gibt es nur über „Mission abschließen“
-              weiter unten; Steigerungen buchen die Spieler:innen selbst auf
-              ihrem Charakterbogen ab. Hier bleibt die freie Buchung für alles
-              andere und für Korrekturen.
-            </p>
-            <ApAwardPanel characters={apCharacters} rules={rules} />
-          </section>
-
-          <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary-ink">Mission abschließen</h2>
-            <p className="text-lcars-ink-dim text-[13px]">
-              AP für einen Missionsabschluss gibt es nur hier: die Mission wird
-              dabei ausgewählt und auf „abgeschlossen“ gesetzt. Vorbelegt sind{" "}
-              {rules.apPerMission} AP je Charakter (Regel „AP pro beendeter
-              Mission“ unter <Link href="/gm/ap">Erfahrungspunkte</Link>).
-            </p>
-            <MissionApPanel
-              missions={completableMissions}
-              characters={apCharacterOptions}
-              defaultMissionAp={rules.apPerMission}
-            />
-          </section>
+          <div className="flex flex-wrap gap-[8px]">
+            <Link className="lcars-pill-btn--outline" href="/gm/ap">AP-Vergabe und Konten</Link>
+            <Link className="lcars-pill-btn--outline" href="/gm/campaign/rules">Weitere Regeln bearbeiten</Link>
+          </div>
+          <details className="lcars-details">
+            <summary className="lcars-details-summary"><span className="lcars-data-row-chevron" aria-hidden="true" /><h2 className="inline text-lcars-primary-ink">Steigerungsregeln</h2></summary>
+            <div className="mt-[12px] flex flex-col gap-[12px]">
+              <p className="text-lcars-ink-dim text-[13px]">Kosten und Budgets für Charaktersteigerungen sowie AP-Vorgaben anpassen.</p>
+              <AdvancementRulesForm rules={rules} />
+            </div>
+          </details>
 
         </div>
       </article>
