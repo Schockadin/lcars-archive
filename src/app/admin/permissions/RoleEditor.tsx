@@ -9,6 +9,7 @@ import {
   type RolesState,
 } from "./actions";
 import { confirmSubmit } from "@/lib/confirmSubmit";
+import { TrashIcon } from "@/lib/icons";
 import {
   FormError,
   FormSuccess,
@@ -198,13 +199,15 @@ export default function RoleEditor({
             <FormError message={deleteState?.error} />
             <SubmitButton
               pending={deleting}
-              pendingLabel="Löschen…"
+              pendingLabel="…"
               onClick={confirmSubmit(
                 `Rolle „${role.label}" wirklich löschen? Das lässt sich nicht rückgängig machen.`,
               )}
-              className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%] bg-lcars-quinary text-black"
+              className="lcars-icon-btn lcars-icon-btn--danger self-end disabled:opacity-50"
+              ariaLabel={`Rolle ${role.label} löschen`}
+              title={`Rolle ${role.label} löschen`}
             >
-              Rolle löschen
+              <TrashIcon />
             </SubmitButton>
           </form>
         )}

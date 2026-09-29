@@ -8,6 +8,7 @@ import { LcarsReadingModeToggle } from "@/components/lcars";
 import DialogueHeader from "@/components/DialogueHeader";
 import DeleteDialogueButton from "@/components/DeleteDialogueButton";
 import ShareMenu from "@/components/ShareMenu";
+import { PencilIcon } from "@/lib/icons";
 import { getDialogueMessages } from "@/lib/dialogues";
 import {
   getViewer,
@@ -130,9 +131,11 @@ export default async function CharacterDialoguePage({ params }: Props) {
                 Gesprächsverlauf. */}
             <Link
               href={`/gm/dialogues/${entry.slug}/edit`}
-              className="lcars-pill-btn--outline"
+              className="lcars-icon-btn"
+              aria-label="Metadaten bearbeiten"
+              title="Metadaten bearbeiten"
             >
-              Metadaten bearbeiten
+              <PencilIcon />
             </Link>
             <DeleteDialogueButton entrySlug={entry.slug} />
           </>

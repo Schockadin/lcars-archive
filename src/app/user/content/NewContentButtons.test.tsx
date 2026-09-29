@@ -24,18 +24,17 @@ vi.mock("@/components/timeline/ManualEventForm", () => ({
   default: ({
     defaultDate,
     characters,
-    triggerVariant,
   }: {
     defaultDate: string | null;
     characters: { id: number; name: string }[];
-    triggerVariant?: string;
   }) => (
     <button
       type="button"
       data-testid="form-event"
       data-date={defaultDate ?? ""}
       data-characters={characters.length}
-      data-variant={triggerVariant}
+      className="lcars-icon-btn"
+      aria-label="Neues Event"
     >
       Neues Event
     </button>
@@ -78,6 +77,9 @@ describe("NewContentButtons", () => {
     expect(screen.queryByRole("link")).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Neuer Missionslog" }));
+    expect(
+      screen.getByRole("button", { name: "Neuer Missionslog" }),
+    ).toHaveClass("lcars-icon-btn");
     expect(screen.getByRole("dialog")).toHaveAttribute(
       "aria-label",
       "Neuen Missionslog anlegen",
@@ -99,9 +101,8 @@ describe("NewContentButtons", () => {
   it("reicht Datum und Figuren an das gemeinsame Event-Formular durch", () => {
     render(<NewContentButtons data={data()} />);
 
-    expect(screen.getByRole("button", { name: "Neues Event" })).toHaveAttribute(
-      "data-variant",
-      "pill",
+    expect(screen.getByRole("button", { name: "Neues Event" })).toHaveClass(
+      "lcars-icon-btn",
     );
     expect(screen.getByTestId("form-event")).toHaveAttribute(
       "data-date",
@@ -194,14 +195,18 @@ describe("NewContentButtons", () => {
   // Startseite die Sektion im Profil).
   it("zeigt den Import nur, wenn der Aufrufer ihn erlaubt", () => {
     const { unmount } = render(<NewContentButtons data={data()} />);
-    expect(screen.queryByRole("link", { name: "Import" })).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "Inhalte importieren" }),
+    ).toBeNull();
     unmount();
 
     render(<NewContentButtons data={data()} canImport />);
-    expect(screen.getByRole("link", { name: "Import" })).toHaveAttribute(
-      "href",
-      "/user/import",
-    );
+    expect(
+      screen.getByRole("link", { name: "Inhalte importieren" }),
+    ).toHaveAttribute("href", "/user/import");
+    expect(
+      screen.getByRole("link", { name: "Inhalte importieren" }),
+    ).toHaveClass("lcars-icon-btn");
   });
 
   // Anders als die übrigen kein Fenster: Der Ablauf blättert durch mehrere
@@ -209,22 +214,19 @@ describe("NewContentButtons", () => {
   it("führt beim Import auf die Seite statt in ein Fenster", () => {
     render(<NewContentButtons data={data()} canImport />);
 
-    expect(screen.queryByRole("button", { name: "Import" })).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "Inhalte importieren" }),
+    ).toHaveAttribute("href", "/user/import");
   });
 
-  // Breite und Umbruch der Leiste stehen in .lcars-btn-row (controls.css),
-  // nicht an den Knöpfen. Trüge ein Knopf wieder eine eigene Breite, schlüge
-  // sie die drei Stufen dort — und niemand sähe es, weil jsdom kein CSS
-  // rechnet. Der Test hält deshalb die Aufteilung fest, nicht das Ergebnis.
-  it("überlässt der Leiste die Breite", () => {
+  // Die Leiste hält kompakte Aktions-Icons und lässt sie bei Platzmangel
+  // umbrechen.
+  it("ordnet die Aktions-Icons in einer flexiblen Leiste an", () => {
     const { container } = render(<NewContentButtons data={data()} canImport />);
 
-    expect(container.querySelector(".lcars-btn-row")).not.toBeNull();
-    for (const el of container.querySelectorAll<HTMLElement>(
-      ".lcars-btn-row > *",
-    )) {
-      expect(el.className).not.toMatch(/\bw-\[|\bw-full\b|max-sm:w-/);
-    }
+    expect(
+      container.querySelector('div[class*="flex-wrap"][class*="items-start"]'),
+    ).not.toBeNull();
   });
 
   it("bietet keinen Knopf für einen neuen Charakter", () => {

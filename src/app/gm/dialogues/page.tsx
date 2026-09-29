@@ -6,6 +6,7 @@ import { requireGM, getRoleMap } from "@/lib/dal";
 import { getAllOpenDialoguesForGM } from "@/lib/dialogues";
 import { formatDateTime } from "@/utils/formateISODate";
 import { LcarsAkteCard } from "@/components/lcars";
+import { PencilIcon } from "@/lib/icons";
 import {
   dialogueHref,
 } from "@/lib/contentRoutes";
@@ -78,9 +79,11 @@ export default async function AdminDialoguesPage() {
                   {canModerate && (
                     <Link
                       href={`/gm/dialogues/${d.slug}/edit`}
-                      className="text-lcars-primary-ink underline text-[13px] self-start"
+                      className="lcars-icon-btn self-start"
+                      aria-label={`Metadaten von ${d.title} bearbeiten`}
+                      title={`Metadaten von ${d.title} bearbeiten`}
                     >
-                      Metadaten bearbeiten
+                      <PencilIcon />
                     </Link>
                   )}
                 </div>

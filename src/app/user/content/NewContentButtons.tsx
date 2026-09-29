@@ -7,6 +7,7 @@ import CreateDialogueForm from "@/app/user/dialogues/new/CreateDialogueForm";
 import NewArchiveEntryForm from "@/app/user/archive/new/NewArchiveEntryForm";
 import NewMissionForm from "@/app/user/missions/new/NewMissionForm";
 import ManualEventForm from "@/components/timeline/ManualEventForm";
+import { PlusIcon, UploadIcon } from "@/lib/icons";
 import type { NewContentData } from "./newContentData";
 import {
   NEW_CONTENT_LABELS,
@@ -62,8 +63,7 @@ export default function NewContentButtons({
   const close = () => setOpen(null);
   const sichtbar = visibleNewContentForms(data, show);
 
-  // Breite und Umbruch kommen aus .lcars-btn-row (controls.css) — hier steht
-  // nur, was der Knopf ist, nicht wie breit er wird.
+  // Die kompakten Aktions-Icons ordnen sich je nach verfügbarer Breite um.
   const button = (form: OpenForm) => {
     // Das Event-Formular verwaltet sein Fenster selbst, weil dieselbe
     // Komponente auch in Chronologie und Inhaltsliste zum Bearbeiten dient.
@@ -73,7 +73,6 @@ export default function NewContentButtons({
           key={form}
           defaultDate={data.event.defaultDate}
           characters={data.event.characters}
-          triggerVariant="pill"
           dateHint="Vorbelegt mit dem jüngsten Logbuch-Datum"
         />
       );
@@ -83,25 +82,30 @@ export default function NewContentButtons({
         key={form}
         type="button"
         onClick={() => setOpen(form)}
-        className="lcars-pill-btn"
+        className="lcars-icon-btn"
+        aria-label={NEW_CONTENT_LABELS[form]}
+        title={NEW_CONTENT_LABELS[form]}
       >
-        {NEW_CONTENT_LABELS[form]}
+        <PlusIcon />
       </button>
     );
   };
 
   return (
     <>
-      {/* Drei Stufen, siehe .lcars-btn-row in controls.css: schmal einer pro
-          Zeile, mittel zwei, breit alle nebeneinander. */}
-      <div className="lcars-btn-row">
+      <div className="flex flex-wrap items-start gap-[12px]">
         {/* Welche Knöpfe hier stehen, entscheidet visibleNewContentForms —
             dieselbe Funktion, aus der der Abschnitt drumherum seine Kurzinfo
             bildet (siehe newContentForms.ts). */}
         {sichtbar.map(button)}
         {canImport && (
-          <Link href="/user/import" className="lcars-pill-btn--outline">
-            Import
+          <Link
+            href="/user/import"
+            className="lcars-icon-btn"
+            aria-label="Inhalte importieren"
+            title="Inhalte importieren"
+          >
+            <UploadIcon />
           </Link>
         )}
       </div>

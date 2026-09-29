@@ -13,6 +13,7 @@ import {
   type ContentNote,
   type NoteContentType,
 } from "@/lib/contentNoteTypes";
+import { PlusIcon, TrashIcon } from "@/lib/icons";
 
 const initialState: NoteActionState = {};
 
@@ -138,9 +139,11 @@ export default function NotesPanel({
           <button
             type="submit"
             disabled={pending}
-            className="lcars-pill-btn--outline text-[12px] px-[14px] py-[4px] disabled:opacity-50"
+            className="lcars-icon-btn disabled:opacity-50"
+            aria-label={pending ? "Notiz wird hinzugefügt" : "Notiz hinzufügen"}
+            title="Notiz hinzufügen"
           >
-            {pending ? "Speichern…" : "Notiz speichern"}
+            {pending ? "…" : <PlusIcon />}
           </button>
         </div>
 
@@ -202,9 +205,11 @@ function NoteItem({ note, path }: { note: ContentNote; path: string }) {
             <button
               type="submit"
               disabled={pending}
-              className="lcars-link-text text-lcars-quinary-ink text-[11px] disabled:opacity-50"
+              className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
+              aria-label={pending ? "Notiz wird gelöscht" : "Notiz löschen"}
+              title="Notiz löschen"
             >
-              {pending ? "Löschen…" : "Löschen"}
+              {pending ? "…" : <TrashIcon />}
             </button>
             <FormError message={state.error} />
           </form>
