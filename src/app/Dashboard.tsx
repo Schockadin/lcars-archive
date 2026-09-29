@@ -289,7 +289,8 @@ async function UpcomingSessionsBlock({ userId }: { userId: number }) {
 }
 
 async function PendingActionsBlock({ userId }: { userId: number }) {
-  return <PendingActionsSection items={await getPendingActions(userId)} />;
+  const permissions = await getCurrentUserPermissions();
+  return <PendingActionsSection items={await getPendingActions(userId, permissions.has("missions.manage"))} />;
 }
 
 async function OpenDialoguesBlock({ userId }: { userId: number }) {

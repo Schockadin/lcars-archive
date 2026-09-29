@@ -46,6 +46,7 @@ export interface GameSession {
 export interface GameSessionSynopsisBlock extends SessionSynopsisBlockInput {
   id: number;
   blockOrder: number;
+  missionBlockNumber: number;
   bodyHtml: string;
 }
 
@@ -53,6 +54,7 @@ export interface MissionSynopsisBlock extends SessionSynopsisBlockInput {
   id: number;
   sessionId: number | null;
   missionSessionNumber: number | null;
+  missionBlockNumber: number;
   bodyHtml: string;
 }
 
@@ -94,13 +96,23 @@ export async function listGameSessions(): Promise<GameSession[]> {
           id: number;
           session_id: number;
           block_order: number;
+          missionBlockNumber: number;
           ingame_date: string;
           body_md: string;
         }[]
       >`
-        SELECT id, session_id, block_order, ingame_date::text AS ingame_date,
-               body_md
-        FROM mission_synopsis_blocks
+        SELECT id, session_id, block_order,
+               mission_block_number AS "missionBlockNumber",
+               ingame_date::text AS ingame_date, body_md
+        FROM (
+          SELECT b.id, b.session_id, b.block_order, b.ingame_date, b.body_md,
+                 ROW_NUMBER() OVER (
+                   PARTITION BY b.mission_id
+                   ORDER BY COALESCE(s.mission_session_number, 0), b.block_order, b.id
+                 )::int AS mission_block_number
+          FROM mission_synopsis_blocks b
+          LEFT JOIN game_sessions s ON s.id = b.session_id
+        ) numbered_blocks
         WHERE session_id = ANY(${sql.array(ids, 23)})
         ORDER BY session_id, block_order, id
       `
@@ -111,6 +123,7 @@ export async function listGameSessions(): Promise<GameSession[]> {
     blocks.push({
       id: row.id,
       blockOrder: row.block_order,
+      missionBlockNumber: row.missionBlockNumber,
       ingameDate: row.ingame_date,
       body: row.body_md,
       bodyHtml: await renderContentHtml(row.body_md),
@@ -131,12 +144,17 @@ export async function listMissionSynopsisBlocks(
       id: number;
       session_id: number | null;
       mission_session_number: number | null;
+      mission_block_number: number;
       ingame_date: string;
       body_md: string;
     }[]
   >`
     SELECT b.id, b.session_id,
            s.mission_session_number AS mission_session_number,
+           ROW_NUMBER() OVER (
+             PARTITION BY b.mission_id
+             ORDER BY COALESCE(s.mission_session_number, 0), b.block_order, b.id
+           )::int AS mission_block_number,
            b.ingame_date::text AS ingame_date,
            b.body_md
     FROM mission_synopsis_blocks b
@@ -149,6 +167,7 @@ export async function listMissionSynopsisBlocks(
       id: row.id,
       sessionId: row.session_id,
       missionSessionNumber: row.mission_session_number,
+      missionBlockNumber: row.mission_block_number,
       ingameDate: row.ingame_date,
       body: row.body_md,
       bodyHtml: await renderContentHtml(row.body_md),
@@ -168,6 +187,18 @@ export async function listSessionMissions(): Promise<SessionMissionOption[]> {
     SELECT id, title, slug, started_at::text AS "startedAt"
     FROM missions m
     WHERE deleted_at IS NULL AND is_draft = false
+    ORDER BY started_at DESC NULLS LAST, created_at DESC, id DESC
+  `;
+}
+
+// Beim Planen eines neuen Termins stehen nur laufende Missionen zur Auswahl.
+// Der vollständige Bestand bleibt für historische Sessions und Bearbeitungen
+// über listSessionMissions verfügbar.
+export async function listActiveSessionMissions(): Promise<SessionMissionOption[]> {
+  return sql<SessionMissionOption[]>`
+    SELECT id, title, slug, started_at::text AS "startedAt"
+    FROM missions m
+    WHERE deleted_at IS NULL AND is_draft = false AND status = 'active'
     ORDER BY started_at DESC NULLS LAST, created_at DESC, id DESC
   `;
 }

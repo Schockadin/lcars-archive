@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
@@ -10,15 +9,22 @@ import { listCampaignRulesFresh } from "@/lib/campaignRules";
 import RuleEditor from "../rules/RuleEditor";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmCampaignGuide } from "@/components/help/guides/GmGuides";
+import PlannedSessionManager from "../sessions/PlannedSessionManager";
+import {
+  listActiveCharactersForAp,
+  listActiveSessionMissions,
+  listSessionMissions,
+} from "@/lib/gameSessions";
+import { listUnrecordedPlannedSessions } from "@/lib/plannedSessions";
+import { getMostRecentLogDate } from "@/lib/missions";
+import { getCharactersForParticipantPicker } from "@/lib/characters";
 
 export const metadata: Metadata = {
   title: "Kampagne",
   robots: { index: false, follow: false },
 };
 
-// GM-oder-admin — die Kampagnen-Seite: Ingame-Jahr, AP-Vergabe und
-// Missionsabschluss. Die Missionsübersicht und ihre Verwaltung liegen separat
-// unter /gm/missions.
+// GM-oder-admin — anstehende Spieltermine, Ingame-Jahr und Regelwerk.
 //
 // Die Zuordnung der Charaktere zu Konten stand hier ebenfalls, seit es dafür
 // keinen eigenen Menüpunkt mehr gab. Sie steht jetzt wieder unter
@@ -27,8 +33,11 @@ export const metadata: Metadata = {
 export default async function AdminCampaignPage() {
   await requireGM();
 
-  const [ingameYearInfo, rules, campaignRules] = await Promise.all([
+  const [ingameYearInfo, rules, campaignRules, planned, characters, missions, recordMissions, missionCharacters, defaultMissionStartedAt] = await Promise.all([
     getIngameYearInfo(), getAdvancementRules(), listCampaignRulesFresh(),
+    listUnrecordedPlannedSessions(), listActiveCharactersForAp(), listActiveSessionMissions(),
+    listSessionMissions(),
+    getCharactersForParticipantPicker(), getMostRecentLogDate(),
   ]);
 
   return (
@@ -45,14 +54,20 @@ export default async function AdminCampaignPage() {
         </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[32px]">
+          <PlannedSessionManager
+            sessions={planned}
+            characters={characters}
+            missions={missions}
+            recordMissions={recordMissions}
+            missionCharacters={missionCharacters}
+            defaultSessionAp={rules.apPerSession}
+            defaultMissionStartedAt={defaultMissionStartedAt}
+          />
+
           <details className="lcars-details">
-            <summary className="lcars-details-summary"><span className="lcars-data-row-chevron" aria-hidden="true" /><span className="text-lcars-primary-ink">Ingame-Jahr</span><span className="ml-auto font-lcars-mono">{ingameYearInfo.effectiveYear ?? "Noch kein Jahr"}</span></summary>
+            <summary className="lcars-details-summary"><span className="lcars-data-row-chevron" aria-hidden="true" /><span className="text-lcars-primary-ink">Ingame Jahr ({ingameYearInfo.effectiveYear ?? "Noch kein Jahr"})</span></summary>
             <div className="mt-[12px]"><IngameYearForm info={ingameYearInfo} /></div>
           </details>
-
-          <div className="flex flex-wrap gap-[8px]">
-            <Link className="lcars-pill-btn--outline" href="/gm/ap">AP-Vergabe und Konten</Link>
-          </div>
           <details className="lcars-details">
             <summary className="lcars-details-summary"><span className="lcars-data-row-chevron" aria-hidden="true" /><h2 className="inline text-lcars-primary-ink">Weitere Regeln</h2></summary>
             <div className="mt-[12px]"><RuleEditor rules={campaignRules} /></div>

@@ -2,13 +2,14 @@
 import { useActionState, useMemo, useState } from "react";
 import Link from "next/link";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
+import ModalOverlay from "@/components/ModalOverlay";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
 import { defaultSessionSynopsisDate } from "@/lib/sessionSynopsis";
 import { missionEditHref } from "@/lib/contentRoutes";
 import { fmtDate } from "@/lib/missionFormat";
-import { CheckIcon, PencilIcon, PlusIcon, TrashIcon } from "@/lib/icons";
+import { CheckIcon, PencilIcon, TrashIcon } from "@/lib/icons";
 import type {
   GameSession,
   ActiveCharacter,
@@ -136,9 +137,8 @@ export function SessionContextFields({
         ))}
         <button
           type="button"
-          className="lcars-icon-btn self-start"
-          aria-label="Zusammenfassungsblock hinzufügen"
-          title="Zusammenfassungsblock hinzufügen"
+          className="lcars-pill-btn--outline self-start disabled:opacity-50"
+          disabled={!missionChoice}
           onClick={() =>
             setBlocks((current) => {
               const ingameDate = defaultSessionSynopsisDate(
@@ -155,7 +155,7 @@ export function SessionContextFields({
               ];
             })
           }
-        ><PlusIcon /></button>
+        >Hinzufügen</button>
       </fieldset>
     </div>
   );
@@ -187,6 +187,7 @@ function NewSessionForm({
       key={state.success ?? "new"}
       action={formAction}
       className="flex flex-col gap-[12px]"
+      data-no-draft
     >
       <div className="flex flex-wrap items-end gap-[8px]">
         <label className="flex flex-col gap-[4px]">
@@ -257,10 +258,8 @@ function NewSessionForm({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-icon-btn self-start disabled:opacity-50"
-        aria-label="Session nachtragen"
-        title="Session nachtragen"
-      ><PlusIcon />
+        className="lcars-pill-btn--outline self-start disabled:opacity-50"
+      >Hinzufügen
       </button>
 
       <FormError message={state.error} />
@@ -299,7 +298,7 @@ function SessionRow({
           {session.synopsisBlocks.map((block) => (
             <article key={block.id} id={`summary-${block.id}`} className="scroll-mt-24 rounded-lg border border-[var(--lcars-ink-dim)]/25 p-[10px]">
               <div className="flex flex-wrap items-baseline justify-between gap-[8px]">
-                <h3 className="font-semibold">{session.missionTitle ?? "Mission"} - Eintrag {session.missionSessionNumber ?? "?"}</h3>
+                <h3 className="font-semibold">Session: {fmtDate(block.ingameDate)} - Eintrag {block.missionBlockNumber}</h3>
                 <span className="lcars-eyebrow">{fmtDate(block.ingameDate)}</span>
               </div>
               <div className="mission-body" dangerouslySetInnerHTML={{ __html: block.bodyHtml }} />
@@ -502,6 +501,7 @@ export default function SessionManager({
 }) {
   const [sessionFilter, setSessionFilter] = useState("");
   const [missionFilter, setMissionFilter] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
   const filteredSessions = useMemo(() => sessions.filter((session) => {
     const missionMatch = !missionFilter || String(session.missionId ?? "") === missionFilter;
     const q = sessionFilter.trim().toLocaleLowerCase("de");
@@ -512,19 +512,17 @@ export default function SessionManager({
   return (
     <div className="flex flex-col gap-[24px]">
       {showCreateForm && (
-        <details className="lcars-collapsible">
-          <summary className="lcars-collapsible-summary">
-            <h2 className="text-lcars-primary-ink">Session nachtragen</h2>
-          </summary>
-          <div className="pt-[12px]">
+        <div>
+          <button type="button" className="lcars-pill-btn--outline" onClick={() => setShowCreate(true)}>Session nachtragen</button>
+          {showCreate && <ModalOverlay title="Session nachtragen" onClose={() => setShowCreate(false)} width={720}>
             <NewSessionForm
               characters={characters}
               missions={missions}
               defaultSessionAp={defaultSessionAp}
               today={today}
             />
-          </div>
-        </details>
+          </ModalOverlay>}
+        </div>
       )}
 
       <section className="flex flex-col gap-[12px]">

@@ -20,7 +20,7 @@ import ContentCardMenu from "@/components/timeline/ContentCardMenu";
 // LcarsLogEntry bleibt bestehen: die Charakter-Log-Liste nutzt sie weiter.
 export default function MissionLogOverview({
   missionSlug,
-  missionTitle,
+  missionTitle: _missionTitle,
   fullSynopsisHtml,
   logs,
   synopsisBlocks,
@@ -44,7 +44,7 @@ export default function MissionLogOverview({
     <section className="mission-log-overview">
       <h2 className="lcars-data-row-heading">Missionschronik</h2>
       <p className="lcars-eyebrow">
-        {logs.length} {logs.length === 1 ? "Log" : "Logs"} · {synopsisBlocks.length} {synopsisBlocks.length === 1 ? "Synopsis-Block" : "Synopsis-Blöcke"} · chronologisch
+        {logs.length} {logs.length === 1 ? "Log" : "Logs"} · {synopsisBlocks.length} {synopsisBlocks.length === 1 ? "Session-Block" : "Session-Blöcke"} · chronologisch
       </p>
 
       {(synopsisBlocks.length > 0 || fullSynopsisHtml) && (
@@ -59,7 +59,7 @@ export default function MissionLogOverview({
               headings={[
                 ...synopsisBlocks.map((block) => ({
                   id: `mission-synopsis-${block.id}`,
-                  text: `${synopsisBlockTitle(missionTitle, block.missionSessionNumber)} · ${fmtDate(block.ingameDate)}`,
+                  text: `Eintrag ${block.missionBlockNumber}`,
                 })),
                 ...(fullSynopsisHtml
                   ? [{ id: "mission-full-synopsis", text: "Synopsis" }]
@@ -85,7 +85,7 @@ export default function MissionLogOverview({
 
       {entries.length === 0 ? (
         <p className="lcars-empty-state">
-          Noch keine Logs oder Synopsis-Einträge vorhanden.
+          Noch keine Logs oder Session-Einträge vorhanden.
         </p>
       ) : (
         <div>
@@ -108,8 +108,8 @@ export default function MissionLogOverview({
                 >
                   <ChronoCard
                     color={CONTENT_TYPE_COLOR.mission}
-                    tag="Synopsis"
-                    title={synopsisBlockTitle(missionTitle, entry.block.missionSessionNumber)}
+                    tag="Session"
+                    title={`Session: ${fmtDate(entry.block.ingameDate)} - Eintrag ${entry.block.missionBlockNumber}`}
                     date={fmtDate(entry.block.ingameDate)}
                   >
                     <div
@@ -135,13 +135,6 @@ export default function MissionLogOverview({
       )}
     </section>
   );
-}
-
-function synopsisBlockTitle(
-  missionTitle: string,
-  missionSessionNumber: number | null,
-): string {
-  return `${missionTitle} - Eintrag ${missionSessionNumber ?? "?"}`;
 }
 
 // Eine Log-Zeile in der chronologischen Missionsübersicht.

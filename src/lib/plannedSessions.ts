@@ -222,13 +222,28 @@ export async function getPlannedSessionPlayers(
   return [...byUser.values()];
 }
 
-// Für die Spielleitung: auch die vergangenen Termine, neueste zuerst.
+// Alle geplanten Termine unabhängig davon, ob sie schon eingetragen wurden.
 export async function listAllPlannedSessions(): Promise<PlannedSession[]> {
   const rows = await sql<Row[]>`
     SELECT ${SELECT_COLUMNS}
     FROM planned_sessions s
     LEFT JOIN users u ON u.id = s.created_by
     LEFT JOIN missions m ON m.id = s.mission_id
+    ORDER BY s.scheduled_at DESC
+  `;
+  return withDetails(rows);
+}
+
+// Auf der Kampagnen-Seite bleiben nur offene Termine sichtbar. Bereits
+// eingetragene Abende stehen in der Sessions-Übersicht und sollen nicht weiter
+// zwischen den noch zu planenden oder nachzutragenden Terminen auftauchen.
+export async function listUnrecordedPlannedSessions(): Promise<PlannedSession[]> {
+  const rows = await sql<Row[]>`
+    SELECT ${SELECT_COLUMNS}
+    FROM planned_sessions s
+    LEFT JOIN users u ON u.id = s.created_by
+    LEFT JOIN missions m ON m.id = s.mission_id
+    WHERE s.game_session_id IS NULL
     ORDER BY s.scheduled_at DESC
   `;
   return withDetails(rows);

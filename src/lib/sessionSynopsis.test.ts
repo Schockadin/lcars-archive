@@ -17,7 +17,7 @@ describe("Session-Synopsis-Blöcke", () => {
   });
 
   it("formatiert das Ingame-Datum der Synopsis", () => {
-    expect(sessionSynopsisHeading("2401-08-03")).toBe("## Synopsis 2401-08-03");
+    expect(sessionSynopsisHeading("2401-08-03")).toBe("## 2401-08-03");
   });
 
   it("baut die Missionszusammenfassung aus mehreren Session-Blöcken", () => {
@@ -33,7 +33,7 @@ describe("Session-Synopsis-Blöcke", () => {
         },
       ]),
     ).toBe(
-      "## Synopsis 2401-08-03\n\nDie Crew erreichte den Außenposten.\n\n## Synopsis 2401-08-04\n\nVerhandlungen beginnen.",
+      "## 2401-08-03\n\nDie Crew erreichte den Außenposten.\n\n## 2401-08-04\n\nVerhandlungen beginnen.",
     );
   });
 

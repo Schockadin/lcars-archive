@@ -49,7 +49,7 @@ const VALID_STATUSES = ["active", "completed", "failed", "abandoned"] as const;
 // die Mission für die Teilnehmenden überhaupt erstmals sichtbar wird — bei
 // einem Entwurf konnte vorher niemand Teilnehmer-Benachrichtigungen
 // bekommen haben, egal ob per Anlegen oder per späterer Veröffentlichung.
-async function notifyMissionParticipants(
+export async function notifyMissionParticipants(
   missionSlug: string,
   missionTitle: string,
   participantCharacterIds: number[],

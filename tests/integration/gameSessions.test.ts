@@ -15,6 +15,8 @@ vi.mock("next/cache", () => ({
 import sql from "@/lib/db";
 import {
   createGameSession,
+  listActiveSessionMissions,
+  listMissionSynopsisBlocks,
   listSessionMissions,
   syncSessionLogbookAp,
 } from "@/lib/gameSessions";
@@ -78,6 +80,43 @@ async function setup() {
 }
 
 describe("Sessions", () => {
+  it("bietet zur Terminplanung nur aktive veröffentlichte Missionen an", async () => {
+    const active = await insertMission({ title: "Laufende Mission" });
+    const completed = await insertMission({ title: "Abgeschlossene Mission" });
+    await sql`UPDATE missions SET status = 'completed' WHERE id = ${completed.id}`;
+
+    const missions = await listActiveSessionMissions();
+    expect(missions.some((mission) => mission.id === active.id)).toBe(true);
+    expect(missions.some((mission) => mission.id === completed.id)).toBe(false);
+  });
+
+  it("nummeriert Summary-Blöcke fortlaufend über die Sessions einer Mission", async () => {
+    const gm = await insertUser({ role: "gm" });
+    const mission = await insertMission();
+    for (const [sessionIndex, blocks] of [
+      ["2399-01-01", ["A", "B", "C"]],
+      ["2399-02-01", ["D", "E"]],
+    ] as const) {
+      await createGameSession({
+        sessionDate: sessionIndex,
+        missionId: mission.id,
+        synopsisBlocks: blocks.map((body, index) => ({
+          ingameDate: `2399-01-${String(index + 1).padStart(2, "0")}`,
+          body,
+        })),
+        sessionAp: 0,
+        bonusAp: 0,
+        characterIds: [],
+        createdByUserId: gm.id,
+      });
+    }
+
+    const blocks = await listMissionSynopsisBlocks(mission.id);
+    expect(Object.fromEntries(blocks.map((block) => [block.body, block.missionBlockNumber]))).toEqual({
+      A: 1, B: 2, C: 3, D: 4, E: 5,
+    });
+  });
+
   it("sortiert Missionsauswahl nach dem jüngsten Startdatum", async () => {
     const older = await insertMission({ title: "Ältere Mission" });
     const newer = await insertMission({ title: "Neuere Mission" });
@@ -119,7 +158,7 @@ describe("Sessions", () => {
     const [saved] = await sql<{ sourceMarkdown: string }[]>`
       SELECT source_md AS "sourceMarkdown" FROM missions WHERE id = ${mission.id}
     `;
-    expect(saved.sourceMarkdown).toContain("## Synopsis 2399-01-01");
+    expect(saved.sourceMarkdown).toContain("## 2399-01-01");
     expect(saved.sourceMarkdown).toContain("Die Crew erreicht das Ziel.");
   });
 

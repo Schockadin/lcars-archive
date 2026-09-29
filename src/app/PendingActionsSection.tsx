@@ -11,6 +11,7 @@ const KIND_COLOR: Record<PendingActionKind, string> = {
   mission_log: "var(--lcars-primary)",
   dialogue_reply: "var(--lcars-senary)",
   draft: "var(--lcars-quinary)",
+  session_record: "var(--lcars-tertiary)",
 };
 
 export default function PendingActionsSection({

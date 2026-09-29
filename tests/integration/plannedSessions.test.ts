@@ -5,6 +5,7 @@ import {
   deletePlannedSession,
   getPlannedSessionPlayers,
   listAllPlannedSessions,
+  listUnrecordedPlannedSessions,
   listUpcomingSessions,
   setRsvp,
   updatePlannedSession,
@@ -252,6 +253,7 @@ describe("Session-Planer", () => {
       "Test Mission 1",
     );
     expect((await getPlannedSession(id))?.gameSessionId).toBe(gameSession.id);
+    expect((await listUnrecordedPlannedSessions()).some((session) => session.id === id)).toBe(false);
 
     // Wird die Session zurückgenommen, steht der Termin wieder als offen da.
     await sql`DELETE FROM game_sessions WHERE id = ${gameSession.id}`;

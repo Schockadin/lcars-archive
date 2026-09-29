@@ -22,7 +22,7 @@ import {
 // Bewusst KEINE eigene Tabelle: eine Aufgabe ist hier immer eine Ableitung
 // aus dem Bestand, kein eigener Zustand, der gepflegt werden müsste.
 
-export type PendingActionKind = "mission_log" | "dialogue_reply" | "draft";
+export type PendingActionKind = "mission_log" | "dialogue_reply" | "draft" | "session_record";
 
 export interface PendingAction {
   kind: PendingActionKind;
@@ -42,8 +42,9 @@ export const DRAFT_STALE_DAYS = 7;
 
 export async function getPendingActions(
   userId: number,
+  includeGmSessions = false,
 ): Promise<PendingAction[]> {
-  const [missions, dialogues, drafts] = await Promise.all([
+  const [missions, dialogues, drafts, sessions] = await Promise.all([
     // 1. Missionen mit eigener Figur, aber ohne eigenes Logbuch. Gezählt wird
     // je Mission, nicht je Figur: zwei eigene Figuren in derselben Mission
     // sind eine Aufgabe, nicht zwei.
@@ -100,6 +101,16 @@ export async function getPendingActions(
       WHERE owner_user_id = ${userId} AND is_draft = true AND deleted_at IS NULL
         AND updated_at < NOW() - ${`${DRAFT_STALE_DAYS} days`}::interval
     `,
+    includeGmSessions
+      ? sql<{ id: number; title: string; since: string }[]>`
+          SELECT ps.id, COALESCE(m.title || ' ' || ps.mission_session_number::text, ps.title) AS title,
+                 ps.scheduled_at::text AS since
+          FROM planned_sessions ps
+          LEFT JOIN missions m ON m.id = ps.mission_id
+          WHERE ps.game_session_id IS NULL AND ps.scheduled_at <= NOW()
+          ORDER BY ps.scheduled_at ASC
+        `
+      : Promise.resolve([]),
   ]);
 
   const actions: PendingAction[] = [
@@ -125,6 +136,13 @@ export async function getPendingActions(
       subject: d.title,
       href: d.kind === "mission" ? missionHref(d.slug) : archiveHref(d.slug),
       since: d.since,
+    })),
+    ...sessions.map((s) => ({
+      kind: "session_record" as const,
+      label: "Gespielte Session eintragen",
+      subject: s.title,
+      href: `/gm/campaign#planned-session-${s.id}`,
+      since: s.since,
     })),
   ];
 

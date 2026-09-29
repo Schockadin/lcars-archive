@@ -169,7 +169,12 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "inhalte",
       },
       {
-        text: "Beim Eintragen einer Session wählt die Spielleitung die Mission aus und ergänzt einen datierten Bericht in deren Zusammenfassung.",
+        text: "Beim Eintragen einer Session ergänzt die Spielleitung datierte Zusammenfassungsblöcke. Die Blöcke werden missionenweit fortlaufend nummeriert und in der Missionschronik als Sessions angezeigt.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Spieltermine werden auf der Kampagnenseite geplant: Die Spielleitung wählt eine laufende Mission oder legt direkt eine neue an. Der Termin erhält automatisch den Missionsnamen und seine laufende Nummer; vergangene, noch nicht eingetragene Abende erscheinen als Aufgabe auf dem Dashboard.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },

@@ -7,7 +7,6 @@ import {
   SubmitButton,
 } from "@/app/_shared/FormPrimitives";
 import ModalOverlay from "@/components/ModalOverlay";
-import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import {
   createPlannedSessionAction,
@@ -26,8 +25,9 @@ import {
 import type { PlannedSession } from "@/lib/plannedSessionTypes";
 import type { ActiveCharacter } from "@/lib/gameSessions";
 import type { SessionMissionOption } from "@/lib/gameSessions";
+import type { CharacterParticipantOption } from "@/lib/characters";
 import { SessionContextFields } from "./SessionManager";
-import { CheckIcon, PencilIcon, PlusIcon, TrashIcon, XIcon } from "@/lib/icons";
+import { CheckIcon, PencilIcon, TrashIcon, XIcon } from "@/lib/icons";
 
 // Die anstehenden Spieltermine — angekündigt von der Spielleitung, mit den
 // Zu- und Absagen der Runde daneben.
@@ -92,12 +92,17 @@ function SessionFields({
   session,
   characters,
   missions,
+  missionCharacters,
+  defaultMissionStartedAt,
 }: {
   session?: PlannedSession;
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
+  missionCharacters: CharacterParticipantOption[];
+  defaultMissionStartedAt: string | null;
 }) {
   const id = session ? `p${session.id}` : "neu";
+  const [missionChoice, setMissionChoice] = useState(String(session?.missionId ?? ""));
   return (
     <>
       <FormField label="Zeitpunkt" htmlFor={`ps-at-${id}`}>
@@ -125,16 +130,56 @@ function SessionFields({
             id={`ps-mission-${id}`}
             name="missionId"
             required
-            defaultValue={session?.missionId ?? ""}
+            value={missionChoice}
+            onChange={(event) => setMissionChoice(event.target.value)}
             className="lcars-input rounded-full"
           >
             <option value="" disabled>Mission auswählen</option>
+            {session?.missionId && !missions.some((mission) => mission.id === session.missionId) && (
+              <option value={session.missionId}>{session.missionTitle ?? session.title} (nicht mehr laufend)</option>
+            )}
             {missions.map((mission) => (
               <option key={mission.id} value={mission.id}>{mission.title}</option>
             ))}
+            {!session && <option value="new">Neue Mission hinzufügen</option>}
           </select>
         )}
       </FormField>
+      {!session && missionChoice === "new" && (
+        <fieldset className="flex flex-col gap-[8px] rounded-lg border border-lcars-border p-[10px]">
+          <legend className="lcars-eyebrow px-[4px]">Neue Mission</legend>
+          <FormField label="Titel" htmlFor={`ps-new-title-${id}`}>
+            <input id={`ps-new-title-${id}`} name="missionTitle" required maxLength={200} className="lcars-input rounded-full" />
+          </FormField>
+          <FormField label="Slug (optional)" htmlFor={`ps-new-slug-${id}`}>
+            <input id={`ps-new-slug-${id}`} name="missionSlug" maxLength={200} className="lcars-input rounded-full" />
+          </FormField>
+          <div className="flex flex-wrap gap-[8px]">
+            <FormField label="Start" htmlFor={`ps-new-start-${id}`}>
+              <input id={`ps-new-start-${id}`} type="date" name="missionStartedAt" defaultValue={defaultMissionStartedAt ?? ""} className="lcars-input rounded-full" />
+            </FormField>
+            <FormField label="Ende (optional)" htmlFor={`ps-new-end-${id}`}>
+              <input id={`ps-new-end-${id}`} type="date" name="missionEndedAt" className="lcars-input rounded-full" />
+            </FormField>
+          </div>
+          <FormField label="Tags (kommagetrennt)" htmlFor={`ps-new-tags-${id}`}>
+            <input id={`ps-new-tags-${id}`} name="missionTags" className="lcars-input rounded-full" />
+          </FormField>
+          <FormField label="Teaser (optional)" htmlFor={`ps-new-teaser-${id}`}>
+            <textarea id={`ps-new-teaser-${id}`} name="missionTeaser" rows={2} maxLength={1000} className="lcars-input rounded-lg" />
+          </FormField>
+          <FormField label="Teilnehmende Charaktere" htmlFor={`ps-new-participants-${id}`} hint="Mehrfachauswahl mit Strg/Cmd- oder Shift-Klick.">
+            {missionCharacters.length > 0 ? (
+              <select id={`ps-new-participants-${id}`} name="participantCharacterIds" multiple size={Math.min(8, missionCharacters.length)} className="lcars-input rounded-lg h-auto py-[8px]">
+                {missionCharacters.filter((character) => character.status === "active").map((character) => (
+                  <option key={character.id} value={character.id}>{character.name} ({character.playerName})</option>
+                ))}
+              </select>
+            ) : <p className="lcars-empty-state">Keine Charaktere zur Auswahl.</p>}
+          </FormField>
+          <p className="text-lcars-ink-dim text-[12px]">Die Mission wird als laufend angelegt. Ihre Synopsis entsteht automatisch aus den später eingetragenen Session-Blöcken.</p>
+        </fieldset>
+      )}
       <FormField label="Ort (optional)" htmlFor={`ps-loc-${id}`}>
         <input
           id={`ps-loc-${id}`}
@@ -143,17 +188,6 @@ function SessionFields({
           defaultValue={session?.location ?? ""}
           maxLength={200}
           className="lcars-input"
-        />
-      </FormField>
-      <FormField label="Notiz (optional)" htmlFor={`ps-notes-${id}`}>
-        {/* Markdown wie in allen anderen Textfeldern des Projekts — die
-            Notiz steht auf der Startseite und darf Betontes, Listen und
-            Links tragen. */}
-        <MarkdownEditor
-          id={`ps-notes-${id}`}
-          name="notes"
-          rows={4}
-          defaultValue={session?.notes ?? ""}
         />
       </FormField>
       <CharacterChecklist
@@ -203,7 +237,7 @@ function RecordSessionModal({
         {formatSessionMoment(session.scheduledAt)}
         {session.title && ` · ${session.title}`}
       </p>
-      <form action={formAction} className="flex flex-col gap-[12px]">
+      <form action={formAction} className="flex flex-col gap-[12px]" data-no-draft>
         <input type="hidden" name="plannedId" value={session.id} />
         <input
           type="hidden"
@@ -264,12 +298,18 @@ function PlannedSessionRow({
   session,
   characters,
   missions,
+  recordMissions,
+  missionCharacters,
   defaultSessionAp,
+  defaultMissionStartedAt,
 }: {
   session: PlannedSession;
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
+  recordMissions: SessionMissionOption[];
+  missionCharacters: CharacterParticipantOption[];
   defaultSessionAp: number;
+  defaultMissionStartedAt: string | null;
 }) {
   const [edit, setEdit] = useState(false);
   const [record, setRecord] = useState(false);
@@ -287,7 +327,7 @@ function PlannedSessionRow({
   const erledigt = session.gameSessionId !== null;
 
   return (
-    <li className="flex flex-col gap-[6px] border-b border-lcars-border pb-[10px]">
+    <li id={`planned-session-${session.id}`} className="scroll-mt-24 flex flex-col gap-[6px] border-b border-lcars-border pb-[10px]">
       <div className="flex flex-wrap items-start gap-[10px]">
         <span className="flex-1 min-w-[220px] flex flex-col">
           <strong className="text-lcars-ink-data">
@@ -348,9 +388,9 @@ function PlannedSessionRow({
       </div>
 
       {edit && (
-        <form action={updateAction} className="flex flex-col">
+        <form action={updateAction} className="flex flex-col" data-no-draft>
           <input type="hidden" name="id" value={session.id} />
-          <SessionFields session={session} characters={characters} missions={missions} />
+          <SessionFields session={session} characters={characters} missions={missions} missionCharacters={missionCharacters} defaultMissionStartedAt={defaultMissionStartedAt} />
           <SubmitButton pending={updatePending} pendingLabel="Speichert…" className="lcars-icon-btn" ariaLabel="Termin speichern" title="Termin speichern">
             <CheckIcon />
           </SubmitButton>
@@ -360,7 +400,7 @@ function PlannedSessionRow({
         <RecordSessionModal
           session={session}
           characters={characters}
-          missions={missions}
+          missions={recordMissions}
           defaultSessionAp={defaultSessionAp}
           onClose={() => setRecord(false)}
         />
@@ -374,19 +414,21 @@ export default function PlannedSessionManager({
   sessions,
   characters,
   missions,
+  recordMissions,
+  missionCharacters,
   defaultSessionAp,
+  defaultMissionStartedAt,
   showCreateForm = true,
 }: {
   sessions: PlannedSession[];
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
+  recordMissions: SessionMissionOption[];
+  missionCharacters: CharacterParticipantOption[];
   defaultSessionAp: number;
+  defaultMissionStartedAt: string | null;
   showCreateForm?: boolean;
 }) {
-  const [state, formAction, pending] = useActionState<
-    PlannedSessionState,
-    FormData
-  >(createPlannedSessionAction, {});
   const [announce, setAnnounce] = useState(false);
 
   return (
@@ -396,12 +438,9 @@ export default function PlannedSessionManager({
         {showCreateForm && (
           <button
             type="button"
-            className="lcars-icon-btn"
-            aria-label="Termin ankündigen"
-            title="Termin ankündigen"
+            className="lcars-pill-btn--outline"
             onClick={() => setAnnounce(true)}
-          ><PlusIcon />
-          </button>
+          >Termin planen</button>
         )}
       </div>
       {showCreateForm && (
@@ -413,27 +452,14 @@ export default function PlannedSessionManager({
       )}
 
       {showCreateForm && announce && (
-        <ModalOverlay
-          title="Termin ankündigen"
+        <CreatePlannedSessionModal
+          characters={characters}
+          missions={missions}
+          missionCharacters={missionCharacters}
+          defaultMissionStartedAt={defaultMissionStartedAt}
           onClose={() => setAnnounce(false)}
-          width={720}
-        >
-          <form
-            action={(data) => {
-              formAction(data);
-              setAnnounce(false);
-            }}
-            className="flex flex-col"
-          >
-            <SessionFields characters={characters} missions={missions} />
-            <SubmitButton pending={pending} pendingLabel="Wird angekündigt…" className="lcars-icon-btn" ariaLabel="Termin hinzufügen" title="Termin hinzufügen">
-              <PlusIcon />
-            </SubmitButton>
-          </form>
-        </ModalOverlay>
+        />
       )}
-      <FormError message={state.error} />
-      {state.success && <FormSuccess>{state.success}</FormSuccess>}
 
       {sessions.length === 0 ? (
         <p className="lcars-empty-state">Kein Termin angekündigt.</p>
@@ -445,11 +471,49 @@ export default function PlannedSessionManager({
               session={s}
               characters={characters}
               missions={missions}
+              recordMissions={recordMissions}
+              missionCharacters={missionCharacters}
               defaultSessionAp={defaultSessionAp}
+              defaultMissionStartedAt={defaultMissionStartedAt}
             />
           ))}
         </ul>
       )}
     </section>
+  );
+}
+
+function CreatePlannedSessionModal({
+  characters,
+  missions,
+  missionCharacters,
+  defaultMissionStartedAt,
+  onClose,
+}: {
+  characters: ActiveCharacter[];
+  missions: SessionMissionOption[];
+  missionCharacters: CharacterParticipantOption[];
+  defaultMissionStartedAt: string | null;
+  onClose: () => void;
+}) {
+  const [state, formAction, pending] = useActionState<PlannedSessionState, FormData>(
+    createPlannedSessionAction,
+    {},
+  );
+  return (
+    <ModalOverlay title="Session planen" onClose={onClose} width={720}>
+      {state.success ? (
+        <div className="flex flex-col gap-[12px]">
+          <FormSuccess>{state.success}</FormSuccess>
+          <button type="button" className="lcars-pill-btn--outline self-start" onClick={onClose}>Schließen</button>
+        </div>
+      ) : (
+        <form action={formAction} className="flex flex-col gap-[12px]" data-no-draft>
+          <SessionFields characters={characters} missions={missions} missionCharacters={missionCharacters} defaultMissionStartedAt={defaultMissionStartedAt} />
+          <SubmitButton pending={pending} pendingLabel="Wird geplant…" className="lcars-pill-btn--outline">Session planen</SubmitButton>
+          <FormError message={state.error} />
+        </form>
+      )}
+    </ModalOverlay>
   );
 }

@@ -133,6 +133,7 @@ export interface GmMissionOverviewItem {
   slug: string;
   title: string;
   status: MissionStatus;
+  startedAt: string | null;
   isDraft: boolean;
   ownerId: number | null;
   ownerName: string | null;
@@ -154,12 +155,13 @@ export async function getAllMissionsForGmOverview(): Promise<
       slug: string;
       title: string;
       status: MissionStatus;
+      started_at: string | null;
       is_draft: boolean;
       owner_user_id: number | null;
       owner_name: string | null;
     }[]
   >`
-    SELECT m.id, m.slug, m.title, m.status, m.is_draft AS is_draft,
+    SELECT m.id, m.slug, m.title, m.status, m.started_at::text AS started_at, m.is_draft AS is_draft,
            m.owner_user_id, u.name AS owner_name
     FROM missions m
     LEFT JOIN users u ON u.id = m.owner_user_id
@@ -173,6 +175,7 @@ export async function getAllMissionsForGmOverview(): Promise<
     slug: row.slug,
     title: row.title,
     status: row.status,
+    startedAt: row.started_at,
     isDraft: row.is_draft,
     ownerId: row.owner_user_id,
     ownerName: row.owner_name,

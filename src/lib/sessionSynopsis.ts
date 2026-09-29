@@ -17,7 +17,7 @@ export function defaultSessionSynopsisDate(
 }
 
 export function sessionSynopsisHeading(ingameDate: string): string {
-  return `## Synopsis ${ingameDate}`;
+  return `## ${ingameDate}`;
 }
 
 export function buildMissionSynopsisMarkdown(

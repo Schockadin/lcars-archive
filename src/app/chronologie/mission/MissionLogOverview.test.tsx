@@ -59,13 +59,13 @@ describe("MissionLogOverview", () => {
     renderOverview();
 
     expect(screen.getByRole("heading", { level: 2, name: "Missionschronik" })).toBeInTheDocument();
-    expect(screen.getByText(/3 Logs · 0 Synopsis-Blöcke/)).toBeInTheDocument();
+    expect(screen.getByText(/3 Logs · 0 Session-Blöcke/)).toBeInTheDocument();
   });
 
   it("zählt ein einzelnes Logbuch im Singular", () => {
     renderOverview({ logs: [log(1, "Allein")] });
 
-    expect(screen.getByText(/1 Log · 0 Synopsis-Block/)).toBeInTheDocument();
+    expect(screen.getByText(/1 Log · 0 Session-Block/)).toBeInTheDocument();
   });
 
   it("verlinkt jede Karte auf das Logbuch in dieser Mission", () => {
@@ -96,12 +96,14 @@ describe("MissionLogOverview", () => {
   it("ordnet Logs und Synopsisblöcke gemeinsam chronologisch absteigend", () => {
     const { container } = renderOverview({
       logs: [log(1, "Log eins", "T'Lara", "2234-12-20"), log(2, "Log zwei", "T'Lara", "2234-12-21")],
-      synopsisBlocks: [{ id: 7, sessionId: 8, missionSessionNumber: 8, ingameDate: "2234-12-20", body: "Zwischenfall", bodyHtml: "<p>Zwischenfall</p>" }],
+      synopsisBlocks: [{ id: 7, sessionId: 8, missionSessionNumber: 8, missionBlockNumber: 8, ingameDate: "2234-12-20", body: "Zwischenfall", bodyHtml: "<p>Zwischenfall</p>" }],
     });
     expect(container.querySelectorAll(".timeline-period")).toHaveLength(0);
     expect(container.querySelectorAll(".timeline-card")).toHaveLength(3);
-    expect([...container.querySelectorAll(".timeline-card-title")].map((node) => node.textContent)).toEqual(["Log zwei", "Log eins", "Deneb IV - Eintrag 8"]);
-    expect(screen.getByText("Deneb IV - Eintrag 8")).toBeInTheDocument();
+    expect([...container.querySelectorAll(".timeline-card-title")].map((node) => node.textContent)).toEqual(["Log zwei", "Log eins", "Session: 20.12.2234 - Eintrag 8"]);
+    expect(screen.getByText("Session: 20.12.2234 - Eintrag 8")).toBeInTheDocument();
+    expect([...container.querySelectorAll(".timeline-tag")].map((node) => node.textContent)).toContain("Session");
+    expect([...container.querySelectorAll(".lcars-toc-link")].map((node) => node.textContent)).toContain("Eintrag 8");
     expect(screen.getAllByText("20.12.2234").length).toBeGreaterThan(0);
   });
 
@@ -111,6 +113,7 @@ describe("MissionLogOverview", () => {
         id: 7,
         sessionId: 8,
         missionSessionNumber: 8,
+        missionBlockNumber: 8,
         ingameDate: "2234-12-20",
         body: "Zwischenfall",
         bodyHtml: "<p>Zwischenfall</p>",
@@ -139,7 +142,7 @@ describe("MissionLogOverview", () => {
   it("sagt Bescheid, wenn es keine Logs oder Synopsis-Einträge gibt", () => {
     const { container } = renderOverview({ logs: [] });
 
-    expect(screen.getByText("Noch keine Logs oder Synopsis-Einträge vorhanden.")).toHaveClass("lcars-empty-state");
+    expect(screen.getByText("Noch keine Logs oder Session-Einträge vorhanden.")).toHaveClass("lcars-empty-state");
     expect(container.querySelector(".mission-sort")).toBeNull();
   });
 });

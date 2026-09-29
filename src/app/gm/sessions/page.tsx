@@ -8,8 +8,6 @@ import {
 } from "@/lib/gameSessions";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import SessionManager from "./SessionManager";
-import PlannedSessionManager from "./PlannedSessionManager";
-import { listAllPlannedSessions } from "@/lib/plannedSessions";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmSessionsGuide } from "@/components/help/guides/GmGuides";
 
@@ -23,12 +21,11 @@ export const metadata: Metadata = {
 export default async function GmSessionsPage() {
   await requireGM();
 
-  const [sessions, characters, rules, planned, missions] =
+  const [sessions, characters, rules, missions] =
     await Promise.all([
       listGameSessions(),
       listActiveCharactersForAp(),
       getAdvancementRules(),
-      listAllPlannedSessions(),
       listSessionMissions(),
     ]);
 
@@ -53,15 +50,6 @@ export default async function GmSessionsPage() {
         </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[16px]">
-          {/* Erst der Blick nach vorn (Termine), dann die Nachbuchung der
-              gespielten Sessions. */}
-          <PlannedSessionManager
-            sessions={planned}
-            characters={characters}
-            missions={missions}
-            defaultSessionAp={rules.apPerSession}
-          />
-
           <p className="text-lcars-ink-dim text-[13px]">
             Eine eingetragene Session schreibt allen ausgewählten Charakteren
             die Session-AP und die Bonus-AP gut. Vorausgewählt sind alle aktiven
