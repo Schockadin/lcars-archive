@@ -1169,6 +1169,13 @@ export default function TutorialPage() {
                   separate Sicherung.
                 </li>
                 <li>
+                  Unter <strong>„Datenbank → DB-Backup“</strong> findest du
+                  außerdem Befehle für ein vollständiges PostgreSQL-Backup mit
+                  <code>pg_dump</code>{" "}und zum atomaren Zurückspielen mit
+                  <code>pg_restore</code>. Diese beiden Befehle laufen lokal auf
+                  deinem Rechner und sichern auch Userkonten.
+                </li>
+                <li>
                   Unter <strong>„Import“</strong> eine oder mehrere
                   Markdown-Dateien im Vault-Frontmatter-Format hochladen, um
                   daraus neue Datenbank-Einträge, Missionen, Charaktere oder

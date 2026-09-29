@@ -8,6 +8,7 @@ import {
 } from "./dbBackupActions";
 import type { RestoreDbSummary } from "@/lib/dbBackup";
 import BackupPanel from "./BackupPanel";
+import PgDumpPanel from "./PgDumpPanel";
 
 const CONFIRM_IMPORT_MESSAGE =
   "Dieses Backup jetzt einspielen? Das ERSETZT den kompletten aktuellen " +
@@ -30,51 +31,53 @@ const CONFIRM_IMPORT_MESSAGE =
 // Panel mit dem User-Backup teilt.
 export default function DbBackupPanel() {
   return (
-    <BackupPanel<RestoreDbSummary>
-      description={
-        <>
-          Exportiert den kompletten Datenbankinhalt außer Useraccounts
-          (Charaktere, Missionen, Mission-Logs, Datenbank-Einträge, Follows,
-          Dialog-Nachrichten, Timeline, dazu seit Format 2 auch AP-Konto,
-          Talente, Schwerpunkte, Hausregeln, Sessions, Notizen, Fassungen,
-          Bilder und Rollen) als eine JSON-Datei. User laufen
-          über ein eigenes, paralleles Backup (siehe „User-Backup“ oben). Der
-          Import ERSETZT den gesamten aktuellen Inhalt (außer Usern) durch den
-          Stand der gewählten Datei. Die Datei ist entsprechend sensibel — nur
-          für die Administration.
-        </>
-      }
-      fileNamePrefix="neo-archiv-db-backup"
-      r2KeyPrefix="db-backups/"
-      confirmImportMessage={CONFIRM_IMPORT_MESSAGE}
-      confirmLocalImport
-      columns
-      actions={{
-        exportLocal: exportDbBackupAction,
-        exportToR2: exportDbBackupToR2Action,
-        listR2: listR2BackupsAction,
-        importLocal: importDbBackupAction,
-        importFromR2: importDbBackupFromR2Action,
-      }}
-      renderSummary={(summary) => (
-        <>
-          Wiederhergestellt:{" "}
-          {summary.tables.map((t) => `${t.name} (${t.rows})`).join(" · ")}
-          {/* Eine Datei im alten Zuschnitt (Format 1) kennt die
-              Kampagnentabellen nicht. Sie werden beim Restore trotzdem
-              geleert, sobald sie an einem wiederhergestellten Inhalt hängen
-              (TRUNCATE ... CASCADE, siehe dbBackup.ts) — das soll hier stehen
-              und nicht erst auffallen, wenn das AP-Konto fehlt. */}
-          {summary.missingTables.length > 0 && (
-            <div className="mt-[8px] text-lcars-quinary-ink">
-              Die Datei (Format {summary.version}) enthielt diese Tabellen
-              nicht:{" "}
-              {summary.missingTables.join(" · ")}. Wo sie an einem
-              wiederhergestellten Inhalt hängen, sind sie jetzt leer.
-            </div>
-          )}
-        </>
-      )}
-    />
+    <>
+      <BackupPanel<RestoreDbSummary>
+        description={
+          <>
+            Exportiert den kompletten Datenbankinhalt außer Useraccounts
+            (Charaktere, Missionen, Mission-Logs, Datenbank-Einträge, Follows,
+            Dialog-Nachrichten, Timeline, dazu seit Format 2 auch AP-Konto,
+            Talente, Schwerpunkte, Hausregeln, Sessions, Notizen, Fassungen,
+            Bilder und Rollen) als eine JSON-Datei. User laufen über ein
+            eigenes, paralleles Backup (siehe „User-Backup“ oben). Der Import
+            ERSETZT den gesamten aktuellen Inhalt (außer Usern) durch den Stand
+            der gewählten Datei. Die Datei ist entsprechend sensibel — nur für
+            die Administration.
+          </>
+        }
+        fileNamePrefix="neo-archiv-db-backup"
+        r2KeyPrefix="db-backups/"
+        confirmImportMessage={CONFIRM_IMPORT_MESSAGE}
+        confirmLocalImport
+        columns
+        actions={{
+          exportLocal: exportDbBackupAction,
+          exportToR2: exportDbBackupToR2Action,
+          listR2: listR2BackupsAction,
+          importLocal: importDbBackupAction,
+          importFromR2: importDbBackupFromR2Action,
+        }}
+        renderSummary={(summary) => (
+          <>
+            Wiederhergestellt:{" "}
+            {summary.tables.map((t) => `${t.name} (${t.rows})`).join(" · ")}
+            {/* Eine Datei im alten Zuschnitt (Format 1) kennt die
+                Kampagnentabellen nicht. Sie werden beim Restore trotzdem
+                geleert, sobald sie an einem wiederhergestellten Inhalt hängen
+                (TRUNCATE ... CASCADE, siehe dbBackup.ts) — das soll hier stehen
+                und nicht erst auffallen, wenn das AP-Konto fehlt. */}
+            {summary.missingTables.length > 0 && (
+              <div className="mt-[8px] text-lcars-quinary-ink">
+                Die Datei (Format {summary.version}) enthielt diese Tabellen
+                nicht: {summary.missingTables.join(" · ")}. Wo sie an einem
+                wiederhergestellten Inhalt hängen, sind sie jetzt leer.
+              </div>
+            )}
+          </>
+        )}
+      />
+      <PgDumpPanel />
+    </>
   );
 }

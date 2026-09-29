@@ -1660,6 +1660,8 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:reset`          | Setzt die Datenbank zurück                                                                                                                                                                                                                                                                      |
 | `npm run db:backup`         | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup")                                                                                                                                                                                                           |
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                                                                                                                                                                   |
+| `npm run db:pg-dump`        | Erstellt mit `pg_dump` ein vollständiges lokales PostgreSQL-Backup (Custom-Format)                                                                                                                                                                                                              |
+| `npm run db:pg-restore -- "<Datei>"` | Spielt einen lokalen pg_dump nach ausdrücklicher Bestätigung atomar zurück; ersetzt Datenbankobjekte aus dem Dump                                                                                                                                              |
 | `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                                                                                                                                                                             |
 | `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                                                                                                                                                                   |
 | `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Zugangs-Gates der kontogebundenen Routen, Komponenten-Galerie inkl. Charakter-Assistent, Bogen-Ansicht, Chronologie, Einstiegs-Liste und aufklappbaren Abschnitten sowie Layout-/Schrift-Regressionen an beiden Viewports) |
@@ -1673,6 +1675,15 @@ R2-Zugangsdaten direkt aus der Prozessumgebung (kein `--env-file`, siehe
 GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
 „Dev-/Preview-Umgebung" unter Deployment.
 
+Die vollständigen PostgreSQL-Dumps dieser Datenbank verwenden `DIRECT_DATABASE_URL`
+(wenn gesetzt), sonst `DATABASE_URL` aus `.env.local`. `pg_dump` und `pg_restore`
+müssen lokal installiert sein. Ohne Ausgabepfad speichert `db:pg-dump` die
+Datei in `Dokumente/Neo-Archiv-Backups`. Ein Restore verlangt die Eingabe einer
+Bestätigung und läuft in einer Transaktion; dennoch sollte vor dem Aufruf
+geprüft werden, dass die Verbindungs-URL auf die richtige Datenbank zeigt.
+Beide Kommandos sind auch im Admin-Bereich unter „Datenbank → DB-Backup"
+beschrieben.
+
 ---
 
 ## 📂 Projektstruktur
@@ -1685,6 +1696,8 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
 │   ├── setup-db.ts           # Schema anlegen
 │   ├── reset-db.ts           # Datenbank zurücksetzen
 │   ├── backup-db.ts          # Voll-Backup nach R2 (täglicher Cronjob)
+│   ├── pg-dump.ts            # Vollständiger lokaler PostgreSQL-Dump
+│   ├── pg-restore.ts         # Bestätigter atomarer Restore eines pg_dump
 │   ├── cleanup-db-backups.ts # Löscht R2-Backups älter als 30 Tage
 │   ├── purge-soft-deleted.ts # Entfernt weich gelöschte Inhalte älter als 7 Tage endgültig
 │   └── ingest/               # Markdown-Vault → Datenbank

@@ -43,6 +43,8 @@
     "embed:all:dev": "tsx --env-file=.env.development.local scripts/embed-all.ts",
     "db:backup": "tsx --conditions=react-server scripts/backup-db.ts",
     "db:backup:cleanup": "tsx --conditions=react-server scripts/cleanup-db-backups.ts",
+    "db:pg-dump": "tsx --env-file=.env.local scripts/pg-dump.ts",
+    "db:pg-restore": "tsx --env-file=.env.local scripts/pg-restore.ts",
     "db:purge-deleted": "tsx --conditions=react-server scripts/purge-soft-deleted.ts",
     "admin:log-digest": "tsx --conditions=react-server scripts/send-admin-log-digest.ts",
     "assets:migrate-content-images": "tsx --conditions=react-server --env-file=.env.local scripts/migrate-content-images-to-asset-bucket.ts",

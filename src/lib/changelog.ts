@@ -174,6 +174,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "spielleitung-admins",
       },
       {
+        text: "Die Administration kann zusätzlich vollständige PostgreSQL-Dumps lokal speichern und nach Bestätigung atomar zurückspielen.",
+        category: "export",
+        tutorial: "spielleitung-admins",
+      },
+      {
         text: "Angekündigte Termine gehören zu einer Mission und erhalten fortlaufende Namen; in der Missionschronik führen Sprungmarken direkt zu den Session-Zusammenfassungen.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
