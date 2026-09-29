@@ -90,6 +90,12 @@ export default function AdminMissionsBrowser({
                 users={users}
               />
               <Link
+                href={`/gm/missions/${encodeURIComponent(mission.slug)}`}
+                className="lcars-pill-btn--outline text-[12px]"
+              >
+                Sessions & Synopsis
+              </Link>
+              <Link
                 href={missionEditHref(mission.id)}
                 className="lcars-icon-btn"
                 aria-label="Bearbeiten"

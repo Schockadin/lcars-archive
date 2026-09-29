@@ -174,6 +174,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "spielleitung-admins",
       },
       {
+        text: "In der Missionsverwaltung lassen sich die Sessions einer Mission samt Summary-Blöcken gebündelt ansehen und bearbeiten.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
         text: "Die Administration kann zusätzlich vollständige PostgreSQL-Dumps lokal speichern und nach Bestätigung atomar zurückspielen.",
         category: "export",
         tutorial: "spielleitung-admins",

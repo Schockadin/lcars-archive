@@ -361,7 +361,10 @@ function SessionRow({
   );
 
   return (
-    <div className="flex flex-col gap-[6px] border-b border-[var(--lcars-ink-dim)]/30 pb-[8px]">
+    <div
+      id={`session-${session.id}`}
+      className="scroll-mt-24 flex flex-col gap-[6px] border-b border-[var(--lcars-ink-dim)]/30 pb-[8px]"
+    >
       <button
         type="button"
         className="flex flex-wrap items-center gap-[8px] text-left"
@@ -545,6 +548,8 @@ export default function SessionManager({
   defaultSessionAp,
   apPerLogbook,
   today,
+  showCreateForm = true,
+  sessionsHeading = "Bisherige Sessions",
 }: {
   sessions: GameSession[];
   characters: ActiveCharacter[];
@@ -557,25 +562,29 @@ export default function SessionManager({
   // vorbelegen (ein `new Date()` im Client wiche sonst ab und würde
   // hydrieren-Warnungen erzeugen).
   today: string;
+  showCreateForm?: boolean;
+  sessionsHeading?: string;
 }) {
   return (
     <div className="flex flex-col gap-[24px]">
-      <details className="lcars-collapsible">
-        <summary className="lcars-collapsible-summary">
-          <h2 className="text-lcars-primary-ink">Session nachtragen</h2>
-        </summary>
-        <div className="pt-[12px]">
-          <NewSessionForm
-            characters={characters}
-            missions={missions}
-            defaultSessionAp={defaultSessionAp}
-            today={today}
-          />
-        </div>
-      </details>
+      {showCreateForm && (
+        <details className="lcars-collapsible">
+          <summary className="lcars-collapsible-summary">
+            <h2 className="text-lcars-primary-ink">Session nachtragen</h2>
+          </summary>
+          <div className="pt-[12px]">
+            <NewSessionForm
+              characters={characters}
+              missions={missions}
+              defaultSessionAp={defaultSessionAp}
+              today={today}
+            />
+          </div>
+        </details>
+      )}
 
       <section className="flex flex-col gap-[12px]">
-        <h2 className="text-lcars-primary-ink">Bisherige Sessions</h2>
+        <h2 className="text-lcars-primary-ink">{sessionsHeading}</h2>
         {sessions.length === 0 ? (
           <p className="lcars-empty-state">Noch keine Session eingetragen.</p>
         ) : (

@@ -374,11 +374,13 @@ export default function PlannedSessionManager({
   characters,
   missions,
   defaultSessionAp,
+  showCreateForm = true,
 }: {
   sessions: PlannedSession[];
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
   defaultSessionAp: number;
+  showCreateForm?: boolean;
 }) {
   const [state, formAction, pending] = useActionState<
     PlannedSessionState,
@@ -390,21 +392,25 @@ export default function PlannedSessionManager({
     <section className="mb-[24px]">
       <div className="flex flex-wrap items-center justify-between gap-[10px]">
         <h2>Anstehende Spieltermine</h2>
-        <button
-          type="button"
-          className="lcars-pill-btn--outline"
-          onClick={() => setAnnounce(true)}
-        >
-          Termin ankündigen
-        </button>
+        {showCreateForm && (
+          <button
+            type="button"
+            className="lcars-pill-btn--outline"
+            onClick={() => setAnnounce(true)}
+          >
+            Termin ankündigen
+          </button>
+        )}
       </div>
-      <p className="text-lcars-ink-dim text-[13px] mb-[10px]">
-        Angekündigte Termine stehen allen Angemeldeten auf der Startseite, mit
-        Zu- und Absage. Ist der Abend gespielt, macht &bdquo;Session
-        eintragen&ldquo; daraus die Nachbuchung mit AP.
-      </p>
+      {showCreateForm && (
+        <p className="text-lcars-ink-dim text-[13px] mb-[10px]">
+          Angekündigte Termine stehen allen Angemeldeten auf der Startseite, mit
+          Zu- und Absage. Ist der Abend gespielt, macht &bdquo;Session
+          eintragen&ldquo; daraus die Nachbuchung mit AP.
+        </p>
+      )}
 
-      {announce && (
+      {showCreateForm && announce && (
         <ModalOverlay
           title="Termin ankündigen"
           onClose={() => setAnnounce(false)}
