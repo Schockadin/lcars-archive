@@ -9,7 +9,6 @@ import { listRevisions } from "@/lib/contentRevisions";
 import { getViewer } from "@/lib/visibility";
 import {
   listActiveCharactersForAp,
-  listAssignableLogbooks,
   listGameSessions,
   listMissionSynopsisBlocks,
   listSessionMissions,
@@ -18,6 +17,7 @@ import { getAdvancementRules } from "@/lib/advancementSettings";
 import { getMissionBySlug } from "@/lib/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import { missionHref } from "@/lib/contentRoutes";
+import { PencilIcon } from "@/lib/icons";
 import SessionManager from "../../sessions/SessionManager";
 import MissionSummaryBlocks from "./MissionSummaryBlocks";
 import MissionContentEditor from "./MissionContentEditor";
@@ -41,7 +41,6 @@ export default async function GmMissionDetailPage({
   const [
     allSessions,
     characters,
-    logbooks,
     rules,
     missions,
     summaryBlocks,
@@ -51,7 +50,6 @@ export default async function GmMissionDetailPage({
   ] = await Promise.all([
       listGameSessions(),
       listActiveCharactersForAp(),
-      listAssignableLogbooks(),
       getAdvancementRules(),
       listSessionMissions(),
       listMissionSynopsisBlocks(mission.id),
@@ -77,7 +75,7 @@ export default async function GmMissionDetailPage({
             <Link href={missionHref(mission.slug)} className="lcars-pill-btn--outline">
               Mission ansehen
             </Link>
-            <a href="#mission-editor" className="lcars-pill-btn">Mission bearbeiten</a>
+            <a href="#mission-editor" className="lcars-icon-btn" aria-label="Mission bearbeiten" title="Mission bearbeiten"><PencilIcon /></a>
           </div>
         </div>
 
@@ -102,11 +100,10 @@ export default async function GmMissionDetailPage({
               sessions={sessions}
               characters={characters}
               missions={missions}
-              logbooks={logbooks}
               defaultSessionAp={rules.apPerSession}
-              apPerLogbook={rules.apPerLogbook}
               today={today}
               showCreateForm={false}
+              showFilters={false}
               sessionsHeading="Gespielte Sessions"
             />
           </section>

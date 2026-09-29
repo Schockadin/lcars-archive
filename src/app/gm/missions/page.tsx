@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
-import { listAllUsers } from "@/lib/users";
 import { getAllMissionsForGmOverview } from "@/lib/missions";
 import AdminMissionsBrowser from "./AdminMissionsBrowser";
 
@@ -18,11 +17,7 @@ export const metadata: Metadata = {
 export default async function AdminMissionsPage() {
   await requireGM();
 
-  const [missions, users] = await Promise.all([
-    getAllMissionsForGmOverview(),
-    listAllUsers(),
-  ]);
-  const userOptions = users.map((u) => ({ id: u.id, name: u.name }));
+  const missions = await getAllMissionsForGmOverview();
 
   return (
     <>
@@ -32,7 +27,7 @@ export default async function AdminMissionsPage() {
         <h1>Missionen</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
-          <AdminMissionsBrowser missions={missions} users={userOptions} />
+          <AdminMissionsBrowser missions={missions} />
         </div>
       </article>
     </>

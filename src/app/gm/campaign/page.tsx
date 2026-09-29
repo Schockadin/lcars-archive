@@ -6,6 +6,8 @@ import { getIngameYearInfo } from "@/lib/campaign";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import IngameYearForm from "./IngameYearForm";
 import AdvancementRulesForm from "../ap/AdvancementRulesForm";
+import { listCampaignRulesFresh } from "@/lib/campaignRules";
+import RuleEditor from "../rules/RuleEditor";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmCampaignGuide } from "@/components/help/guides/GmGuides";
 
@@ -25,8 +27,8 @@ export const metadata: Metadata = {
 export default async function AdminCampaignPage() {
   await requireGM();
 
-  const [ingameYearInfo, rules] = await Promise.all([
-    getIngameYearInfo(), getAdvancementRules(),
+  const [ingameYearInfo, rules, campaignRules] = await Promise.all([
+    getIngameYearInfo(), getAdvancementRules(), listCampaignRulesFresh(),
   ]);
 
   return (
@@ -43,15 +45,18 @@ export default async function AdminCampaignPage() {
         </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[32px]">
-          <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary-ink">Ingame-Jahr</h2>
-            <IngameYearForm info={ingameYearInfo} />
-          </section>
+          <details className="lcars-details">
+            <summary className="lcars-details-summary"><span className="lcars-data-row-chevron" aria-hidden="true" /><span className="text-lcars-primary-ink">Ingame-Jahr</span><span className="ml-auto font-lcars-mono">{ingameYearInfo.effectiveYear ?? "Noch kein Jahr"}</span></summary>
+            <div className="mt-[12px]"><IngameYearForm info={ingameYearInfo} /></div>
+          </details>
 
           <div className="flex flex-wrap gap-[8px]">
             <Link className="lcars-pill-btn--outline" href="/gm/ap">AP-Vergabe und Konten</Link>
-            <Link className="lcars-pill-btn--outline" href="/gm/campaign/rules">Weitere Regeln bearbeiten</Link>
           </div>
+          <details className="lcars-details">
+            <summary className="lcars-details-summary"><span className="lcars-data-row-chevron" aria-hidden="true" /><h2 className="inline text-lcars-primary-ink">Weitere Regeln</h2></summary>
+            <div className="mt-[12px]"><RuleEditor rules={campaignRules} /></div>
+          </details>
           <details className="lcars-details">
             <summary className="lcars-details-summary"><span className="lcars-data-row-chevron" aria-hidden="true" /><h2 className="inline text-lcars-primary-ink">Steigerungsregeln</h2></summary>
             <div className="mt-[12px] flex flex-col gap-[12px]">

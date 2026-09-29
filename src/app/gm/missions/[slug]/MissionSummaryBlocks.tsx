@@ -6,6 +6,7 @@ import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import type { MissionSynopsisBlock } from "@/lib/gameSessions";
 import { fmtDate } from "@/lib/missionFormat";
+import { CheckIcon, PencilIcon, TrashIcon, XIcon } from "@/lib/icons";
 import {
   deleteMissionSummaryBlockAction,
   updateMissionSummaryBlockAction,
@@ -112,16 +113,18 @@ function MissionSummaryBlockRow({
             <button
               type="submit"
               disabled={pending}
-              className="lcars-pill-btn--outline disabled:opacity-50"
-            >
-              Speichern
+              className="lcars-icon-btn disabled:opacity-50"
+              aria-label="Summary-Block speichern"
+              title="Summary-Block speichern"
+            ><CheckIcon />
             </button>
             <button
               type="button"
-              className="lcars-pill-btn--outline"
+              className="lcars-icon-btn"
+              aria-label="Bearbeiten abbrechen"
+              title="Bearbeiten abbrechen"
               onClick={() => setEditing(false)}
-            >
-              Abbrechen
+            ><XIcon />
             </button>
           </div>
         </form>
@@ -130,10 +133,11 @@ function MissionSummaryBlockRow({
         <div className="mt-[8px] flex flex-wrap gap-[8px]">
           <button
             type="button"
-            className="lcars-pill-btn--outline"
+            className="lcars-icon-btn"
+            aria-label="Summary-Block bearbeiten"
+            title="Summary-Block bearbeiten"
             onClick={() => setEditing(true)}
-          >
-            Bearbeiten
+          ><PencilIcon />
           </button>
           {block.sessionId !== null && (
             <Link
@@ -152,9 +156,10 @@ function MissionSummaryBlockRow({
               onClick={confirmSubmit(
                 `„${missionTitle} - Eintrag ${block.missionSessionNumber ?? "?"}“ wirklich löschen?`,
               )}
-              className="lcars-pill-btn--outline disabled:opacity-50"
-            >
-              Löschen
+              className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
+              aria-label="Summary-Block löschen"
+              title="Summary-Block löschen"
+            ><TrashIcon />
             </button>
           </form>
         </div>

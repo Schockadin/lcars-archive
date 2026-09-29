@@ -2,6 +2,7 @@
 import { useActionState } from "react";
 import { FormError } from "@/app/_shared/FormPrimitives";
 import { confirmSubmit } from "@/lib/confirmSubmit";
+import { TrashIcon } from "@/lib/icons";
 import {
   SOURCE_TYPE_LABELS,
   categoryVisual,
@@ -70,13 +71,15 @@ function EventRowForm({ event }: { event: StoredTimelineEvent }) {
           <input type="hidden" name="id" value={event.id} />
           <button
             type="submit"
-            className="lcars-pill-btn--outline disabled:opacity-50"
+            className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
             disabled={pending}
+            aria-label="Chronologie-Eintrag entfernen"
+            title="Chronologie-Eintrag entfernen"
             onClick={confirmSubmit(
               `„${event.title}" aus der Chronologie entfernen?`,
             )}
           >
-            {pending ? "Entfernt…" : "Entfernen"}
+            <TrashIcon />
           </button>
         </form>
       </div>

@@ -66,7 +66,7 @@ const DEMO_FOCUSES: Focus[] = [
   { id: 3, name: "Diplomacy", discipline: "command", description: null },
 ].map((focus) => ({ ...focus, isCustom: false }) as Focus);
 
-// Und für die Hausregeln der Runde (siehe /gm/rules).
+// Und für die Hausregeln der Runde (siehe /gm/campaign).
 const DEMO_RULES: CampaignRule[] = [
   {
     id: 1,

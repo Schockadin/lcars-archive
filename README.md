@@ -306,7 +306,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   der Rückmeldung mit Grund genannt. Rücknahme, Notiz und Gegenbuchungen laufen
   wie das Festschreiben in EINER Transaktion.
 - **Eigene Regeln der Runde** — Hausregeln (Name, Regeltext, `sort_order`)
-  liegen in `campaign_rules`, gepflegt unter `/gm/rules`, und erscheinen auf
+  liegen in `campaign_rules`, gepflegt unter `/gm/campaign`, und erscheinen auf
   dem Spickzettel jedes Charakterbogens hinter den Kernregeln — in der
   Bildschirm-Vorschau wie im PDF. Anders als Talente und Schwerpunkte hängen
   sie an keinem Charakter, deshalb ist auch jede Regel löschbar: sie steht auf
@@ -507,25 +507,22 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     Seite einmal für alle Bögen, nicht je Zeile. Die Seite nutzt die **volle
     Breite** statt der 1100px-Spalte: bei fünfzehn Wertespalten ist jeder
     Deckel ein Scrollbalken.
-  - `/gm/sessions` — gespielte Sessions eintragen (Datum, Titel, Session-AP,
-    Bonus-AP, Notizen) und allen ausgewählten Charakteren in einem Rutsch
-    gutschreiben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
+  - `/gm/sessions` — geplante Termine und gespielte Sessions verwalten. Eine
+    Session gehört zu einer Mission; Titel entstehen aus Missionsname und
+    laufender Nummer. Session-AP und Bonus-AP werden allen ausgewählten
+    Charakteren gutgeschrieben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
     Konto; Session, Teilnehmerliste (`game_session_characters`) und
     Gutschriften entstehen in einer Transaktion (`game_sessions` +
     `character_ap_entries.session_id`), das Zurücknehmen storniert sie per
-    `ON DELETE CASCADE` mit. Einer Session lassen sich **Logbücher**
-    zuordnen (`mission_logs.session_id`): ab dem ersten bucht
-    `syncSessionLogbookAp` allen Teilnehmenden automatisch die Logbuch-AP —
-    genau einmal je Session und Charakter, idempotent, und beim Wegfallen des
-    letzten Logbuchs wieder zurück (auch beim Löschen/Wiederherstellen eines
-    Logbuchs oder seiner ganzen Mission). Ein Logbuch hängt an genau EINER
-    Session; zieht `setSessionLogbooks` eines aus einer anderen herüber, wird
-    auch deren Gutschrift nachgezogen — Lösen, Zuordnen und Buchen laufen
-    dafür in einer Transaktion. Eine eingetragene Session lässt sich
-    **vollständig korrigieren** (Datum, Titel, AP-Beträge, Notizen,
-    Teilnehmende): `updateGameSession` schreibt dabei die `session`- und
+    `ON DELETE CASCADE` mit. Bei Abschluss können mehrere datierte
+    Zusammenfassungsblöcke ergänzt werden; daraus entsteht automatisch die
+    Missions-Synopsis. Neue Sessions bieten keine Logbuch-Zuordnung an;
+    bestehende historische Verknüpfungen bleiben erhalten und ihre Logbuch-AP
+    werden weiterhin synchronisiert. Eine eingetragene Session lässt sich
+    **vollständig korrigieren** (Datum, Mission, AP-Beträge,
+    Zusammenfassungsblöcke, Teilnehmende): `updateGameSession` schreibt dabei die `session`- und
     `bonus`-Buchungen der Session neu statt sie fortzuschreiben und zieht die
-    Logbuch-AP nach — alles in einer Transaktion, damit Session und Konten
+    historischen Logbuch-AP nach — alles in einer Transaktion, damit Session und Konten
     nie auseinanderlaufen. Bereits ausgegebene AP holt das nicht zurück, ein
     Konto kann dadurch rechnerisch ins Minus laufen.
   - **Missionsabschluss** (auf `/gm/campaign`) — AP für einen Missionsabschluss
@@ -543,8 +540,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     keine Einträge unter bereits gepflegten Charakterbögen verschwinden.
   - `/gm/focuses` — dasselbe für den Schwerpunkt-Katalog (Suche,
     Disziplin-Filter, bearbeiten, ergänzen; löschbar nur selbst ergänzte).
-  - `/gm/rules` — eigene Regeln der Runde für den Spickzettel (Name,
-    Regeltext, Reihenfolge). Hier ist jede Regel löschbar.
+  - `/gm/campaign` — Ingame-Jahr, eigene Regeln der Runde für den Spickzettel
+    (Name, Regeltext, Reihenfolge) und eingeklappt darunter die
+    Steigerungsregeln. Hier ist jede eigene Regel löschbar.
 - **Session-Planer** — die Spielleitung kündigt Termine an (`/gm/sessions`,
   Knopf „Termin ankündigen" über der Terminliste, Formular im Fenster) und
   ordnet sie einer Mission zu; eine neue Mission lässt sich dort ebenfalls

@@ -37,9 +37,6 @@ export interface GameSession {
   // Wie vielen Charakteren wurde gutgeschrieben und wie viele AP insgesamt.
   characterCount: number;
   totalAp: number;
-  // Wie viele Logbücher an dieser Session hängen (siehe
-  // syncSessionLogbookAp): ab dem ersten gibt es die Logbuch-AP automatisch.
-  logbookCount: number;
   // Wem sie gutgeschrieben wurde — das Bearbeiten-Formular hakt daraus seine
   // Teilnehmer-Auswahl vor.
   characterIds: number[];
@@ -71,8 +68,7 @@ export async function listGameSessions(): Promise<GameSession[]> {
            s.created_at::text AS "createdAt",
            COALESCE(p.character_count, 0)::int AS "characterCount",
            COALESCE(p.character_ids, ARRAY[]::int[]) AS "characterIds",
-           COALESCE(e.total_ap, 0)::int AS "totalAp",
-           COALESCE(l.logbook_count, 0)::int AS "logbookCount"
+           COALESCE(e.total_ap, 0)::int AS "totalAp"
     FROM game_sessions s
     LEFT JOIN missions m ON m.id = s.mission_id
     LEFT JOIN users u ON u.id = s.created_by
@@ -88,12 +84,6 @@ export async function listGameSessions(): Promise<GameSession[]> {
       FROM game_session_characters
       GROUP BY session_id
     ) p ON p.session_id = s.id
-    LEFT JOIN (
-      SELECT session_id, COUNT(*) AS logbook_count
-      FROM mission_logs
-      WHERE session_id IS NOT NULL AND deleted_at IS NULL
-      GROUP BY session_id
-    ) l ON l.session_id = s.id
     ORDER BY s.session_date DESC, s.id DESC
   `;
 
@@ -538,99 +528,8 @@ export async function updateGameSession(
   return result;
 }
 
-// ── Logbücher an Sessions ──────────────────────────────────────────────
-// Ein Logbuch (mission_log) kann zu einer Session gehören. Sobald mindestens
-// eines an einer Session hängt, bekommen die Charaktere, denen diese Session
-// gutgeschrieben wurde, automatisch zusätzlich die Logbuch-AP — genau EINMAL
-// je Session und Charakter, egal wie viele Logbücher geschrieben werden.
-
-export interface SessionLogbook {
-  id: number;
-  slug: string;
-  title: string;
-  logDate: string | null;
-  missionTitle: string;
-  authorName: string | null;
-  // An welcher Session das Logbuch hängt (null = an keiner).
-  sessionId: number | null;
-}
-
-// Logbücher für die Zuordnung — die jüngsten, mit ihrer aktuellen Session (oder
-// null). Die Oberfläche zeigt je Session daraus die eigenen und die noch
-// freien; ein Logbuch, das schon an einer ANDEREN Session hängt, taucht dort
-// nicht auf. Begrenzt, weil ältere Logs für eine neue Session praktisch nicht
-// mehr in Frage kommen und die Auswahlliste nur zumüllen würden.
-export async function listAssignableLogbooks(
-  limit = 100,
-): Promise<SessionLogbook[]> {
-  return sql<SessionLogbook[]>`
-    SELECT l.id, l.slug, l.title, l.log_date::text AS "logDate",
-           m.title AS "missionTitle",
-           c.name AS "authorName",
-           l.session_id AS "sessionId"
-    FROM mission_logs l
-    JOIN missions m ON m.id = l.mission_id
-    LEFT JOIN characters c ON c.id = l.author_id
-    WHERE l.deleted_at IS NULL
-      AND l.is_draft = false
-    ORDER BY l.log_date DESC NULLS LAST, l.id DESC
-    LIMIT ${limit}
-  `;
-}
-
-// Setzt die Logbuch-Zuordnung einer Session auf genau diese Liste und zieht
-// die automatische Logbuch-AP nach.
-//
-// Alles in EINER Transaktion: Lösen, Zuordnen und die AP-Buchungen gehören
-// zusammen — bricht etwas dazwischen ab, stünde sonst die Zuordnung ohne ihre
-// Gutschrift da (oder umgekehrt).
-//
-// Ein Logbuch kann nur an EINER Session hängen. Wird eines aus einer anderen
-// Session hierher gezogen, verliert jene es — ihre Logbuch-AP muss deshalb
-// mitgezogen werden, sonst behielte sie Buchungen für Logbücher, die sie gar
-// nicht mehr hat. Die Regelwerks-Abfrage läuft VOR der Transaktion (sonst
-// wartete sie auf die einzige Connection, siehe getAdvancementRules).
-export async function setSessionLogbooks(
-  sessionId: number,
-  logIds: number[],
-  actingUserId: number,
-): Promise<void> {
-  const rules = await getAdvancementRules();
-
-  await sql.begin(async (tx) => {
-    // Welche anderen Sessions verlieren hier ein Logbuch? Vor dem UPDATE
-    // ermitteln — danach steht die alte Zuordnung nicht mehr in der Tabelle.
-    const affected =
-      logIds.length > 0
-        ? await tx<{ sessionId: number }[]>`
-            SELECT DISTINCT session_id AS "sessionId" FROM mission_logs
-            WHERE id = ANY(${logIds}::int[])
-              AND session_id IS NOT NULL AND session_id <> ${sessionId}
-          `
-        : [];
-
-    await tx`
-      UPDATE mission_logs SET session_id = NULL
-      WHERE session_id = ${sessionId}
-        AND NOT (id = ANY(${logIds.length > 0 ? logIds : [0]}::int[]))
-    `;
-    if (logIds.length > 0) {
-      await tx`
-        UPDATE mission_logs SET session_id = ${sessionId}
-        WHERE id = ANY(${logIds}::int[]) AND deleted_at IS NULL
-      `;
-    }
-
-    await syncSessionLogbookAp(sessionId, actingUserId, rules, tx);
-    for (const row of affected) {
-      await syncSessionLogbookAp(row.sessionId, actingUserId, rules, tx);
-    }
-  });
-}
-
-// Bringt die automatischen Logbuch-Buchungen einer Session in den Stand, den
-// ihre Logbücher vorgeben: mindestens ein Logbuch → je gutgeschriebenem
-// Charakter genau eine Buchung; kein Logbuch mehr → keine.
+// Erhält automatische Logbuch-AP aus bestehenden historischen Zuordnungen.
+// Neue Sessions bieten keine Logbuch-Zuordnung mehr an.
 //
 // Idempotent und darum gefahrlos mehrfach aufrufbar (nach dem Verknüpfen, nach
 // dem Löschen eines Logs, nach dem Ändern der Teilnehmenden). Die Buchungen
@@ -640,7 +539,7 @@ export async function syncSessionLogbookAp(
   sessionId: number,
   actingUserId: number,
   // Vorgeladenes Regelwerk und Transaktions-Client für Aufrufe aus einer
-  // offenen Transaktion heraus (setSessionLogbooks) — src/lib/db.ts hält nur
+  // offenen Transaktion heraus — src/lib/db.ts hält nur
   // EINE Connection (max: 1), eine Abfrage über den globalen Client während
   // einer laufenden sql.begin()-Transaktion würde auf eine nie freiwerdende
   // Connection warten. Ohne beide Argumente unverändertes Verhalten.
@@ -686,10 +585,8 @@ export async function syncSessionLogbookAp(
   return { added: added.length, removed: 0 };
 }
 
-// Nach dem Löschen/Wiederherstellen eines Logbuchs die automatische Logbuch-AP
-// seiner Session nachziehen — verliert eine Session ihr letztes Logbuch, fällt
-// die Gutschrift wieder weg; kommt es zurück, kommt sie wieder. Ohne Session
-// am Logbuch ist das ein No-op.
+// Nach dem Löschen/Wiederherstellen eines Logbuchs historische Logbuch-AP
+// nachziehen. Ohne bestehende Session-Zuordnung ist das ein No-op.
 export async function resyncSessionLogbookApForLog(
   logId: number,
   actingUserId: number,

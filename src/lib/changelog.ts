@@ -199,9 +199,9 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "spielleitung-admins",
       },
       {
-        text: "Spielende können Hausregeln lesen und die Talent- sowie Schwerpunktkataloge durchsuchen.",
+        text: "Spielende können Hausregeln lesen sowie Talent- und Schwerpunktkataloge nach Attribut beziehungsweise Department gruppieren und alphabetisch sortieren.",
         category: "spielleitung",
-        tutorial: "spielleitung-admins",
+        tutorial: "mein-bereich",
       },
     ],
   },

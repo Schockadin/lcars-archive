@@ -1,40 +1,24 @@
 "use client";
-import { useMemo, useOptimistic, useState } from "react";
-import Link from "next/link";
-import OwnerSelect from "@/components/OwnerSelect";
-import DeleteOwnContentButton from "@/app/user/content/DeleteOwnContentButton";
-import { PencilIcon } from "@/lib/icons";
+import { useMemo, useState } from "react";
 import { STATUS_CONFIG } from "@/lib/missionFormat";
 import type { GmMissionOverviewItem } from "@/lib/missions";
 import { LcarsAkteCard } from "@/components/lcars";
-import { missionEditHref, missionHref } from "@/lib/contentRoutes";
+import { missionEditHref } from "@/lib/contentRoutes";
 
-// GM-Missionsübersicht (/gm/missions) — Edit/Löschen/Owner-Zuweisung pro
-// Zeile in einer durchsuchbaren Liste, analog zu AdminContentBrowser.tsx
-// (/admin/content), aber GM-zugänglich (nicht nur Admin) und auf Missionen
-// beschränkt. Kein Sichtbarkeits-Feld (siehe page.tsx-Kommentar). Löschen
-// nutzt dieselbe Action wie "Meine Inhalte" (deleteOwnContentAction "mission"
-// erlaubt bereits jede Spielleitung), Owner-Zuweisung dieselbe Komponente
-// wie auf den Detailseiten (setOwnerAction erlaubt "mission" jetzt ebenfalls
-// für GM, siehe src/app/actions/owner.ts).
+// Durchsuchbare Übersicht. Die Karte führt direkt in die GM-Detailseite, wo
+// Sessions, Summary-Blöcke und die Mission verwaltet werden.
 export default function AdminMissionsBrowser({
   missions,
-  users,
 }: {
   missions: GmMissionOverviewItem[];
-  users: { id: number; name: string }[];
 }) {
   const [search, setSearch] = useState("");
-  const [optimisticMissions, removeOptimisticMission] = useOptimistic(
-    missions,
-    (state, id: number) => state.filter((m) => m.id !== id),
-  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return optimisticMissions;
-    return optimisticMissions.filter((m) => m.title.toLowerCase().includes(q));
-  }, [optimisticMissions, search]);
+    if (!q) return missions;
+    return missions.filter((m) => m.title.toLowerCase().includes(q));
+  }, [missions, search]);
 
   if (missions.length === 0) {
     return <p className="lcars-empty-state">Noch keine Missionen vorhanden.</p>;
@@ -61,7 +45,7 @@ export default function AdminMissionsBrowser({
               className="flex flex-wrap items-center gap-[8px]"
             >
               <LcarsAkteCard
-                href={missionHref(mission.slug)}
+                href={missionEditHref(mission.slug)}
                 color={STATUS_CONFIG[mission.status].color}
                 className="flex-1 min-w-[240px]"
                 title={
@@ -79,25 +63,6 @@ export default function AdminMissionsBrowser({
                     </span>
                   </>
                 }
-              />
-              <OwnerSelect
-                contentType="mission"
-                id={mission.id}
-                initialOwnerId={mission.ownerId}
-                users={users}
-              />
-              <Link
-                href={missionEditHref(mission.slug)}
-                className="lcars-icon-btn"
-                aria-label="Bearbeiten"
-                title="Bearbeiten"
-              >
-                <PencilIcon />
-              </Link>
-              <DeleteOwnContentButton
-                contentType="mission"
-                id={mission.id}
-                onOptimisticDelete={() => removeOptimisticMission(mission.id)}
               />
             </div>
           ))}

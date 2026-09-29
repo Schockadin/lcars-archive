@@ -2,6 +2,7 @@
 import { useActionState, useMemo, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import { confirmSubmit } from "@/lib/confirmSubmit";
+import { CheckIcon, PencilIcon, PlusIcon, TrashIcon, XIcon } from "@/lib/icons";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import {
   FOCUS_DISCIPLINES,
@@ -82,11 +83,13 @@ function NewFocusForm() {
     <div className="flex flex-col gap-[8px]">
       <button
         type="button"
-        className="lcars-pill-btn--outline self-start"
+        className="lcars-icon-btn self-start"
         aria-expanded={open}
+        aria-label={open ? "Neuen Schwerpunkt schließen" : "Neuen Schwerpunkt hinzufügen"}
+        title={open ? "Abbrechen" : "Neuen Schwerpunkt hinzufügen"}
         onClick={() => setOpen((v) => !v)}
       >
-        {open ? "Abbrechen" : "Neuer Schwerpunkt"}
+        {open ? <XIcon /> : <PlusIcon />}
       </button>
 
       {open && (
@@ -101,9 +104,11 @@ function NewFocusForm() {
           <button
             type="submit"
             disabled={pending}
-            className="lcars-pill-btn--outline self-start disabled:opacity-50"
+            className="lcars-icon-btn self-start disabled:opacity-50"
+            aria-label="Schwerpunkt hinzufügen"
+            title="Schwerpunkt hinzufügen"
           >
-            Anlegen
+            <PlusIcon />
           </button>
         </form>
       )}
@@ -138,6 +143,7 @@ function FocusRow({ focus }: { focus: Focus }) {
           {focusDisciplineLabel(focus.discipline)}
         </span>
         {focus.isCustom && <span className="lcars-eyebrow">eigen</span>}
+        <span className="lcars-icon-btn" aria-hidden="true"><PencilIcon /></span>
       </button>
 
       {!open && focus.descriptionHtml && (
@@ -156,9 +162,11 @@ function FocusRow({ focus }: { focus: Focus }) {
               <button
                 type="submit"
                 disabled={pending}
-                className="lcars-pill-btn--outline disabled:opacity-50"
+                className="lcars-icon-btn disabled:opacity-50"
+                aria-label="Schwerpunkt speichern"
+                title="Schwerpunkt speichern"
               >
-                Speichern
+                <CheckIcon />
               </button>
             </div>
           </form>
@@ -175,9 +183,11 @@ function FocusRow({ focus }: { focus: Focus }) {
                 onClick={confirmSubmit(
                   `„${focus.name}“ wirklich löschen? Auf Charakterbögen bleibt der Eintrag dann als reiner Text stehen.`,
                 )}
-                className="lcars-pill-btn--outline disabled:opacity-50"
+                className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
+                aria-label="Schwerpunkt löschen"
+                title="Schwerpunkt löschen"
               >
-                Löschen
+                <TrashIcon />
               </button>
             </form>
           )}

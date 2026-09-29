@@ -1,9 +1,8 @@
 import GuideSection, { GuideBody } from "../GuideSection";
 import { MyContentFigure, ProfileFigure } from "../figures/AreaFigures";
 
-// Die Anleitungen zum eigenen Bereich: die angemeldete Startseite und die
-// Punkte des Profil-Menüs — „Meine Inhalte" und „Einstellungen". Der dritte
-// Punkt des Menüs, „Charaktere", hat seine eigene (viel längere) Anleitung:
+// Die Anleitungen zum eigenen Bereich: die angemeldete Startseite, Profil- und
+// Regeln-Menüs. „Charaktere" hat seine eigene (viel längere) Anleitung:
 // character/CharacterCreationGuide.tsx.
 //
 // Wie die Leitungs-Anleitungen (GmGuides.tsx) steht jeder Baustein an zwei
@@ -284,9 +283,22 @@ export function UserProfileGuide() {
   );
 }
 
+export function UserRulesGuide() {
+  return (
+    <GuideSection title="Regeln der Runde">
+      <p>
+        Über <strong>„Regeln“</strong> erreichst du die Hausregeln sowie die
+        Kataloge für <strong>Schwerpunkte</strong> und <strong>Talente</strong>.
+        Die Kataloge sind nach Department beziehungsweise Attribut gruppiert;
+        du kannst die Einträge alphabetisch von A bis Z oder Z bis A sortieren
+        und nach Namen, Gruppe oder Beschreibung suchen.
+      </p>
+    </GuideSection>
+  );
+}
+
 // Alle Bausteine am Stück — so stehen sie im Abschnitt „Mein Bereich" der
-// Anleitung (/tutorial). Der Import steht zwischen „Meine Inhalte" und dem
-// Profil, weil er von dort aus erreicht wird.
+// Anleitung (/tutorial).
 export default function UserAreaGuides() {
   return (
     <GuideBody>
@@ -294,6 +306,7 @@ export default function UserAreaGuides() {
       <MyContentGuide />
       <ImportGuide />
       <UserProfileGuide />
+      <UserRulesGuide />
     </GuideBody>
   );
 }

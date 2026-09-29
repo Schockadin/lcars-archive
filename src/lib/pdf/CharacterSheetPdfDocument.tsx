@@ -376,7 +376,7 @@ export interface CharacterSheetPdfInput {
   stats: CharacterStats;
   // Katalog für den Spickzettel — der Regeltext steht nicht am Charakter.
   talents: Talent[];
-  // Hausregeln der Runde (gepflegt unter /gm/rules); leer = kein Abschnitt.
+  // Hausregeln der Runde (gepflegt unter /gm/campaign); leer = kein Abschnitt.
   campaignRules: CampaignRule[];
   // Biografie als Markdown-Quelltext (characters.source_md). @react-pdf kennt
   // kein HTML, das gerenderte bio-Feld nützt hier also nichts — die einfachen

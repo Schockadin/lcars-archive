@@ -3,6 +3,7 @@ import { useActionState, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
+import { CheckIcon, PencilIcon, PlusIcon, TrashIcon, XIcon } from "@/lib/icons";
 import {
   RULE_BODY_MAX,
   RULE_NAME_MAX,
@@ -81,11 +82,12 @@ function NewRuleForm() {
     <div className="flex flex-col gap-[8px]">
       <button
         type="button"
-        className="lcars-pill-btn--outline self-start"
+        className="lcars-icon-btn self-start"
         aria-expanded={open}
+        aria-label={open ? "Neue Regel schließen" : "Neue Regel hinzufügen"}
+        title={open ? "Abbrechen" : "Neue Regel hinzufügen"}
         onClick={() => setOpen((v) => !v)}
-      >
-        {open ? "Abbrechen" : "Neue Regel"}
+      >{open ? <XIcon /> : <PlusIcon />}
       </button>
 
       {open && (
@@ -100,9 +102,10 @@ function NewRuleForm() {
           <button
             type="submit"
             disabled={pending}
-            className="lcars-pill-btn--outline self-start disabled:opacity-50"
-          >
-            Anlegen
+            className="lcars-icon-btn self-start disabled:opacity-50"
+            aria-label="Regel hinzufügen"
+            title="Regel hinzufügen"
+          ><PlusIcon />
           </button>
         </form>
       )}
@@ -136,6 +139,7 @@ function RuleRow({ rule }: { rule: CampaignRule }) {
           {rule.sortOrder}
         </span>
         <span className="flex-1 min-w-[180px]">{rule.name}</span>
+        <span className="lcars-icon-btn" aria-hidden="true"><PencilIcon /></span>
       </button>
 
       {!open && (
@@ -154,9 +158,10 @@ function RuleRow({ rule }: { rule: CampaignRule }) {
               <button
                 type="submit"
                 disabled={pending}
-                className="lcars-pill-btn--outline disabled:opacity-50"
-              >
-                Speichern
+                className="lcars-icon-btn disabled:opacity-50"
+                aria-label="Regel speichern"
+                title="Regel speichern"
+              ><CheckIcon />
               </button>
             </div>
           </form>
@@ -171,9 +176,10 @@ function RuleRow({ rule }: { rule: CampaignRule }) {
               onClick={confirmSubmit(
                 `„${rule.name}“ wirklich löschen? Die Regel verschwindet damit von allen Spickzetteln.`,
               )}
-              className="lcars-pill-btn--outline disabled:opacity-50"
-            >
-              Löschen
+              className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
+              aria-label="Regel löschen"
+              title="Regel löschen"
+            ><TrashIcon />
             </button>
           </form>
         </>

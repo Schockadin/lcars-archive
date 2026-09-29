@@ -27,7 +27,7 @@ import type { PlannedSession } from "@/lib/plannedSessionTypes";
 import type { ActiveCharacter } from "@/lib/gameSessions";
 import type { SessionMissionOption } from "@/lib/gameSessions";
 import { SessionContextFields } from "./SessionManager";
-import { PencilIcon, TrashIcon, XIcon } from "@/lib/icons";
+import { CheckIcon, PencilIcon, PlusIcon, TrashIcon, XIcon } from "@/lib/icons";
 
 // Die anstehenden Spieltermine — angekündigt von der Spielleitung, mit den
 // Zu- und Absagen der Runde daneben.
@@ -250,8 +250,8 @@ function RecordSessionModal({
           legend="Gutschreiben an"
         />
 
-        <SubmitButton pending={pending} pendingLabel="Wird gebucht…">
-          Session eintragen
+        <SubmitButton pending={pending} pendingLabel="Wird gebucht…" className="lcars-icon-btn" ariaLabel="Session eintragen" title="Session eintragen">
+          <CheckIcon />
         </SubmitButton>
         <FormError message={state.error} />
         {state.success && <FormSuccess>{state.success}</FormSuccess>}
@@ -317,10 +317,11 @@ function PlannedSessionRow({
           {!erledigt && (
             <button
               type="button"
-              className="lcars-pill-btn--outline"
+              className="lcars-icon-btn"
+              aria-label="Session eintragen"
+              title="Session eintragen"
               onClick={() => setRecord(true)}
-            >
-              Session eintragen
+            ><CheckIcon />
             </button>
           )}
           <button
@@ -350,8 +351,8 @@ function PlannedSessionRow({
         <form action={updateAction} className="flex flex-col">
           <input type="hidden" name="id" value={session.id} />
           <SessionFields session={session} characters={characters} missions={missions} />
-          <SubmitButton pending={updatePending} pendingLabel="Speichert…">
-            Speichern
+          <SubmitButton pending={updatePending} pendingLabel="Speichert…" className="lcars-icon-btn" ariaLabel="Termin speichern" title="Termin speichern">
+            <CheckIcon />
           </SubmitButton>
         </form>
       )}
@@ -395,10 +396,11 @@ export default function PlannedSessionManager({
         {showCreateForm && (
           <button
             type="button"
-            className="lcars-pill-btn--outline"
+            className="lcars-icon-btn"
+            aria-label="Termin ankündigen"
+            title="Termin ankündigen"
             onClick={() => setAnnounce(true)}
-          >
-            Termin ankündigen
+          ><PlusIcon />
           </button>
         )}
       </div>
@@ -424,8 +426,8 @@ export default function PlannedSessionManager({
             className="flex flex-col"
           >
             <SessionFields characters={characters} missions={missions} />
-            <SubmitButton pending={pending} pendingLabel="Wird angekündigt…">
-              Ankündigen
+            <SubmitButton pending={pending} pendingLabel="Wird angekündigt…" className="lcars-icon-btn" ariaLabel="Termin hinzufügen" title="Termin hinzufügen">
+              <PlusIcon />
             </SubmitButton>
           </form>
         </ModalOverlay>

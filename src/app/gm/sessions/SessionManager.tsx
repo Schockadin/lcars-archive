@@ -8,18 +8,16 @@ import { formatISODate } from "@/utils/formateISODate";
 import { defaultSessionSynopsisDate } from "@/lib/sessionSynopsis";
 import { missionEditHref } from "@/lib/contentRoutes";
 import { fmtDate } from "@/lib/missionFormat";
-import { PlusIcon, TrashIcon } from "@/lib/icons";
+import { CheckIcon, PencilIcon, PlusIcon, TrashIcon } from "@/lib/icons";
 import type {
   GameSession,
   ActiveCharacter,
-  SessionLogbook,
   SessionMissionOption,
 } from "@/lib/gameSessions";
 import {
   createSessionAction,
   deleteSessionAction,
   updateSessionAction,
-  setSessionLogbooksAction,
   type SessionFormState,
 } from "./actions";
 
@@ -259,78 +257,10 @@ function NewSessionForm({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-pill-btn--outline self-start disabled:opacity-50"
-      >
-        Session nachtragen
-      </button>
-
-      <FormError message={state.error} />
-      {state.success && <FormSuccess>{state.success}</FormSuccess>}
-    </form>
-  );
-}
-
-// Logbücher einer Session zuordnen. Angeboten werden die bereits zugeordneten
-// und alle noch freien — ein Logbuch gehört zu höchstens einer Session.
-function SessionLogbookForm({
-  session,
-  logbooks,
-  apPerLogbook,
-}: {
-  session: GameSession;
-  logbooks: SessionLogbook[];
-  apPerLogbook: number;
-}) {
-  const [state, formAction, pending] = useActionState(
-    setSessionLogbooksAction,
-    initialState,
-  );
-
-  const own = logbooks.filter((log) => log.sessionId === session.id);
-  const free = logbooks.filter((log) => log.sessionId === null);
-
-  return (
-    <form action={formAction} className="flex flex-col gap-[8px]">
-      <input type="hidden" name="id" value={session.id} />
-      <fieldset className="flex flex-col gap-[6px]">
-        <legend className="lcars-eyebrow">Logbücher zu dieser Session</legend>
-        <p className="text-lcars-ink-dim text-[12px]">
-          Sobald mindestens ein Logbuch verknüpft ist, bekommen alle
-          Teilnehmenden automatisch {apPerLogbook} AP extra — einmal je Session,
-          egal wie viele Logbücher geschrieben werden.
-        </p>
-        {own.length + free.length === 0 ? (
-          <p className="lcars-empty-state">Keine Logbücher zur Auswahl.</p>
-        ) : (
-          <div className="flex flex-col gap-[4px]">
-            {[...own, ...free].map((log) => (
-              <label key={log.id} className="flex items-center gap-[6px]">
-                <input
-                  type="checkbox"
-                  name="logIds"
-                  value={log.id}
-                  defaultChecked={log.sessionId === session.id}
-                />
-                <span>
-                  {log.title}
-                  <span className="text-lcars-ink-dim text-[12px]">
-                    {" "}
-                    · {log.missionTitle}
-                    {log.authorName && ` · ${log.authorName}`}
-                    {log.logDate && ` · ${formatISODate(log.logDate)}`}
-                  </span>
-                </span>
-              </label>
-            ))}
-          </div>
-        )}
-      </fieldset>
-      <button
-        type="submit"
-        disabled={pending}
-        className="lcars-pill-btn--outline self-start disabled:opacity-50"
-      >
-        Logbücher übernehmen
+        className="lcars-icon-btn self-start disabled:opacity-50"
+        aria-label="Session nachtragen"
+        title="Session nachtragen"
+      ><PlusIcon />
       </button>
 
       <FormError message={state.error} />
@@ -343,15 +273,11 @@ function SessionRow({
   session,
   characters,
   missions,
-  logbooks,
-  apPerLogbook,
 }: {
   session: GameSession;
   // Auswahl für „Gutschreiben an" — dieselbe Liste wie beim Anlegen.
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
-  logbooks: SessionLogbook[];
-  apPerLogbook: number;
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -377,7 +303,7 @@ function SessionRow({
                 <span className="lcars-eyebrow">{fmtDate(block.ingameDate)}</span>
               </div>
               <div className="mission-body" dangerouslySetInnerHTML={{ __html: block.bodyHtml }} />
-              {session.missionSlug && <Link className="lcars-back-link mt-[6px] inline-block" href={`${missionEditHref(session.missionSlug)}#summary-${block.id}`}>Bearbeiten</Link>}
+              {session.missionSlug && <Link className="lcars-icon-btn mt-[6px] inline-flex" aria-label="Summary-Block bearbeiten" title="Summary-Block bearbeiten" href={`${missionEditHref(session.missionSlug)}#summary-${block.id}`}><PencilIcon /></Link>}
             </article>
           ))}
         </div>
@@ -415,8 +341,7 @@ function SessionRow({
           {session.bonusAp > 0 && ` + ${session.bonusAp}`} AP
         </span>
         <span className="text-lcars-ink-dim text-[13px]">
-          {session.characterCount} Charaktere · {session.totalAp} AP gesamt ·{" "}
-          {session.logbookCount} Logbücher
+          {session.characterCount} Charaktere · {session.totalAp} AP gesamt
         </span>
       </button>
 
@@ -513,18 +438,13 @@ function SessionRow({
               <button
                 type="submit"
                 disabled={pending}
-                className="lcars-pill-btn--outline disabled:opacity-50"
-              >
-                Speichern
+                className="lcars-icon-btn disabled:opacity-50"
+                aria-label="Session speichern"
+                title="Session speichern"
+              ><CheckIcon />
               </button>
             </div>
           </form>
-
-          <SessionLogbookForm
-            session={session}
-            logbooks={logbooks}
-            apPerLogbook={apPerLogbook}
-          />
 
           <form action={deleteAction}>
             <input type="hidden" name="id" value={session.id} />
@@ -534,9 +454,10 @@ function SessionRow({
               onClick={confirmSubmit(
                 "Session zurücknehmen? Die Gutschriften dieser Session werden storniert — bereits ausgegebene AP kommen dadurch nicht zurück.",
               )}
-              className="lcars-pill-btn--outline disabled:opacity-50"
-            >
-              Session zurücknehmen
+              className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
+              aria-label="Session zurücknehmen"
+              title="Session zurücknehmen"
+            ><TrashIcon />
             </button>
           </form>
         </>
@@ -561,28 +482,23 @@ export default function SessionManager({
   sessions,
   characters,
   missions,
-  logbooks,
   defaultSessionAp,
-  apPerLogbook,
   today,
   showCreateForm = true,
+  showFilters = true,
   sessionsHeading = "Bisherige Sessions",
-  groupByMission = false,
 }: {
   sessions: GameSession[];
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
-  // Logbücher zur Zuordnung: die bereits zugeordneten plus alle noch freien.
-  logbooks: SessionLogbook[];
   defaultSessionAp: number;
-  apPerLogbook: number;
   // Vom Server vorgegeben, damit Server- und Client-Render dasselbe Datum
   // vorbelegen (ein `new Date()` im Client wiche sonst ab und würde
   // hydrieren-Warnungen erzeugen).
   today: string;
   showCreateForm?: boolean;
+  showFilters?: boolean;
   sessionsHeading?: string;
-  groupByMission?: boolean;
 }) {
   const [sessionFilter, setSessionFilter] = useState("");
   const [missionFilter, setMissionFilter] = useState("");
@@ -593,16 +509,6 @@ export default function SessionManager({
       .some((value) => value?.toLocaleLowerCase("de").includes(q));
     return missionMatch && textMatch;
   }), [sessions, missionFilter, sessionFilter]);
-  const groupedSessions = useMemo(() => {
-    const groups = new Map<string, { title: string; sessions: GameSession[] }>();
-    for (const session of filteredSessions) {
-      const key = String(session.missionId ?? "none");
-      const group = groups.get(key) ?? { title: session.missionTitle ?? "Ohne Mission", sessions: [] };
-      group.sessions.push(session);
-      groups.set(key, group);
-    }
-    return [...groups.entries()];
-  }, [filteredSessions]);
   return (
     <div className="flex flex-col gap-[24px]">
       {showCreateForm && (
@@ -623,7 +529,7 @@ export default function SessionManager({
 
       <section className="flex flex-col gap-[12px]">
         <h2 className="text-lcars-primary-ink">{sessionsHeading}</h2>
-        {groupByMission && <div className="flex flex-wrap gap-[8px]">
+        {showFilters && <div className="flex flex-wrap gap-[8px]">
           <label className="flex min-w-[220px] flex-1 flex-col gap-[4px]"><span className="lcars-eyebrow">Session suchen</span><input className="lcars-input rounded-full" type="search" value={sessionFilter} onChange={(event) => setSessionFilter(event.target.value)} placeholder="Titel, Datum oder Zusammenfassung" /></label>
           <label className="flex min-w-[220px] flex-1 flex-col gap-[4px]"><span className="lcars-eyebrow">Mission filtern</span><select className="lcars-input rounded-full" value={missionFilter} onChange={(event) => setMissionFilter(event.target.value)}><option value="">Alle Missionen</option>{missions.map((mission) => <option key={mission.id} value={mission.id}>{mission.title}</option>)}</select></label>
         </div>}
@@ -631,11 +537,8 @@ export default function SessionManager({
           <p className="lcars-empty-state">Noch keine Session eingetragen.</p>
         ) : (
           <div className="flex flex-col gap-[8px]">
-            {groupByMission ? groupedSessions.map(([key, group]) => <details key={key} className="lcars-details">
-              <summary className="lcars-details-summary"><span className="lcars-data-row-chevron" aria-hidden="true" /><span className="font-semibold">{group.title}</span><span className="text-lcars-ink-dim text-[13px]"> · {group.sessions.length}</span></summary>
-              <div className="mt-[12px] flex flex-col gap-[8px]">{group.sessions.map((session) => <SessionRow key={session.id} session={session} characters={characters} missions={missions} logbooks={logbooks} apPerLogbook={apPerLogbook} />)}</div>
-            </details>) : filteredSessions.map((session) => (
-              <SessionRow key={session.id} session={session} characters={characters} missions={missions} logbooks={logbooks} apPerLogbook={apPerLogbook} />
+            {filteredSessions.map((session) => (
+              <SessionRow key={session.id} session={session} characters={characters} missions={missions} />
             ))}
           </div>
         )}

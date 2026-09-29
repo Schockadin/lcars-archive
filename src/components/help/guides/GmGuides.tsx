@@ -46,26 +46,30 @@ export function GmCampaignGuide() {
 
       <GuideSection title="Kampagne · AP und Missionen">
         <p>
-          Darunter liegt die <strong>AP-Vergabe</strong> für einzelne Figuren:
-          je Charakter eine Zeile mit ihrem Kontostand, den{" "}
-          <strong>Schnellknöpfen</strong> für eine Session und ein Logbuch
-          (Beträge aus dem Regelwerk unter „AP“) und einer{" "}
-          <strong>freien Buchung</strong> aus Betrag, Grund und Notiz. Für
-          alles, was eine ganze Session betrifft, ist der Bereich{" "}
-          <strong>„Sessions“</strong> der richtige Ort — hier geht es um die
-          Einzelbuchung, die dazwischen anfällt.
+          Die <strong>AP-Vergabe, AP-Konten und der Buchungsverlauf</strong>
+          liegen zusammen im Menüpunkt „AP“. Ganze Sessions werden unter
+          „Sessions“ eingetragen und buchen die AP für alle Beteiligten auf
+          einmal.
         </p>
         <p>
-          AP für einen <strong>Missionsabschluss</strong> gibt es nur über den
-          Abschnitt „Mission abschließen“: Dort wird die Mission ausgewählt und
-          die AP vergeben — und die Mission dabei zugleich auf „abgeschlossen“
-          gesetzt. Beides in einem Schritt, damit keine abgeschlossene Mission
-          ohne Gutschrift und keine Gutschrift ohne Abschluss entsteht.
+          AP für einen <strong>Missionsabschluss</strong> werden ebenfalls unter
+          „AP“ vergeben. Dabei wird die Mission ausgewählt und zugleich auf
+          „abgeschlossen“ gesetzt.
         </p>
         <p>
           Die <strong>Missionsübersicht</strong> liegt im Leitungs-Menü unter
-          „Missionen“. Dort lassen sich Missionen verwalten und pro Mission die
-          zugehörigen Termine, Sessions und Summary-Blöcke bearbeiten.
+          „Missionen“. Die Detailseite enthält die Sessions und Summary-Blöcke
+          sowie den Missionseditor.
+        </p>
+      </GuideSection>
+
+      <GuideSection title="Kampagne · Weitere Regeln">
+        <p>
+          Im eingeklappten Bereich <strong>„Weitere Regeln“</strong> pflegst du
+          die Hausregeln der Runde mit Namen, Reihenfolge und Markdown-Text.
+          Sie erscheinen bei den Spielenden unter „Regeln“ sowie auf jedem
+          Charakterbogen. Die <strong>Steigerungsregeln</strong> stehen im
+          eigenen, ebenfalls eingeklappten Bereich darunter.
         </p>
       </GuideSection>
     </GuideBody>
@@ -99,32 +103,22 @@ export function GmSessionsGuide() {
         <p>
           Ist der Abend gespielt, macht <strong>„Session eintragen“</strong> am
           Termin daraus in einem Schritt die Nachbuchung: ein Fenster fragt
-          Session-AP, Bonus-AP und Notizen ab, übernimmt Datum, Titel und
-          Besetzung und bucht die AP. Der Termin bleibt mit seinen Zusagen in
+          Session-AP, Bonus-AP und Zusammenfassungsblöcke ab, übernimmt Datum
+          und Besetzung und bucht die AP. Der Termin bleibt mit seinen Zusagen in
           der Liste stehen, verschwindet aber von der Startseite.
         </p>
         <p>
           Ohne vorherigen Termin geht es genauso von Hand:{" "}
-          <strong>„Session nachtragen“</strong> fragt Datum, Titel, Session-AP,
-          Bonus-AP und Notizen ab und schreibt allen Beteiligten die AP in einem
-          Rutsch gut. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
+          <strong>„Session nachtragen“</strong> fragt Datum, Mission, Session-AP,
+          Bonus-AP und Zusammenfassungsblöcke ab und schreibt allen Beteiligten
+          die AP in einem Rutsch gut. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
           Konto — wer gefehlt hat, wird einfach abgewählt. Eine versehentlich
           eingetragene Session lässt sich zurücknehmen; die Gutschriften werden
           dann mit storniert.
         </p>
         <p>
-          Einer eingetragenen Session lassen sich <strong>Logbücher</strong>{" "}
-          zuordnen. Sobald mindestens eines daran hängt, bekommen alle
-          Teilnehmenden automatisch die Logbuch-AP extra — einmal je Session,
-          egal wie viele Logbücher geschrieben werden. Wird die Zuordnung gelöst
-          oder das letzte Logbuch entfernt, verschwindet die Gutschrift ebenso
-          automatisch; auch dann, wenn das Logbuch mit seiner ganzen Mission
-          gelöscht oder einer anderen Session zugeordnet wird (ein Logbuch hängt
-          immer an genau einer Session).
-        </p>
-        <p>
-          Die Vorbelegung der Beträge kommt aus dem Regelwerk unter{" "}
-          <strong>„AP“</strong> — dort stehen die AP je Session und je Logbuch.
+          Die Vorbelegung der Session-AP kommt aus dem Regelwerk unter{" "}
+          <strong>„Kampagne“ → „Steigerungsregeln“</strong>.
         </p>
       </GuideSection>
     </GuideBody>

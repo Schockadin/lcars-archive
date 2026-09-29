@@ -2,6 +2,7 @@
 import { useActionState, useMemo, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import { confirmSubmit } from "@/lib/confirmSubmit";
+import { CheckIcon, PencilIcon, PlusIcon, TrashIcon, XIcon } from "@/lib/icons";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import {
   TALENT_CATEGORIES,
@@ -98,11 +99,13 @@ function NewTalentForm() {
     <div className="flex flex-col gap-[8px]">
       <button
         type="button"
-        className="lcars-pill-btn--outline self-start"
+        className="lcars-icon-btn self-start"
         aria-expanded={open}
+        aria-label={open ? "Neues Talent schließen" : "Neues Talent hinzufügen"}
+        title={open ? "Abbrechen" : "Neues Talent hinzufügen"}
         onClick={() => setOpen((v) => !v)}
       >
-        {open ? "Abbrechen" : "Neues Talent"}
+        {open ? <XIcon /> : <PlusIcon />}
       </button>
 
       {open && (
@@ -117,9 +120,11 @@ function NewTalentForm() {
           <button
             type="submit"
             disabled={pending}
-            className="lcars-pill-btn--outline self-start disabled:opacity-50"
+            className="lcars-icon-btn self-start disabled:opacity-50"
+            aria-label="Talent hinzufügen"
+            title="Talent hinzufügen"
           >
-            Anlegen
+            <PlusIcon />
           </button>
         </form>
       )}
@@ -157,6 +162,7 @@ function TalentRow({ talent }: { talent: Talent }) {
           </span>
         )}
         {talent.isCustom && <span className="lcars-eyebrow">eigen</span>}
+        <span className="lcars-icon-btn" aria-hidden="true"><PencilIcon /></span>
       </button>
 
       {!open && (
@@ -177,9 +183,11 @@ function TalentRow({ talent }: { talent: Talent }) {
               <button
                 type="submit"
                 disabled={pending}
-                className="lcars-pill-btn--outline disabled:opacity-50"
+                className="lcars-icon-btn disabled:opacity-50"
+                aria-label="Talent speichern"
+                title="Talent speichern"
               >
-                Speichern
+                <CheckIcon />
               </button>
             </div>
           </form>
@@ -195,9 +203,11 @@ function TalentRow({ talent }: { talent: Talent }) {
                 onClick={confirmSubmit(
                   `„${talent.name}“ wirklich löschen? Auf Charakterbögen bleibt der Eintrag dann als reiner Text stehen.`,
                 )}
-                className="lcars-pill-btn--outline disabled:opacity-50"
+                className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
+                aria-label="Talent löschen"
+                title="Talent löschen"
               >
-                Löschen
+                <TrashIcon />
               </button>
             </form>
           )}

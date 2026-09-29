@@ -8,6 +8,7 @@ import { missionHeadFields, missionMetadataFields } from "@/app/user/missions/_s
 import MissionParticipantsField from "@/app/user/missions/_shared/MissionParticipantsField";
 import { DangerZoneButton } from "@/app/_shared/DangerZoneButton";
 import { FormError } from "@/app/_shared/FormPrimitives";
+import { TrashIcon } from "@/lib/icons";
 import { deleteGmMissionAction, type EditMissionState } from "./actions";
 
 const initialState: EditMissionState = {};
@@ -32,7 +33,9 @@ export default function MissionContentEditor({ mission, userId, characters, part
     <section className="mt-[32px] flex flex-col gap-[12px]"><h2 className="text-lcars-quinary-ink">Gefahrenzone</h2>
       <DangerZoneButton formAction={deleteAction} hiddenFields={{ missionId: mission.id }} pending={deletePending}
         confirmMessage={`Mission „${mission.title}“ wirklich endgültig löschen? Alle zugehörigen Mission-Logs werden mit gelöscht — das lässt sich nicht rückgängig machen.`}
-        label="Mission löschen" pendingLabel="Wird gelöscht…" />
+        label="" ariaLabel="Mission löschen" title="Mission löschen" className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50" pendingLabel="Wird gelöscht…">
+        <TrashIcon />
+      </DangerZoneButton>
       <FormError message={deleteState.error} />
     </section>
   </>;

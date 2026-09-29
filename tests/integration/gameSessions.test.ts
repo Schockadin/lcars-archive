@@ -16,7 +16,6 @@ import sql from "@/lib/db";
 import {
   createGameSession,
   listSessionMissions,
-  setSessionLogbooks,
   syncSessionLogbookAp,
 } from "@/lib/gameSessions";
 import {
@@ -37,6 +36,10 @@ async function logbookAp(sessionId: number): Promise<number> {
     WHERE session_id = ${sessionId} AND reason = 'logbook'
   `;
   return rows.length;
+}
+
+async function attachLegacyLogbook(sessionId: number, logId: number): Promise<void> {
+  await sql`UPDATE mission_logs SET session_id = ${sessionId} WHERE id = ${logId}`;
 }
 
 async function setup() {
@@ -74,7 +77,7 @@ async function setup() {
   return { gm, player, character, mission, sessionId, log };
 }
 
-describe("setSessionLogbooks", () => {
+describe("Sessions", () => {
   it("sortiert Missionsauswahl nach dem jüngsten Startdatum", async () => {
     const older = await insertMission({ title: "Ältere Mission" });
     const newer = await insertMission({ title: "Neuere Mission" });
@@ -120,55 +123,14 @@ describe("setSessionLogbooks", () => {
     expect(saved.sourceMarkdown).toContain("Die Crew erreicht das Ziel.");
   });
 
-  it("bucht die Logbuch-AP beim Zuordnen und nimmt sie beim Lösen zurück", async () => {
-    const { gm, sessionId, log } = await setup();
-
-    await setSessionLogbooks(sessionId, [log.id], gm.id);
-    expect(await logbookAp(sessionId)).toBe(1);
-
-    await setSessionLogbooks(sessionId, [], gm.id);
-    expect(await logbookAp(sessionId)).toBe(0);
-  });
-
-  it("bucht nicht doppelt, wenn dieselbe Zuordnung erneut gesetzt wird", async () => {
-    const { gm, sessionId, log } = await setup();
-
-    await setSessionLogbooks(sessionId, [log.id], gm.id);
-    await setSessionLogbooks(sessionId, [log.id], gm.id);
-
-    expect(await logbookAp(sessionId)).toBe(1);
-  });
-
-  // Ein Logbuch hängt an genau EINER Session. Wird es weitergezogen, verliert
-  // die alte Session ihr letztes Logbuch — und damit ihre Gutschrift.
-  it("zieht die AP der Session mit, der ein Logbuch weggenommen wird", async () => {
-    const { gm, character, mission, sessionId, log } = await setup();
-
-    const zweiteSession = await createGameSession({
-      sessionDate: "2399-01-08",
-      missionId: mission.id,
-      synopsisBlocks: [],
-      sessionAp: 0,
-      bonusAp: 0,
-      characterIds: [character.id],
-      createdByUserId: gm.id,
-    });
-
-    await setSessionLogbooks(sessionId, [log.id], gm.id);
-    expect(await logbookAp(sessionId)).toBe(1);
-
-    await setSessionLogbooks(zweiteSession, [log.id], gm.id);
-
-    expect(await logbookAp(zweiteSession)).toBe(1);
-    expect(await logbookAp(sessionId)).toBe(0);
-  });
 });
 
 describe("Logbuch-AP beim Löschen und Wiederherstellen einer Mission", () => {
   it("nimmt die Gutschrift zurück und holt sie beim Wiederherstellen zurück", async () => {
     const { gm, mission, sessionId, log } = await setup();
 
-    await setSessionLogbooks(sessionId, [log.id], gm.id);
+    await attachLegacyLogbook(sessionId, log.id);
+    await syncSessionLogbookAp(sessionId, gm.id);
     expect(await logbookAp(sessionId)).toBe(1);
 
     await deleteMission(mission.id, gm.id);
@@ -183,7 +145,7 @@ describe("syncSessionLogbookAp", () => {
   it("ist idempotent", async () => {
     const { gm, sessionId, log } = await setup();
 
-    await setSessionLogbooks(sessionId, [log.id], gm.id);
+    await attachLegacyLogbook(sessionId, log.id);
     await syncSessionLogbookAp(sessionId, gm.id);
     await syncSessionLogbookAp(sessionId, gm.id);
 

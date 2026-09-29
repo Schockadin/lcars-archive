@@ -44,8 +44,8 @@ describe("MissionSummaryBlocks", () => {
     expect(
       screen.getByRole("link", { name: "Zur zugehörigen Session" }),
     ).toHaveAttribute("href", "#session-8");
-    expect(screen.getAllByRole("button", { name: "Bearbeiten" })).toHaveLength(2);
-    expect(screen.getAllByRole("button", { name: "Löschen" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Summary-Block bearbeiten" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Summary-Block löschen" })).toHaveLength(2);
   });
 
   it("öffnet Datum und Markdown-Text zum Bearbeiten eines Blocks", () => {
@@ -66,7 +66,7 @@ describe("MissionSummaryBlocks", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Bearbeiten" }));
+    fireEvent.click(screen.getByRole("button", { name: "Summary-Block bearbeiten" }));
 
     expect(container.querySelector('input[name="ingameDate"]')).toHaveValue(
       "2234-12-21",

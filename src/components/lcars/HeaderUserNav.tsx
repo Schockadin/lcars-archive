@@ -85,12 +85,6 @@ const GM_ITEMS: NavMenuItem[] = [
     group: "Regelwerk",
   },
   {
-    href: "/gm/campaign/rules",
-    label: "Regeln",
-    permission: "gm.access",
-    group: "Regelwerk",
-  },
-  {
     href: "/gm/chronologie",
     label: "Chronologie",
     permission: "gm.access",

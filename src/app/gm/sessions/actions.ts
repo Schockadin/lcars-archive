@@ -7,7 +7,6 @@ import {
   updateGameSession,
   listActiveCharactersForAp,
   listSessionMissions,
-  setSessionLogbooks,
 } from "@/lib/gameSessions";
 import { validateGameSessionInput } from "@/lib/gameSessionFormat";
 import { isIsoDate } from "@/lib/gameSessionFormat";
@@ -160,39 +159,6 @@ export async function updateSessionAction(
   revalidatePath("/gm/campaign");
   return {
     success: "Session gespeichert — die Gutschriften wurden neu gebucht.",
-  };
-}
-
-// Logbücher einer Session zuordnen. Sobald mindestens eines daran hängt,
-// schreibt setSessionLogbooks den Teilnehmenden automatisch die Logbuch-AP gut
-// (einmal je Session und Charakter); fällt das letzte wieder weg, wird die
-// Gutschrift zurückgenommen.
-export async function setSessionLogbooksAction(
-  state: SessionFormState,
-  formData: FormData,
-): Promise<SessionFormState> {
-  const user = await requireGM();
-
-  // > 0 statt nur isInteger: Number("") ist 0 und damit eine ganze Zahl — ein
-  // leeres Feld käme sonst als gültige ID durch.
-  const id = Number(formData.get("id"));
-  if (!Number.isInteger(id) || id <= 0) return { error: "Ungültige Session." };
-
-  const logIds = formData.getAll("logIds").map(Number);
-  if (logIds.some((logId) => !Number.isInteger(logId) || logId <= 0)) {
-    return { error: "Ungültige Logbuch-Auswahl." };
-  }
-
-  await setSessionLogbooks(id, logIds, user.id);
-
-  revalidatePath("/gm/sessions");
-  revalidatePath("/gm/ap");
-
-  return {
-    success:
-      logIds.length > 0
-        ? `${logIds.length} Logbuch/Logbücher verknüpft — die Logbuch-AP sind gebucht.`
-        : "Keine Logbücher mehr verknüpft — die Logbuch-AP wurden zurückgenommen.",
   };
 }
 
