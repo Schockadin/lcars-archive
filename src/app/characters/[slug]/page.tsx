@@ -16,6 +16,7 @@ import { listNotes } from "@/lib/contentNotes";
 import { getTimeline } from "@/lib/timeline";
 import { filterEvents, type TimelineScope } from "@/lib/timelineTypes";
 import { listCharacterDocuments } from "@/lib/characterDocuments";
+import { addStoredContentLinkPreviews } from "@/lib/autolink";
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -95,6 +96,10 @@ export default async function CharakterPage({ params }: Props) {
     missions: countTimelineScope("missions"),
     events: countTimelineScope("events"),
   };
+  const characterWithLinkPreviews = {
+    ...character,
+    bio: await addStoredContentLinkPreviews(character.bio ?? ""),
+  };
   // Angezeigtes Alter: aus Geburtsdatum + Ingame-Jahr abgeleitet, sonst das
   // manuell gepflegte metadata.age als Fallback (siehe campaign.ts).
   const displayAge =
@@ -114,7 +119,7 @@ export default async function CharakterPage({ params }: Props) {
     <div className="h-[90%]">
       <MarkNewsSeen type="character" slug={character.slug} />
       <CharakterDetailPage
-        character={character}
+        character={characterWithLinkPreviews}
         documents={documents}
         documentsReadOnly={!isOwner}
         chronologyCounts={chronologyCounts}

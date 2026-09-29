@@ -538,6 +538,106 @@ function previewText(source: string | null | undefined): string | null {
   return text ? text.slice(0, 220) : null;
 }
 
+// Ergaenzt Vorschauen bei bereits gespeichertem HTML. Der erste Renderer
+// kann data-preview nur bei neu aufgeloesten Wikilinks setzen; alte Vault-
+// Imports enthalten dagegen schon direkte hrefs. Es werden ausschliesslich
+// die im HTML referenzierten, veroeffentlichten Ziele nachgeladen.
+export async function addStoredContentLinkPreviews(html: string): Promise<string> {
+  const slugs = { characters: new Set<string>(), archive: new Set<string>() };
+  const hrefs = new Map<string, { type: "characters" | "archive"; slug: string }>();
+
+  for (const match of html.matchAll(/<a\b[^>]*\bhref="([^"]+)"[^>]*>/gi)) {
+    const href = match[1].replace(/&amp;/g, "&");
+    const target = href.match(
+      /^\/(characters|archive)\/([a-z0-9-]+)(?:\/(?:sheet|logs))?(?:[?#].*)?$/i,
+    );
+    if (!target) continue;
+    const type = target[1].toLowerCase() as "characters" | "archive";
+    const slug = target[2];
+    slugs[type].add(slug);
+    hrefs.set(href, { type, slug });
+  }
+
+  if (hrefs.size === 0) return html;
+
+  const [characters, archiveEntries] = await Promise.all([
+    slugs.characters.size > 0
+      ? sql<
+          { slug: string; name: string; bio: string | null; source_md: string | null }[]
+        >`
+          SELECT slug, name, bio, source_md FROM characters
+          WHERE slug = ANY(${[...slugs.characters]})
+            AND is_draft = false AND deleted_at IS NULL
+        `
+      : Promise.resolve([]),
+    slugs.archive.size > 0
+      ? sql<
+          {
+            slug: string;
+            title: string;
+            summary: string | null;
+            source_md: string | null;
+          }[]
+        >`
+          SELECT slug, title, metadata->>'summary' AS summary, source_md
+          FROM archive_entries
+          WHERE slug = ANY(${[...slugs.archive]})
+            AND is_draft = false AND deleted_at IS NULL
+            AND category != 'dialogue'
+        `
+      : Promise.resolve([]),
+  ]);
+
+  const previews = new Map<string, string>();
+  for (const character of characters) {
+    previews.set(
+      `/characters/${character.slug}`,
+      previewText(character.bio || character.source_md) ?? character.name,
+    );
+    previews.set(
+      `/characters/${character.slug}/sheet`,
+      previewText(character.bio || character.source_md) ?? character.name,
+    );
+    previews.set(
+      `/characters/${character.slug}/logs`,
+      previewText(character.bio || character.source_md) ?? character.name,
+    );
+  }
+  for (const entry of archiveEntries) {
+    previews.set(
+      `/archive/${entry.slug}`,
+      previewText(entry.summary || entry.source_md) ?? entry.title,
+    );
+  }
+
+  return html.replace(/<a\b[^>]*\bhref="([^"]+)"[^>]*>/gi, (tag, rawHref: string) => {
+    if (/\bdata-preview=/i.test(tag)) return tag;
+    const href = rawHref.replace(/&amp;/g, "&");
+    const target = hrefs.get(href);
+    if (!target) return tag;
+    const baseHref = `/${target.type}/${target.slug}`;
+    const preview = previews.get(href) ?? previews.get(baseHref);
+    if (!preview) return tag;
+
+    const classMatch = tag.match(/\bclass="([^"]*)"/i);
+    let decoratedTag = classMatch
+      ? classMatch[1].split(/\s+/).includes("lcars-wikilink")
+        ? tag
+        : tag.replace(
+            /\bclass="([^"]*)"/i,
+            `class="${escapeAttribute(`${classMatch[1]} lcars-wikilink`)}"`,
+          )
+      : tag.replace(/>$/, ' class="lcars-wikilink">');
+    let attributes = "";
+    attributes += ` data-preview="${escapeAttribute(preview)}"`;
+    if (!/\btitle="/i.test(decoratedTag)) {
+      attributes += ` title="${escapeAttribute(preview)}"`;
+    }
+    decoratedTag = `${decoratedTag.slice(0, -1)}${attributes}>`;
+    return decoratedTag;
+  });
+}
+
 // Das Ziel eines nicht auflösbaren Verweises landet in einem title-Attribut
 // des gespeicherten HTML — und stammt aus dem Text, den jemand geschrieben
 // hat. Ein " darin würde das Attribut beenden. Heute kann das nicht passieren,

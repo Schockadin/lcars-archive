@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   applyAutolinks,
   autoLinkMarkdown,
+  addStoredContentLinkPreviews,
   getAutolinkTargets,
   renderContentHtml,
   resolveAllWikilinks,
@@ -207,6 +208,48 @@ describe("renderContentHtml", () => {
     expect(html).toContain(
       'data-preview="Auch manuelle Links zeigen diesen Text."',
     );
+  });
+
+  it("adds previews to already-resolved character and archive links", async () => {
+    const character = await insertCharacter({ name: "Alter Charakter-Link" });
+    await sql`UPDATE characters SET source_md = ${"Vorschautext des Charakters."} WHERE id = ${character.id}`;
+    const user = await insertUser();
+    const entry = await createArchiveEntry({
+      title: "Alter Archiv-Link",
+      category: "location",
+      tags: [],
+      summary: "Vorschautext des Archivs.",
+      aliases: [],
+      attributeValues: {},
+      referenceValues: {},
+      bodyMarkdown: "",
+      ownerUserId: user.id,
+      isDraft: false,
+    });
+    const html =
+      `<a href="/characters/${character.slug}">Person</a>` +
+      `<a href="/archive/${entry.slug}" class="existing-link">Ort</a>`;
+
+    const result = await addStoredContentLinkPreviews(html);
+
+    expect(result).toContain('data-preview="Vorschautext des Charakters."');
+    expect(result).toContain('data-preview="Vorschautext des Archivs."');
+    expect(result).toContain('class="existing-link lcars-wikilink"');
+  });
+
+  it("does not expose previews for unpublished entries", async () => {
+    const character = await insertCharacter({
+      name: "Unveröffentlichter Charakter",
+      isDraft: true,
+    });
+    await sql`UPDATE characters SET source_md = ${"Geheimer Vorschautext."} WHERE id = ${character.id}`;
+
+    const result = await addStoredContentLinkPreviews(
+      `<a href="/characters/${character.slug}">Entwurf</a>`,
+    );
+
+    expect(result).not.toContain("Geheimer Vorschautext");
+    expect(result).not.toContain("data-preview");
   });
 });
 

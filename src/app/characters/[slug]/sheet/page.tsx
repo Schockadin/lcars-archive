@@ -26,6 +26,7 @@ import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
 import CharacterSheetPreview from "@/components/character/CharacterSheetPreview";
 import PrintSheetButton from "@/components/character/PrintSheetButton";
+import { addStoredContentLinkPreviews } from "@/lib/autolink";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -72,6 +73,7 @@ export default async function CharacterSheetPage({ params }: Props) {
     listTalents(),
     listCampaignRules(),
   ]);
+  const bioHtml = await addStoredContentLinkPreviews(character.bio ?? "");
 
   return (
     <div className="lcars-wide-column pf-preview-page">
@@ -110,7 +112,7 @@ export default async function CharacterSheetPage({ params }: Props) {
             // characters.bio hält bereits das gerenderte, bereinigte HTML
             // (siehe updateOwnCharacterBio) — dieselbe Quelle wie die
             // Charakterseite.
-            bioHtml: character.bio,
+            bioHtml,
             talents,
             campaignRules,
           }}

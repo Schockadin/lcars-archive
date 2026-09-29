@@ -15,6 +15,7 @@ import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 import { listNotes } from "@/lib/contentNotes";
 import { ARCHIVE_REFERENCES_ID } from "@/lib/archiveToc";
 import NotesPanel from "@/app/_shared/NotesPanel";
+import { addStoredContentLinkPreviews } from "@/lib/autolink";
 import {
   archiveHref,
   archiveListHref,
@@ -73,6 +74,10 @@ export default async function ArchiveEntryPage({ params }: Props) {
   }
 
   if (!canView(entry.isDraft, entry.ownerUserId, viewer)) notFound();
+  const entryWithLinkPreviews = {
+    ...entry,
+    content: await addStoredContentLinkPreviews(entry.content ?? ""),
+  };
 
   // Owner-Auswahl und Bookmark/Abo-Stand sind voneinander unabhängig —
   // parallel laden. Gespräche werden hier nicht mehr gerendert (sie leiten
@@ -123,7 +128,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
       </div>
 
       <ArchiveEntryBody
-        entry={entry}
+        entry={entryWithLinkPreviews}
         viewer={viewer}
         owners={owners}
         messages={[]}
