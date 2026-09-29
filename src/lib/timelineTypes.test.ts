@@ -5,6 +5,7 @@ import {
   filterEvents,
   isIsoDate,
   isMissionStart,
+  isSessionEvent,
   isTimelineScope,
   latestEventDate,
   normalizeCategory,
@@ -34,6 +35,22 @@ function event(partial: Partial<TimelineEvent>): TimelineEvent {
     ...partial,
   };
 }
+
+describe("Session-Umfang", () => {
+  it("trennt echte Zusammenfassungsblöcke von freien Events der Kategorie Session", () => {
+    const block = event({ id: "block", sessionBlockId: 7, category: "session" });
+    const manual = event({ id: "manual", origin: "manual", category: "session" });
+    const filters = { query: "", category: null, year: null };
+    expect(isSessionEvent(block)).toBe(true);
+    expect(isSessionEvent(manual)).toBe(false);
+    expect(isTimelineScope("sessions")).toBe(true);
+    expect(timelineScopeForCategory("session")).toBe("sessions");
+    expect(filterEvents([block, manual], { ...filters, scope: "sessions" })).toEqual([block]);
+    expect(filterEvents([block, manual], { ...filters, scope: "events" })).toEqual([manual]);
+    expect(filterEvents([block], { ...filters, scope: "missions" })).toEqual([]);
+    expect(filterEvents([block, manual], { ...filters, scope: "all" })).toHaveLength(2);
+  });
+});
 
 describe("parseTimelineMarkers", () => {
   it("liest Datum, Titel und Kategorie aus einem Marker", () => {

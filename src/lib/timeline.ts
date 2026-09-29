@@ -2,8 +2,10 @@ import "server-only";
 import sql from "@/lib/db";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { markdownToSafeHtml } from "@/lib/markdown";
+import { renderContentHtml } from "@/lib/autolink";
 import {
   eventId,
+  fmtDate,
   parseTimelineMarkers,
   isIsoDate,
   sortEvents,
@@ -183,8 +185,8 @@ export async function getTimeline({
   renderManualDetails = true,
 }: {
   // Zähler und andere reine Listenansichten brauchen den gerenderten
-  // Markdown-Volltext freier Ereignisse nicht. Die Chronologie selbst lässt
-  // die Vorgabe an, damit das Detail-Overlay vollständig bleibt.
+  // Markdown-Volltext freier Ereignisse und Session-Blöcke nicht. Die Chronologie
+  // selbst lässt die Vorgabe an, damit Overlay und Session-Panels vollständig bleiben.
   renderManualDetails?: boolean;
 } = {}): Promise<TimelineEvent[]> {
   const [
@@ -195,6 +197,7 @@ export async function getTimeline({
     inferred,
     eventCharacters,
     thumbnails,
+    sessionBlocks,
   ] = await Promise.all([
     sql<MissionRow[]>`
       SELECT m.id, m.slug, m.title,
@@ -268,6 +271,13 @@ export async function getTimeline({
     // Ereignisse; wer kein Bild hat, steht gar nicht in der Map und bekommt
     // auch keinen Platzhalter.
     getFirstContentImageIdsBySlug(),
+    sql<{ id: number; mission_id: number; ingame_date: string; body_md: string }[]>`
+      SELECT b.id, b.mission_id, b.ingame_date::text AS ingame_date, b.body_md
+      FROM mission_synopsis_blocks b
+      JOIN missions m ON m.id = b.mission_id
+      WHERE m.deleted_at IS NULL AND m.is_draft = false
+      ORDER BY b.ingame_date DESC, b.id DESC
+    `,
   ]);
 
   // Das Vorschaubild einer Quelle — der Charakter nimmt sein Portrait, sofern
@@ -423,6 +433,29 @@ export async function getTimeline({
         people,
       }),
     );
+  }
+
+  // ── Session-Zusammenfassungen ────────────────────────────────────────────
+  // Öffentlich ist nur der Ingame-Bericht; Spieltermin, AP und GM-Verwaltung
+  // werden hier nicht ausgeliefert. Die Mission bestimmt die Sichtbarkeit.
+  const missionsById = new Map(missions.filter((mission) => !mission.is_draft).map((mission) => [mission.id, mission]));
+  for (const block of sessionBlocks) {
+    const mission = missionsById.get(block.mission_id);
+    if (!mission) continue;
+    events.push({
+      id: eventId("mission", mission.slug, `session-${block.id}`),
+      sessionBlockId: block.id,
+      date: block.ingame_date,
+      title: fmtDate(block.ingame_date),
+      detail: excerptOf(block.body_md),
+      fullDetailHtml: renderManualDetails ? await renderContentHtml(block.body_md) : null,
+      category: "session",
+      origin: "metadata",
+      sourceType: "mission",
+      sourceTitle: mission.title,
+      href: `${missionHref(mission.slug)}#mission-synopsis-${block.id}`,
+      people: mission.participants ?? [],
+    });
   }
 
   // ── Logbücher ────────────────────────────────────────────────────────────

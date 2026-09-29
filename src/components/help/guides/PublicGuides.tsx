@@ -119,13 +119,22 @@ export function PublicChronologyGuide() {
           Ganz links im Umschalter steht <strong>„Missionen“</strong> — dann
           zeigt der Strahl je Einsatz einen Eintrag mit seinem ganzen Zeitraum,
           und ein Klick führt auf die Missionsseite mit ihren Einsatzberichten.
-          Daneben führen <strong>Events</strong>, <strong>Gespräche</strong> und{" "}
-          <strong>Logbücher</strong> direkt in ihre jeweilige Liste;{" "}
+          Daneben führen <strong>Events</strong>, <strong>Gespräche</strong>,{" "}
+          <strong>Logbücher</strong> und <strong>Sessions</strong> direkt in ihre jeweilige Liste;{" "}
           <strong>Alles</strong> verbindet den gesamten Zeitstrahl.
         </p>
         <p>
           Eigene Ereignisse zeigen auf der Karte einen kurzen Teaser. Ein Klick
           auf ihren Titel öffnet die Detailansicht mit Volltext und Bildern.
+        </p>
+        <p>
+          Unter <strong>Sessions</strong> findest du die datierten Zusammenfassungsblöcke
+          der Missionen. Ihre Inhalte sind zunächst aufgeklappt. Mit <strong>+</strong>{" "}
+          und <strong>−</strong> rechts neben dem Inhaltsverzeichnis öffnest oder
+          schließt du alle Session-Panels gemeinsam. Das funktioniert auch in der
+          Missionschronik; ein Sprung über das Inhaltsverzeichnis öffnet den gewählten
+          Block. Am Ende der Missionschronik steht die vollständige <strong>Synopsis</strong>{" "}
+          mit dem jeweiligen Datum als Zwischenüberschrift.
         </p>
       </GuideSection>
 

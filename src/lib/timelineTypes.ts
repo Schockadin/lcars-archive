@@ -50,6 +50,7 @@ export const SOURCE_TYPE_LABELS: Record<TimelineSourceType, string> = {
 export const EVENT_CATEGORIES = [
   { key: "mission", label: "Mission", color: "var(--lcars-primary)" },
   { key: "log", label: "Logbuch", color: "var(--lcars-primary-light)" },
+  { key: "session", label: "Session", color: "var(--lcars-senary)" },
   { key: "discovery", label: "Entdeckung", color: "var(--lcars-tertiary)" },
   { key: "conflict", label: "Konflikt", color: "var(--lcars-quinary)" },
   { key: "political", label: "Politik", color: "var(--lcars-quaternary)" },
@@ -117,6 +118,8 @@ export interface TimelineEvent {
   // Eigene Ereignisse tragen auf der Karte `detail` als kurzen Teaser und
   // öffnen ihren davon getrennten Markdown-Volltext in einem Overlay.
   fullDetailHtml?: string | null;
+  // Datierter Zusammenfassungsblock einer veröffentlichten Mission.
+  sessionBlockId?: number;
   manualEventId?: number;
   manualEventCreatedBy?: number | null;
   category: string;
@@ -306,6 +309,7 @@ export const TIMELINE_SCOPES = [
   { key: "events", label: "Events" },
   { key: "dialogues", label: "Gespräche" },
   { key: "logs", label: "Logbücher" },
+  { key: "sessions", label: "Sessions" },
   { key: "all", label: "Alles" },
 ] as const;
 
@@ -321,6 +325,10 @@ export function isMissionStart(event: TimelineEvent): boolean {
   return event.sourceType === "mission" && event.phase === "start";
 }
 
+export function isSessionEvent(event: TimelineEvent): boolean {
+  return event.sessionBlockId != null && event.origin === "metadata";
+}
+
 export function timelineScopeForCategory(category: string): TimelineScope {
   switch (normalizeCategory(category)) {
     case "mission":
@@ -329,6 +337,8 @@ export function timelineScopeForCategory(category: string): TimelineScope {
       return "logs";
     case "dialogue":
       return "dialogues";
+    case "session":
+      return "sessions";
     default:
       return "events";
   }
@@ -338,13 +348,14 @@ function eventMatchesScope(
   event: TimelineEvent,
   scope: TimelineScope,
 ): boolean {
-  // Die fünf Umfänge trennen QUELLEN, nicht Kategorien. Ein frei gepflegtes
+  // Die Umfänge trennen QUELLEN, nicht Kategorien. Ein frei gepflegtes
   // Event darf z. B. die Ereignisart „Logbuch“ tragen und bleibt trotzdem ein
   // Event; umgekehrt ist ein Marker innerhalb einer Mission kein Missionseintrag.
   // Nur die je Inhalt automatisch erzeugten Metadaten-Karten repräsentieren
   // Missionen, Logbücher und Gespräche als solche.
   const isMissionEntry =
     event.sourceType === "mission" && event.origin === "metadata";
+  const isSessionEntry = isSessionEvent(event);
   const isLogEntry =
     event.sourceType === "mission_log" && event.origin === "metadata";
   const isDialogueEntry =
@@ -359,8 +370,10 @@ function eventMatchesScope(
       return isLogEntry;
     case "dialogues":
       return isDialogueEntry;
+    case "sessions":
+      return isSessionEntry;
     case "events":
-      return !isMissionEntry && !isLogEntry && !isDialogueEntry;
+      return !isMissionEntry && !isLogEntry && !isDialogueEntry && !isSessionEntry;
     case "all":
       return true;
   }

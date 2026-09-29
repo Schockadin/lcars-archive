@@ -38,6 +38,19 @@ import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
+import type { MissionSynopsisBlock } from "@/lib/gameSessions";
+
+const DEMO_SESSION_BLOCKS: MissionSynopsisBlock[] = [8, 7].map((day, index) => ({
+  id: 7000 + day, sessionId: 42, missionSessionNumber: 1, missionBlockNumber: 2 - index,
+  ingameDate: `2401-03-0${day}`, body: `Bericht vom ${day}. März.`,
+  bodyHtml: `<p>Bericht vom ${day}. März.</p>`,
+}));
+const DEMO_SESSION_EVENTS: TimelineEvent[] = DEMO_SESSION_BLOCKS.map((block) => ({
+  id: `session:${block.id}`, sessionBlockId: block.id, date: block.ingameDate,
+  title: `${block.ingameDate.slice(-2)}.03.2401`, category: "session", origin: "metadata",
+  sourceType: "mission", sourceTitle: "Demo-Mission", people: [], detail: block.body,
+  fullDetailHtml: block.bodyHtml, href: `${missionHref("demo-mission")}#mission-synopsis-${block.id}`,
+}));
 
 // Zwei Katalog-Talente reichen für die Auswahl im Werte-Schritt und für den
 // Regeltext auf dem Spickzettel-Blatt — eines ohne, eines mit Voraussetzung.
@@ -717,6 +730,16 @@ export default function DevGalleryPage() {
           ]}
         />
         <TimelineView events={DEMO_TIMELINE} />
+      </section>
+
+      <section id="timeline-sessions" className="mb-[24px]">
+        <h2 className="lcars-text">Session-Chronologie</h2>
+        <TimelineView events={DEMO_SESSION_EVENTS} initialScope="sessions" />
+      </section>
+      <section id="mission-session-panels" className="mb-[24px]">
+        <MissionLogOverview missionSlug="session-panels-demo" missionTitle="Demo-Mission"
+          logs={DEMO_MISSION_LOGS} synopsisBlocks={DEMO_SESSION_BLOCKS} canCreateLog={false}
+          fullSynopsisHtml="<h2>Synopsis 2401-03-08</h2><p>Veraltete Fassung</p>" />
       </section>
 
       {/* Die Datenbank (/archive) mit Attrappen-Einträgen: sie trägt seit der

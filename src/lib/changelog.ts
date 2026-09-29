@@ -174,6 +174,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "spielleitung-admins",
       },
       {
+        text: "Die Chronologie bietet einen eigenen Bereich für Sessions. Zusammenfassungsblöcke lassen sich dort und in der Missionschronik einzeln oder gemeinsam auf- und zuklappen.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
         text: "Spieltermine werden auf der Kampagnenseite geplant: Die Spielleitung wählt eine laufende Mission oder legt direkt eine neue an. Der Termin erhält automatisch den Missionsnamen und seine laufende Nummer; vergangene, noch nicht eingetragene Abende erscheinen als Aufgabe auf dem Dashboard.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",

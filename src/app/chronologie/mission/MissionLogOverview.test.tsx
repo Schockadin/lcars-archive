@@ -123,14 +123,49 @@ describe("MissionLogOverview", () => {
         body: "Zwischenfall",
         bodyHtml: "<p>Zwischenfall</p>",
       }],
-      fullSynopsisHtml: "<p>Die gesamte Missionszusammenfassung.</p>",
+      fullSynopsisHtml: "<h2>Synopsis 2234-12-20</h2><p>Veralteter Text.</p>",
     });
 
     const fullSynopsis = container.querySelector("#mission-full-synopsis");
     expect(fullSynopsis).toHaveTextContent("Synopsis");
-    expect(fullSynopsis).toHaveTextContent("Die gesamte Missionszusammenfassung.");
+    expect(fullSynopsis).toHaveTextContent("Zwischenfall");
+    expect(fullSynopsis?.querySelector("h4")).toHaveTextContent("20.12.2234");
+    expect(fullSynopsis).not.toHaveTextContent("Synopsis 2234-12-20");
+    expect(fullSynopsis).not.toHaveTextContent("Veralteter Text");
     expect(container.querySelector(".mission-log-overview")?.lastElementChild).toBe(fullSynopsis);
     expect([...container.querySelectorAll(".lcars-toc-link")].map((item) => item.textContent)).toContain("Synopsis");
+  });
+
+  it("öffnet Session-Inhalte standardmäßig und steuert sie mit Textzeichen neben dem ToC", () => {
+    const { container } = renderOverview({ synopsisBlocks: [7, 8].map((id) => ({
+      id, sessionId: 1, missionSessionNumber: 1, missionBlockNumber: id,
+      ingameDate: `2234-12-0${id}`, body: "Bericht", bodyHtml: "<p>Bericht</p>",
+    })) });
+    const panels = [...container.querySelectorAll<HTMLDetailsElement>("[data-session-panel]")];
+    expect(panels).toHaveLength(2);
+    expect(panels.every((panel) => panel.open)).toBe(true);
+    const close = screen.getByRole("button", { name: "Alle Session-Panels schließen" });
+    const open = screen.getByRole("button", { name: "Alle Session-Panels öffnen" });
+    expect(close).toHaveTextContent("−");
+    expect(open).toHaveTextContent("+");
+    expect(open.querySelector("svg")).toBeNull();
+    expect(open).not.toHaveClass("lcars-icon-btn");
+    fireEvent.click(close);
+    expect(panels.every((panel) => !panel.open)).toBe(true);
+    fireEvent.click(open);
+    expect(panels.every((panel) => panel.open)).toBe(true);
+    fireEvent.click(close);
+    const target = container.querySelector<HTMLElement>("#mission-synopsis-7")!;
+    target.scrollIntoView = vi.fn();
+    fireEvent.click(container.querySelector(".lcars-toc-link")!);
+    expect(target.querySelector("details")).toHaveAttribute("open");
+    expect(container.querySelector("#mission-synopsis-8 details")).not.toHaveAttribute("open");
+  });
+
+  it("erhält eine alte Synopsis, wenn noch keine Session-Blöcke vorhanden sind", () => {
+    renderOverview({ fullSynopsisHtml: "<p>Historische Zusammenfassung.</p>" });
+    expect(screen.getByText("Historische Zusammenfassung.")).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: "Session-Panels" })).not.toBeInTheDocument();
   });
 
   it("bietet „Neues Log“ nur an, wenn der Betrachter teilnimmt", () => {

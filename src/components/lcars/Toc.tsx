@@ -7,6 +7,7 @@ export interface TocHeading {
 }
 
 interface LcarsTocProps {
+  onJump?: (id: string) => void;
   /** Sprungziele – `id` muss zu einem Element im DOM passen. */
   headings: TocHeading[];
   /** Überschrift des Verzeichnisses. */
@@ -33,6 +34,7 @@ export default function LcarsToc({
   ariaLabel,
   className,
   scrollRootSelector = ".lcars-main-content",
+  onJump,
 }: LcarsTocProps) {
   const navRef = useRef<HTMLElement>(null);
   const [activeId, setActiveId] = useState<string>(headings[0]?.id ?? "");
@@ -80,6 +82,7 @@ export default function LcarsToc({
   if (headings.length === 0) return null;
 
   const handleJump = (id: string) => {
+    onJump?.(id);
     document
       .getElementById(id)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });

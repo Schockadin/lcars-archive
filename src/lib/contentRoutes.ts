@@ -191,5 +191,6 @@ export const RESERVED_CHRONOLOGY_SEGMENTS: readonly string[] = [
   "events",
   "dialogues",
   "logs",
+  "sessions",
   "all",
 ];
