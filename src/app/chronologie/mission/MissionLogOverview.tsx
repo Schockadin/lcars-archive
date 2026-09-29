@@ -20,12 +20,16 @@ import ContentCardMenu from "@/components/timeline/ContentCardMenu";
 // LcarsLogEntry bleibt bestehen: die Charakter-Log-Liste nutzt sie weiter.
 export default function MissionLogOverview({
   missionSlug,
+  missionTitle,
+  fullSynopsisHtml,
   logs,
   synopsisBlocks,
   canCreateLog,
   currentUserId = null,
 }: {
   missionSlug: string;
+  missionTitle: string;
+  fullSynopsisHtml: string | null;
   logs: MissionLogListItem[];
   synopsisBlocks: MissionSynopsisBlock[];
   canCreateLog: boolean;
@@ -43,7 +47,7 @@ export default function MissionLogOverview({
         {logs.length} {logs.length === 1 ? "Log" : "Logs"} · {synopsisBlocks.length} {synopsisBlocks.length === 1 ? "Synopsis-Block" : "Synopsis-Blöcke"} · chronologisch
       </p>
 
-      {synopsisBlocks.length > 0 && (
+      {(synopsisBlocks.length > 0 || fullSynopsisHtml) && (
         <div className="mb-[16px]">
           <LcarsCollapsiblePanel
             title="Inhaltsverzeichnis"
@@ -52,10 +56,15 @@ export default function MissionLogOverview({
             <LcarsToc
               title="Sessions"
               ariaLabel="Inhaltsverzeichnis der Missionschronik"
-              headings={synopsisBlocks.map((block) => ({
-                id: `mission-synopsis-${block.id}`,
-                text: `${block.sessionTitle ?? "Session-Zusammenfassung"} · ${fmtDate(block.ingameDate)}`,
-              }))}
+              headings={[
+                ...synopsisBlocks.map((block) => ({
+                  id: `mission-synopsis-${block.id}`,
+                  text: `${synopsisBlockTitle(missionTitle, block.missionSessionNumber)} · ${fmtDate(block.ingameDate)}`,
+                })),
+                ...(fullSynopsisHtml
+                  ? [{ id: "mission-full-synopsis", text: "Synopsis" }]
+                  : []),
+              ]}
             />
           </LcarsCollapsiblePanel>
         </div>
@@ -100,7 +109,7 @@ export default function MissionLogOverview({
                   <ChronoCard
                     color={CONTENT_TYPE_COLOR.mission}
                     tag="Synopsis"
-                    title={entry.block.sessionTitle ?? "Session-Zusammenfassung"}
+                    title={synopsisBlockTitle(missionTitle, entry.block.missionSessionNumber)}
                     date={fmtDate(entry.block.ingameDate)}
                   >
                     <div
@@ -114,8 +123,25 @@ export default function MissionLogOverview({
           })}
         </div>
       )}
+
+      {fullSynopsisHtml && (
+        <section id="mission-full-synopsis" className="mission-full-synopsis scroll-mt-24">
+          <h3 className="lcars-data-row-heading">Synopsis</h3>
+          <div
+            className="mission-body"
+            dangerouslySetInnerHTML={{ __html: fullSynopsisHtml }}
+          />
+        </section>
+      )}
     </section>
   );
+}
+
+function synopsisBlockTitle(
+  missionTitle: string,
+  missionSessionNumber: number | null,
+): string {
+  return `${missionTitle} - Eintrag ${missionSessionNumber ?? "?"}`;
 }
 
 // Eine Log-Zeile in der chronologischen Missionsübersicht.

@@ -122,6 +122,8 @@ export default async function MissionPage({ params, searchParams }: Props) {
       />
       <MissionLogOverview
         missionSlug={mission.slug}
+        missionTitle={mission.title}
+        fullSynopsisHtml={mission.metadata.body}
         logs={logs}
         synopsisBlocks={synopsisBlocks}
         canCreateLog={canCreateLog}

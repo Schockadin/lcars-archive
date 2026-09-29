@@ -663,6 +663,8 @@ export default function DevGalleryPage() {
         <h2 className="lcars-text">MissionLogOverview</h2>
         <MissionLogOverview
           missionSlug="demo-mission"
+          missionTitle="Demo-Mission"
+          fullSynopsisHtml={null}
           logs={DEMO_MISSION_LOGS}
           synopsisBlocks={[]}
           canCreateLog

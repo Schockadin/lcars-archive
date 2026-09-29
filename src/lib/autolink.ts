@@ -32,6 +32,7 @@ export interface AutolinkMatch {
   canonical: string;
   href: string;
   matchedText: string;
+  preview?: string;
 }
 
 export interface AutolinkResult {
@@ -137,6 +138,7 @@ export function applyAutolinks(
       canonical: target.canonical,
       href: target.href,
       matchedText: m[0],
+      ...(target.preview ? { preview: target.preview } : {}),
     });
     lastIndex = end;
   }
@@ -329,8 +331,8 @@ export function resolveAutolinkedWikilinks(
   html: string,
   matches: AutolinkMatch[],
 ): string {
-  const hrefByCanonical = new Map(
-    matches.map((m) => [normalizeWikilinkTarget(m.canonical), m.href]),
+  const matchByCanonical = new Map(
+    matches.map((m) => [normalizeWikilinkTarget(m.canonical), m]),
   );
   return html.replace(
     /<a href="wikilink:\/\/([^"]*)">/g,
@@ -338,8 +340,12 @@ export function resolveAutolinkedWikilinks(
       const target = normalizeWikilinkTarget(
         decodeHtmlEntities(decodeURIComponent(rawTarget)),
       );
-      const href = hrefByCanonical.get(target);
-      return href ? `<a href="${href}" class="lcars-wikilink">` : full;
+      const match = matchByCanonical.get(target);
+      if (!match) return full;
+      const preview = match.preview
+        ? ` data-preview="${escapeAttribute(match.preview)}" title="${escapeAttribute(match.preview)}"`
+        : "";
+      return `<a href="${escapeAttribute(match.href)}" class="lcars-wikilink"${preview}>`;
     },
   );
 }

@@ -53,7 +53,7 @@ export interface GameSessionSynopsisBlock extends SessionSynopsisBlockInput {
 export interface MissionSynopsisBlock extends SessionSynopsisBlockInput {
   id: number;
   sessionId: number | null;
-  sessionTitle: string | null;
+  missionSessionNumber: number | null;
   bodyHtml: string;
 }
 
@@ -136,12 +136,13 @@ export async function listMissionSynopsisBlocks(
     {
       id: number;
       session_id: number | null;
-      session_title: string | null;
+      mission_session_number: number | null;
       ingame_date: string;
       body_md: string;
     }[]
   >`
-    SELECT b.id, b.session_id, s.title AS session_title,
+    SELECT b.id, b.session_id,
+           s.mission_session_number AS mission_session_number,
            b.ingame_date::text AS ingame_date,
            b.body_md
     FROM mission_synopsis_blocks b
@@ -153,7 +154,7 @@ export async function listMissionSynopsisBlocks(
     rows.map(async (row) => ({
       id: row.id,
       sessionId: row.session_id,
-      sessionTitle: row.session_title,
+      missionSessionNumber: row.mission_session_number,
       ingameDate: row.ingame_date,
       body: row.body_md,
       bodyHtml: await renderContentHtml(row.body_md),

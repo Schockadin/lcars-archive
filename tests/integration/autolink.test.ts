@@ -47,7 +47,9 @@ describe("applyAutolinks", () => {
   it("uses the alias form when the matched alias differs from the canonical name", () => {
     const result = applyAutolinks("Wir trafen Desmond gestern.", targets);
 
-    expect(result.sourceMd).toBe("Wir trafen [[Desmond Hobbes|Desmond]] gestern.");
+    expect(result.sourceMd).toBe(
+      "Wir trafen [[Desmond Hobbes|Desmond]] gestern.",
+    );
   });
 
   it("does not link phrases inside code blocks, images, or existing links", () => {
@@ -117,9 +119,9 @@ describe("getAutolinkTargets", () => {
     const targets = await getAutolinkTargets();
 
     expect(targets.find((t) => t.slug === mission.slug)).toBeUndefined();
-    expect(applyAutolinks("Zurück zur Verschollene Mission.", targets).sourceMd).toBe(
-      "Zurück zur Verschollene Mission.",
-    );
+    expect(
+      applyAutolinks("Zurück zur Verschollene Mission.", targets).sourceMd,
+    ).toBe("Zurück zur Verschollene Mission.");
   });
 
   it("excludes the given target from the result", async () => {
@@ -176,9 +178,35 @@ describe("renderContentHtml", () => {
   it("renders markdown to HTML and resolves any [[wikilinks]] against the DB", async () => {
     const character = await insertCharacter({ name: "Verlinkte Person" });
 
-    const html = await renderContentHtml("Ein Verweis auf [[Verlinkte Person]].");
+    const html = await renderContentHtml(
+      "Ein Verweis auf [[Verlinkte Person]].",
+    );
 
     expect(html).toContain(`href="/characters/${character.slug}"`);
+  });
+
+  it("adds a hover preview to automatically linked content", async () => {
+    const character = await insertCharacter({ name: "Vorschau Person" });
+    await sql`UPDATE characters SET source_md = ${"Eine kurze Beschreibung des Eintrags."} WHERE id = ${character.id}`;
+
+    const { html } = await autoLinkMarkdown("Vorschau Person ist anwesend.");
+
+    expect(html).toContain(`href="/characters/${character.slug}"`);
+    expect(html).toContain(
+      'data-preview="Eine kurze Beschreibung des Eintrags."',
+    );
+  });
+
+  it("adds a hover preview to manually written wikilinks", async () => {
+    const character = await insertCharacter({ name: "Manuell Vorschau" });
+    await sql`UPDATE characters SET source_md = ${"Auch manuelle Links zeigen diesen Text."} WHERE id = ${character.id}`;
+
+    const html = await renderContentHtml("Siehe [[Manuell Vorschau]].");
+
+    expect(html).toContain(`href="/characters/${character.slug}"`);
+    expect(html).toContain(
+      'data-preview="Auch manuelle Links zeigen diesen Text."',
+    );
   });
 });
 
@@ -303,9 +331,7 @@ describe("autoLinkMarkdown und von Hand gesetzte Wikilinks", () => {
 
     // Derselbe Anker, den rehypeSlug auf der Zielseite an die Überschrift
     // „Frühe Jahre" schreibt (siehe headingAnchor-Test in markdown.test.ts).
-    expect(html).toContain(
-      `href="/characters/${character.slug}#frühe-jahre"`,
-    );
+    expect(html).toContain(`href="/characters/${character.slug}#frühe-jahre"`);
   });
 
   it("behält Anzeigetext und Abschnitt gemeinsam bei", async () => {
@@ -343,9 +369,7 @@ describe("autoLinkMarkdown und von Hand gesetzte Wikilinks", () => {
 
     // Die freie Erwähnung wird zur Marke, die bereits gesetzte bleibt, wie
     // sie ist — und beide führen auf dieselbe Seite.
-    expect(sourceMd).toBe(
-      "[[Doppelt Genannt]] kam, [[Doppelt Genannt]] ging.",
-    );
+    expect(sourceMd).toBe("[[Doppelt Genannt]] kam, [[Doppelt Genannt]] ging.");
     expect(
       html.match(new RegExp(`href="/characters/${character.slug}"`, "g")),
     ).toHaveLength(2);
