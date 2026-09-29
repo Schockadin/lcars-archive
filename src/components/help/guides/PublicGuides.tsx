@@ -168,10 +168,11 @@ export function PublicDatabaseGuide() {
         </p>
         <p>
           Oben grenzt das Auswahlfeld auf eine <strong>Kategorie</strong> ein,
-          das Filterfeld sucht im <strong>Titel</strong>, und der Knopf daneben
-          dreht die alphabetische Reihenfolge um. Gefiltert wird dabei im
-          Browser, ohne neue Anfrage — die Adresse ändert sich nicht. Wer einen
-          Link auf eine Kategorie weitergeben will, hängt sie an:{" "}
+          das Filterfeld sucht im <strong>Titel und in den Aliasen</strong>, und
+          der Knopf daneben dreht die alphabetische Reihenfolge um. Gefiltert
+          wird dabei im Browser, ohne neue Anfrage — die Adresse ändert sich
+          nicht. Wer einen Link auf eine Kategorie weitergeben will, hängt sie
+          an:{" "}
           <code>/archive?cat=person</code> öffnet die Datenbank gleich mit
           dieser Auswahl.
         </p>

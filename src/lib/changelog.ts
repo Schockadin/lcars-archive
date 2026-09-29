@@ -179,6 +179,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "spielleitung-admins",
       },
       {
+        text: "Die Datenbank-Übersicht findet Einträge jetzt auch über ihre Aliase.",
+        category: "inhalte",
+        tutorial: "seiten-im-ueberblick",
+      },
+      {
         text: "Angekündigte Termine gehören zu einer Mission und erhalten fortlaufende Namen; in der Missionschronik führen Sprungmarken direkt zu den Session-Zusammenfassungen.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
