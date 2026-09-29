@@ -18,6 +18,15 @@ function session(id: number, missionId: number, date: string): GameSession {
 const SESSIONS = [session(1, 1, "2026-09-01"), session(2, 2, "2026-09-05"), session(3, 1, "2026-09-10")];
 
 describe("SessionsBrowser", () => {
+  it("zeigt in einer Mission dieselben Detailkarten ohne zusätzliche Missionsauswahl", () => {
+    const { container } = render(<SessionsBrowser sessions={SESSIONS.filter((item) => item.missionId === 1)} heading="Sessions" groupByMission={false} />);
+    expect(screen.getByRole("heading", { name: "Sessions" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Mission filtern")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
+    expect(container.querySelectorAll(".timeline-card")).toHaveLength(2);
+    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/gm/sessions/3", "/gm/sessions/1"]);
+  });
+
   it("gruppiert gemeinsame Chronologie-Karten nach Mission, neueste Session zuerst", () => {
     const { container } = render(<SessionsBrowser sessions={SESSIONS} />);
     expect(container.querySelectorAll(".timeline-card")).toHaveLength(3);

@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { fireEvent } from "@testing-library/react";
 import HeaderUserNav from "./HeaderUserNav";
+import { renderToStaticMarkup } from "react-dom/server";
+import { BookIcon } from "@/lib/icons";
 
 // usePathname/logout/Service-Worker-Cache brauchen einen Next-Runtime bzw. eine
 // Server-Action — hier stellvertretend gemockt, geprüft wird allein, welche
@@ -118,10 +120,12 @@ describe("HeaderUserNav: Gliederung des Leitungs-Menüs", () => {
     ]);
   });
 
-  it("bietet Spielenden den Regelkatalog und weitere Regeln in einem Dropdown", () => {
+  it("bietet Steigerungsregeln und Kataloge über das Buch-Menü an", () => {
     render(<HeaderUserNav permissions={["users.browse"]} />);
+    expect(screen.getByRole("button", { name: /Regeln/ })).toContainHTML(renderToStaticMarkup(<BookIcon />));
     fireEvent.click(screen.getByRole("button", { name: /Regeln/ }));
-    expect(menuEintraege()).toEqual(["Weitere Regeln", "Schwerpunkte", "Talente"]);
+    expect(menuEintraege()).toEqual(["Steigerungsregeln", "Schwerpunkte", "Talente"]);
+    expect(screen.getByRole("link", { name: "Steigerungsregeln" })).toHaveAttribute("href", "/user/rules");
     expect(screen.getByRole("link", { name: "Schwerpunkte" })).toHaveAttribute("href", "/user/rules/focuses");
     expect(screen.getByRole("link", { name: "Talente" })).toHaveAttribute("href", "/user/rules/talents");
   });

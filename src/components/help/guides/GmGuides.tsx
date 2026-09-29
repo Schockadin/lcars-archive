@@ -2,7 +2,6 @@ import GuideSection, { GuideBody } from "../GuideSection";
 import {
   ApLedgerFigure,
   CampaignFigure,
-  CampaignRulesFigure,
   CatalogEditorFigure,
   GmCharactersFigure,
   GmDialoguesFigure,
@@ -63,13 +62,12 @@ export function GmCampaignGuide() {
         </p>
       </GuideSection>
 
-      <GuideSection title="Kampagne · Weitere Regeln">
+      <GuideSection title="Kampagne · Steigerungsregeln">
         <p>
-          Im eingeklappten Bereich <strong>„Weitere Regeln“</strong> pflegst du
-          die Hausregeln der Runde mit Namen, Reihenfolge und Markdown-Text.
-          Sie erscheinen bei den Spielenden unter „Regeln“ sowie auf jedem
-          Charakterbogen. Die <strong>Steigerungsregeln</strong> stehen im
-          eigenen, ebenfalls eingeklappten Bereich darunter.
+          Im eingeklappten Bereich <strong>„Steigerungsregeln“</strong> legst du
+          Kosten, Erschaffungsbudgets und AP-Vorgaben fest. Spielende können
+          die aktuellen Werte unter <strong>„Regeln“ → „Steigerungsregeln“</strong>
+          {" "}nachlesen.
         </p>
       </GuideSection>
     </GuideBody>
@@ -127,6 +125,10 @@ export function GmSessionsGuide() {
           Über den Stift bearbeitest du die Session und ihre Blöcke; einzelne
           Blöcke lassen sich im Formular entfernen. Die Missionschronik zeigt
           die Blöcke mit ihrem Ingame-Datum als Titel und Sprungmarke.
+        </p>
+        <p>
+          Auch die Missionsverwaltung zeigt die zugehörigen Sessions als Karten.
+          Von dort öffnest du dieselbe Session-Detailseite zum Bearbeiten.
         </p>
       </GuideSection>
     </GuideBody>
@@ -305,28 +307,6 @@ export function GmFocusesGuide() {
   );
 }
 
-// ── Eigene Regeln ────────────────────────────────────────────────────
-export function GmRulesGuide() {
-  return (
-    <GuideBody>
-      <GuideSection title="Eigene Regeln" figure={<CampaignRulesFigure />}>
-        <p>
-          Hier hinterlegst du die <strong>Hausregeln der Runde</strong>: Name,
-          Regeltext und eine Zahl für die Reihenfolge. Sie erscheinen auf dem
-          Spickzettel <em>jedes</em> Charakterbogens — auch im PDF — hinter den
-          Regeln aus dem Regelwerk, und gelten dort für alle gleich.
-        </p>
-        <p>
-          Anders als bei Talenten und Schwerpunkten lässt sich jede Regel wieder
-          löschen: Sie steht auf keinem Bogen als Eintrag, sondern wird bei
-          jeder Anzeige frisch dazugeholt. Eine gerade gespeicherte Änderung
-          steht beim Zurückkehren sofort in der Liste.
-        </p>
-      </GuideSection>
-    </GuideBody>
-  );
-}
-
 // ── Chronologie (Leitung) ────────────────────────────────────────────
 export function GmTimelineGuide() {
   return (
@@ -410,7 +390,6 @@ export default function GmAreaGuides() {
       <GmApGuide />
       <GmTalentsGuide />
       <GmFocusesGuide />
-      <GmRulesGuide />
       <GmTimelineGuide />
       <GmDialoguesGuide />
     </GuideBody>

@@ -13,6 +13,7 @@ import {
   GmNavIcon,
   LogoutNavIcon,
   HelpIcon,
+  BookIcon,
 } from "@/lib/icons";
 import { useAnchoredDropdown } from "./useAnchoredDropdown";
 
@@ -377,7 +378,7 @@ export default function HeaderUserNav({
     { href: "/user", label: "Einstellungen" },
   ];
   const playerRulesItems = visibleItems([
-    { href: "/user/rules", label: "Weitere Regeln", permission: "users.browse" },
+    { href: "/user/rules", label: "Steigerungsregeln", permission: "users.browse" },
     { href: "/user/rules/focuses", label: "Schwerpunkte", permission: "users.browse" },
     { href: "/user/rules/talents", label: "Talente", permission: "users.browse" },
   ], permissions);
@@ -404,7 +405,7 @@ export default function HeaderUserNav({
 
       {playerRulesItems.length > 0 && <NavDropdown
         label="Regeln"
-        icon={<ProfileNavIcon />}
+        icon={<BookIcon />}
         items={playerRulesItems}
         active={pathname.startsWith("/user/rules")}
         placement={placement}

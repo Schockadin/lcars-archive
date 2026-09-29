@@ -199,12 +199,12 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "spielleitung-admins",
       },
       {
-        text: "Die Session-Übersicht zeigt durchsuchbare Karten nach Mission gruppiert. Jede Session hat eine eigene Detailseite mit Teilnehmenden, AP und bearbeitbaren Zusammenfassungsblöcken. Die Missionsdetailseite bündelt weiterhin Sessions und Missionseditor; AP-Vergabe, Konten und Verlauf liegen unter AP.",
+        text: "Die Session-Übersicht zeigt durchsuchbare Karten nach Mission gruppiert. Auch die Missionsdetailseite verlinkt ihre Sessions als Karten auf die jeweilige Detailseite mit Teilnehmenden, AP und bearbeitbaren Zusammenfassungsblöcken. AP-Vergabe, Konten und Verlauf liegen unter AP.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },
       {
-        text: "Spielende können Hausregeln lesen sowie Talent- und Schwerpunktkataloge nach Attribut beziehungsweise Department gruppieren und alphabetisch sortieren.",
+        text: "Spielende können die aktuellen Steigerungsregeln nachlesen sowie Talent- und Schwerpunktkataloge nach Attribut beziehungsweise Department gruppieren und alphabetisch sortieren.",
         category: "spielleitung",
         tutorial: "mein-bereich",
       },

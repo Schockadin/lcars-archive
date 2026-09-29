@@ -305,15 +305,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Regeln und derselben Prüfung wie beim Steigern; was nicht mehr passt, wird in
   der Rückmeldung mit Grund genannt. Rücknahme, Notiz und Gegenbuchungen laufen
   wie das Festschreiben in EINER Transaktion.
-- **Eigene Regeln der Runde** — Hausregeln (Name, Regeltext, `sort_order`)
-  liegen in `campaign_rules`, gepflegt unter `/gm/campaign`, und erscheinen auf
-  dem Spickzettel jedes Charakterbogens hinter den Kernregeln — in der
-  Bildschirm-Vorschau wie im PDF. Anders als Talente und Schwerpunkte hängen
-  sie an keinem Charakter, deshalb ist auch jede Regel löschbar: sie steht auf
-  keinem Bogen als Eintrag. Validierung und Sortierung liegen in
-  `src/lib/campaignRuleTypes.ts` (ohne `server-only`, damit die Vorschau sie
-  nutzen kann), der DB-Zugriff mit eigenem Cache-Tag in
-  `src/lib/campaignRules.ts`.
+- **Regeln der Runde** — `/user/rules` zeigt die aktuellen Steigerungsregeln
+  aus `campaign_settings.advancement_rules` schreibgeschützt. Der GM bearbeitet
+  diese Werte unter `/gm/campaign`; das Buch-Menü „Regeln“ führt außerdem zu
+  den Schwerpunkt- und Talentkatalogen. Die Oberfläche „Weitere Regeln“ ist
+  entfernt. Bestehende Hausregeln in `campaign_rules` bleiben für die
+  Charakterbogen-Vorschau und den PDF-Export erhalten.
 - **„Wer kennt wen"** — auf jeder Personalakte steht unter dem Inhalt, mit
   wem die Figur zu tun hat (`getRelationsOf` in `src/lib/relations.ts`,
   angezeigt von `src/app/_shared/RelationsSection.tsx`). Drei Quellen:

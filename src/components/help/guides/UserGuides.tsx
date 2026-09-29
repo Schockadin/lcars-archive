@@ -287,7 +287,8 @@ export function UserRulesGuide() {
   return (
     <GuideSection title="Regeln der Runde">
       <p>
-        Über <strong>„Regeln“</strong> erreichst du die Hausregeln sowie die
+        Über <strong>„Regeln“</strong> liest du die aktuellen Steigerungsregeln
+        mit Kosten, Erschaffungsbudgets und AP-Vorgaben nach und erreichst die
         Kataloge für <strong>Schwerpunkte</strong> und <strong>Talente</strong>.
         Die Kataloge sind nach Department beziehungsweise Attribut gruppiert;
         du kannst die Einträge alphabetisch von A bis Z oder Z bis A sortieren
