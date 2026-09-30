@@ -54,7 +54,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Markdown in allen Freitextfeldern** — der `MarkdownEditor` (Toolbar +
   Rohtext/Vorschau) steht nicht nur an den Content-Formularen, sondern auch an
   Notizen, eigenen Regeln, Talent- und Schwerpunkt-Beschreibungen,
-  Session-Zusammenfassungsblöcken, der Notiz eines angekündigten Spieltermins,
+  Session-Zusammenfassungsblöcken,
   der
   Beschreibung eines von Hand eingetragenen Chronologie-Ereignisses und den
   Gesprächs-Formularen; sein `rows`-Prop setzt die
@@ -270,7 +270,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   serverseitig erzwungen, nicht nur im Formular. Steigerung und Abbuchung
   laufen in einer Transaktion, damit nie das eine ohne das andere passiert.
   Alle Zahlen des Regelwerks sind Standardwerte: die Spielleitung stellt sie
-  unter `/gm/ap` ein, gespeichert in `campaign_settings.advancement_rules`
+  unter `/gm/campaign` ein, gespeichert in `campaign_settings.advancement_rules`
   (`src/lib/advancementSettings.ts`); die Funktionen in `advancement.ts` nehmen
   den geltenden Satz als Argument entgegen. Der Wertebereich des Charakterbogens
   rechnet **live** mit: der State der Attribut-/Disziplin-Eingaben liegt in der
@@ -480,9 +480,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   liegenden Seiten `campaign`, `dialogues`, `characters` und `missions` sind
   hierher umgezogen, `/admin` ist dadurch reine Verwaltung (`requireStaff`
   verlangt dort kein `gm.access` mehr).
-  - `/gm/campaign` — Ingame-Jahr, AP-Vergabe, Missionsabschluss und
-    Missions-Übersicht an einem Ort (`/gm/missions` bleibt als Direktlink auf
-    die Einzelansicht erhalten).
+  - `/gm/missions` — nach Datum und Status gruppierbare Missionskarten.
+    Die Detailseite enthält den Missionseditor und verlinkt die zugehörigen
+    Sessions unter `/gm/sessions/[id]`.
   - `/gm/characters` — die Charakter-Verwaltung: Zuordnung der Figuren zu
     Konten und der Erschaffungs-Status samt „Erschaffung wieder öffnen“
     (siehe oben). Eigener Menüpunkt; die Zuordnung stand übergangsweise
@@ -504,7 +504,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     Seite einmal für alle Bögen, nicht je Zeile. Die Seite nutzt die **volle
     Breite** statt der 1100px-Spalte: bei fünfzehn Wertespalten ist jeder
     Deckel ein Scrollbalken.
-  - `/gm/sessions` — geplante Termine und gespielte Sessions verwalten. Eine
+  - `/gm/sessions` — gespielte Sessions als durchsuchbare, nach Mission
+    gruppierte Karten; „Session nachtragen“ öffnet ein Formular im Fenster.
+    `/gm/sessions/[id]` zeigt und bearbeitet Session und Zusammenfassungen. Eine
     Session gehört zu einer Mission; Titel entstehen aus Missionsname und
     laufender Nummer. Session-AP und Bonus-AP werden allen ausgewählten
     Charakteren gutgeschrieben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
@@ -522,26 +524,26 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     historischen Logbuch-AP nach — alles in einer Transaktion, damit Session und Konten
     nie auseinanderlaufen. Bereits ausgegebene AP holt das nicht zurück, ein
     Konto kann dadurch rechnerisch ins Minus laufen.
-  - **Missionsabschluss** (auf `/gm/campaign`) — AP für einen Missionsabschluss
+  - **Missionsabschluss** (auf `/gm/ap`) — AP für einen Missionsabschluss
     gibt es ausschließlich über die Missionsauswahl: die gewählte Mission wird
     dabei auf `completed` gesetzt und die Buchungen tragen
     `character_ap_entries.mission_id`. Vorbelegt ist der Betrag mit der Regel
     **„AP pro beendeter Mission"** (`apPerMission`, Standard 5) aus dem
-    Regelwerk unter `/gm/ap`; im Einzelfall bleibt er überschreibbar. Der Grund „Mission" ist deshalb aus der
+    Regelwerk unter `/gm/campaign`; im Einzelfall bleibt er überschreibbar. Der Grund „Mission" ist deshalb aus der
     freien Buchung entfernt (die Server-Action weist ihn ab).
-  - `/gm/ap` — Kontostände aller Charaktere, das Gesamtjournal aller Buchungen
-    (nach Charakter und Grund filterbar, serverseitig auf die letzten 500
-    begrenzt) und der Editor des AP-Regelwerks.
+  - `/gm/ap` — AP-Vergabe einschließlich Missionsabschluss, danach
+    Kontostände aller Charaktere und das Gesamtjournal aller Buchungen
+    (nach Charakter und Grund filterbar, serverseitig auf die letzten 500 begrenzt).
   - `/gm/talents` — Talent-Katalog durchsuchen, filtern und bearbeiten sowie
     eigene Talente ergänzen. Löschbar sind nur selbst ergänzte Talente, damit
     keine Einträge unter bereits gepflegten Charakterbögen verschwinden.
   - `/gm/focuses` — dasselbe für den Schwerpunkt-Katalog (Suche,
     Disziplin-Filter, bearbeiten, ergänzen; löschbar nur selbst ergänzte).
-  - `/gm/campaign` — Ingame-Jahr, eigene Regeln der Runde für den Spickzettel
-    (Name, Regeltext, Reihenfolge) und eingeklappt darunter die
-    Steigerungsregeln. Hier ist jede eigene Regel löschbar.
-- **Session-Planer** — die Spielleitung kündigt Termine an (`/gm/sessions`,
-  Knopf „Termin ankündigen" über der Terminliste, Formular im Fenster) und
+  - `/gm/campaign` — anstehende und noch nicht eingetragene Spieltermine,
+    danach eingeklappte Panels für das Ingame-Jahr und die Steigerungsregeln.
+    Spieler lesen die Steigerungsregeln unter `/user/rules`.
+- **Session-Planer** — die Spielleitung kündigt Termine an (`/gm/campaign`,
+  Knopf „Session planen" über der Terminliste, Formular im Fenster) und
   ordnet sie einer Mission zu; eine neue Mission lässt sich dort ebenfalls
   anlegen. Der Titel entsteht aus Missionsname und laufender Nummer. Alle
   Angemeldeten sehen Termine auf der Startseite und sagen zu oder ab. Der
@@ -557,11 +559,18 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   er trägt die Zusagen —, verschwindet aber von der Startseite; wird die
   Session zurückgenommen, steht er per `ON DELETE SET NULL` wieder als offen
   da. Von Hand nachtragen lässt sich weiterhin alles, was ohne Ankündigung
-  gespielt wurde: „Session nachtragen" darunter, zugeklappt.
+  gespielt wurde: „Session nachtragen" unter `/gm/sessions` öffnet ein Fenster.
 
   Zusammenfassungsblöcke werden automatisch in die Missions-Synopsis übernommen
   und chronologisch mit den Missionslogs angezeigt. Das Inhaltsverzeichnis der
-  Missionschronik bietet Sprungmarken zu den Session-Blöcken.
+  Missionschronik bietet datierte Sprungmarken zu den Session-Blöcken.
+  Deren IDs bleiben bei Korrekturen erhalten. Die vollständige „Synopsis“
+  steht am Ende außerhalb der Chronik. Die Missionschronik bietet einen
+  wechselnden +/−-Schalter für alle standardmäßig offenen Session-Panels;
+  die allgemeine Chronologie zeigt die Kategorie „Sessions“ ohne ToC oder
+  gemeinsamen Schalter. Das Eintragen eines geplanten Termins verbindet
+  Termin, Session, AP-Buchungen und Blöcke in einer Transaktion und verhindert
+  eine doppelte Buchung desselben Termins.
 
   Zwei eigene Tabellen (`planned_sessions`,
   `planned_session_rsvps`): `game_sessions` ist die **Nachbuchung** einer
@@ -574,7 +583,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Stunden, damit ein Abend nicht mitten im Spielen aus der Liste fällt — das
   Dashboard zeigte dadurch aber stundenlang einen längst begonnenen Abend samt
   Zusage-Knöpfen. Die Spielleitung sieht die vergangenen weiterhin über
-  `listAllPlannedSessions` unter `/gm/sessions`. Eine zweite Antwort ersetzt
+  `listUnrecordedPlannedSessions` unter `/gm/campaign`. Eine zweite Antwort ersetzt
   die erste; eine verschobene Uhrzeit lässt die Zusagen stehen.
 
   Ein **neu angekündigter** Termin erreicht die Spielenden seiner eingeplanten

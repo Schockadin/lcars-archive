@@ -238,7 +238,7 @@ export async function listActiveCharactersForAp(): Promise<ActiveCharacter[]> {
 export interface CreateGameSessionInput {
   sessionDate: string;
   missionId?: number;
-  reservedMissionSessionNumber?: number;
+  plannedSessionId?: number;
   newMission?: { slug: string; title: string; ownerUserId: number };
   synopsisBlocks: SessionSynopsisBlockInput[];
   sessionAp: number;
@@ -256,6 +256,18 @@ export async function createGameSession(
 ): Promise<number> {
   const { sessionId, missionId } = await sql.begin(async (tx) => {
     let missionId = input.missionId;
+    let reservedNumber: number | undefined;
+    if (input.plannedSessionId != null) {
+      const [planned] = await tx<{ mission_id: number | null; mission_session_number: number | null; game_session_id: number | null }[]>`
+        SELECT mission_id, mission_session_number, game_session_id FROM planned_sessions
+        WHERE id = ${input.plannedSessionId} FOR UPDATE
+      `;
+      if (!planned || planned.game_session_id != null) throw new Error("Dieser Termin ist nicht mehr offen.");
+      if (planned.mission_id != null) {
+        if (missionId !== planned.mission_id || input.newMission) throw new Error("Die Mission des Termins wurde geändert. Bitte neu laden.");
+        reservedNumber = planned.mission_session_number ?? undefined;
+      }
+    }
     if (input.newMission) {
       const [createdMission] = await tx<{ id: number }[]>`
         INSERT INTO missions (
@@ -280,7 +292,7 @@ export async function createGameSession(
     `;
     if (!mission) throw new Error("Mission für diese Session nicht gefunden.");
 
-    let missionSessionNumber = input.reservedMissionSessionNumber;
+    let missionSessionNumber = reservedNumber;
     if (missionSessionNumber == null) {
       const [sequence] = await tx<{ number: number }[]>`
         SELECT GREATEST(
@@ -329,6 +341,11 @@ export async function createGameSession(
       }
     }
 
+    if (input.plannedSessionId != null) {
+      await tx`UPDATE planned_sessions SET game_session_id = ${session.id}, mission_id = ${missionId},
+        mission_session_number = ${missionSessionNumber}, title = ${title}, updated_at = NOW()
+        WHERE id = ${input.plannedSessionId}`;
+    }
     return { sessionId: session.id, missionId };
   });
   await syncMissionSynopsis(missionId);
@@ -358,8 +375,24 @@ async function replaceSessionSynopsisBlocks(
   missionId: number,
   blocks: SessionSynopsisBlockInput[],
 ): Promise<void> {
-  await tx`DELETE FROM mission_synopsis_blocks WHERE session_id = ${sessionId}`;
+  const existing = await tx<{ id: number }[]>`
+    SELECT id FROM mission_synopsis_blocks WHERE session_id = ${sessionId} FOR UPDATE
+  `;
+  const existingIds = new Set(existing.map((block) => block.id));
+  const retained = blocks.flatMap((block) => block.id == null ? [] : [block.id]);
+  if (new Set(retained).size !== retained.length || retained.some((id) => !existingIds.has(id))) {
+    throw new Error("Ein Zusammenfassungsblock gehört nicht zu dieser Session oder wurde inzwischen gelöscht.");
+  }
+  await tx`DELETE FROM mission_synopsis_blocks WHERE session_id = ${sessionId}
+    AND NOT (id = ANY(${sql.array(retained, 23)}))`;
   for (const [blockOrder, block] of blocks.entries()) {
+    if (block.id != null) {
+      await tx`UPDATE mission_synopsis_blocks
+        SET mission_id = ${missionId}, block_order = ${blockOrder}, ingame_date = ${block.ingameDate},
+            end_date = NULL, body_md = ${block.body}
+        WHERE id = ${block.id} AND session_id = ${sessionId}`;
+      continue;
+    }
     await tx`
       INSERT INTO mission_synopsis_blocks
         (mission_id, session_id, block_order, ingame_date, body_md)

@@ -44,8 +44,8 @@ describe("MissionSummaryBlocks", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("21.12.2234")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Zur zugehörigen Session" }),
-    ).toHaveAttribute("href", "#session-8");
+      screen.getAllByRole("link", { name: "Zur zugehörigen Session" })[0],
+    ).toHaveAttribute("href", "/gm/sessions/8#summary-12");
     expect(screen.getAllByRole("button", { name: "Summary-Block bearbeiten" })).toHaveLength(2);
     expect(screen.getAllByRole("button", { name: "Summary-Block löschen" })).toHaveLength(2);
   });
@@ -77,7 +77,7 @@ describe("MissionSummaryBlocks", () => {
     expect(
       container.querySelector('textarea[name="bodyMarkdown"]'),
     ).toHaveValue("Rückkehr");
-    expect(screen.getByRole("button", { name: "Speichern" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Summary-Block speichern" })).toBeInTheDocument();
   });
 
   it("zeigt einen Hinweis, wenn noch keine Summary-Blöcke existieren", () => {

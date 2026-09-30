@@ -17,7 +17,6 @@ import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
 import {
   getPlannedSession,
-  linkPlannedSession,
 } from "@/lib/plannedSessions";
 
 export interface SessionFormState {
@@ -177,7 +176,7 @@ export async function updateSessionAction(
 // die eingeplanten Figuren stehen schon, im Fenster kommen AP-Beträge und Synopsisblöcke
 // und die letzte Korrektur der Teilnehmerliste dazu.
 //
-// Danach zeigt der Termin auf die gebuchte Session (linkPlannedSession) und
+// In derselben Transaktion zeigt der Termin auf die gebuchte Session und
 // verschwindet von der Startseite — die Zusagen bleiben an ihm stehen. Wird
 // die Session später zurückgenommen, steht der Termin wieder als offen da
 // (ON DELETE SET NULL).
@@ -224,18 +223,16 @@ export async function recordPlannedSessionAction(
     };
   }
 
-  const sessionId = await createGameSession({
+  await createGameSession({
     ...parsed.value,
     missionId: planned.missionId ?? sessionContext.missionId,
-    reservedMissionSessionNumber:
-      planned.missionId !== null ? planned.missionSessionNumber ?? undefined : undefined,
+    plannedSessionId: plannedId,
     newMission: sessionContext.newMission,
     synopsisBlocks: sessionContext.synopsisBlocks,
     characterIds,
     createdByUserId: user.id,
   });
   revalidateMission(sessionContext.missionSlug);
-  await linkPlannedSession(plannedId, sessionId);
 
   revalidatePath("/gm/sessions");
   revalidatePath("/gm/ap");
@@ -259,7 +256,7 @@ async function readSessionContext(
       missionId?: number;
       missionSlug: string;
       newMission?: { slug: string; title: string; ownerUserId: number };
-      synopsisBlocks: { ingameDate: string; body: string }[];
+      synopsisBlocks: { id?: number; ingameDate: string; body: string }[];
     }
   | { error: string }
 > {
@@ -290,17 +287,20 @@ async function readSessionContext(
   }
 
   const dates = formData.getAll("synopsisDate").map((value) => String(value).trim());
+  const ids = formData.getAll("synopsisId").map(String);
   const texts = formData.getAll("synopsisText").map((value) => String(value).trim());
-  if (dates.length !== texts.length || dates.length > 20) {
+  if (dates.length !== texts.length || (ids.length > 0 && ids.length !== dates.length) || dates.length > 20) {
     return { error: "Die Zusammenfassungsblöcke sind ungültig." };
   }
-  const synopsisBlocks: { ingameDate: string; body: string }[] = [];
+  const synopsisBlocks: { id?: number; ingameDate: string; body: string }[] = [];
   for (let i = 0; i < dates.length; i++) {
     const [ingameDate, body] = [dates[i], texts[i]];
     if (!ingameDate && !body) continue;
     if (!isIsoDate(ingameDate)) return { error: `Bitte ein gültiges Ingame-Datum für Block ${i + 1} angeben.` };
     if (!body || body.length > 12_000) return { error: `Bitte Text für Block ${i + 1} angeben (maximal 12.000 Zeichen).` };
-    synopsisBlocks.push({ ingameDate, body });
+    const id = ids[i] ? Number(ids[i]) : undefined;
+    if (id !== undefined && (!Number.isSafeInteger(id) || id <= 0)) return { error: "Ungültiger Zusammenfassungsblock." };
+    synopsisBlocks.push({ ...(id !== undefined ? { id } : {}), ingameDate, body });
   }
   return { missionId, missionSlug, newMission, synopsisBlocks };
 }

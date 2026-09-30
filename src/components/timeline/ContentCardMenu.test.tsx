@@ -42,6 +42,11 @@ const props = {
 };
 
 describe("ContentCardMenu", () => {
+  it("verlinkt den Missionseditor über den Slug statt die ID", () => {
+    render(<ContentCardMenu {...props} contentType="mission" currentUserId={7} href="/chronologie/mission/deneb-iv" />);
+    fireEvent.click(screen.getByRole("button", { name: "Weitere Aktionen" }));
+    expect(screen.getByRole("menuitem", { name: "Bearbeiten" })).toHaveAttribute("href", "/gm/missions/deneb-iv");
+  });
   it("bietet allen das Teilen mit dem Link zur jeweiligen Karte an", () => {
     render(<ContentCardMenu {...props} />);
     fireEvent.click(screen.getByRole("button", { name: "Weitere Aktionen" }));
@@ -50,14 +55,14 @@ describe("ContentCardMenu", () => {
     expect(screen.getByRole("menuitem", { name: "Per WhatsApp teilen" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Als Markdown exportieren" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Als PDF exportieren" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Bearbeiten" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Bearbeiten" })).toBeNull();
   });
 
   it("zeigt dem Besitzer Bearbeiten, Sichtbarkeit und Löschen", () => {
     render(<ContentCardMenu {...props} currentUserId={7} />);
     fireEvent.click(screen.getByRole("button", { name: "Weitere Aktionen" }));
 
-    expect(screen.getByRole("link", { name: "Bearbeiten" })).toHaveAttribute(
+    expect(screen.getByRole("menuitem", { name: "Bearbeiten" })).toHaveAttribute(
       "href",
       "/user/archive/42/edit",
     );

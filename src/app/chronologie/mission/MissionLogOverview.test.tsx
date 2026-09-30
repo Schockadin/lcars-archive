@@ -81,7 +81,7 @@ describe("MissionLogOverview", () => {
 
     fireEvent.click(screen.getAllByRole("button", { name: "Weitere Aktionen" })[0]);
 
-    expect(screen.getByRole("link", { name: "Bearbeiten" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Bearbeiten" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Als Entwurf" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Löschen" })).toBeInTheDocument();
   });

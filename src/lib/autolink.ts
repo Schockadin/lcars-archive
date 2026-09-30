@@ -170,7 +170,7 @@ export async function getAutolinkTargets(
       WHERE is_draft = false AND deleted_at IS NULL
     `,
     sql<{ slug: string; title: string; source_md: string | null }[]>`
-      SELECT slug, title, source_md FROM missions WHERE deleted_at IS NULL
+      SELECT slug, title, source_md FROM missions WHERE deleted_at IS NULL AND is_draft = false
     `,
     sql<{ slug: string; title: string; aliases: string[] | null; source_md: string | null; summary: string | null }[]>`
       SELECT slug, title, metadata->'aliases' AS aliases, source_md,
@@ -386,13 +386,17 @@ export async function resolveAllWikilinks(html: string): Promise<string> {
   // gelten deshalb als nicht gefunden, nicht als Link.
   const [characters, missions, archiveEntries] = await Promise.all([
     sql<{ slug: string; name: string; aliases: string[] | null; source_md: string | null; bio: string | null }[]>`
-      SELECT slug, name, metadata->'aliases' AS aliases, source_md, bio
+      SELECT slug, name, metadata->'aliases' AS aliases,
+             CASE WHEN NOT is_draft THEN source_md END AS source_md,
+             CASE WHEN NOT is_draft THEN bio END AS bio
       FROM characters WHERE deleted_at IS NULL`,
     sql<{ slug: string; title: string; source_md: string | null }[]>`
-      SELECT slug, title, source_md FROM missions WHERE deleted_at IS NULL`,
+      SELECT slug, title, CASE WHEN NOT is_draft THEN source_md END AS source_md
+      FROM missions WHERE deleted_at IS NULL`,
     sql<{ slug: string; title: string; aliases: string[] | null; source_md: string | null; summary: string | null }[]>`
-      SELECT slug, title, metadata->'aliases' AS aliases, source_md,
-             metadata->>'summary' AS summary
+      SELECT slug, title, metadata->'aliases' AS aliases,
+             CASE WHEN NOT is_draft AND category != 'dialogue' THEN source_md END AS source_md,
+             CASE WHEN NOT is_draft AND category != 'dialogue' THEN metadata->>'summary' END AS summary
       FROM archive_entries WHERE deleted_at IS NULL`,
   ]);
 
@@ -411,14 +415,10 @@ export async function resolveAllWikilinks(html: string): Promise<string> {
 
   return replaceWikilinkTags(html, (target) => {
     const href = hrefFromLookup(lookup, target);
-    const key = normalizeWikilinkTarget(target);
     return href
       ? {
           href,
-          preview:
-            lookup.byPreview.get(key) ??
-            lookup.byPreview.get(slugifyForWikilinkFallback(target)) ??
-            null,
+          preview: lookup.byPreview.get(href) ?? null,
         }
       : undefined;
   });
@@ -446,15 +446,13 @@ function addToLookup(
 ): void {
   const titleKey = normalizeWikilinkTarget(title);
   lookup.byTitle.set(titleKey, href);
-  lookup.byPreview.set(titleKey, preview);
+  lookup.byPreview.set(href, preview);
   lookup.bySlug.set(slug, href);
-  lookup.byPreview.set(slug, preview);
   for (const alias of aliases ?? []) {
     if (typeof alias !== "string") continue;
     const key = normalizeWikilinkTarget(alias);
     if (key) {
       lookup.byAlias.set(key, href);
-      lookup.byPreview.set(key, preview);
     }
   }
 }
@@ -511,14 +509,10 @@ export async function resolvePublicWikilinks(html: string): Promise<string> {
 
   return replaceWikilinkTags(html, (target) => {
     const href = hrefFromLookup(lookup, target);
-    const normalized = normalizeWikilinkTarget(target);
     return href
       ? {
           href,
-          preview:
-            lookup.byPreview.get(normalized) ??
-            lookup.byPreview.get(slugifyForWikilinkFallback(target)) ??
-            null,
+          preview: lookup.byPreview.get(href) ?? null,
         }
       : undefined;
   });
@@ -611,10 +605,14 @@ export async function addStoredContentLinkPreviews(html: string): Promise<string
   }
 
   return html.replace(/<a\b[^>]*\bhref="([^"]+)"[^>]*>/gi, (tag, rawHref: string) => {
-    if (/\bdata-preview=/i.test(tag)) return tag;
     const href = rawHref.replace(/&amp;/g, "&");
     const target = hrefs.get(href);
     if (!target) return tag;
+    // Gespeicherte Vorschauen dürfen nach dem Zurückziehen eines Ziels nicht
+    // weiter dessen Text verraten. Öffentliche Ziele erhalten den aktuellen Text.
+    if (/\bdata-preview=/i.test(tag)) {
+      tag = tag.replace(/\sdata-preview="[^"]*"/gi, "").replace(/\stitle="[^"]*"/gi, "");
+    }
     const baseHref = `/${target.type}/${target.slug}`;
     const preview = previews.get(href) ?? previews.get(baseHref);
     if (!preview) return tag;

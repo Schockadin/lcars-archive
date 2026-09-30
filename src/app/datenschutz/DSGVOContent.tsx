@@ -108,7 +108,11 @@ export default function DSGVOContent({ year }: { year: number }) {
           <strong>Sessions</strong> mit Datum, zugehöriger Mission, automatisch
           gebildetem Titel, AP-Buchungen und Teilnehmerliste gespeichert. Die
           Spielleitung kann dazu mehrere datierte Zusammenfassungsblöcke
-          erfassen; sie erscheinen in der Chronik der Mission. Die
+          erfassen. Bei veröffentlichten Missionen sind diese Texte mit ihrem
+          Ingame-Datum in der allgemeinen Chronologie, der Missionschronik und
+          der daraus zusammengestellten Synopsis öffentlich sichtbar. Die
+          öffentliche Session-Ansicht enthält keine AP-Buchungen oder realen
+          Spieltermine. Die
           Teilnehmerzuordnung wird mit dem Charakter entfernt, die Session und
           ihre Missionschronik bleiben bestehen. Diese Angaben dienen dem
           Kampagnenbetrieb (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO —

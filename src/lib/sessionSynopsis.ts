@@ -1,4 +1,5 @@
 export interface SessionSynopsisBlockInput {
+  id?: number;
   ingameDate: string;
   body: string;
 }

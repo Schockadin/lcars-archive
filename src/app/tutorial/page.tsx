@@ -734,6 +734,9 @@ export default function TutorialPage() {
                 ersetzt die alte. Wer zugesagt hat, steht am Termin.
               </p>
               <p>
+                Die Spielleitung plant Termine unter „Kampagne“ und verwaltet
+                gespielte Abende unter „Sessions“. Jede Session-Karte öffnet
+                eine Detailseite zum Bearbeiten der Session und ihrer Blöcke.
                 Jeder angekündigte Termin gehört zu einer Mission. Sein Titel
                 entsteht automatisch aus Missionsname und laufender Nummer;
                 beim Ankündigen kann die Spielleitung auch direkt eine neue
@@ -742,13 +745,16 @@ export default function TutorialPage() {
                 Zusammenfassungsblöcke erfassen, jeweils mit Ingame-Datum und
                 Text. Sie erscheinen chronologisch zwischen den Missionslogs;
                 das Inhaltsverzeichnis der Missionschronik springt direkt zu den
-                einzelnen Blöcken.
+                einzelnen Blöcken. Unter „Synopsis“ am Ende steht die gesamte
+                Zusammenfassung. Mit + beziehungsweise − neben dem Inhaltsverzeichnis
+                öffnest oder schließt du alle Session-Blöcke. Die allgemeine
+                Chronologie führt sie zusätzlich in der Kategorie „Sessions“.
               </p>
               <p>
                 Ist einer deiner Charaktere für den Termin{" "}
                 <strong>eingeplant</strong>, erfährst du davon außerdem per{" "}
                 <strong>Mail und Push</strong>, sobald der Termin angekündigt
-                wird — samt Zeitpunkt, Ort und der Notiz der Spielleitung. Dafür
+                wird — samt Zeitpunkt und Ort. Dafür
                 musst du nichts abonnieren; es gelten nur deine allgemeinen
                 Schalter für Mail- und Push-Benachrichtigungen unter
                 „Einstellungen“. Auch mit zwei eingeplanten Figuren bekommst du

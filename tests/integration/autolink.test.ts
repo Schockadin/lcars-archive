@@ -138,6 +138,32 @@ describe("getAutolinkTargets", () => {
 });
 
 describe("resolveAllWikilinks", () => {
+  it("übernimmt keine Vorschautexte aus Entwürfen und hält die öffentliche Auflösung frei davon", async () => {
+    const character = await insertCharacter({ name: "Verborgene Person", isDraft: true });
+    const mission = await insertMission({ title: "Verborgene Mission" });
+    await sql`UPDATE characters SET bio = 'Geheime Biografie' WHERE id = ${character.id}`;
+    await sql`UPDATE missions SET is_draft = true, source_md = 'Geheimer Missionsplan' WHERE id = ${mission.id}`;
+    const html = await renderContentHtml("[[Verborgene Person]] [[Verborgene Mission]]");
+    expect(html).not.toContain("Geheime Biografie");
+    expect(html).not.toContain("Geheimer Missionsplan");
+    expect(html).not.toContain("data-preview");
+    expect(await resolvePublicWikilinks('<a href="wikilink://Verborgene Mission">Mission</a>')).toContain("lcars-wikilink--missing");
+    const stored = await addStoredContentLinkPreviews(`<a href="/characters/${character.slug}" data-preview="Geheime Biografie" title="Geheime Biografie">Person</a>`);
+    expect(stored).not.toContain("Geheime Biografie");
+    expect(stored).not.toContain("data-preview");
+  });
+
+  it("verwendet bei Alias-Kollisionen die Vorschau des tatsächlich verlinkten Ziels", async () => {
+    const mission = await insertMission({ title: "Gemeinsamer Name" });
+    const character = await insertCharacter({ name: "Andere Person" });
+    await sql`UPDATE characters SET metadata = jsonb_set(metadata, '{aliases}', '["Gemeinsamer Name"]'::jsonb) WHERE id = ${character.id}`;
+    await sql`UPDATE missions SET source_md = 'Missionsvorschau' WHERE id = ${mission.id}`;
+    await sql`UPDATE characters SET bio = 'Charaktervorschau' WHERE id = ${character.id}`;
+    const html = await renderContentHtml("[[Gemeinsamer Name]]");
+    expect(html).toContain(`/chronologie/mission/${mission.slug}`);
+    expect(html).toContain('data-preview="Missionsvorschau"');
+    expect(html).not.toContain("Charaktervorschau");
+  });
   it("resolves a wikilink anchor to the target's real href", async () => {
     const character = await insertCharacter({ name: "Ziel Person" });
     const html = `<a href="wikilink://Ziel Person">Ziel Person</a>`;

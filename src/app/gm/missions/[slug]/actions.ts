@@ -19,6 +19,7 @@ export async function updateMissionSummaryBlockAction(_state: MissionSummaryBloc
   const body = String(formData.get("bodyMarkdown") ?? "");
   if (!missionSlug || !Number.isSafeInteger(id) || id <= 0) return { error: "Der Summary-Block konnte nicht zugeordnet werden." };
   if (!isIsoDate(ingameDate)) return { error: "Bitte ein gültiges Ingame-Datum angeben." };
+  if (!body.trim() || body.length > 12_000) return { error: "Bitte einen Text mit höchstens 12.000 Zeichen angeben." };
   const mission = await getMissionBySlug(missionSlug);
   if (!mission) return { error: "Mission nicht gefunden." };
   if (!(await updateMissionSynopsisBlock({ id, missionId: mission.id, ingameDate, body }))) return { error: "Summary-Block nicht gefunden." };

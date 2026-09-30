@@ -92,7 +92,7 @@ export default function ContentCardMenu({
             <>
               <Link
                 className="timeline-card-menu-link"
-                href={contentEditHref(editType, id)}
+                href={contentEditHref(editType, id, exportSlug)}
                 role="menuitem"
                 onClick={() => setOpen(false)}
               >

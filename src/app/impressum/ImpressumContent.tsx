@@ -76,7 +76,8 @@ export default function ImpressumContent() {
           etwa Charakterbiografien, Einsatzberichten, Session-Zusammenfassungen,
           Gesprächen, freien Chronologie-Ereignissen, Datenbank-Einträgen und
           zusätzlich zu einer Figur hinterlegten Dokumenten – liegen bei den
-          jeweiligen Autor*innen.
+          jeweiligen Autor*innen. Das gilt auch für die aus den datierten
+          Session-Zusammenfassungen automatisch zusammengestellte Missions-Synopsis.
           Der Seitenbetreiber stellt lediglich die Plattform zur gemeinsamen
           Dokumentation der Kampagne bereit und beansprucht keine darüber
           hinausgehenden Rechte an diesen nutzergenerierten Beiträgen. Die Owner

@@ -75,7 +75,7 @@ function MissionSummaryBlockRow({
     >
       <div className="mb-[6px] flex flex-wrap items-baseline justify-between gap-[8px]">
         <h3 className="font-semibold">
-          {missionTitle} - Eintrag {block.missionSessionNumber ?? "?"}
+          {missionTitle} - Eintrag {block.missionBlockNumber}
         </h3>
         <span className="lcars-eyebrow">{fmtDate(block.ingameDate)}</span>
       </div>
@@ -141,7 +141,7 @@ function MissionSummaryBlockRow({
           </button>
           {block.sessionId !== null && (
             <Link
-              href={`#session-${block.sessionId}`}
+              href={`/gm/sessions/${block.sessionId}#summary-${block.id}`}
               className="lcars-back-link self-center"
             >
               Zur zugehörigen Session
@@ -154,7 +154,7 @@ function MissionSummaryBlockRow({
               type="submit"
               disabled={deletePending}
               onClick={confirmSubmit(
-                `„${missionTitle} - Eintrag ${block.missionSessionNumber ?? "?"}“ wirklich löschen?`,
+                `„${missionTitle} - Eintrag ${block.missionBlockNumber}“ wirklich löschen?`,
               )}
               className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
               aria-label="Summary-Block löschen"

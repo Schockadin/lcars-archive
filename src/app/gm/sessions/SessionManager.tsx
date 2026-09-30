@@ -43,6 +43,7 @@ export function SessionContextFields({
   );
   const [blocks, setBlocks] = useState(() => initialBlocks.map((block, index) => ({
     key: `${idPrefix}-${index}`,
+    id: block.id as number | undefined,
     ingameDate: block.ingameDate,
     body: block.body,
   })));
@@ -99,6 +100,7 @@ export function SessionContextFields({
             id={`${idPrefix}-synopsis-block-${index}`}
             className="scroll-mt-24 flex flex-col gap-[6px] rounded-lg border border-[var(--lcars-ink-dim)]/30 p-[8px]"
           >
+            <input type="hidden" name="synopsisId" value={block.id ?? ""} />
             <div className="flex flex-wrap gap-[8px]">
               <label className="flex flex-col gap-[4px]">
                 <span className="lcars-eyebrow">Ingame-Datum</span>
@@ -149,6 +151,7 @@ export function SessionContextFields({
                 ...current,
                 {
                   key: crypto.randomUUID(),
+                  id: undefined,
                   ingameDate,
                   body: "",
                 },

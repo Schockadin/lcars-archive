@@ -15,6 +15,7 @@ vi.mock("next/cache", () => ({
 import sql from "@/lib/db";
 import {
   createGameSession,
+  updateGameSession,
   getGameSession,
   listCharactersForSessionEdit,
   listActiveSessionMissions,
@@ -28,6 +29,7 @@ import {
   restoreMission,
 } from "@/lib/missions";
 import { insertUser, insertCharacter, insertMission } from "./helpers";
+import { createPlannedSession, getPlannedSession } from "@/lib/plannedSessions";
 
 // Die automatische Logbuch-AP (reason 'logbook') hängt an einer einzigen
 // Regel: hat eine Session mindestens ein nicht gelöschtes Logbuch, bekommt
@@ -82,6 +84,29 @@ async function setup() {
 }
 
 describe("Sessions", () => {
+  it("behält Block-IDs beim Bearbeiten und verweigert fremde Block-IDs", async () => {
+    const { gm, character, mission, sessionId } = await setup();
+    const before = (await getGameSession(sessionId))!;
+    const input = { id: sessionId, sessionDate: before.sessionDate, missionId: mission.id,
+      sessionAp: 1, bonusAp: 0, characterIds: [character.id], actingUserId: gm.id,
+      synopsisBlocks: before.synopsisBlocks.map((block) => ({ id: block.id, ingameDate: block.ingameDate, body: "Korrigiert" })) };
+    await updateGameSession(input);
+    expect((await getGameSession(sessionId))?.synopsisBlocks[0]).toMatchObject({ id: before.synopsisBlocks[0].id, body: "Korrigiert" });
+    await expect(updateGameSession({ ...input, synopsisBlocks: [{ id: 2147483647, ingameDate: "2399-01-01", body: "Fremd" }] })).rejects.toThrow("gehört nicht");
+    expect((await getGameSession(sessionId))?.synopsisBlocks[0].body).toBe("Korrigiert");
+  });
+
+  it("verknüpft einen geplanten Termin atomar und bucht ihn nur einmal", async () => {
+    const gm = await insertUser({ role: "gm" });
+    const mission = await insertMission();
+    const plannedSessionId = await createPlannedSession({ missionId: mission.id, scheduledAt: "2026-09-01T18:00:00Z", location: "", notes: "", characterIds: [] }, gm.id);
+    const input = { missionId: mission.id, plannedSessionId, sessionDate: "2026-09-01", sessionAp: 0, bonusAp: 0, characterIds: [], synopsisBlocks: [], createdByUserId: gm.id };
+    const id = await createGameSession(input);
+    expect((await getPlannedSession(plannedSessionId))?.gameSessionId).toBe(id);
+    expect((await getGameSession(id))?.missionSessionNumber).toBe(1);
+    await expect(createGameSession(input)).rejects.toThrow("nicht mehr offen");
+    expect(await sql`SELECT id FROM game_sessions WHERE mission_id = ${mission.id}`).toHaveLength(1);
+  });
   it("lädt eine einzelne Session samt Teilnehmenden und Zusammenfassungsblöcken", async () => {
     const { sessionId, character, mission } = await setup();
     const session = await getGameSession(sessionId);

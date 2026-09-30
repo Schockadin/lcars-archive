@@ -37,6 +37,7 @@ describe("SessionManager", () => {
     expect(editLink).toHaveAttribute("href", "#session-7-synopsis-block-0");
     expect(container.querySelector("#session-7-synopsis-block-0")).toBeInTheDocument();
     expect(screen.getByLabelText("Ingame-Datum")).toHaveValue("2400-05-12");
+    expect(container.querySelector('input[name="synopsisId"]')).toHaveValue("11");
     expect(screen.getByRole("checkbox", { name: /T'Lara/ })).toBeChecked();
     expect(screen.getByRole("button", { name: "Session speichern" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Session zurücknehmen" }).closest("form")).toContainHTML('name="returnToSessions"');

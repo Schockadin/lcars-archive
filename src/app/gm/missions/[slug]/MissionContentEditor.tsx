@@ -32,7 +32,7 @@ export default function MissionContentEditor({ mission, userId, characters, part
       submitLabel="Änderungen speichern" submitPendingLabel="Wird gespeichert…" />
     <section className="mt-[32px] flex flex-col gap-[12px]"><h2 className="text-lcars-quinary-ink">Gefahrenzone</h2>
       <DangerZoneButton formAction={deleteAction} hiddenFields={{ missionId: mission.id }} pending={deletePending}
-        confirmMessage={`Mission „${mission.title}“ wirklich endgültig löschen? Alle zugehörigen Mission-Logs werden mit gelöscht — das lässt sich nicht rückgängig machen.`}
+        confirmMessage={`Mission „${mission.title}“ löschen? Die zugehörigen Mission-Logs werden ebenfalls in den Papierkorb verschoben.`}
         label="" ariaLabel="Mission löschen" title="Mission löschen" className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50" pendingLabel="Wird gelöscht…">
         <TrashIcon />
       </DangerZoneButton>
