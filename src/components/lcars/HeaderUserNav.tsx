@@ -40,12 +40,6 @@ interface NavMenuItem {
 // was aus dem Regelwerk kommt, was am Archiv gepflegt wird.
 const GM_ITEMS: NavMenuItem[] = [
   {
-    href: "/gm/campaign",
-    label: "Kampagne",
-    permission: "gm.access",
-    group: "Kampagne",
-  },
-  {
     href: "/gm/missions",
     label: "Missionen",
     permission: "gm.access",
@@ -82,6 +76,12 @@ const GM_ITEMS: NavMenuItem[] = [
   {
     href: "/gm/focuses",
     label: "Schwerpunkte",
+    permission: "gm.access",
+    group: "Regelwerk",
+  },
+  {
+    href: "/gm/campaign",
+    label: "Kampagne",
     permission: "gm.access",
     group: "Regelwerk",
   },
