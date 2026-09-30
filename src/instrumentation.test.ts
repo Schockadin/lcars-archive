@@ -50,7 +50,7 @@ describe("onRequestError", () => {
 });
 
 describe("runtime-spezifische Instrumentation", () => {
-  const source = readFileSync(new URL("./instrumentation.ts", import.meta.url), "utf8");
+  const source = readFileSync("src/instrumentation.ts", "utf8");
   const compiled = transpileModule(source, { compilerOptions: { module: ModuleKind.CommonJS } }).outputText;
   function load(runtime: string, requireModule: ReturnType<typeof vi.fn>) {
     const exports: { register?: () => void } = {};
