@@ -38,6 +38,23 @@
   min-width: 0;
 }
 
+/* Die Leiste für „Neue Inhalte“ füllt die Breite mit gleich breiten
+   Aktionsspalten. Auf schmalen Ansichten bleibt eine Spalte übrig; längere
+   Beschriftungen können die Spalte nicht über ihren Container hinausziehen. */
+.lcars-btn-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+.lcars-btn-row > * {
+  min-width: 0;
+}
+.lcars-btn-row > .lcars-pill-btn,
+.lcars-btn-row > .lcars-pill-btn--outline {
+  width: 100%;
+  min-width: 0;
+}
+
 /* Meta-/Nebentext („2 Einträge", „Bearbeitet von …", Zähler, Leerhinweise):
    klein, in der Datenschrift und gedimmt. Domänenübergreifend dieselbe Rolle,
    deshalb EINE Regel statt bislang elf gleichlautender Deklarationen in fünf
