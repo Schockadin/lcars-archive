@@ -57,3 +57,6 @@ credentials.json
 # scripts/create-initial-admin.ts darauf verweisen. Neue .env-Muster deshalb
 # ÜBER dieser Zeile ergänzen, nicht darunter.
 !.env.example
+
+# Local Netlify folder
+.netlify
