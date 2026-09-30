@@ -1127,8 +1127,10 @@ export default function TutorialPage() {
                 Zusätzlich zu allem oben Genannten hat die Spielleitung ein
                 eigenes <strong>„Leitung“</strong>-Menü. Es steht getrennt neben
                 dem Admin-Menü — wer beide Rollen hat, sieht beide nebeneinander
-                — und ist nach Aufgaben gegliedert: Kampagne, Charaktere,
-                Regelwerk, Inhalte. Jeder seiner zehn Bereiche ist hier erklärt;
+                — und ist nach Aufgaben gegliedert: Missionen und Sessions
+                unter „Kampagne“, Charaktere, Gruppenblatt und AP unter
+                „Charaktere“, Kampagneneinstellungen unter „Regelwerk“ sowie
+                Inhalte. Jeder seiner Bereiche ist hier erklärt;
                 denselben Text öffnet auf der jeweiligen Seite das{" "}
                 <strong>Fragezeichen</strong> neben der Überschrift.
               </p>

@@ -821,11 +821,7 @@ auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
   News auf einmal als gelesen. Im Profil lässt sich einstellen, welche News-Arten
   (neu/bearbeitet/gelöscht) überhaupt angezeigt werden (Standard: nur neue).
   Persistenz über die Tabelle `news_seen`.
-- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign`
-  („Kampagne", ersetzt das frühere reine „Missionen") an einem Ort das aktuelle
-  Ingame-Jahr, die Charakter-Zuweisung und die Missions-Übersicht. Charaktere
-  haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen
-  Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
+- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign` (im Leitungsmenü unter „Regelwerk") das aktuelle Ingame-Jahr und die Steigerungsregeln. Charakter-Zuweisungen liegen unter `/gm/characters`, die Missionsübersicht unter `/gm/missions`. Charaktere haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
 - **Eingaben überleben den Reload** — jede Eingabe in jedem Formular der App
   wird für die Browser-Sitzung gesichert (`sessionStorage`) und beim nächsten
   Aufbau derselben Seite wieder eingesetzt: Neuladen, versehentliches Zurück
@@ -1377,9 +1373,10 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   Die Spielleitung hat ein eigenes „Leitung“-Dropdown im Header, das getrennt
   neben dem Admin-Menü steht (wer beide Rollen hat, sieht beide Menüs
   nebeneinander), wie dieses **nach Aufgabe gegliedert** ist (Kampagne ·
-  Charaktere · Regelwerk · Inhalte) und in den Bereich `/gm` führt: Kampagnen-Seite (Ingame-Jahr,
-  Charakter-Zuweisung, Missions-Übersicht mit Bearbeiten/Löschen/Besitzer:in-
-  Zuordnung), Sessions, AP, Talente sowie alle aktuell offenen Gespräche — auch
+  Charaktere · Regelwerk · Inhalte) und in den Bereich `/gm` führt: Missionen
+  und Sessions stehen unter „Kampagne“, Charaktere, Gruppenblatt und AP unter
+  „Charaktere“, Talente, Schwerpunkte und Kampagneneinstellungen unter
+  „Regelwerk“. Dazu kommen die Inhalte sowie alle aktuell offenen Gespräche — auch
   ohne eigene Teilnahme, verlinkt auf die read-only-Ansicht des jeweiligen
   Gesprächs. Über jedes neu
   begonnene Gespräch wird jeder aktive GM-Account zusätzlich automatisch per
