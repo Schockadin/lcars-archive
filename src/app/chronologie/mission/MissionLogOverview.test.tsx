@@ -68,13 +68,13 @@ describe("MissionLogOverview", () => {
     renderOverview();
 
     expect(screen.getByRole("heading", { level: 2, name: "Missionschronik" })).toBeInTheDocument();
-    expect(screen.getByText(/3 Logs · 0 Session-Blöcke/)).toBeInTheDocument();
+    expect(screen.getByText(/3 Logeinträge chronologisch/)).toBeInTheDocument();
   });
 
   it("zählt ein einzelnes Logbuch im Singular", () => {
     renderOverview({ logs: [log(1, "Allein")] });
 
-    expect(screen.getByText(/1 Log · 0 Session-Blöcke/)).toBeInTheDocument();
+    expect(screen.getByText(/1 Logeintrag chronologisch/)).toBeInTheDocument();
   });
 
   it("verlinkt jede Karte auf das Logbuch in dieser Mission", () => {
@@ -111,12 +111,21 @@ describe("MissionLogOverview", () => {
     expect(container.querySelectorAll(".timeline-card")).toHaveLength(3);
     expect([...container.querySelectorAll(".timeline-card-title")].map((node) => node.textContent)).toEqual(["Log zwei", "Log eins", "20.12.2234"]);
     expect(screen.queryByText("Session: 20.12.2234 - Eintrag 8")).not.toBeInTheDocument();
-    expect([...container.querySelectorAll(".timeline-tag")].map((node) => node.textContent)).toContain("Session");
-    const tocEntry = container.querySelector(".lcars-toc-link")!;
-    expect(tocEntry).toHaveTextContent("20.12.2234");
+    expect([...container.querySelectorAll(".timeline-tag")].map((node) => node.textContent)).toEqual([
+      "Logbuch",
+      "Logbuch",
+      "Logbuch",
+    ]);
+    const tocEntries = [...container.querySelectorAll(".lcars-toc-link")];
+    expect(tocEntries.map((item) => item.textContent)).toEqual([
+      "21.12.2234 · Log zwei",
+      "20.12.2234 · Log eins",
+      "20.12.2234",
+      "Synopsis",
+    ]);
     const summary = container.querySelector<HTMLElement>("#mission-synopsis-7")!;
     summary.scrollIntoView = vi.fn();
-    fireEvent.click(tocEntry);
+    fireEvent.click(tocEntries[2]);
     expect(summary.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
     expect(screen.getAllByText("20.12.2234").length).toBeGreaterThan(0);
   });
@@ -168,7 +177,10 @@ describe("MissionLogOverview", () => {
     fireEvent.click(toggle);
     const target = container.querySelector<HTMLElement>("#mission-synopsis-7")!;
     target.scrollIntoView = vi.fn();
-    fireEvent.click(container.querySelector(".lcars-toc-link")!);
+    const blockEntry = [...container.querySelectorAll(".lcars-toc-link")].find(
+      (item) => item.textContent === "07.12.2234",
+    )!;
+    fireEvent.click(blockEntry);
     expect(target.querySelector("details")).toHaveAttribute("open");
     expect(container.querySelector("#mission-synopsis-8 details")).not.toHaveAttribute("open");
     expect(toggle).toHaveTextContent("+");

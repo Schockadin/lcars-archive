@@ -33,7 +33,7 @@ vi.mock("@/components/timeline/ManualEventForm", () => ({
       data-testid="form-event"
       data-date={defaultDate ?? ""}
       data-characters={characters.length}
-      className="lcars-icon-btn"
+      className="lcars-pill-btn"
       aria-label="Neues Event"
     >
       Neues Event
@@ -79,7 +79,7 @@ describe("NewContentButtons", () => {
     fireEvent.click(screen.getByRole("button", { name: "Neuer Missionslog" }));
     expect(
       screen.getByRole("button", { name: "Neuer Missionslog" }),
-    ).toHaveClass("lcars-icon-btn");
+    ).toHaveClass("lcars-pill-btn");
     expect(screen.getByRole("dialog")).toHaveAttribute(
       "aria-label",
       "Neuen Missionslog anlegen",
@@ -102,7 +102,7 @@ describe("NewContentButtons", () => {
     render(<NewContentButtons data={data()} />);
 
     expect(screen.getByRole("button", { name: "Neues Event" })).toHaveClass(
-      "lcars-icon-btn",
+      "lcars-pill-btn",
     );
     expect(screen.getByTestId("form-event")).toHaveAttribute(
       "data-date",
@@ -195,18 +195,17 @@ describe("NewContentButtons", () => {
   // Startseite die Sektion im Profil).
   it("zeigt den Import nur, wenn der Aufrufer ihn erlaubt", () => {
     const { unmount } = render(<NewContentButtons data={data()} />);
-    expect(
-      screen.queryByRole("link", { name: "Inhalte importieren" }),
-    ).toBeNull();
+    expect(screen.queryByRole("link", { name: "Import" })).toBeNull();
     unmount();
 
     render(<NewContentButtons data={data()} canImport />);
-    expect(
-      screen.getByRole("link", { name: "Inhalte importieren" }),
-    ).toHaveAttribute("href", "/user/import");
-    expect(
-      screen.getByRole("link", { name: "Inhalte importieren" }),
-    ).toHaveClass("lcars-icon-btn");
+    expect(screen.getByRole("link", { name: "Import" })).toHaveAttribute(
+      "href",
+      "/user/import",
+    );
+    expect(screen.getByRole("link", { name: "Import" })).toHaveClass(
+      "lcars-pill-btn--outline",
+    );
   });
 
   // Anders als die übrigen kein Fenster: Der Ablauf blättert durch mehrere
@@ -214,18 +213,18 @@ describe("NewContentButtons", () => {
   it("führt beim Import auf die Seite statt in ein Fenster", () => {
     render(<NewContentButtons data={data()} canImport />);
 
-    expect(
-      screen.queryByRole("link", { name: "Inhalte importieren" }),
-    ).toHaveAttribute("href", "/user/import");
+    expect(screen.getByRole("link", { name: "Import" })).toHaveAttribute(
+      "href",
+      "/user/import",
+    );
   });
 
-  // Die Leiste hält kompakte Aktions-Icons und lässt sie bei Platzmangel
-  // umbrechen.
-  it("ordnet die Aktions-Icons in einer flexiblen Leiste an", () => {
+  // Die beschrifteten Knöpfe liegen in der gemeinsamen Button-Leiste.
+  it("ordnet die beschrifteten Aktionen in der gemeinsamen Leiste an", () => {
     const { container } = render(<NewContentButtons data={data()} canImport />);
 
     expect(
-      container.querySelector('div[class*="flex-wrap"][class*="items-start"]'),
+      container.querySelector(".lcars-btn-row"),
     ).not.toBeNull();
   });
 

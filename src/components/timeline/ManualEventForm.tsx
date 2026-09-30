@@ -29,6 +29,7 @@ export default function ManualEventForm({
   defaultDate,
   characters,
   event,
+  triggerVariant = "icon",
   dateHint = "Vorbelegt mit dem jüngsten Ereignis der Chronologie",
 }: {
   // Vorgabedatum des jeweiligen Einstiegs. Die Chronologie verwendet ihr
@@ -41,6 +42,9 @@ export default function ManualEventForm({
   // Mit Ereignis wird dasselbe Formular zum Editor. So bleiben Felder,
   // Validierung und Kategorien beim Anlegen und Bearbeiten identisch.
   event?: ManualEventForEdit;
+  // Der gemeinsame „Neue Inhalte“-Bereich verwendet die beschriftete Pille;
+  // in der Chronologie und auf Karten bleibt der kompakte Symbolknopf.
+  triggerVariant?: "icon" | "pill";
   dateHint?: string;
 }) {
   const editing = event !== undefined;
@@ -50,18 +54,33 @@ export default function ManualEventForm({
   >(editing ? updateManualEventAction : createManualEventAction, {});
   const [open, setOpen] = useState(false);
   const idPrefix = editing ? `manual-event-${event.id}` : "manual-event-new";
-  const triggerLabel = editing ? "Event bearbeiten" : "Event hinzufügen";
+  const triggerLabel =
+    triggerVariant === "pill"
+      ? "Neues Event"
+      : editing
+        ? "Event bearbeiten"
+        : "Event hinzufügen";
 
   return (
     <div className="timeline-newevent">
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="lcars-icon-btn self-start"
+        className={
+          triggerVariant === "pill"
+            ? "lcars-pill-btn w-full"
+            : "lcars-icon-btn self-start"
+        }
         aria-label={triggerLabel}
         title={triggerLabel}
       >
-        {editing ? <PencilIcon /> : <PlusIcon />}
+        {triggerVariant === "pill" ? (
+          "Neues Event"
+        ) : editing ? (
+          <PencilIcon />
+        ) : (
+          <PlusIcon />
+        )}
       </button>
 
       {open && (

@@ -112,21 +112,23 @@
   color: var(--lcars-bg);
   border-color: var(--lcars-primary);
 }
+.lcars-icon-btn--danger,
+.lcars-icon-btn[aria-label*="löschen" i],
+.lcars-icon-btn[aria-label*="entfernen" i] {
+  border-color: #c62828;
+  color: #c62828;
+}
+.lcars-icon-btn--danger:hover:not(:disabled),
+.lcars-icon-btn[aria-label*="löschen" i]:hover:not(:disabled),
+.lcars-icon-btn[aria-label*="entfernen" i]:hover:not(:disabled) {
+  background: #c62828;
+  color: #fff;
+  border-color: #c62828;
+}
 .lcars-icon-btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
-/* Löschen: rot statt Standard-Blau, auch im Hover. */
-.lcars-icon-btn--danger {
-  border-color: var(--lcars-quinary);
-  color: var(--lcars-quinary-ink);
-}
-.lcars-icon-btn--danger:hover:not(:disabled) {
-  background: var(--lcars-quinary);
-  color: var(--lcars-bg);
-  border-color: var(--lcars-quinary);
-}
-
 /* Pill Buttons — Basis-Look (Größe/Form/Typografie) auch von
    .lcars-usernav-pill (header.css) geteilt, das denselben "Amber-Pille"-
    Aufbau für die Header-Navigation braucht; nur Farbe/Maße/Hover

@@ -72,7 +72,7 @@ export default function MissionLogOverview({
         chronologisch
       </p>
 
-      {hasSynopsis && (
+      {(hasSynopsis || logs.length > 0) && (
         <div className="mb-[16px] flex items-start gap-[8px]">
           <div className="min-w-0 flex-1">
             <LcarsCollapsiblePanel
@@ -80,7 +80,7 @@ export default function MissionLogOverview({
               storageId={`mission:${missionSlug}:chronicle-toc`}
             >
               <LcarsToc
-                title="Logbücher"
+                title="Chronik"
                 ariaLabel="Inhaltsverzeichnis der Missionschronik"
                 onJump={(id) => {
                   const block = synopsisBlocks.find(
@@ -89,10 +89,19 @@ export default function MissionLogOverview({
                   if (block) panels.setOpen(String(block.id), true);
                 }}
                 headings={[
-                  ...synopsisBlocks.map((block) => ({
-                    id: `mission-synopsis-${block.id}`,
-                    text: fmtDate(block.ingameDate),
-                  })),
+                  ...entries.map((entry) =>
+                    entry.kind === "log"
+                      ? {
+                          id: `mission-log-${entry.log.id}`,
+                          text: [fmtDate(entry.log.log_date), entry.log.title]
+                            .filter(Boolean)
+                            .join(" · "),
+                        }
+                      : {
+                          id: `mission-synopsis-${entry.block.id}`,
+                          text: fmtDate(entry.block.ingameDate),
+                        },
+                  ),
                   ...(hasSynopsis
                     ? [{ id: "mission-full-synopsis", text: "Synopsis" }]
                     : []),
@@ -131,12 +140,17 @@ export default function MissionLogOverview({
           {entries.map((entry) => {
             if (entry.kind === "log") {
               return (
-                <LogRow
+                <div
                   key={`log-${entry.log.id}`}
-                  log={entry.log}
-                  missionSlug={missionSlug}
-                  currentUserId={currentUserId}
-                />
+                  id={`mission-log-${entry.log.id}`}
+                  className="scroll-mt-24"
+                >
+                  <LogRow
+                    log={entry.log}
+                    missionSlug={missionSlug}
+                    currentUserId={currentUserId}
+                  />
+                </div>
               );
             }
             return (

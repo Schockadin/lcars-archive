@@ -4,7 +4,6 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { createRoleAction, type RolesState } from "./actions";
 import PermissionCheckboxList from "./PermissionCheckboxList";
 import { slugifyBase } from "@/lib/slug";
-import { PlusIcon } from "@/lib/icons";
 import {
   FormField,
   FormError,
@@ -88,12 +87,10 @@ export default function CreateRoleForm() {
 
       <SubmitButton
         pending={pending}
-        pendingLabel="…"
-        className="lcars-icon-btn self-end disabled:opacity-50"
-        ariaLabel="Rolle anlegen"
-        title="Rolle anlegen"
+        pendingLabel="Anlegen…"
+        className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
       >
-        <PlusIcon />
+        Rolle anlegen
       </SubmitButton>
     </form>
   );

@@ -102,7 +102,7 @@ export default function TrashTable({ items }: { items: TrashItem[] }) {
             type="button"
             disabled={pendingKey === itemKey(row)}
             onClick={() => handleRestore(row)}
-            className="lcars-icon-btn disabled:opacity-50"
+            className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
             aria-label="Wiederherstellen"
             title="Wiederherstellen"
           >

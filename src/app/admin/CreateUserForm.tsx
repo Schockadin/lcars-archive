@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { createUserAction, type AdminActionState } from "./actions";
-import { PlusIcon } from "@/lib/icons";
 import {
   FormField,
   FormError,
@@ -71,12 +70,10 @@ export default function CreateUserForm() {
 
       <SubmitButton
         pending={pending}
-        pendingLabel="…"
-        className="lcars-icon-btn disabled:opacity-50 mb-[8px]"
-        ariaLabel="User anlegen"
-        title="User anlegen"
+        pendingLabel="Anlegen…"
+        className="lcars-pill-btn--outline disabled:opacity-50 mb-[8px]"
       >
-        <PlusIcon />
+        User anlegen
       </SubmitButton>
 
       <FormError message={state?.error} className="w-full" />

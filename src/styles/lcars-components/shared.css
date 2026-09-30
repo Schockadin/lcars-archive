@@ -253,6 +253,10 @@
 }
 
 /* Inhaltsverzeichnis (wiederverwendbar) */
+.lcars-toc {
+  width: 100%;
+  max-width: 500px;
+}
 .lcars-toc-title {
   margin-bottom: 6px;
   font-family: var(--lcars-font-sans);

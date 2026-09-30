@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useOverlayDismiss } from "@/hooks/useOverlayDismiss";
 import { createPortal } from "react-dom";
-import { PlusIcon, XIcon } from "@/lib/icons";
+import { XIcon } from "@/lib/icons";
 import { useReturnFocus } from "@/hooks/useReturnFocus";
 
 // Fenster mit einem freien Eingabefeld — das Hinzufügen zu den Listen des
@@ -86,11 +86,9 @@ export default function EntryAddModal({
           type="button"
           onClick={submit}
           disabled={!value.trim()}
-          className="lcars-icon-btn self-start disabled:opacity-50"
-          aria-label={title}
-          title={title}
+          className="lcars-pill-btn--outline self-start disabled:opacity-50"
         >
-          <PlusIcon />
+          Übernehmen
         </button>
       </div>
     </div>,

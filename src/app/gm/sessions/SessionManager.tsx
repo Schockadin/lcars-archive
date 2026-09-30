@@ -137,7 +137,7 @@ export function SessionContextFields({
               </label>
               <button
                 type="button"
-                className="lcars-icon-btn self-end"
+                className="lcars-icon-btn lcars-icon-btn--danger self-end"
                 aria-label={`Zusammenfassungsblock ${index + 1} entfernen`}
                 title="Zusammenfassungsblock entfernen"
                 onClick={() =>
