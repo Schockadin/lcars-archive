@@ -29,10 +29,10 @@ describe("SessionManager", () => {
     expect(screen.getByLabelText("Datum")).toHaveValue("2026-09-29");
   });
 
-  it("öffnet den Editor am Summary-Block und bietet Speichern, Entfernen und Zurücknehmen", () => {
+  it("öffnet den Editor am Log-Eintrag und bietet Speichern, Entfernen und Zurücknehmen", () => {
     const { container } = render(<SessionDetails session={SESSION} characters={CHARACTERS} missions={MISSIONS} detailPage />);
     expect(screen.getByText("Zwischenfall")).toBeInTheDocument();
-    const editLink = screen.getByRole("link", { name: "Summary-Block bearbeiten" });
+    const editLink = screen.getByRole("link", { name: "Log-Eintrag bearbeiten" });
     fireEvent.click(editLink);
     expect(editLink).toHaveAttribute("href", "#session-7-synopsis-block-0");
     expect(container.querySelector("#session-7-synopsis-block-0")).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe("SessionManager", () => {
     expect(screen.getByRole("checkbox", { name: /T'Lara/ })).toBeChecked();
     expect(screen.getByRole("button", { name: "Session speichern" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Session zurücknehmen" }).closest("form")).toContainHTML('name="returnToSessions"');
-    fireEvent.click(screen.getByRole("button", { name: "Zusammenfassungsblock 1 entfernen" }));
+    fireEvent.click(screen.getByRole("button", { name: "Log-Eintrag 1 entfernen" }));
     expect(screen.queryByLabelText("Ingame-Datum")).not.toBeInTheDocument();
   });
 });

@@ -9,7 +9,7 @@ import { PlusIcon } from "@/lib/icons";
 import { fmtDate } from "@/lib/missionFormat";
 
 // Durchsuchbare Übersicht. Die Karte führt direkt in die GM-Detailseite, wo
-// Sessions, Summary-Blöcke und die Mission verwaltet werden.
+// Sessions, Log-Einträge und die Mission verwaltet werden.
 export default function AdminMissionsBrowser({
   missions,
 }: {

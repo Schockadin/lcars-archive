@@ -195,10 +195,10 @@ export default function TutorialPage() {
               <p>
                 Die <strong>Missionsseite</strong> selbst zeigt oben Status,
                 Zeitraum und die beteiligten Figuren. In der{" "}
-                <strong>Missionschronik</strong> stehen datierte Logs und die
-                Zusammenfassungsblöcke gespielter Sessions gemeinsam, neueste
+                <strong>Missionschronik</strong> stehen Spieler-Logbücher und
+                Log-Einträge der Spielleitung gemeinsam, neueste
                 zuerst. Das Inhaltsverzeichnis lässt sich einklappen und springt
-                direkt zu den Zusammenfassungsblöcken. Ein Klick auf ein Log
+                direkt zu den Log-Einträgen. Ein Klick auf ein Logbuch
                 öffnet den Einsatzbericht; von dort führt der Link oben links
                 zurück zur Mission.
               </p>
@@ -742,10 +742,10 @@ export default function TutorialPage() {
                 beim Ankündigen kann die Spielleitung auch direkt eine neue
                 Mission anlegen. Nach dem Abend wird aus dem Termin eine
                 gespielte Session. Dabei kann die Spielleitung mehrere
-                Zusammenfassungsblöcke erfassen, jeweils mit Ingame-Datum und
+                Log-Einträge erfassen, jeweils mit Ingame-Datum und
                 Text. Sie erscheinen chronologisch zwischen den Missionslogs;
                 das Inhaltsverzeichnis der Missionschronik springt direkt zu den
-                einzelnen Blöcken. Unter „Synopsis“ am Ende steht die gesamte
+                einzelnen Einträgen. Unter „Synopsis“ am Ende steht die gesamte
                 Zusammenfassung. Mit + beziehungsweise − neben dem Inhaltsverzeichnis
                 öffnest oder schließt du alle Session-Blöcke. Die allgemeine
                 Chronologie führt sie zusätzlich in der Kategorie „Sessions“.
@@ -1004,7 +1004,7 @@ export default function TutorialPage() {
                 Inhaltsformularen, sondern auch an den kleineren Textfeldern:{" "}
                 <strong>Notizen</strong> und Kommentare, eigenen{" "}
                 <strong>Regeln</strong>, Talent- und Schwerpunkt-Beschreibungen,{" "}
-                <strong>Session-Zusammenfassungsblöcke</strong> sowie Antworten
+                <strong>Log-Einträge aus Sessions</strong> sowie Antworten
                 und Nachrichten in Gesprächen. Überall dort wird der Text beim
                 Anzeigen auch als Markdown dargestellt — im PDF-Spickzettel werden Auszeichnungen
                 auf ihren Text zurückgeführt, Listen bleiben Listen.

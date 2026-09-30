@@ -184,7 +184,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "spielleitung-admins",
       },
       {
-        text: "Die Missionsverwaltung ist über das Leitungs-Menü erreichbar; pro Mission lassen sich gespielte Sessions und deren Summary-Blöcke bearbeiten oder löschen.",
+        text: "Die Missionsverwaltung ist über das Leitungs-Menü erreichbar; pro Mission lassen sich gespielte Sessions und deren Log-Einträge bearbeiten oder löschen.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },
@@ -199,7 +199,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "seiten-im-ueberblick",
       },
       {
-        text: "Angekündigte Termine gehören zu einer Mission und erhalten fortlaufende Namen; in der Missionschronik führen Sprungmarken direkt zu den Session-Zusammenfassungen.",
+        text: "Angekündigte Termine gehören zu einer Mission und erhalten fortlaufende Namen; in der Missionschronik führen Sprungmarken direkt zu den Log-Einträgen der Spielleitung.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },

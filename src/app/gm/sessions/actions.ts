@@ -290,16 +290,16 @@ async function readSessionContext(
   const ids = formData.getAll("synopsisId").map(String);
   const texts = formData.getAll("synopsisText").map((value) => String(value).trim());
   if (dates.length !== texts.length || (ids.length > 0 && ids.length !== dates.length) || dates.length > 20) {
-    return { error: "Die Zusammenfassungsblöcke sind ungültig." };
+    return { error: "Die Log-Einträge sind ungültig." };
   }
   const synopsisBlocks: { id?: number; ingameDate: string; body: string }[] = [];
   for (let i = 0; i < dates.length; i++) {
     const [ingameDate, body] = [dates[i], texts[i]];
     if (!ingameDate && !body) continue;
-    if (!isIsoDate(ingameDate)) return { error: `Bitte ein gültiges Ingame-Datum für Block ${i + 1} angeben.` };
-    if (!body || body.length > 12_000) return { error: `Bitte Text für Block ${i + 1} angeben (maximal 12.000 Zeichen).` };
+    if (!isIsoDate(ingameDate)) return { error: `Bitte ein gültiges Ingame-Datum für Log-Eintrag ${i + 1} angeben.` };
+    if (!body || body.length > 12_000) return { error: `Bitte Text für Log-Eintrag ${i + 1} angeben (maximal 12.000 Zeichen).` };
     const id = ids[i] ? Number(ids[i]) : undefined;
-    if (id !== undefined && (!Number.isSafeInteger(id) || id <= 0)) return { error: "Ungültiger Zusammenfassungsblock." };
+    if (id !== undefined && (!Number.isSafeInteger(id) || id <= 0)) return { error: "Ungültiger Log-Eintrag." };
     synopsisBlocks.push({ ...(id !== undefined ? { id } : {}), ingameDate, body });
   }
   return { missionId, missionSlug, newMission, synopsisBlocks };

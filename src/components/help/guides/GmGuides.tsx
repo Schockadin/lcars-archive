@@ -57,7 +57,7 @@ export function GmCampaignGuide() {
         </p>
         <p>
           Die <strong>Missionsübersicht</strong> liegt im Leitungs-Menü unter
-          „Missionen“. Die Detailseite enthält die Sessions und Summary-Blöcke
+          „Missionen“. Die Detailseite enthält die Sessions und Log-Einträge
           sowie den Missionseditor.
         </p>
       </GuideSection>
@@ -121,10 +121,10 @@ export function GmSessionsGuide() {
         <p>
           Die Karten der gespielten Sessions sind nach Mission gruppiert und
           nach Mission, Datum oder Zusammenfassung durchsuchbar. Ein Klick
-          öffnet die Detailseite mit AP, Teilnehmenden und Summary-Blöcken.
-          Über den Stift bearbeitest du die Session und ihre Blöcke; einzelne
-          Blöcke lassen sich im Formular entfernen. Die Missionschronik zeigt
-          die Blöcke mit ihrem Ingame-Datum als Titel und Sprungmarke.
+          öffnet die Detailseite mit AP, Teilnehmenden und Log-Einträgen.
+          Über den Stift bearbeitest du die Session und ihre Log-Einträge; einzelne
+          Log-Einträge lassen sich im Formular entfernen. Die Missionschronik zeigt
+          sie mit ihrem Ingame-Datum als Titel und Sprungmarke.
         </p>
         <p>
           Auch die Missionsverwaltung zeigt die zugehörigen Sessions als Karten.

@@ -54,7 +54,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Markdown in allen Freitextfeldern** — der `MarkdownEditor` (Toolbar +
   Rohtext/Vorschau) steht nicht nur an den Content-Formularen, sondern auch an
   Notizen, eigenen Regeln, Talent- und Schwerpunkt-Beschreibungen,
-  Session-Zusammenfassungsblöcken,
+  Log-Einträgen aus Sessions,
   der
   Beschreibung eines von Hand eingetragenen Chronologie-Ereignisses und den
   Gesprächs-Formularen; sein `rows`-Prop setzt die
@@ -506,7 +506,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     Deckel ein Scrollbalken.
   - `/gm/sessions` — gespielte Sessions als durchsuchbare, nach Mission
     gruppierte Karten; „Session nachtragen“ öffnet ein Formular im Fenster.
-    `/gm/sessions/[id]` zeigt und bearbeitet Session und Zusammenfassungen. Eine
+    `/gm/sessions/[id]` zeigt und bearbeitet Session und Log-Einträge. Eine
     Session gehört zu einer Mission; Titel entstehen aus Missionsname und
     laufender Nummer. Session-AP und Bonus-AP werden allen ausgewählten
     Charakteren gutgeschrieben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
@@ -514,12 +514,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     Gutschriften entstehen in einer Transaktion (`game_sessions` +
     `character_ap_entries.session_id`), das Zurücknehmen storniert sie per
     `ON DELETE CASCADE` mit. Bei Abschluss können mehrere datierte
-    Zusammenfassungsblöcke ergänzt werden; daraus entsteht automatisch die
+    Log-Einträge mit Datum ergänzt werden; daraus entsteht automatisch die
     Missions-Synopsis. Neue Sessions bieten keine Logbuch-Zuordnung an;
     bestehende historische Verknüpfungen bleiben erhalten und ihre Logbuch-AP
     werden weiterhin synchronisiert. Eine eingetragene Session lässt sich
     **vollständig korrigieren** (Datum, Mission, AP-Beträge,
-    Zusammenfassungsblöcke, Teilnehmende): `updateGameSession` schreibt dabei die `session`- und
+    Log-Einträge, Teilnehmende): `updateGameSession` schreibt dabei die `session`- und
     `bonus`-Buchungen der Session neu statt sie fortzuschreiben und zieht die
     historischen Logbuch-AP nach — alles in einer Transaktion, damit Session und Konten
     nie auseinanderlaufen. Bereits ausgegebene AP holt das nicht zurück, ein
@@ -552,7 +552,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   zu jedem Termin gehört eine **Besetzung** (`planned_session_characters`, alle
   aktiven Figuren vorausgewählt). Ist der Abend gespielt, macht der Knopf
   **„Session eintragen"** am Termin daraus in einem Schritt die Nachbuchung:
-  ein Fenster fragt AP-Beträge, datierte Zusammenfassungsblöcke und die letzte
+  ein Fenster fragt AP-Beträge, datierte Log-Einträge und die letzte
   Korrektur der Besetzung ab, legt die `game_sessions`-Zeile samt Gutschriften
   an und hängt sie über
   `planned_sessions.game_session_id` an den Termin. Der Termin bleibt stehen —
@@ -561,15 +561,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   da. Von Hand nachtragen lässt sich weiterhin alles, was ohne Ankündigung
   gespielt wurde: „Session nachtragen" unter `/gm/sessions` öffnet ein Fenster.
 
-  Zusammenfassungsblöcke werden automatisch in die Missions-Synopsis übernommen
-  und chronologisch mit den Missionslogs angezeigt. Das Inhaltsverzeichnis der
-  Missionschronik bietet datierte Sprungmarken zu den Session-Blöcken.
+  Log-Einträge werden automatisch in die Missions-Synopsis übernommen und
+  chronologisch mit den Spieler-Logbüchern angezeigt. Das Inhaltsverzeichnis
+  der Missionschronik bietet datierte Sprungmarken zu den Log-Einträgen.
   Deren IDs bleiben bei Korrekturen erhalten. Die vollständige „Synopsis“
   steht am Ende außerhalb der Chronik. Die Missionschronik bietet einen
   wechselnden +/−-Schalter für alle standardmäßig offenen Session-Panels;
   die allgemeine Chronologie zeigt die Kategorie „Sessions“ ohne ToC oder
   gemeinsamen Schalter. Das Eintragen eines geplanten Termins verbindet
-  Termin, Session, AP-Buchungen und Blöcke in einer Transaktion und verhindert
+  Termin, Session, AP-Buchungen und Log-Einträge in einer Transaktion und verhindert
   eine doppelte Buchung desselben Termins.
 
   Zwei eigene Tabellen (`planned_sessions`,

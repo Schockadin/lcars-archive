@@ -114,7 +114,7 @@ describe("MissionLogOverview", () => {
     expect([...container.querySelectorAll(".timeline-tag")].map((node) => node.textContent)).toEqual([
       "Logbuch",
       "Logbuch",
-      "Logbuch",
+      "Log-Eintrag",
     ]);
     const tocEntries = [...container.querySelectorAll(".lcars-toc-link")];
     expect(tocEntries.map((item) => item.textContent)).toEqual([

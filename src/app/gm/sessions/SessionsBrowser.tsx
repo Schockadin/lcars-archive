@@ -74,7 +74,7 @@ export default function SessionsBrowser({
                 meta={<>
                   <span>{session.sessionAp}{session.bonusAp > 0 && ` + ${session.bonusAp}`} AP</span>
                   <span>{session.characterCount} Charaktere</span>
-                  <span>{session.synopsisBlocks.length} {session.synopsisBlocks.length === 1 ? "Summary-Block" : "Summary-Blöcke"}</span>
+                  <span>{session.synopsisBlocks.length} {session.synopsisBlocks.length === 1 ? "Log-Eintrag" : "Log-Einträge"}</span>
                 </>}
               />
             </ChronoRow>

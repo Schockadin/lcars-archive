@@ -8,7 +8,7 @@ vi.mock("@/lib/gameSessions", () => ({
 }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); } }));
 vi.mock("@/components/PageMeta", () => ({ default: () => null }));
-vi.mock("../SessionManager", () => ({ SessionDetails: ({ session }: { session: GameSession }) => <p>Summary-Blöcke für {session.id}</p> }));
+vi.mock("../SessionManager", () => ({ SessionDetails: ({ session }: { session: GameSession }) => <p>Log-Einträge für {session.id}</p> }));
 
 import { requireGM } from "@/lib/dal";
 import { getGameSession, listCharactersForSessionEdit, listSessionMissions, listGameSessions } from "@/lib/gameSessions";
@@ -43,7 +43,7 @@ describe("Session-Detailseite", () => {
     expect(screen.getByText("T'Lara")).toBeInTheDocument();
     expect(screen.queryByText("Nicht beteiligt")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Mission verwalten" })).toHaveAttribute("href", "/gm/missions/deneb");
-    expect(screen.getByText("Summary-Blöcke für 7")).toBeInTheDocument();
+    expect(screen.getByText("Log-Einträge für 7")).toBeInTheDocument();
   });
 
   it.each(["abc", "0", "-1", "1.5", "2147483648"])("weist ungültige IDs zurück: %s", async (id) => {

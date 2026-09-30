@@ -26,7 +26,7 @@ export default function MissionContentEditor({ mission, userId, characters, part
       metadataFields={missionMetadataFields}
       defaults={{ title: mission.title, status: mission.status, startedAt: mission.started_at ?? undefined, endedAt: mission.ended_at ?? undefined, tags: mission.metadata.tags.join(", "), teaser: mission.metadata.teaser ?? undefined }}
       idPrefix="edit-mission" draftScope={`mission:${mission.id}`} bodyLabel="Zusammenfassung" bodyHidden
-      bodyHiddenMessage={<p className="lcars-empty-state">Die Missionszusammenfassung entsteht automatisch aus den Zusammenfassungsblöcken eingetragener Sessions.</p>}
+      bodyHiddenMessage={<p className="lcars-empty-state">Die Missionszusammenfassung entsteht automatisch aus den Log-Einträgen eingetragener Sessions.</p>}
       draftDefaultValue={mission.isDraft}
       extraHeadSlot={<MissionParticipantsField idPrefix="edit-mission" characters={characters} defaultSelectedIds={participantIds} />}
       submitLabel="Änderungen speichern" submitPendingLabel="Wird gespeichert…" />

@@ -153,8 +153,8 @@ export function SessionContextFields({
               <button
                 type="button"
                 className="lcars-icon-btn lcars-icon-btn--danger self-end"
-                aria-label={`Zusammenfassungsblock ${index + 1} entfernen`}
-                title="Zusammenfassungsblock entfernen"
+                aria-label={`Log-Eintrag ${index + 1} entfernen`}
+                title="Log-Eintrag entfernen"
                 onClick={() =>
                   setBlocks((current) => current.filter((_, i) => i !== index))
                 }
@@ -344,7 +344,7 @@ export function SessionDetails({
     session.synopsisBlocks.length > 0 ? (
       <div className="flex flex-col gap-[8px]">
         {detailPage && (
-          <h2 className="text-lcars-primary-ink">Summary-Blöcke</h2>
+          <h2 className="text-lcars-primary-ink">Log-Einträge</h2>
         )}
         {session.synopsisBlocks.map((block, index) => (
           <article
@@ -365,8 +365,8 @@ export function SessionDetails({
             />
             <a
               className="lcars-icon-btn mt-[6px] inline-flex"
-              aria-label="Summary-Block bearbeiten"
-              title="Summary-Block bearbeiten"
+              aria-label="Log-Eintrag bearbeiten"
+              title="Log-Eintrag bearbeiten"
               href={`#session-${session.id}-synopsis-block-${index}`}
               onClick={() => setOpen(true)}
             >
@@ -571,7 +571,7 @@ export function SessionDetails({
 
       {detailPage && session.synopsisBlocks.length === 0 && (
         <p className="lcars-empty-state">
-          Für diese Session gibt es noch keine Summary-Blöcke.
+          Für diese Session gibt es noch keine Log-Einträge.
         </p>
       )}
       <FormError message={state.error ?? deleteState.error} />

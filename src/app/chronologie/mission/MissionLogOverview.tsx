@@ -165,7 +165,7 @@ export default function MissionLogOverview({
                 >
                   <ChronoCard
                     color={CONTENT_TYPE_COLOR.mission}
-                    tag="Logbuch"
+                    tag="Log-Eintrag"
                     title={fmtDate(entry.block.ingameDate)}
                     date={fmtDate(entry.block.ingameDate)}
                   >

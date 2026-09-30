@@ -11,7 +11,7 @@ vi.mock("@/app/actions/editorPreferences", () => ({
 }));
 
 describe("MissionSummaryBlocks", () => {
-  it("zeigt Summary-Blöcke in der übergebenen Reihenfolge und verlinkt ihre Sessions", () => {
+  it("zeigt Log-Einträge in der übergebenen Reihenfolge und verlinkt ihre Sessions", () => {
     render(
       <MissionSummaryBlocks
         missionSlug="deneb-iv"
@@ -49,8 +49,8 @@ describe("MissionSummaryBlocks", () => {
     expect(
       screen.getAllByRole("link", { name: "Zur zugehörigen Session" })[0],
     ).toHaveAttribute("href", "/gm/sessions/8#summary-12");
-    expect(screen.getAllByRole("button", { name: "Summary-Block bearbeiten" })).toHaveLength(2);
-    expect(screen.getAllByRole("button", { name: "Summary-Block löschen" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Log-Eintrag bearbeiten" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Log-Eintrag löschen" })).toHaveLength(2);
   });
 
   it("öffnet Datum und Markdown-Text zum Bearbeiten eines Blocks", () => {
@@ -72,7 +72,7 @@ describe("MissionSummaryBlocks", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Summary-Block bearbeiten" }));
+    fireEvent.click(screen.getByRole("button", { name: "Log-Eintrag bearbeiten" }));
 
     expect(container.querySelector('input[name="ingameDate"]')).toHaveValue(
       "2234-12-21",
@@ -80,10 +80,10 @@ describe("MissionSummaryBlocks", () => {
     expect(
       container.querySelector('textarea[name="bodyMarkdown"]'),
     ).toHaveValue("Rückkehr");
-    expect(screen.getByRole("button", { name: "Summary-Block speichern" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Log-Eintrag speichern" })).toBeInTheDocument();
   });
 
-  it("zeigt einen Hinweis, wenn noch keine Summary-Blöcke existieren", () => {
+  it("zeigt einen Hinweis, wenn noch keine Log-Einträge existieren", () => {
     render(
       <MissionSummaryBlocks
         missionSlug="deneb-iv"
@@ -92,6 +92,6 @@ describe("MissionSummaryBlocks", () => {
       />,
     );
 
-    expect(screen.getByText("Für diese Mission gibt es noch keine Summary-Blöcke.")).toBeInTheDocument();
+    expect(screen.getByText("Für diese Mission gibt es noch keine Log-Einträge.")).toBeInTheDocument();
   });
 });

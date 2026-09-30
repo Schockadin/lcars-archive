@@ -28,10 +28,10 @@ export default function MissionSummaryBlocks({
 }) {
   return (
     <section className="flex flex-col gap-[12px]">
-      {showHeading && <h2 className="text-lcars-primary-ink">Summary-Blöcke</h2>}
+      {showHeading && <h2 className="text-lcars-primary-ink">Log-Einträge</h2>}
       {blocks.length === 0 ? (
         <p className="lcars-empty-state">
-          Für diese Mission gibt es noch keine Summary-Blöcke.
+          Für diese Mission gibt es noch keine Log-Einträge.
         </p>
       ) : (
         <ol className="flex flex-col gap-[10px]">
@@ -114,8 +114,8 @@ function MissionSummaryBlockRow({
               type="submit"
               disabled={pending}
               className="lcars-icon-btn disabled:opacity-50"
-              aria-label="Summary-Block speichern"
-              title="Summary-Block speichern"
+              aria-label="Log-Eintrag speichern"
+              title="Log-Eintrag speichern"
             ><CheckIcon />
             </button>
             <button
@@ -134,8 +134,8 @@ function MissionSummaryBlockRow({
           <button
             type="button"
             className="lcars-icon-btn"
-            aria-label="Summary-Block bearbeiten"
-            title="Summary-Block bearbeiten"
+            aria-label="Log-Eintrag bearbeiten"
+            title="Log-Eintrag bearbeiten"
             onClick={() => setEditing(true)}
           ><PencilIcon />
           </button>
@@ -157,8 +157,8 @@ function MissionSummaryBlockRow({
                 `„${missionTitle} - Eintrag ${block.missionBlockNumber}“ wirklich löschen?`,
               )}
               className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
-              aria-label="Summary-Block löschen"
-              title="Summary-Block löschen"
+              aria-label="Log-Eintrag löschen"
+              title="Log-Eintrag löschen"
             ><TrashIcon />
             </button>
           </form>

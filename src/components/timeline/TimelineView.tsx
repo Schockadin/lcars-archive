@@ -89,7 +89,7 @@ const SCOPE_DESCRIPTIONS: Record<TimelineScope, string> = {
   events: "Ereignisse und Meilensteine der Kampagne",
   dialogues: "Abgeschlossene Gespräche der Kampagne",
   logs: "Logbücher aus den Missionen",
-  sessions: "Datierte Session-Zusammenfassungen der Missionen",
+  sessions: "Datierte Log-Einträge der Spielleitung",
   all: "Alle datierten Inhalte der Kampagne",
 };
 
