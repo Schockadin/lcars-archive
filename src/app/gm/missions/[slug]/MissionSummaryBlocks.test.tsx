@@ -6,6 +6,9 @@ vi.mock("./actions", () => ({
   deleteMissionSummaryBlockAction: vi.fn(),
   updateMissionSummaryBlockAction: vi.fn(),
 }));
+vi.mock("@/app/actions/editorPreferences", () => ({
+  getEditorSpellcheckPreferenceAction: vi.fn(async () => true),
+}));
 
 describe("MissionSummaryBlocks", () => {
   it("zeigt Summary-Blöcke in der übergebenen Reihenfolge und verlinkt ihre Sessions", () => {
