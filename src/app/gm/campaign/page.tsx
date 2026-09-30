@@ -31,11 +31,24 @@ export const metadata: Metadata = {
 export default async function AdminCampaignPage() {
   await requireGM();
 
-  const [ingameYearInfo, rules, planned, characters, missions, recordMissions, missionCharacters, defaultMissionStartedAt] = await Promise.all([
-    getIngameYearInfo(), getAdvancementRules(),
-    listUnrecordedPlannedSessions(), listActiveCharactersForAp(), listActiveSessionMissions(),
+  const [
+    ingameYearInfo,
+    rules,
+    planned,
+    characters,
+    missions,
+    recordMissions,
+    missionCharacters,
+    defaultMissionStartedAt,
+  ] = await Promise.all([
+    getIngameYearInfo(),
+    getAdvancementRules(),
+    listUnrecordedPlannedSessions(),
+    listActiveCharactersForAp(),
+    listActiveSessionMissions(),
     listSessionMissions(),
-    getCharactersForParticipantPicker(), getMostRecentLogDate(),
+    getCharactersForParticipantPicker(),
+    getMostRecentLogDate(),
   ]);
 
   return (
@@ -63,17 +76,31 @@ export default async function AdminCampaignPage() {
           />
 
           <details className="lcars-details">
-            <summary className="lcars-details-summary"><span className="lcars-data-row-chevron" aria-hidden="true" /><span className="text-lcars-primary-ink">Ingame Jahr ({ingameYearInfo.effectiveYear ?? "Noch kein Jahr"})</span></summary>
-            <div className="mt-[12px]"><IngameYearForm info={ingameYearInfo} /></div>
+            <summary className="lcars-details-summary">
+              <span className="lcars-data-row-chevron" aria-hidden="true" />
+              <h2 className="inline text-lcars-primary-ink">
+                Ingame Jahr ({ingameYearInfo.effectiveYear ?? "Noch kein Jahr"})
+              </h2>
+            </summary>
+            <div className="mt-[12px]">
+              <IngameYearForm info={ingameYearInfo} />
+            </div>
           </details>
           <details className="lcars-details">
-            <summary className="lcars-details-summary"><span className="lcars-data-row-chevron" aria-hidden="true" /><h2 className="inline text-lcars-primary-ink">Steigerungsregeln</h2></summary>
+            <summary className="lcars-details-summary">
+              <span className="lcars-data-row-chevron" aria-hidden="true" />
+              <h2 className="inline text-lcars-primary-ink">
+                Steigerungsregeln
+              </h2>
+            </summary>
             <div className="mt-[12px] flex flex-col gap-[12px]">
-              <p className="text-lcars-ink-dim text-[13px]">Kosten und Budgets für Charaktersteigerungen sowie AP-Vorgaben anpassen.</p>
+              <p className="text-lcars-ink-dim text-[13px]">
+                Kosten und Budgets für Charaktersteigerungen sowie AP-Vorgaben
+                anpassen.
+              </p>
               <AdvancementRulesForm rules={rules} />
             </div>
           </details>
-
         </div>
       </article>
     </>
