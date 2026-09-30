@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { dispatchInstrumentation } from "./instrumentation";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
+import { ModuleKind, transpileModule } from "typescript";
 
 const { logServerError } = vi.hoisted(() => ({ logServerError: vi.fn() }));
 vi.mock("@/lib/errorLog", () => ({ logServerError }));
@@ -48,10 +50,17 @@ describe("onRequestError", () => {
 });
 
 describe("runtime-spezifische Instrumentation", () => {
+  const source = readFileSync(new URL("./instrumentation.ts", import.meta.url), "utf8");
+  const compiled = transpileModule(source, { compilerOptions: { module: ModuleKind.CommonJS } }).outputText;
+  function load(runtime: string, requireModule: ReturnType<typeof vi.fn>) {
+    const exports: { register?: () => void } = {};
+    runInNewContext(compiled, { exports, require: requireModule, process: { env: { NEXT_RUNTIME: runtime } } });
+    exports.register!();
+  }
   it("lädt das Node-Bootstrap-Modul für den Node-Runtime", () => {
     const loadNodeInstrumentation = vi.fn();
 
-    dispatchInstrumentation("nodejs", loadNodeInstrumentation);
+    load("nodejs", loadNodeInstrumentation);
 
     expect(loadNodeInstrumentation).toHaveBeenCalledOnce();
   });
@@ -59,9 +68,10 @@ describe("runtime-spezifische Instrumentation", () => {
   it("lädt das Node-Bootstrap-Modul nicht für die Edge-Runtime", () => {
     const loadNodeInstrumentation = vi.fn();
 
-    dispatchInstrumentation("edge", loadNodeInstrumentation);
+    load("edge", loadNodeInstrumentation);
 
     expect(loadNodeInstrumentation).not.toHaveBeenCalled();
+    expect(source).toContain('if (process.env.NEXT_RUNTIME === "edge")');
   });
 });
 
