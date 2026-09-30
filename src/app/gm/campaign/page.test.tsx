@@ -9,6 +9,7 @@ vi.mock("@/lib/gameSessions", () => ({
   listActiveCharactersForAp: vi.fn(async () => []),
   listActiveSessionMissions: vi.fn(async () => []),
   listSessionMissions: vi.fn(async () => []),
+  listGameSessions: vi.fn(async () => []),
 }));
 vi.mock("@/lib/plannedSessions", () => ({ listUnrecordedPlannedSessions: vi.fn(async () => []) }));
 vi.mock("@/lib/missions", () => ({ getMostRecentLogDate: vi.fn(async () => null) }));

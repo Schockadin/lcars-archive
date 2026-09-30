@@ -4,14 +4,14 @@ import type { GameSession } from "@/lib/gameSessions";
 
 vi.mock("@/lib/dal", () => ({ requireGM: vi.fn() }));
 vi.mock("@/lib/gameSessions", () => ({
-  getGameSession: vi.fn(), listCharactersForSessionEdit: vi.fn(), listSessionMissions: vi.fn(),
+  getGameSession: vi.fn(), listCharactersForSessionEdit: vi.fn(), listSessionMissions: vi.fn(), listGameSessions: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); } }));
 vi.mock("@/components/PageMeta", () => ({ default: () => null }));
 vi.mock("../SessionManager", () => ({ SessionDetails: ({ session }: { session: GameSession }) => <p>Summary-Blöcke für {session.id}</p> }));
 
 import { requireGM } from "@/lib/dal";
-import { getGameSession, listCharactersForSessionEdit, listSessionMissions } from "@/lib/gameSessions";
+import { getGameSession, listCharactersForSessionEdit, listSessionMissions, listGameSessions } from "@/lib/gameSessions";
 import GmSessionDetailPage from "./page";
 
 const SESSION: GameSession = {
@@ -30,6 +30,7 @@ beforeEach(() => {
     { id: 3, name: "Nicht beteiligt", playerName: null },
   ]);
   vi.mocked(listSessionMissions).mockResolvedValue([]);
+  vi.mocked(listGameSessions).mockResolvedValue([]);
 });
 
 describe("Session-Detailseite", () => {
