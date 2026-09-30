@@ -7,6 +7,9 @@ import { getGameSession, listCharactersForSessionEdit, listGameSessions, listSes
 import { missionEditHref, missionHref } from "@/lib/contentRoutes";
 import { fmtDate } from "@/lib/missionFormat";
 import { SessionDetails } from "../SessionManager";
+import HelpButton from "@/components/help/HelpButton";
+import { HelpTitleRow } from "@/components/help/HelpHeading";
+import { GmSessionDetailGuide } from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "Session",
@@ -38,8 +41,18 @@ export default async function GmSessionDetailPage({ params }: { params: Promise<
             <Link href={missionHref(session.missionSlug)} className="lcars-pill-btn--outline">Mission ansehen</Link>
           </div>}
         </div>
-        <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
-        <h1>{session.title || "Session"}</h1>
+        <HelpTitleRow
+          help={
+            <HelpButton title="Leitung · Sessiondetails" tutorial="spielleitung-admins">
+              <GmSessionDetailGuide />
+            </HelpButton>
+          }
+        >
+          <div>
+            <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
+            <h1>{session.title || "Session"}</h1>
+          </div>
+        </HelpTitleRow>
         <div className="lcars-text mt-[12px] flex flex-col gap-[20px]">
           <dl className="flex flex-wrap items-baseline gap-x-[24px] gap-y-[10px]">
             <div><dt className="lcars-eyebrow">Spieltermin</dt><dd>{fmtDate(session.sessionDate)}</dd></div>

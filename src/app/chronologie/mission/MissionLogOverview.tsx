@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import ChronoRow from "@/components/timeline/ChronoRow";
 import ChronoCard from "@/components/timeline/ChronoCard";
 import { MissionLogListItem } from "@/types/missions";
@@ -31,6 +32,7 @@ export default function MissionLogOverview({
   synopsisBlocks,
   canCreateLog,
   currentUserId = null,
+  help,
 }: {
   missionSlug: string;
   missionTitle: string;
@@ -39,6 +41,7 @@ export default function MissionLogOverview({
   synopsisBlocks: MissionSynopsisBlock[];
   canCreateLog: boolean;
   currentUserId?: number | null;
+  help?: ReactNode;
 }) {
   const panels = useSessionPanels(
     synopsisBlocks.map((block) => String(block.id)),
@@ -63,7 +66,10 @@ export default function MissionLogOverview({
 
   return (
     <section className="mission-log-overview">
-      <h2 className="lcars-data-row-heading">Missionschronik</h2>
+      <div className="flex items-start justify-between gap-[12px]">
+        <h2 className="lcars-data-row-heading">Missionschronik</h2>
+        {help}
+      </div>
       <p className="lcars-eyebrow">
         {logs.length + synopsisBlocks.length}{" "}
         {logs.length + synopsisBlocks.length === 1

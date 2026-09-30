@@ -17,7 +17,7 @@ export default function MissionBookLink({
       href={`/api/export/mission-book/${missionSlug}`}
       download
       className="lcars-pill-btn--outline"
-      title="Diese Mission mit allen Logbüchern als PDF"
+      title="Missionschronik mit Spieler-Logbüchern und GM-Log-Einträgen als PDF"
     >
       Missionsakte (PDF)
     </a>

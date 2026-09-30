@@ -4,10 +4,15 @@ import { requireGM } from "@/lib/dal";
 import {
   listGameSessions,
   listActiveCharactersForAp,
+  listActiveSessionMissions,
   listSessionMissions,
 } from "@/lib/gameSessions";
 import { getAdvancementRules } from "@/lib/advancementSettings";
+import { listUnrecordedPlannedSessions } from "@/lib/plannedSessions";
+import { getMostRecentLogDate } from "@/lib/missions";
+import { getCharactersForParticipantPicker } from "@/lib/characters";
 import SessionManager from "./SessionManager";
+import PlannedSessionManager from "./PlannedSessionManager";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmSessionsGuide } from "@/components/help/guides/GmGuides";
 
@@ -21,13 +26,25 @@ export const metadata: Metadata = {
 export default async function GmSessionsPage() {
   await requireGM();
 
-  const [sessions, characters, rules, missions] =
-    await Promise.all([
-      listGameSessions(),
-      listActiveCharactersForAp(),
-      getAdvancementRules(),
-      listSessionMissions(),
-    ]);
+  const [
+    sessions,
+    characters,
+    rules,
+    missions,
+    planned,
+    plannedMissions,
+    missionCharacters,
+    defaultMissionStartedAt,
+  ] = await Promise.all([
+    listGameSessions(),
+    listActiveCharactersForAp(),
+    getAdvancementRules(),
+    listSessionMissions(),
+    listUnrecordedPlannedSessions(),
+    listActiveSessionMissions(),
+    getCharactersForParticipantPicker(),
+    getMostRecentLogDate(),
+  ]);
 
   // Serverseitig gebildet, damit Formular-Vorbelegung und Server-Render
   // dasselbe Datum zeigen. Europe/Berlin statt UTC: auf Netlify läuft die
@@ -50,6 +67,17 @@ export default async function GmSessionsPage() {
         </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[16px]">
+          <PlannedSessionManager
+            sessions={planned}
+            characters={characters}
+            missions={plannedMissions}
+            recordMissions={missions}
+            playedSessions={sessions}
+            missionCharacters={missionCharacters}
+            defaultSessionAp={rules.apPerSession}
+            defaultMissionStartedAt={defaultMissionStartedAt}
+            showCreateForm={false}
+          />
           <p className="text-lcars-ink-dim text-[13px]">
             Eine eingetragene Session schreibt allen ausgewählten Charakteren
             die Session-AP und die Bonus-AP gut. Vorausgewählt sind alle aktiven

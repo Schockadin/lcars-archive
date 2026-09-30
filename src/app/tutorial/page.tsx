@@ -197,10 +197,16 @@ export default function TutorialPage() {
                 Zeitraum und die beteiligten Figuren. In der{" "}
                 <strong>Missionschronik</strong> stehen Spieler-Logbücher und
                 Log-Einträge der Spielleitung gemeinsam, neueste
-                zuerst. Das Inhaltsverzeichnis lässt sich einklappen und springt
-                direkt zu den Log-Einträgen. Ein Klick auf ein Logbuch
-                öffnet den Einsatzbericht; von dort führt der Link oben links
-                zurück zur Mission.
+                zuerst. Das einklappbare Inhaltsverzeichnis springt zu beiden
+                Eintragsarten und zur Synopsis. Die Log-Einträge der
+                Spielleitung sind zunächst aufgeklappt; der +/−-Knopf neben
+                dem Inhaltsverzeichnis öffnet oder schließt alle gemeinsam.
+                Ein Klick auf ein Logbuch öffnet den Spielerbericht; von dort
+                führt der Link oben links zurück zur Mission. Über
+                „Missionsakte (PDF)“ lassen sich Beschreibung und Chronik als
+                Datei herunterladen. Sie enthält Spieler-Logbücher und
+                GM-Log-Einträge in chronologischer Reihenfolge; ihr
+                Inhaltsverzeichnis springt direkt zu den Berichten.
               </p>
               <p>
                 Einträge <strong>ohne Datum</strong> gehen dabei nicht verloren:
@@ -697,12 +703,12 @@ export default function TutorialPage() {
                 diese Mission in eine Datei — Titelblatt mit Zeitraum, Status
                 und Beteiligten, ein <strong>Inhaltsverzeichnis</strong>
                 (jeder Eintrag springt im PDF zu seinem Bericht), danach die
-                Beschreibung und jedes Logbuch auf einer eigenen Seite,
-                chronologisch. Aufgemacht ist die Akte wie der Charakterbogen:
+                Beschreibung sowie Spieler-Logbücher und GM-Log-Einträge auf
+                jeweils eigenen Seiten, gemeinsam chronologisch. Aufgemacht ist die Akte wie der Charakterbogen:
                 derselbe blaue Rahmen, dieselbe Kopfzeile, formatierter Text mit
-                Überschriften, Aufzählungen und Zitaten. Die Akte enthält genau
-                das, was du auch sonst lesen darfst; nicht öffentliche Logbücher
-                stehen darin mit einem entsprechenden Hinweis.
+                Überschriften, Aufzählungen und Zitaten. Die Akte enthält
+                veröffentlichte Logbücher und die Session-Log-Einträge der
+                Mission; Logbuch-Entwürfe werden nicht aufgenommen.
               </p>
               <p>
                 Auf der Seite deines eigenen Charakters (und für die

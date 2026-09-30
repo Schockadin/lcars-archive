@@ -1123,9 +1123,10 @@ LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
 - **Missionsakte als PDF** — `/api/export/mission-book/[missionSlug]` (Knopf
   auf der Mission-Detailseite, nur für Angemeldete) packt **eine** Mission in
   eine Datei: Titelblatt mit Zeitraum, Status und Beteiligten, ein
-  **Inhaltsverzeichnis**, danach die Beschreibung und jedes Logbuch auf einer
-  eigenen Seite, chronologisch. In der Akte stehen nur **veröffentlichte**
-  Logbücher (`src/lib/missionBook.ts`), und eine Entwurfs-Mission liefert
+  **Inhaltsverzeichnis**, danach die Beschreibung sowie Spieler-Logbücher und
+  datierte GM-Log-Einträge auf jeweils eigenen Seiten, gemeinsam chronologisch.
+  In der Akte stehen nur **veröffentlichte** Logbücher (`src/lib/missionBook.ts`),
+  und eine Entwurfs-Mission liefert
   dieselbe 404 wie ihre Seite. Layout: `src/lib/pdf/MissionBookPdfDocument.tsx` —
   dieselbe Aufmachung wie der Charakterbogen (blauer Rahmen, Kopfzeile aus
   Kampagne und Titelreiter, formatierter Markdown-Text), Farben und die

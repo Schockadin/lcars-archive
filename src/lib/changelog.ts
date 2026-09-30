@@ -213,6 +213,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "spielleitung",
         tutorial: "mein-bereich",
       },
+      {
+        text: "Die herunterladbare Missionsakte enthält jetzt auch die datierten Log-Einträge der Spielleitung, gemeinsam mit den Spieler-Logbüchern und chronologisch geordnet.",
+        category: "export",
+        tutorial: "chronologie",
+      },
     ],
   },
   {

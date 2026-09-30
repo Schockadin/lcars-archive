@@ -128,13 +128,26 @@ export function PublicChronologyGuide() {
           auf ihren Titel öffnet die Detailansicht mit Volltext und Bildern.
         </p>
         <p>
-          Unter <strong>Sessions</strong> findest du die datierten Zusammenfassungsblöcke
-          der Missionen. Ihre Inhalte sind zunächst aufgeklappt und lassen sich einzeln schließen.
-          In der Missionschronik öffnet <strong>+</strong> rechts neben dem Inhaltsverzeichnis
-          alle Session-Panels und wechselt zu <strong>−</strong>. Ein Klick darauf schließt
-          alle Panels wieder. Ein Sprung über das Inhaltsverzeichnis öffnet den gewählten
-          Block. Am Ende der Missionschronik steht die vollständige <strong>Synopsis</strong>{" "}
-          mit dem jeweiligen Datum als Zwischenüberschrift.
+          Unter <strong>Sessions</strong> findest du die datierten Log-Einträge
+          der Spielleitung. Auf der Missionsseite stehen sie zusammen mit den
+          Spieler-<strong>Logbüchern</strong> in der Missionschronik, nach
+          Ingame-Datum sortiert — neueste zuerst. Ein Klick auf ein Logbuch
+          öffnet den Spielerbericht; ein Log-Eintrag der Spielleitung lässt
+          sich direkt in der Karte auf- und zuklappen.
+        </p>
+        <p>
+          Das einklappbare <strong>Inhaltsverzeichnis</strong> enthält
+          Sprungmarken zu beiden Arten von Einträgen und zur vollständigen
+          <strong> Synopsis</strong> am Ende. Die Session-Panels sind zunächst
+          geöffnet. Mit <strong>+</strong> neben dem Inhaltsverzeichnis öffnest
+          du alle, mit <strong>−</strong> schließt du sie wieder; einzelne
+          Panels lassen sich unabhängig davon umschalten.
+        </p>
+        <p>
+          Über <strong>„Missionsakte (PDF)“</strong> lädst du Beschreibung,
+          Spieler-Logbücher und GM-Log-Einträge als eine Datei herunter. Das
+          Inhaltsverzeichnis im PDF springt ebenfalls zu den chronologisch
+          sortierten Einträgen.
         </p>
       </GuideSection>
 

@@ -30,6 +30,23 @@ import {
 export function GmCampaignGuide() {
   return (
     <GuideBody>
+      <GuideSection title="Kampagne · Termine planen">
+        <p>
+          Unter <strong>„Session planen“</strong> wählst du eine laufende Mission
+          oder legst direkt eine neue an. Zeitpunkt, Ort und teilnehmende
+          Figuren werden am Termin gespeichert; der Titel entsteht automatisch
+          aus Missionsname und laufender Nummer. Die Ankündigung erscheint bei
+          den Spielenden auf der Startseite und zusätzlich hier oben in
+          <strong> „Kampagne“</strong>.
+        </p>
+        <p>
+          Ist der Termin gespielt, trägst du ihn über <strong>„Session
+          eintragen“</strong> nach. Dadurch wird er aus den offenen Terminen
+          genommen, die AP werden gebucht und die Log-Einträge können ergänzt
+          werden. Offene Termine stehen auch oben auf der Seite
+          <strong> „Sessions“</strong> bereit.
+        </p>
+      </GuideSection>
       <GuideSection title="Kampagne · Ingame-Jahr" figure={<CampaignFigure />}>
         <p>
           Die Kampagnen-Seite bündelt, was die Runde als Ganzes betrifft. Unter
@@ -95,6 +112,12 @@ export function GmSessionsGuide() {
           niemand etwas; die Rückmeldung im Formular nennt, wie viele Personen
           tatsächlich erreicht wurden.
         </p>
+        <p>
+          Offene Termine bleiben oben auf „Kampagne“ sichtbar und werden
+          zusätzlich am Anfang dieser Sessions-Seite gespiegelt. Hier kannst du
+          sie bearbeiten, löschen oder nach dem Spiel direkt eintragen; neue
+          Termine legst du weiterhin unter „Kampagne“ an.
+        </p>
       </GuideSection>
 
       <GuideSection title="Sessions · Eintragen und buchen">
@@ -127,8 +150,87 @@ export function GmSessionsGuide() {
           sie mit ihrem Ingame-Datum als Titel und Sprungmarke.
         </p>
         <p>
+          Jede Session gehört zu einer Mission und erhält ihren Titel samt
+          fortlaufender Nummer automatisch. Beim Eintragen kannst du mehrere
+          Log-Einträge erfassen: jeder besteht aus Ingame-Datum und Text. Ein
+          Notizfeld gibt es nicht mehr. Aus den gespeicherten Einträgen baut
+          sich die Missions-Synopsis automatisch auf; du pflegst sie nicht
+          zusätzlich von Hand.
+        </p>
+        <p>
+          In der Missionschronik stehen diese GM-Log-Einträge gemeinsam mit den
+          Spieler-Logbüchern, nach Ingame-Datum sortiert. Das Inhaltsverzeichnis
+          springt zu beiden Arten von Einträgen und zur Synopsis am Ende. Die
+          Session-Panels sind einzeln aufklappbar; + und − öffnen oder schließen
+          alle zusammen. Die PDF-Missionsakte enthält dieselbe Chronik.
+        </p>
+        <p>
           Auch die Missionsverwaltung zeigt die zugehörigen Sessions als Karten.
           Von dort öffnest du dieselbe Session-Detailseite zum Bearbeiten.
+        </p>
+      </GuideSection>
+    </GuideBody>
+  );
+}
+
+// ── Missionen (Leitung) ──────────────────────────────────────────────
+export function GmMissionsOverviewGuide() {
+  return (
+    <GuideBody>
+      <GuideSection title="Missionen verwalten" figure={<SessionsFigure />}>
+        <p>
+          Die Übersicht enthält laufende, abgeschlossene und geplante Missionen.
+          Über die Sortierung und Gruppierung kannst du sie nach Datum oder
+          Status ordnen; die Suche grenzt die Karten ein. Das Plus legt eine
+          Mission an. Ein Klick auf eine Karte öffnet ihre Verwaltungsseite.
+        </p>
+        <p>
+          Die Karte öffnet die Leitungsverwaltung mit Session-Karten und
+          Missionseditor. Dort führt „Mission ansehen“ in die öffentliche
+          Chronik.
+        </p>
+      </GuideSection>
+    </GuideBody>
+  );
+}
+
+export function GmMissionDetailGuide() {
+  return (
+    <GuideBody>
+      <GuideSection title="Mission verwalten">
+        <p>
+          Oben führen die Session-Karten zu den Spielterminen dieser Mission.
+          Auf der Detailseite einer Session kannst du Datum, AP, Teilnehmende
+          und Log-Einträge anpassen. Der Missionseditor am Ende dieser Seite
+          pflegt Beschreibung, Zeitraum, Status und Besetzung.
+        </p>
+        <p>
+          „Mission ansehen“ öffnet die Missionschronik. Dort erscheinen die
+          Spieler-Logbücher und die datierten Log-Einträge der Spielleitung
+          gemeinsam nach Ingame-Datum. Das Inhaltsverzeichnis springt zu jedem
+          Eintrag; die vollständige Synopsis steht am Ende.
+        </p>
+      </GuideSection>
+    </GuideBody>
+  );
+}
+
+export function GmSessionDetailGuide() {
+  return (
+    <GuideBody>
+      <GuideSection title="Session bearbeiten">
+        <p>
+          Die Detailseite hält Spieltermin, zugehörige Mission, AP und
+          Teilnehmende zusammen. Über den Stift kannst du die Session und ihre
+          Log-Einträge bearbeiten; einzelne Einträge lassen sich dort entfernen.
+          Gelöscht wird die Session über den Papierkorb. Dabei werden auch ihre
+          AP-Buchungen zurückgenommen.
+        </p>
+        <p>
+          Ein Log-Eintrag ist ein datierter Abschnitt für die Missionschronik.
+          Seine Nummer läuft über alle Sessions der Mission weiter. Die
+          Missionschronik sortiert diese Einträge zusammen mit den Spieler-
+          Logbüchern nach Ingame-Datum.
         </p>
       </GuideSection>
     </GuideBody>
@@ -384,22 +486,10 @@ export default function GmAreaGuides() {
   return (
     <GuideBody>
       <GmCampaignGuide />
-      <GuideSection title="Missionen · Sessions und Synopsis" figure={<SessionsFigure />}>
-        <p>
-          Unter „Missionen“ kannst du die Karten nach Datum oder Status gruppieren
-          und sortieren. Das Plus legt eine neue Mission an. Eine Karte öffnet
-          die Verwaltung mit den zugehörigen Sessions und dem Missionseditor.
-          Jede Session-Karte führt zur Detailseite, auf der du AP, Teilnehmende
-          und datierte Zusammenfassungsblöcke bearbeitest oder entfernst.
-        </p>
-        <p>
-          Aus den Blöcken entsteht automatisch die Synopsis. „Mission ansehen“
-          führt zur Chronik mit Logs und Session-Blöcken. Ihr Inhaltsverzeichnis
-          bietet datierte Sprungmarken; + beziehungsweise − öffnet oder schließt
-          alle Session-Panels. Die vollständige Synopsis steht am Ende.
-        </p>
-      </GuideSection>
+      <GmMissionsOverviewGuide />
+      <GmMissionDetailGuide />
       <GmSessionsGuide />
+      <GmSessionDetailGuide />
       <GmCharactersGuide />
       <GmPartySheetGuide />
       <GmApGuide />

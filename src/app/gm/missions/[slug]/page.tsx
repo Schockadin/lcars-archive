@@ -19,6 +19,8 @@ import SessionsBrowser from "../../sessions/SessionsBrowser";
 import MissionSummaryBlocks from "./MissionSummaryBlocks";
 import MissionContentEditor from "./MissionContentEditor";
 import RevisionsPanel from "@/app/_shared/RevisionsPanel";
+import HelpButton from "@/components/help/HelpButton";
+import { GmMissionDetailGuide } from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "Mission bearbeiten",
@@ -63,6 +65,9 @@ export default async function GmMissionDetailPage({
             <Link href={missionHref(mission.slug)} className="lcars-pill-btn--outline">
               Mission ansehen
             </Link>
+            <HelpButton title="Leitung · Mission bearbeiten" tutorial="spielleitung-admins">
+              <GmMissionDetailGuide />
+            </HelpButton>
             <a href="#mission-editor" className="lcars-icon-btn" aria-label="Mission bearbeiten" title="Mission bearbeiten"><PencilIcon /></a>
           </div>
         </div>
