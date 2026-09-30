@@ -40,6 +40,7 @@ test.describe("Zeitleisten-Marke einfügen", () => {
     await expect(art.locator("option")).toHaveText([
       "Mission",
       "Logbuch",
+      "Session",
       "Entdeckung",
       "Konflikt",
       "Politik",

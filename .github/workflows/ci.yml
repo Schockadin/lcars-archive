@@ -24,7 +24,7 @@ jobs:
     services:
       # Für die DB-Integrationstests (tests/integration/) — dort wird
       # DATABASE_URL pro Step auf diesen Container gesetzt (s.u.), der obige
-      # Dummy-Wert bleibt für Lint/Unit-Tests/E2E unverändert.
+      # Dummy-Wert bleibt für Lint/Unit-Tests unverändert.
       postgres:
         # pgvector statt des nackten postgres-Images: scripts/schema.sql legt
         # content_embeddings mit einer vector-Spalte an (RAG-Index) und
@@ -53,10 +53,6 @@ jobs:
       - run: npm run lint
 
       - run: npm test
-
-      - run: npx playwright install --with-deps chromium
-
-      - run: npm run test:e2e
 
       # DB-Integrationstests (tests/integration/). Sie liefen lange gar nicht
       # mit — und genau deshalb blieb eine veraltete Erwartung über zehn

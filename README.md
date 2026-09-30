@@ -1680,6 +1680,17 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Zugangs-Gates der kontogebundenen Routen, Komponenten-Galerie inkl. Charakter-Assistent, Bogen-Ansicht, Chronologie, Einstiegs-Liste und aufklappbaren Abschnitten sowie Layout-/Schrift-Regressionen an beiden Viewports) |
 | `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz **mit pgvector**, siehe unten)                                                                                                                                                              |
 
+### Prüfungen vor dem Merge
+
+Der manuell gestartete GitHub-Workflow `CI` prüft Lint, Unit-Tests und
+Datenbankintegration für den abschließenden PR-Commit. Die vollständigen
+Playwright-E2E-Tests laufen lokal über `npm run test:e2e`; die Browserinstallation
+(`npx playwright install chromium`, einmalig) erfolgt ebenfalls lokal.
+Für diesen Lauf einen separaten Testserver mit einer Dummy-`DATABASE_URL`
+verwenden, etwa `postgresql://user:pass@127.0.0.1:5432/dummy`, und keinen
+bereits laufenden Server mit produktiver Datenbankverbindung wiederverwenden.
+Vor dem Merge müssen lokale E2E-Tests, GitHub CI und Netlify erfolgreich sein.
+
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
 (z.B. `db:setup:dev`, `db:ingest:dev`, `db:reset:dev`) — identisch, nur mit
 `--env-file=.env.dev` statt `.env.local`. Ausnahme: `db:backup`/

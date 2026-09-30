@@ -53,8 +53,10 @@ Base the items on the current Pull Request's body (see "The Pull Request Body" a
 
 # Testing/Reviewing Behaviour
 
-**Do not run the test suite locally.** GitHub Actions runs it on every push (`.github/workflows/ci.yml`: `npm run lint`, `npm test`, `npm run test:e2e` and the DB integration tests). Running the same suite here only duplicates it and costs minutes — a local run is never a precondition for a commit.
+**Run the complete Playwright E2E suite locally before merging.** E2E tests and browser installation are not part of GitHub Actions. Use a separate local test server with a dummy `DATABASE_URL`, not a server connected to production.
 
-Still yours with each commit: **write and adjust the tests** for what you changed (unit and e2e, as before — the suite is only run elsewhere, not written elsewhere). After pushing, **watch the CI run for that commit** and fix whatever it reports; a red CI is your work, not something to hand over. Only reach for a local run when CI has failed and you need to reproduce that one failing test — then run that test alone, never the whole suite.
+**Do not run the complete unit or DB integration suites locally.** The manually dispatched GitHub Actions workflow (`.github/workflows/ci.yml`) runs `npm run lint`, `npm test` and the DB integration tests. Dispatch it for the final PR commit before merging.
 
-Also do a full scope code review each time you are instrcuted to merge. Fix all problems found while reviewing and repeat unless no more problems occur. If no problems show up, always update the `README.md`, `/impressum`, `/datenschutz` und `/tutorial` to reflect the latest changes. Only then and if CI and Netlify show green merge the PR.
+Still yours with each commit: **write and adjust the tests** for what you changed (unit and e2e). After starting CI, **watch the run for that commit** and fix whatever it reports; a red CI is your work, not something to hand over. For unit or DB integration tests, only use a local run to reproduce a specific CI failure, never the whole suite. Fix local E2E failures and rerun the affected tests before merging.
+
+Also do a full scope code review each time you are instrcuted to merge. Fix all problems found while reviewing and repeat unless no more problems occur. If no problems show up, always update the `README.md`, `/impressum`, `/datenschutz` und `/tutorial` to reflect the latest changes. Only then and if local E2E tests, CI and Netlify show green merge the PR.
