@@ -254,7 +254,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Einsatzberichte/Gespräche bleibt dort erhalten.
 - **Erfahrungspunkte (AP)** — jeder Charakter hat ein AP-Konto als
   Buchungsjournal (`character_ap_entries`): die Spielleitung vergibt unter
-  „Kampagne" AP (je 1 AP für gespielte Session und geschriebenes Logbuch, ein
+  unter „AP" AP (je 1 AP für gespielte Session und geschriebenes Logbuch, ein
   freier Betrag für Missions-/Story-Abschlüsse, dazu Korrekturen), die
   Spieler:innen geben sie auf ihrem Charakterbogen beim Steigern aus. Der
   Kontostand ist immer die Summe der Buchungen — kein separates Saldo-Feld, das
@@ -539,10 +539,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     keine Einträge unter bereits gepflegten Charakterbögen verschwinden.
   - `/gm/focuses` — dasselbe für den Schwerpunkt-Katalog (Suche,
     Disziplin-Filter, bearbeiten, ergänzen; löschbar nur selbst ergänzte).
-  - `/gm/campaign` — anstehende und noch nicht eingetragene Spieltermine,
-    danach eingeklappte Panels für das Ingame-Jahr und die Steigerungsregeln.
+  - `/gm/campaign` — eingeklappte Panels für das Ingame-Jahr und die
+    Steigerungsregeln.
     Spieler lesen die Steigerungsregeln unter `/user/rules`.
-- **Session-Planer** — die Spielleitung kündigt Termine an (`/gm/campaign`,
+- **Session-Planer** — die Spielleitung kündigt Termine an (`/gm/sessions`,
   Knopf „Session planen" über der Terminliste, Formular im Fenster) und
   ordnet sie einer Mission zu; eine neue Mission lässt sich dort ebenfalls
   anlegen. Der Titel entsteht aus Missionsname und laufender Nummer. Alle

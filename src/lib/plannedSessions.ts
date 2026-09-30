@@ -234,8 +234,8 @@ export async function listAllPlannedSessions(): Promise<PlannedSession[]> {
   return withDetails(rows);
 }
 
-// Auf der Kampagnen-Seite bleiben nur offene Termine sichtbar. Bereits
-// eingetragene Abende stehen in der Sessions-Übersicht und sollen nicht weiter
+// In der Sessions-Übersicht bleiben nur offene Termine sichtbar. Bereits
+// eingetragene Abende stehen in der Session-Liste und sollen nicht weiter
 // zwischen den noch zu planenden oder nachzutragenden Terminen auftauchen.
 export async function listUnrecordedPlannedSessions(): Promise<PlannedSession[]> {
   const rows = await sql<Row[]>`

@@ -7,23 +7,13 @@ import IngameYearForm from "./IngameYearForm";
 import AdvancementRulesForm from "../ap/AdvancementRulesForm";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmCampaignGuide } from "@/components/help/guides/GmGuides";
-import PlannedSessionManager from "../sessions/PlannedSessionManager";
-import {
-  listActiveCharactersForAp,
-  listActiveSessionMissions,
-  listSessionMissions,
-  listGameSessions,
-} from "@/lib/gameSessions";
-import { listUnrecordedPlannedSessions } from "@/lib/plannedSessions";
-import { getMostRecentLogDate } from "@/lib/missions";
-import { getCharactersForParticipantPicker } from "@/lib/characters";
 
 export const metadata: Metadata = {
   title: "Kampagne",
   robots: { index: false, follow: false },
 };
 
-// GM-oder-admin — anstehende Spieltermine, Ingame-Jahr und Regelwerk.
+// GM-oder-admin — Ingame-Jahr und Regelwerk.
 //
 // Die Zuordnung der Charaktere zu Konten stand hier ebenfalls, seit es dafür
 // keinen eigenen Menüpunkt mehr gab. Sie steht jetzt wieder unter
@@ -32,26 +22,9 @@ export const metadata: Metadata = {
 export default async function AdminCampaignPage() {
   await requireGM();
 
-  const [
-    ingameYearInfo,
-    rules,
-    planned,
-    characters,
-    missions,
-    recordMissions,
-    missionCharacters,
-    defaultMissionStartedAt,
-    playedSessions,
-  ] = await Promise.all([
+  const [ingameYearInfo, rules] = await Promise.all([
     getIngameYearInfo(),
     getAdvancementRules(),
-    listUnrecordedPlannedSessions(),
-    listActiveCharactersForAp(),
-    listActiveSessionMissions(),
-    listSessionMissions(),
-    getCharactersForParticipantPicker(),
-    getMostRecentLogDate(),
-    listGameSessions(),
   ]);
 
   return (
@@ -68,17 +41,6 @@ export default async function AdminCampaignPage() {
         </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[32px]">
-          <PlannedSessionManager
-            sessions={planned}
-            characters={characters}
-            missions={missions}
-            recordMissions={recordMissions}
-            playedSessions={playedSessions}
-            missionCharacters={missionCharacters}
-            defaultSessionAp={rules.apPerSession}
-            defaultMissionStartedAt={defaultMissionStartedAt}
-          />
-
           <details className="lcars-details">
             <summary className="lcars-details-summary">
               <span className="lcars-data-row-chevron" aria-hidden="true" />

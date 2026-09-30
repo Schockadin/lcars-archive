@@ -30,27 +30,10 @@ import {
 export function GmCampaignGuide() {
   return (
     <GuideBody>
-      <GuideSection title="Kampagne · Termine planen">
-        <p>
-          Unter <strong>„Session planen“</strong> wählst du eine laufende Mission
-          oder legst direkt eine neue an. Zeitpunkt, Ort und teilnehmende
-          Figuren werden am Termin gespeichert; der Titel entsteht automatisch
-          aus Missionsname und laufender Nummer. Die Ankündigung erscheint bei
-          den Spielenden auf der Startseite und zusätzlich hier oben in
-          <strong> „Kampagne“</strong>.
-        </p>
-        <p>
-          Ist der Termin gespielt, trägst du ihn über <strong>„Session
-          eintragen“</strong> nach. Dadurch wird er aus den offenen Terminen
-          genommen, die AP werden gebucht und die Log-Einträge können ergänzt
-          werden. Offene Termine stehen auch oben auf der Seite
-          <strong> „Sessions“</strong> bereit.
-        </p>
-      </GuideSection>
       <GuideSection title="Kampagne · Ingame-Jahr" figure={<CampaignFigure />}>
         <p>
-          Die Kampagnen-Seite bündelt, was die Runde als Ganzes betrifft. Unter
-          den Spielterminen steht das eingeklappte <strong>Ingame-Jahr</strong> — das Jahr, in dem die
+          Die Kampagnen-Seite bündelt, was die Runde als Ganzes betrifft. Im
+          eingeklappten Bereich steht das <strong>Ingame-Jahr</strong> — das Jahr, in dem die
           Kampagne gerade spielt. Es ist mehr als eine Anzeige: Trägt eine Figur
           ein <strong>Geburtsdatum</strong>, wird ihr Alter überall aus
           Ingame-Jahr minus Geburtsjahr gerechnet. Ohne Geburtsdatum gilt
@@ -63,9 +46,7 @@ export function GmCampaignGuide() {
       <GuideSection title="Kampagne · AP und Missionen">
         <p>
           Die <strong>AP-Vergabe, AP-Konten und der Buchungsverlauf</strong>
-          liegen zusammen im Menüpunkt „AP“. Ganze Sessions werden unter
-          „Sessions“ eingetragen und buchen die AP für alle Beteiligten auf
-          einmal.
+          liegen zusammen im Menüpunkt „AP“.
         </p>
         <p>
           AP für einen <strong>Missionsabschluss</strong> werden ebenfalls unter
@@ -74,8 +55,7 @@ export function GmCampaignGuide() {
         </p>
         <p>
           Die <strong>Missionsübersicht</strong> liegt im Leitungs-Menü unter
-          „Missionen“. Die Detailseite enthält die Sessions und Log-Einträge
-          sowie den Missionseditor.
+          „Missionen“. Dort verwaltest du Missionen und ihre Inhalte.
         </p>
       </GuideSection>
 
@@ -100,7 +80,7 @@ export function GmSessionsGuide() {
         figure={<SessionsFigure />}
       >
         <p>
-          Unter <strong>„Kampagne“ → „Session planen“</strong> setzt du den nächsten
+          Oben auf der Seite <strong>„Sessions“</strong> planst du den nächsten
           Spielabend an: Zeitpunkt, Mission, Ort und wer mitspielt — alle
           aktiven Figuren sind vorausgewählt. Der Termin erscheint danach auf
           der Startseite aller Beteiligten, die dort zu- oder absagen können.
@@ -113,10 +93,9 @@ export function GmSessionsGuide() {
           tatsächlich erreicht wurden.
         </p>
         <p>
-          Offene Termine bleiben oben auf „Kampagne“ sichtbar und werden
-          zusätzlich am Anfang dieser Sessions-Seite gespiegelt. Hier kannst du
+          Offene Termine stehen hier oberhalb der gespielten Sessions. Du kannst
           sie bearbeiten, löschen oder nach dem Spiel direkt eintragen; neue
-          Termine legst du weiterhin unter „Kampagne“ an.
+          Termine legst du ebenfalls hier an.
         </p>
       </GuideSection>
 

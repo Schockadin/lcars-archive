@@ -76,7 +76,6 @@ export default async function GmSessionsPage() {
             missionCharacters={missionCharacters}
             defaultSessionAp={rules.apPerSession}
             defaultMissionStartedAt={defaultMissionStartedAt}
-            showCreateForm={false}
           />
           <p className="text-lcars-ink-dim text-[13px]">
             Eine eingetragene Session schreibt allen ausgewählten Charakteren

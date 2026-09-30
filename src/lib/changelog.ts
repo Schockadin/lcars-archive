@@ -179,7 +179,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "chronologie",
       },
       {
-        text: "Spieltermine werden auf der Kampagnenseite geplant: Die Spielleitung wählt eine laufende Mission oder legt direkt eine neue an. Der Termin erhält automatisch den Missionsnamen und seine laufende Nummer; vergangene, noch nicht eingetragene Abende erscheinen als Aufgabe auf dem Dashboard.",
+        text: "Spieltermine werden auf der Sessions-Seite geplant: Die Spielleitung wählt eine laufende Mission oder legt direkt eine neue an. Der Termin erhält automatisch den Missionsnamen und seine laufende Nummer; vergangene, noch nicht eingetragene Abende erscheinen als Aufgabe auf dem Dashboard.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },

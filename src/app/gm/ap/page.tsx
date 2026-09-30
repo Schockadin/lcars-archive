@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 // Gesamtübersicht über alle AP-Bewegungen plus der Regel-Editor. Vergeben
-// wird weiterhin unter „Kampagne" (Einzelbuchungen) bzw. „Sessions"
+// wird weiterhin unter „AP" (Einzelbuchungen) bzw. „Sessions"
 // (Sammelgutschrift) — hier geht es ums Nachvollziehen und ums Regelwerk.
 export default async function GmApPage() {
   await requireGM();
