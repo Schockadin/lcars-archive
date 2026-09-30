@@ -220,6 +220,7 @@ describe("abgeleitete Listen", () => {
     for (const table of [
       "character_ap_entries",
       "game_session_characters",
+      "mission_synopsis_blocks",
       "planned_session_characters",
       "timeline_event_characters",
       "dialogue_npc_speakers",
