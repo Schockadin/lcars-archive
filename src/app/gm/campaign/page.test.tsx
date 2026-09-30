@@ -5,32 +5,22 @@ import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
 vi.mock("@/lib/dal", () => ({ requireGM: vi.fn(async () => ({ id: 1 })) }));
 vi.mock("@/lib/campaign", () => ({ getIngameYearInfo: vi.fn(async () => ({ effectiveYear: 2400 })) }));
 vi.mock("@/lib/advancementSettings", () => ({ getAdvancementRules: vi.fn() }));
-vi.mock("@/lib/gameSessions", () => ({
-  listActiveCharactersForAp: vi.fn(async () => []),
-  listActiveSessionMissions: vi.fn(async () => []),
-  listSessionMissions: vi.fn(async () => []),
-  listGameSessions: vi.fn(async () => []),
-}));
-vi.mock("@/lib/plannedSessions", () => ({ listUnrecordedPlannedSessions: vi.fn(async () => []) }));
-vi.mock("@/lib/missions", () => ({ getMostRecentLogDate: vi.fn(async () => null) }));
-vi.mock("@/lib/characters", () => ({ getCharactersForParticipantPicker: vi.fn(async () => []) }));
 vi.mock("@/components/PageMeta", () => ({ default: () => null }));
 vi.mock("@/components/help/HelpHeading", () => ({ default: () => <h1>Kampagne</h1> }));
 vi.mock("./IngameYearForm", () => ({ default: () => null }));
 vi.mock("../ap/AdvancementRulesForm", () => ({ default: () => <p>Steigerungsregeln bearbeiten</p> }));
-vi.mock("../sessions/PlannedSessionManager", () => ({ default: () => <p>Anstehende Spieltermine</p> }));
 
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import AdminCampaignPage from "./page";
 
 describe("Kampagnenregeln", () => {
-  it("zeigt nach dem Redirect von /gm/rules nur noch den Editor für Steigerungsregeln", async () => {
+  it("zeigt nur Ingame-Jahr und Steigerungsregeln, ohne Session-Termine", async () => {
     vi.mocked(getAdvancementRules).mockResolvedValue(DEFAULT_ADVANCEMENT_RULES);
     const { container } = render(await AdminCampaignPage());
     expect(screen.queryByText("Weitere Regeln")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Steigerungsregeln", hidden: true })).toBeInTheDocument();
     expect(screen.getByText("Steigerungsregeln bearbeiten")).toBeInTheDocument();
-    expect(screen.getByText("Anstehende Spieltermine")).toBeInTheDocument();
+    expect(screen.queryByText("Anstehende Spieltermine")).not.toBeInTheDocument();
     expect(screen.getByText("Ingame Jahr (2400)")).toBeInTheDocument();
     expect(container.querySelectorAll("details[open]")).toHaveLength(0);
   });
