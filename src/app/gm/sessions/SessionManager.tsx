@@ -41,40 +41,51 @@ export function SessionContextFields({
   const [missionChoice, setMissionChoice] = useState(
     initialMissionId ? `mission:${initialMissionId}` : "",
   );
-  const [blocks, setBlocks] = useState(() => initialBlocks.map((block, index) => ({
-    key: `${idPrefix}-${index}`,
-    id: block.id as number | undefined,
-    ingameDate: block.ingameDate,
-    body: block.body,
-  })));
+  const [blocks, setBlocks] = useState(() =>
+    initialBlocks.map((block, index) => ({
+      key: `${idPrefix}-${index}`,
+      id: block.id as number | undefined,
+      ingameDate: block.ingameDate,
+      body: block.body,
+    })),
+  );
   return (
     <div className="flex flex-col gap-[8px]">
       <label className="flex flex-col gap-[4px]">
         <span className="lcars-eyebrow">Zugehörige Mission</span>
         {lockedMission && initialMissionId ? (
           <>
-            <input type="hidden" name="missionChoice" value={`mission:${initialMissionId}`} />
-            <span className="lcars-input rounded-full">{missions.find((mission) => mission.id === initialMissionId)?.title ?? "Mission"}</span>
+            <input
+              type="hidden"
+              name="missionChoice"
+              value={`mission:${initialMissionId}`}
+            />
+            <span className="lcars-input rounded-full">
+              {missions.find((mission) => mission.id === initialMissionId)
+                ?.title ?? "Mission"}
+            </span>
           </>
-        ) : <select
-          name="missionChoice"
-          required
-          value={missionChoice}
-          onChange={(event) => setMissionChoice(event.target.value)}
-          className="lcars-input rounded-full"
-        >
-          <option value="" disabled>
-            Mission auswählen
-          </option>
-          {missions.map((mission) => (
-            <option key={mission.id} value={`mission:${mission.id}`}>
-              {mission.title}
+        ) : (
+          <select
+            name="missionChoice"
+            required
+            value={missionChoice}
+            onChange={(event) => setMissionChoice(event.target.value)}
+            className="lcars-input rounded-full"
+          >
+            <option value="" disabled>
+              Mission auswählen
             </option>
-          ))}
-          {allowNewMission && (
-            <option value="new">Neue Mission anlegen…</option>
-          )}
-        </select>}
+            {missions.map((mission) => (
+              <option key={mission.id} value={`mission:${mission.id}`}>
+                {mission.title}
+              </option>
+            ))}
+            {allowNewMission && (
+              <option value="new">Neue Mission anlegen…</option>
+            )}
+          </select>
+        )}
       </label>
       {missions.length === 0 && !allowNewMission && (
         <p className="lcars-empty-state">
@@ -132,9 +143,16 @@ export function SessionContextFields({
                 onClick={() =>
                   setBlocks((current) => current.filter((_, i) => i !== index))
                 }
-              ><TrashIcon /></button>
+              >
+                <TrashIcon />
+              </button>
             </div>
-            <MarkdownEditor id={`${idPrefix}-synopsis-${index}`} name="synopsisText" rows={6} defaultValue={block.body} />
+            <MarkdownEditor
+              id={`${idPrefix}-synopsis-${index}`}
+              name="synopsisText"
+              rows={6}
+              defaultValue={block.body}
+            />
           </div>
         ))}
         <button
@@ -144,7 +162,9 @@ export function SessionContextFields({
           onClick={() =>
             setBlocks((current) => {
               const ingameDate = defaultSessionSynopsisDate(
-                missions.find((mission) => `mission:${mission.id}` === missionChoice)?.startedAt,
+                missions.find(
+                  (mission) => `mission:${mission.id}` === missionChoice,
+                )?.startedAt,
                 current,
               );
               return [
@@ -158,7 +178,9 @@ export function SessionContextFields({
               ];
             })
           }
-        >Hinzufügen</button>
+        >
+          Hinzufügen
+        </button>
       </fieldset>
     </div>
   );
@@ -262,7 +284,8 @@ function NewSessionForm({
         type="submit"
         disabled={pending}
         className="lcars-pill-btn--outline self-start disabled:opacity-50"
-      >Hinzufügen
+      >
+        Hinzufügen
       </button>
 
       <FormError message={state.error} />
@@ -293,21 +316,42 @@ export function SessionDetails({
     initialState,
   );
 
-  const summaries = session.synopsisBlocks.length > 0 ? (
-    <div className="flex flex-col gap-[8px]">
-      {detailPage && <h2 className="text-lcars-primary-ink">Summary-Blöcke</h2>}
-      {session.synopsisBlocks.map((block, index) => (
-        <article key={block.id} id={`summary-${block.id}`} className="scroll-mt-24 rounded-lg border border-[var(--lcars-ink-dim)]/25 p-[10px]">
-          <div className="flex flex-wrap items-baseline justify-between gap-[8px]">
-            <h3 className="font-semibold">Session: {fmtDate(block.ingameDate)} - Eintrag {block.missionBlockNumber}</h3>
-            <span className="lcars-eyebrow">{fmtDate(block.ingameDate)}</span>
-          </div>
-          <div className="mission-body" dangerouslySetInnerHTML={{ __html: block.bodyHtml }} />
-          <a className="lcars-icon-btn mt-[6px] inline-flex" aria-label="Summary-Block bearbeiten" title="Summary-Block bearbeiten" href={`#session-${session.id}-synopsis-block-${index}`} onClick={() => setOpen(true)}><PencilIcon /></a>
-        </article>
-      ))}
-    </div>
-  ) : null;
+  const summaries =
+    session.synopsisBlocks.length > 0 ? (
+      <div className="flex flex-col gap-[8px]">
+        {detailPage && (
+          <h2 className="text-lcars-primary-ink">Summary-Blöcke</h2>
+        )}
+        {session.synopsisBlocks.map((block, index) => (
+          <article
+            key={block.id}
+            id={`summary-${block.id}`}
+            className="scroll-mt-24 rounded-lg border border-[var(--lcars-ink-dim)]/25 p-[10px]"
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-[8px]">
+              <h3 className="font-semibold">
+                Session: {fmtDate(block.ingameDate)} - Eintrag{" "}
+                {block.missionBlockNumber}
+              </h3>
+              <span className="lcars-eyebrow">{fmtDate(block.ingameDate)}</span>
+            </div>
+            <div
+              className="mission-body"
+              dangerouslySetInnerHTML={{ __html: block.bodyHtml }}
+            />
+            <a
+              className="lcars-icon-btn mt-[6px] inline-flex"
+              aria-label="Summary-Block bearbeiten"
+              title="Summary-Block bearbeiten"
+              href={`#session-${session.id}-synopsis-block-${index}`}
+              onClick={() => setOpen(true)}
+            >
+              <PencilIcon />
+            </a>
+          </article>
+        ))}
+      </div>
+    ) : null;
 
   return (
     <div
@@ -316,52 +360,68 @@ export function SessionDetails({
     >
       <button
         type="button"
-        className={detailPage ? "lcars-icon-btn self-start" : "flex flex-wrap items-center gap-[8px] text-left"}
+        className={
+          detailPage
+            ? "lcars-icon-btn self-start"
+            : "flex flex-wrap items-center gap-[8px] text-left"
+        }
         aria-expanded={open}
         aria-controls={`session-editor-${session.id}`}
         aria-label={detailPage ? "Session bearbeiten" : undefined}
         title={detailPage ? "Session bearbeiten" : undefined}
         onClick={() => setOpen((v) => !v)}
       >
-        {detailPage ? <PencilIcon /> : <>
-        {/* Auf-/Zuklapp-Anzeige links wie bei den DataRow-Akkordeons — dreht
+        {detailPage ? (
+          <PencilIcon />
+        ) : (
+          <>
+            {/* Auf-/Zuklapp-Anzeige links wie bei den DataRow-Akkordeons — dreht
             sich, wenn die Session-Details offen sind. */}
-        <span
-          className={
-            open
-              ? "lcars-data-row-chevron lcars-data-row-chevron--open"
-              : "lcars-data-row-chevron"
-          }
-          style={{ margin: "0 4px 0 2px" }}
-          aria-hidden="true"
-        />
-        <span className="lcars-eyebrow">
-          {formatISODate(session.sessionDate)}
-        </span>
-        <span className="flex-1 min-w-[180px]">
-          {session.title || "Ohne Titel"}
-        </span>
-        {session.missionTitle && (
-          <span className="text-lcars-ink-dim text-[12px]">
-            {session.missionTitle}
-          </span>
+            <span
+              className={
+                open
+                  ? "lcars-data-row-chevron lcars-data-row-chevron--open"
+                  : "lcars-data-row-chevron"
+              }
+              style={{ margin: "0 4px 0 2px" }}
+              aria-hidden="true"
+            />
+            <span className="lcars-eyebrow">
+              {formatISODate(session.sessionDate)}
+            </span>
+            <span className="flex-1 min-w-[180px]">
+              {session.title || "Ohne Titel"}
+            </span>
+            {session.missionTitle && (
+              <span className="text-lcars-ink-dim text-[12px]">
+                {session.missionTitle}
+              </span>
+            )}
+            <span className="stat-ap-amount">
+              {session.sessionAp}
+              {session.bonusAp > 0 && ` + ${session.bonusAp}`} AP
+            </span>
+            <span className="text-lcars-ink-dim text-[13px]">
+              {session.characterCount} Charaktere · {session.totalAp} AP gesamt
+            </span>
+          </>
         )}
-        <span className="stat-ap-amount">
-          {session.sessionAp}
-          {session.bonusAp > 0 && ` + ${session.bonusAp}`} AP
-        </span>
-        <span className="text-lcars-ink-dim text-[13px]">
-          {session.characterCount} Charaktere · {session.totalAp} AP gesamt
-        </span>
-        </>}
       </button>
 
       {open && (
         <>
           <form
             id={`session-editor-${session.id}`}
-            key={JSON.stringify([session.sessionDate, session.sessionAp, session.bonusAp, session.missionId, session.characterIds, session.synopsisBlocks])}
-            action={formAction} className="scroll-mt-24 flex flex-col gap-[8px]"
+            key={JSON.stringify([
+              session.sessionDate,
+              session.sessionAp,
+              session.bonusAp,
+              session.missionId,
+              session.characterIds,
+              session.synopsisBlocks,
+            ])}
+            action={formAction}
+            className="scroll-mt-24 flex flex-col gap-[8px]"
           >
             <input type="hidden" name="id" value={session.id} />
             <div className="flex flex-wrap items-end gap-[8px]">
@@ -456,14 +516,17 @@ export function SessionDetails({
                 className="lcars-icon-btn disabled:opacity-50"
                 aria-label="Session speichern"
                 title="Session speichern"
-              ><CheckIcon />
+              >
+                <CheckIcon />
               </button>
             </div>
           </form>
 
           <form action={deleteAction}>
             <input type="hidden" name="id" value={session.id} />
-            {detailPage && <input type="hidden" name="returnToSessions" value="true" />}
+            {detailPage && (
+              <input type="hidden" name="returnToSessions" value="true" />
+            )}
             <button
               type="submit"
               disabled={deletePending}
@@ -473,14 +536,17 @@ export function SessionDetails({
               className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
               aria-label="Session zurücknehmen"
               title="Session zurücknehmen"
-            ><TrashIcon />
+            >
+              <TrashIcon />
             </button>
           </form>
         </>
       )}
 
       {detailPage && session.synopsisBlocks.length === 0 && (
-        <p className="lcars-empty-state">Für diese Session gibt es noch keine Summary-Blöcke.</p>
+        <p className="lcars-empty-state">
+          Für diese Session gibt es noch keine Summary-Blöcke.
+        </p>
       )}
       <FormError message={state.error ?? deleteState.error} />
       {(state.success ?? deleteState.success) && (
@@ -525,30 +591,51 @@ export default function SessionManager({
     <div className="flex flex-col gap-[24px]">
       {showCreateForm && (
         <div>
-          <button type="button" className="lcars-pill-btn--outline" onClick={() => setShowCreate(true)}>Session nachtragen</button>
-          {showCreate && <ModalOverlay title="Session nachtragen" onClose={() => setShowCreate(false)} width={720}>
-            <NewSessionForm
-              characters={characters}
-              missions={missions}
-              defaultSessionAp={defaultSessionAp}
-              today={today}
-            />
-          </ModalOverlay>}
+          <button
+            type="button"
+            className="lcars-pill-btn--outline"
+            onClick={() => setShowCreate(true)}
+          >
+            Session nachtragen
+          </button>
+          {showCreate && (
+            <ModalOverlay
+              title="Session nachtragen"
+              onClose={() => setShowCreate(false)}
+              width={720}
+            >
+              <NewSessionForm
+                characters={characters}
+                missions={missions}
+                defaultSessionAp={defaultSessionAp}
+                today={today}
+              />
+            </ModalOverlay>
+          )}
         </div>
       )}
 
-      {view === "cards" ? <SessionsBrowser sessions={sessions} /> : <section className="flex flex-col gap-[12px]">
-        <h2 className="text-lcars-primary-ink">{sessionsHeading}</h2>
-        {sessions.length === 0 ? (
-          <p className="lcars-empty-state">Noch keine Session eingetragen.</p>
-        ) : (
-          <div className="flex flex-col gap-[8px]">
-            {sessions.map((session) => (
-              <SessionDetails key={session.id} session={session} characters={characters} missions={missions} />
-            ))}
-          </div>
-        )}
-      </section>}
+      {view === "cards" ? (
+        <SessionsBrowser sessions={sessions} />
+      ) : (
+        <section className="flex flex-col gap-[12px]">
+          <h2 className="text-lcars-primary-ink">{sessionsHeading}</h2>
+          {sessions.length === 0 ? (
+            <p className="lcars-empty-state">Noch keine Session eingetragen.</p>
+          ) : (
+            <div className="flex flex-col gap-[8px]">
+              {sessions.map((session) => (
+                <SessionDetails
+                  key={session.id}
+                  session={session}
+                  characters={characters}
+                  missions={missions}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
