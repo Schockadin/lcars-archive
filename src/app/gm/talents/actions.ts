@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requireGM } from "@/lib/dal";
 import {
   createTalent,
@@ -45,7 +45,7 @@ export async function createTalentAction(
     throw err;
   }
 
-  revalidatePath("/gm/talents");
+  await revalidatePathAndNotify("/gm/talents");
   return { success: `„${parsed.value.name}“ angelegt.` };
 }
 
@@ -71,7 +71,7 @@ export async function updateTalentAction(
     throw err;
   }
 
-  revalidatePath("/gm/talents");
+  await revalidatePathAndNotify("/gm/talents");
   return { success: `„${parsed.value.name}“ gespeichert.` };
 }
 
@@ -95,6 +95,6 @@ export async function deleteTalentAction(
     };
   }
 
-  revalidatePath("/gm/talents");
+  await revalidatePathAndNotify("/gm/talents");
   return { success: "Talent gelöscht." };
 }

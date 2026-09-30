@@ -112,9 +112,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   gewöhnliche Einträge und bleiben für alle auffindbar. Dieselbe Regel gilt im
   RAG-Index (`embeddingSync.ts` nimmt nur `dialogue_open = FALSE`) und in der
   Chronologie (`timeline.ts`).
-  Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
-  8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
-  Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite. Jede
+  Offene Gespräche aktualisieren sich über WebSockets: neue Nachrichten und
+  Sperr-Status-Änderungen erscheinen direkt, ohne manuelles Neuladen. Bei
+  fehlender Verbindung bleibt ein Polling-Rückfallweg aktiv. Jede
   Nachrichtenkarte eines **laufenden** Gesprächs trägt neben dem Sprechernamen
   ihren Zeitstempel (`formatDateTimeShort`, fest auf `Europe/Berlin` — Server-
   Render und Hydration liefern denselben String); abgeschlossene Gespräche
@@ -760,19 +760,19 @@ auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
   gedeckelt (`OwnCharacterList`): Darüber zerreißt das Paar aus Akte und
   Aktionen optisch — die Akte wächst weiter, die Knöpfe bleiben rechts
   stehen. Ohne Aktionszeile war das hier kein Thema.
-- **Die Startseite aktualisiert sich selbst** — alle 10 Sekunden ein
-  `router.refresh()`
-  ([`DashboardAutoRefresh.tsx`](src/app/DashboardAutoRefresh.tsx)). Sie zeigt
+- **Die Startseite aktualisiert sich live** — ein WebSocket-Signal löst
+  `router.refresh()` aus; bei fehlender Verbindung bleibt ein 10-Sekunden-
+  Rückfallweg aktiv ([`DashboardAutoRefresh.tsx`](src/app/DashboardAutoRefresh.tsx)). Sie zeigt
   lauter Dinge, die sich woanders ändern (Zu-/Absagen zum Spielabend, neue
   Nachrichten in offenen Gesprächen, News, eigene Entwürfe), und bis v1.49 sah
-  man das erst beim nächsten Aufruf. `router.refresh()` statt eines eigenen
-  Poll-Endpunkts wie in `DialogueLiveView`: Für ein Dutzend unabhängiger
+  man das erst beim nächsten Aufruf. Der Refresh nutzt weiterhin
+  `router.refresh()` für ein Dutzend unabhängiger
   Abschnitte gibt es keinen gemeinsamen Snapshot, und der Refresh ist
   **weich** — die bestehende Oberfläche bleibt stehen, bis die neuen Daten da
   sind, kein Flackern und kein verlorener Client-Zustand (aufgeklappte
   Abschnitte, ein offenes Anlege-Fenster samt getippter Felder).
   **Pausiert bei unsichtbarem Tab** und holt beim Zurückkehren sofort frische
-  Daten — dasselbe Muster wie der Dialog-Poll, hier aber nicht nur Kosmetik:
+  Daten — hier aber nicht nur Kosmetik:
   Ein Refresh rendert die meistbesuchte Seite der Anwendung vollständig neu,
   und ein vergessener Hintergrund-Tab liefe sonst tagelang im
   Zehn-Sekunden-Takt gegen die Datenbank. Wer wenig anzeigt, zahlt auch wenig:

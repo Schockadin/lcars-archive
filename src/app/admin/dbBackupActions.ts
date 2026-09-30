@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requirePermission } from "@/lib/dal";
 import { revalidateAllContent } from "@/lib/revalidate";
 import {
@@ -65,7 +65,7 @@ async function parseAndImportDbBackup(json: string): Promise<ImportDbBackupResul
     // Ingest, hier zusätzlich noch der Router-Cache selbst für Seiten ohne
     // eigenen Content-Tag, z.B. das Dashboard).
     revalidateAllContent();
-    revalidatePath("/", "layout");
+    await revalidatePathAndNotify("/", "layout");
     return { summary };
   } catch (err) {
     if (err instanceof InvalidBackupError) {

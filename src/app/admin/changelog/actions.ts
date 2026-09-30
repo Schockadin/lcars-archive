@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { checkPermission } from "@/lib/dal";
 import { changelogVersionExists } from "@/lib/changelog";
 import { isChangelogCategory } from "@/lib/changelogCategories";
@@ -38,8 +38,8 @@ export async function saveChangelogVisibilityAction(
 
   // Das Dashboard rendert die Box (ChangelogSection); /admin/changelog zeigt
   // die bestätigte Auswahl.
-  revalidatePath("/");
-  revalidatePath("/admin/changelog");
+  await revalidatePathAndNotify("/");
+  await revalidatePathAndNotify("/admin/changelog");
 
   return { success: true };
 }
@@ -74,8 +74,8 @@ export async function saveChangelogCategoryVisibilityAction(
 
   await setHiddenChangelogCategories(hidden);
 
-  revalidatePath("/");
-  revalidatePath("/admin/changelog");
+  await revalidatePathAndNotify("/");
+  await revalidatePathAndNotify("/admin/changelog");
 
   return { success: true };
 }

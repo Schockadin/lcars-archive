@@ -5,6 +5,7 @@ import {
   ColorTakenError,
 } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 import { isHexColor, normalizeHex } from "@/lib/characterColor";
 
 export interface CharacterColorState {
@@ -54,5 +55,6 @@ export async function updateCharacterColorAction(
   }
 
   revalidateCharacter(slug);
+  await publishContentChanged();
   return { success: true, color };
 }

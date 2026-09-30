@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requireGM } from "@/lib/dal";
 import {
   createFocus,
@@ -47,7 +47,7 @@ export async function createFocusAction(
     throw err;
   }
 
-  revalidatePath("/gm/focuses");
+  await revalidatePathAndNotify("/gm/focuses");
   return { success: `„${parsed.value.name}“ angelegt.` };
 }
 
@@ -75,7 +75,7 @@ export async function updateFocusAction(
     throw err;
   }
 
-  revalidatePath("/gm/focuses");
+  await revalidatePathAndNotify("/gm/focuses");
   return { success: `„${parsed.value.name}“ gespeichert.` };
 }
 
@@ -99,6 +99,6 @@ export async function deleteFocusAction(
     };
   }
 
-  revalidatePath("/gm/focuses");
+  await revalidatePathAndNotify("/gm/focuses");
   return { success: "Schwerpunkt gelöscht." };
 }

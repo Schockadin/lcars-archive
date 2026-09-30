@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requirePermission } from "@/lib/dal";
 import { deleteContentImageAsAdmin } from "@/lib/contentImages";
 
@@ -13,6 +13,6 @@ export async function deleteContentImageAdminAction(id: number): Promise<{ error
   const deleted = await deleteContentImageAsAdmin(id);
   if (!deleted) return { error: "Bild nicht gefunden." };
 
-  revalidatePath("/admin/content/images");
+  await revalidatePathAndNotify("/admin/content/images");
   return {};
 }

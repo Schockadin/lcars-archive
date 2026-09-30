@@ -577,7 +577,8 @@ export default function TutorialPage() {
                 Person selbst, endet sie vorzeitig). Ein offenes Gespräch
                 aktualisiert sich dabei automatisch — neue Nachrichten und
                 Änderungen am Antwortrecht erscheinen von selbst, ohne dass du
-                die Seite neu laden musst. An jeder Nachrichtenkarte eines
+                die Seite neu laden musst. Bei aktiver Verbindung kommen diese
+                Aktualisierungen direkt über WebSockets. An jeder Nachrichtenkarte eines
                 laufenden Gesprächs steht neben dem Namen der sprechenden
                 Person, <strong>wann sie verschickt wurde</strong> (Datum und
                 Uhrzeit) — so siehst du, ob zwischen zwei Beiträgen Minuten oder

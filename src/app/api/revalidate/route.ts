@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { revalidateAllContent } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 // Geschützter Endpoint zum Invalidieren der Inhalts-Caches. Wird am Ende des
 // Ingest-Skripts aufgerufen (scripts/ingest/index.ts) und kann künftig von
@@ -29,5 +30,6 @@ export async function POST(request: NextRequest) {
   }
 
   const tags = revalidateAllContent();
+  await publishContentChanged();
   return Response.json({ revalidated: true, tags, now: Date.now() });
 }

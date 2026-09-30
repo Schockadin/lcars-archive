@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requireGM } from "@/lib/dal";
 import { revalidateMission } from "@/lib/revalidate";
 import {
@@ -59,8 +59,8 @@ export async function completeMissionAction(
   if (!result.ok) return { error: result.error };
 
   revalidateMission(result.slug);
-  revalidatePath("/gm/ap");
-  revalidatePath("/gm/ap");
+  await revalidatePathAndNotify("/gm/ap");
+  await revalidatePathAndNotify("/gm/ap");
 
   return {
     success:

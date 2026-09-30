@@ -28,6 +28,7 @@ import {
   revalidateCharacter,
   revalidateAllContent,
 } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 // Re-Export, damit die Client-Komponente daneben (MarkdownImportPanel) den
 // Typ nicht aus einem "server-only"-Modul ziehen muss. Die Wahrheit über die
@@ -199,6 +200,7 @@ export async function confirmMarkdownImportAction(
     // Admin-Backfill in DialogueContentRegeneratePanel.tsx — ein seltener
     // Vorgang, kein Hot Path.
     else revalidateAllContent();
+    await publishContentChanged();
   }
   return result;
 }

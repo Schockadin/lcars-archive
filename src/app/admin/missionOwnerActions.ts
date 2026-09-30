@@ -7,6 +7,7 @@ import {
   countOwnerlessMissions,
 } from "@/lib/missions";
 import { revalidateMission } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 export interface AssignOwnerlessMissionsBatchResult {
   error?: string;
@@ -47,6 +48,7 @@ export async function assignOwnerlessMissionsBatchAction(
   for (const slug of slugs) {
     revalidateMission(slug);
   }
+  if (slugs.length > 0) await publishContentChanged();
   const remaining = await countOwnerlessMissions();
 
   return { assignedInBatch: slugs.length, remaining };

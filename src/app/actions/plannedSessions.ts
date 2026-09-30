@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requireGM } from "@/lib/dal";
 import {
   createPlannedSession,
@@ -40,11 +40,11 @@ export interface PlannedSessionState {
 // Begründung steht ausführlich in src/app/api/rsvp/route.ts).
 //
 // Nach jeder Änderung die Kampagnenplanung und das Dashboard aktualisieren.
-function revalidateBoth(): void {
-  revalidatePath("/gm/sessions");
-  revalidatePath("/gm/campaign");
-  revalidatePath("/gm/missions");
-  revalidatePath("/");
+async function revalidateBoth(): Promise<void> {
+  await revalidatePathAndNotify("/gm/sessions");
+  await revalidatePathAndNotify("/gm/campaign");
+  await revalidatePathAndNotify("/gm/missions");
+  await revalidatePathAndNotify("/");
 }
 
 function formFields(formData: FormData) {
@@ -143,8 +143,8 @@ export async function createPlannedSessionAction(
       missionPreview,
       user.id,
     );
-    revalidatePath(`/chronologie/mission/${encodeURIComponent(createdMission.slug)}`);
-    revalidatePath(`/gm/missions/${encodeURIComponent(createdMission.slug)}`);
+    await revalidatePathAndNotify(`/chronologie/mission/${encodeURIComponent(createdMission.slug)}`);
+    await revalidatePathAndNotify(`/gm/missions/${encodeURIComponent(createdMission.slug)}`);
   } else {
     const activeMissions = await listActiveSessionMissions();
     if (!activeMissions.some((mission) => mission.id === missionId)) {
@@ -153,7 +153,7 @@ export async function createPlannedSessionAction(
   }
 
   const sessionId = await createPlannedSession({ ...parsed, missionId, notes: "", characterIds }, user.id);
-  revalidateBoth();
+  await revalidateBoth();
 
   const created = await getPlannedSession(sessionId);
 
@@ -279,7 +279,7 @@ export async function updatePlannedSessionAction(
   }
 
   await updatePlannedSession(id, { ...parsed, notes: existing.notes, characterIds });
-  revalidateBoth();
+  await revalidateBoth();
   return { success: "Termin geändert." };
 }
 
@@ -292,6 +292,6 @@ export async function deletePlannedSessionAction(
   if (!Number.isInteger(id)) return { error: "Unbekannter Termin." };
 
   await deletePlannedSession(id);
-  revalidateBoth();
+  await revalidateBoth();
   return { success: "Termin abgesagt und entfernt." };
 }

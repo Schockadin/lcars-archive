@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { getActiveSession } from "@/lib/dal";
 import {
   getUserById,
@@ -154,7 +154,7 @@ export async function postDialogueMessageAction(
 
   // Offene Dialoge sind für keinen gecachten Leser sichtbar (siehe
   // src/lib/archive.ts) — nur die eigene, ungecachte Seite muss frisch sein.
-  revalidatePath(dialogueHref(entrySlug));
+  await revalidatePathAndNotify(dialogueHref(entrySlug));
 
   // Nur wer diesen Dialog abonniert hat (Default beim Anlegen, dort und auf
   // der Dialog-Seite abbestellbar) bekommt eine Mail — statt bedingungslos
@@ -255,9 +255,9 @@ export async function editDialogueMessageAction(
   // /archive (siehe Redirect in beiden Seiten) — welcher zutrifft, ist hier
   // nicht bekannt, deshalb werden vorsichtshalber beide invalidiert (nötig
   // erst seit Moderations-Edits auch auf geschlossenen Dialogen möglich sind).
-  revalidatePath(dialogueHref(entrySlug));
+  await revalidatePathAndNotify(dialogueHref(entrySlug));
   revalidateArchiveEntry(entrySlug);
-  revalidatePath(archiveHref(entrySlug));
+  await revalidatePathAndNotify(archiveHref(entrySlug));
   return { success: true };
 }
 
@@ -301,9 +301,9 @@ export async function deleteDialogueMessageAction(
     throw err;
   }
 
-  revalidatePath(dialogueHref(entrySlug));
+  await revalidatePathAndNotify(dialogueHref(entrySlug));
   revalidateArchiveEntry(entrySlug);
-  revalidatePath(archiveHref(entrySlug));
+  await revalidatePathAndNotify(archiveHref(entrySlug));
   return {};
 }
 
@@ -349,14 +349,14 @@ const CLOSED_SNAPSHOT: DialogueSnapshot = {
   canReplyNow: false,
 };
 
-// Grundlage für das Polling in DialogueLiveView.tsx (Live-Aktualisierung
-// offener Dialoge ohne manuelles Neuladen, siehe dortiger Kommentar) — ein
+// Grundlage für die Live-Aktualisierung in DialogueLiveView.tsx (siehe
+// dortiger Kommentar) — ein
 // kompletter Snapshot statt Delta, damit Bearbeitungen/Soft-Deletes an
 // bestehenden Nachrichten automatisch mit abgedeckt sind. Bewusst OHNE
-// alreadyRequestedNotify (ändert sich selten, würde jeden Poll unnötig
-// verteuern — bleibt ein reiner SSR-Initialwert in DialogueLockPanel).
+// alreadyRequestedNotify (ändert sich selten und bleibt ein reiner
+// SSR-Initialwert in DialogueLockPanel).
 // open: false deckt sowohl "Dialog während des Betrachtens gelöscht" als
-// auch "kein Teilnehmer (mehr)" ab — DialogueLiveView stoppt das Polling in
+// auch "kein Teilnehmer (mehr)" ab — DialogueLiveView stoppt die Aktualisierung in
 // beiden Fällen und zeigt einen Hinweis.
 export async function getDialogueSnapshotAction(
   entrySlug: string,
@@ -426,7 +426,7 @@ export async function completeDialogueAction(
   await completeDialogue(entry.id);
 
   revalidateArchiveEntry(entrySlug);
-  revalidatePath(archiveHref(entrySlug));
+  await revalidatePathAndNotify(archiveHref(entrySlug));
 
   // Sowohl Charakter-Abonnenten (Fans, die keinem der beiden Teilnehmer
   // selbst entsprechen müssen) als auch die tatsächlichen Teilnehmer-Spieler
@@ -521,8 +521,8 @@ export async function deleteDialogueAction(
   }
 
   revalidateArchiveEntry(entrySlug);
-  revalidatePath(archiveHref(entrySlug));
-  revalidatePath(dialogueHref(entrySlug));
+  await revalidatePathAndNotify(archiveHref(entrySlug));
+  await revalidatePathAndNotify(dialogueHref(entrySlug));
 
   // Mit Gesprächs-ID, damit auch die NPC-Sprecher informiert werden: das
   // Löschen ist ein Soft-Delete (deleted_at), die Zeilen in
@@ -562,7 +562,7 @@ export async function setDialogueViewPreferenceAction(
   if (!session) return;
 
   await updateDialogueViewPreference(session.userId, flowingTextEnabled);
-  revalidatePath(archiveHref(entrySlug));
+  await revalidatePathAndNotify(archiveHref(entrySlug));
 }
 
 // Verschickt Mail/Push an alle, die "informiere mich, wenn die Sperre
@@ -721,9 +721,9 @@ export async function inviteDialogueParticipantAction(
     return { error: "Dieser Dialog existiert nicht mehr." };
   }
 
-  revalidatePath(dialogueHref(entrySlug));
+  await revalidatePathAndNotify(dialogueHref(entrySlug));
   revalidateArchiveEntry(entrySlug);
-  revalidatePath(archiveHref(entrySlug));
+  await revalidatePathAndNotify(archiveHref(entrySlug));
 
   if (invited.length > 0) {
     const dialogueUrl = `${await getBaseUrl()}/dialogues/${entrySlug}`;
@@ -859,7 +859,7 @@ export async function reserveDialogueReplyAction(
     throw err;
   }
 
-  revalidatePath(dialogueHref(entrySlug));
+  await revalidatePathAndNotify(dialogueHref(entrySlug));
   return {};
 }
 
@@ -886,7 +886,7 @@ export async function releaseDialogueReservationAction(
   const released = await forceReleaseDialogueReservation(entry.id);
   await notifyReservationReleased(released);
 
-  revalidatePath(dialogueHref(entrySlug));
+  await revalidatePathAndNotify(dialogueHref(entrySlug));
   return {};
 }
 
@@ -910,5 +910,5 @@ export async function dialogueReservationNotifyAction(
   if (!participant) return;
 
   await requestDialogueReservationNotification(entry.id, session.userId);
-  revalidatePath(dialogueHref(entrySlug));
+  await revalidatePathAndNotify(dialogueHref(entrySlug));
 }

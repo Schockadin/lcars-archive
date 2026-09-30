@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { verifySession } from "@/lib/dal";
 import {
   advanceOwnCharacter,
@@ -94,7 +94,7 @@ export async function advanceCharacterAction(
   if (!result.ok) return { error: result.error };
 
   revalidateCharacter(result.slug);
-  revalidatePath(characterEditHref(characterId));
+  await revalidatePathAndNotify(characterEditHref(characterId));
 
   return { success: `${result.label} für ${result.cost} AP gesteigert.` };
 }
@@ -131,7 +131,7 @@ export async function lockCreationAction(
   }
 
   revalidateCharacter(result.slug);
-  revalidatePath(characterEditHref(characterId));
+  await revalidatePathAndNotify(characterEditHref(characterId));
 
   const parts = [
     "Erschaffung abgeschlossen — Attribute und Disziplinen lassen sich jetzt nur noch mit AP steigern.",

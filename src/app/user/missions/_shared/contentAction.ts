@@ -19,6 +19,7 @@ import {
 import { getParticipantCharactersForNotification } from "@/lib/characters";
 import { getCharacterSubscribersForSlugs } from "@/lib/dialogues";
 import { logCaughtError } from "@/lib/errorLog";
+import { publishContentChanged } from "@/lib/realtimeServer";
 import { getUserSubscribersForSlugs, notifyContentChange } from "@/lib/follows";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
@@ -272,6 +273,7 @@ export async function missionAction(
     // Änderung der Liste.
     await setMissionParticipants(missionId!, participantCharacterIds);
     revalidateMission(result.slug);
+    await publishContentChanged();
 
     // Heißt die Mission jetzt anders, prüfen alle anderen Inhalte im
     // Hintergrund, ob sie sie nun verlinken können — und bestehende Links
@@ -360,6 +362,7 @@ export async function missionAction(
     ownerUserId: user.id,
   });
   revalidateMission(result.slug);
+  await publishContentChanged();
 
   if (participantCharacterIds.length > 0) {
     await setMissionParticipants(result.id, participantCharacterIds);

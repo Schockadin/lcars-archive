@@ -5,8 +5,12 @@ import DashboardAutoRefresh, {
 } from "./DashboardAutoRefresh";
 
 const refresh = vi.fn();
+const realtimeState = vi.hoisted(() => ({ connected: false }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: () => refresh() }),
+}));
+vi.mock("@/components/RealtimeUpdatesProvider", () => ({
+  useRealtimeUpdates: () => ({ connected: realtimeState.connected }),
 }));
 
 // document.hidden ist nur über document.visibilityState zu steuern — beide
@@ -26,6 +30,7 @@ function setzeSichtbarkeit(state: "visible" | "hidden") {
 describe("DashboardAutoRefresh", () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    realtimeState.connected = false;
     refresh.mockClear();
     setzeSichtbarkeit("visible");
     refresh.mockClear();
@@ -54,6 +59,15 @@ describe("DashboardAutoRefresh", () => {
 
     vi.advanceTimersByTime(DASHBOARD_REFRESH_INTERVAL_MS * 2);
     expect(refresh).toHaveBeenCalledTimes(3);
+  });
+
+  it("pollt nicht, solange die WebSocket-Verbindung steht", () => {
+    realtimeState.connected = true;
+    render(<DashboardAutoRefresh />);
+
+    vi.advanceTimersByTime(DASHBOARD_REFRESH_INTERVAL_MS * 3);
+
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   // „/" ist die meistbesuchte Seite der Anwendung, und ein Refresh rendert

@@ -20,6 +20,7 @@ import {
 import ThemeApplier from "@/components/lcars/ThemeApplier";
 import { NeoProvider } from "@/context/NeoProvider";
 import { ToastProvider } from "@/components/toast/ToastProvider";
+import RealtimeUpdatesProvider from "@/components/RealtimeUpdatesProvider";
 import { getCampaignYears } from "@/lib/constants";
 import { APP_VERSION } from "@/lib/version";
 import { THEME_COOKIE_NAME, THEME_CUSTOM_COOKIE_NAME } from "@/lib/session";
@@ -196,7 +197,9 @@ export default function RootLayout({
         </Suspense>
         <NeoProvider>
           <ToastProvider>
-            <LcarsAppShell appVersion={APP_VERSION}>{children}</LcarsAppShell>
+            <RealtimeUpdatesProvider>
+              <LcarsAppShell appVersion={APP_VERSION}>{children}</LcarsAppShell>
+            </RealtimeUpdatesProvider>
             <LcarsCookieNotice />
             <LcarsServiceWorkerRegister />
             {/* Sichert jede Eingabe für die Sitzung (sessionStorage) und

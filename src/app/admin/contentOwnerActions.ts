@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requirePermission } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { setOwnerAction, type OwnerContentType } from "@/app/actions/owner";
@@ -35,6 +35,6 @@ export async function bulkSetContentOwnerAction(
     if (!result.error) count++;
   }
 
-  revalidatePath("/admin/content");
+  await revalidatePathAndNotify("/admin/content");
   return { count };
 }

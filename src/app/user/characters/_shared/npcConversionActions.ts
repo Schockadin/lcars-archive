@@ -6,7 +6,7 @@ import {
   restoreOwnedCharacterFromNpc,
 } from "@/lib/characterNpcConversion";
 import { revalidateCharacter, revalidateArchiveEntry } from "@/lib/revalidate";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 
 export interface CharacterNpcConversionState {
   error?: string;
@@ -19,18 +19,18 @@ function readCharacterId(formData: FormData): number | null {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
-function revalidateConversionPaths(
+async function revalidateConversionPaths(
   characterId: number,
   characterSlug: string,
   npcSlug: string,
 ) {
   revalidateCharacter(characterSlug);
   revalidateArchiveEntry(npcSlug);
-  revalidatePath("/characters");
-  revalidatePath(`/characters/${characterSlug}`);
-  revalidatePath(`/archive/${npcSlug}`);
-  revalidatePath("/user/characters");
-  revalidatePath(`/user/characters/${characterId}`);
+  await revalidatePathAndNotify("/characters");
+  await revalidatePathAndNotify(`/characters/${characterSlug}`);
+  await revalidatePathAndNotify(`/archive/${npcSlug}`);
+  await revalidatePathAndNotify("/user/characters");
+  await revalidatePathAndNotify(`/user/characters/${characterId}`);
 }
 
 export async function convertCharacterToNpcAction(
@@ -63,7 +63,7 @@ export async function convertCharacterToNpcAction(
     };
   }
 
-  revalidateConversionPaths(characterId, result.characterSlug, result.npcSlug);
+  await revalidateConversionPaths(characterId, result.characterSlug, result.npcSlug);
   return {
     success: "Der Charakter wurde in einen NPC umgewandelt.",
     npcSlug: result.npcSlug,
@@ -86,6 +86,6 @@ export async function restoreCharacterFromNpcAction(
     return { error: "Umwandlung nicht gefunden oder keine Berechtigung." };
   }
 
-  revalidateConversionPaths(characterId, result.characterSlug, result.npcSlug);
+  await revalidateConversionPaths(characterId, result.characterSlug, result.npcSlug);
   return { success: "Der Charakter wurde wiederhergestellt." };
 }

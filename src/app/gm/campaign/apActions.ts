@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requireGM } from "@/lib/dal";
 import { awardAp, isApReason } from "@/lib/characterAp";
 import { listActiveCharactersForAp } from "@/lib/gameSessions";
@@ -77,8 +77,8 @@ export async function awardApAction(
   // würde dort nicht sauber abgebildet. Wer wann wie viel gebucht hat, steht
   // ohnehin in character_ap_entries (created_by/created_at/note).
 
-  revalidatePath("/gm/ap");
-  revalidatePath(characterEditHref(characterId));
+  await revalidatePathAndNotify("/gm/ap");
+  await revalidatePathAndNotify(characterEditHref(characterId));
 
   return {
     success: `${amount > 0 ? "+" : ""}${amount} AP gebucht.`,

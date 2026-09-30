@@ -8,7 +8,7 @@ import {
 import { getUserById } from "@/lib/users";
 import { createCharacter } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { autoLinkMarkdown } from "@/lib/autolink";
 import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
@@ -104,7 +104,7 @@ export async function createCharacterWizardAction(
     ownerUserId: session.userId,
   });
   revalidateCharacter(result.slug);
-  revalidatePath("/user/characters");
+  await revalidatePathAndNotify("/user/characters");
 
   if (!isDraft) {
     const contentUrl = `${await getBaseUrl()}/characters/${result.slug}`;

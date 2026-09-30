@@ -1,6 +1,7 @@
 "use server";
 import { checkPermission } from "@/lib/dal";
 import { revalidateAllContent } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 export interface RevalidateActionState {
   tags?: string[];
@@ -25,6 +26,7 @@ export async function runRevalidateAction(
 
   try {
     const tags = revalidateAllContent();
+    await publishContentChanged();
     return { tags };
   } catch (err) {
     return {

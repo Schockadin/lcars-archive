@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.60",
+    title: "Live-Aktualisierungen",
+    items: [
+      {
+        text: "Neue Nachrichten und geänderte Inhalte erscheinen direkt, ohne Neuladen — auch auf der Startseite und in offenen Gesprächen.",
+        category: "darstellung",
+        tutorial: "mein-bereich",
+      },
+    ],
+  },
+  {
     version: "1.59",
     title: "Kartenaktionen und Session-Verwaltung",
     items: [

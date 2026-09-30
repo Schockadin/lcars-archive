@@ -262,6 +262,32 @@ export default function DSGVOContent({ year }: { year: number }) {
           </a>
         </p>
         <p>
+          Für Live-Aktualisierungen der Website nutzen wir{" "}
+          <strong>Ably Realtime Ltd.</strong> (London, Vereinigtes Königreich).
+          Beim Aufbau und Betrieb einer WebSocket-Verbindung verarbeitet Ably
+          technisch notwendige Verbindungsdaten wie IP-Adresse, Zeitpunkt und
+          Verbindungsstatus. Übertragen wird ausschließlich ein allgemeines,
+          inhaltsloses Signal, dass sich Inhalte geändert haben; Nachrichten,
+          Texte, Nutzerkennungen oder andere Kampagnendaten werden nicht über
+          Ably gesendet. Der Browser erhält ein kurzlebiges Zugriffstoken, das
+          nur das Abonnieren dieses Signals erlaubt (Rechtsgrundlage: Art. 6
+          Abs. 1 lit. f DSGVO — berechtigtes Interesse an unmittelbar aktuellen
+          Seiten). Ably verarbeitet die Verbindungsdaten als
+          Auftragsverarbeiter gemäß Art. 28 DSGVO. Mehr Informationen:{" "}
+          <a href="https://ably.com/privacy" target="_blank" rel="noreferrer">
+            ably.com/privacy
+          </a>{" "}
+          und{" "}
+          <a
+            href="https://render.ably.com/data-processing-addendum"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Ablys Auftragsverarbeitungsvereinbarung
+          </a>
+          .
+        </p>
+        <p>
           Der Inhalt der Datenbank wird einmal täglich automatisch als
           Sicherungsdatei über eine verschlüsselte Verbindung in einen nicht
           öffentlichen Speicher („R2“) bei <strong>Cloudflare</strong>{" "}
@@ -388,10 +414,11 @@ export default function DSGVOContent({ year }: { year: number }) {
         <h2>5. Datenübertragung in Drittländer</h2>
         <p>
           Netlify, Resend, OpenAI und Cloudflare haben Serverstandorte in den
-          USA. Die Übertragung erfolgt auf Basis des EU-US Data Privacy
-          Framework (Angemessenheitsbeschluss der EU-Kommission vom Juli 2023)
-          bzw., soweit ein Anbieter diesem nicht angeschlossen ist, auf Basis
-          der EU-Standardvertragsklauseln.
+          USA. Für Ably können im Rahmen des Verbindungsbetriebs ebenfalls
+          Daten in Drittländer übermittelt werden. Die Übertragung erfolgt auf
+          Basis des EU-US Data Privacy Framework (Angemessenheitsbeschluss der
+          EU-Kommission vom Juli 2023) bzw., soweit ein Anbieter diesem nicht
+          angeschlossen ist, auf Basis der EU-Standardvertragsklauseln.
         </p>
 
         <h2>6. Cookies</h2>

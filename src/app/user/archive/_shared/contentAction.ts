@@ -10,6 +10,7 @@ import {
 } from "@/lib/archive";
 import { isArchiveCategory } from "@/lib/archiveFormat";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 import { autoLinkMarkdown } from "@/lib/autolink";
 import { syncAutolinksAfterRename } from "@/lib/autolinkSync";
 import { notifyContentChange } from "@/lib/follows";
@@ -145,6 +146,7 @@ export async function archiveEntryAction(
       return { error: "Eintrag nicht gefunden oder keine Berechtigung." };
     }
     revalidateArchiveEntry(result.slug);
+    await publishContentChanged();
 
     // Heißt der Eintrag jetzt anders oder hat er neue Aliase, prüfen alle
     // anderen Inhalte im Hintergrund, ob sie ihn nun verlinken können — und
@@ -220,6 +222,7 @@ export async function archiveEntryAction(
     ownerUserId: session.userId,
   });
   revalidateArchiveEntry(result.slug);
+  await publishContentChanged();
 
   if (!isDraft) {
     const contentUrl = `${await getBaseUrl()}/archive/${result.slug}`;

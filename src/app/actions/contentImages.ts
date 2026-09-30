@@ -7,6 +7,7 @@ import {
   revalidateCharacter,
   revalidateContentImageLists,
 } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 import {
   isContentImageType,
   getContentAccessContext,
@@ -104,6 +105,7 @@ export async function uploadContentImagesAction(
   // Die Übersichten tragen das erste Bild als Vorschaubild — nach einem
   // Upload also die zwischengespeicherten Listen auffrischen.
   revalidateContentImageLists(access.contentType);
+  await publishContentChanged();
   return { images: await listContentImages(access.contentType, contentId) };
 }
 
@@ -119,6 +121,7 @@ export async function deleteContentImageAction(
   // War es das Vorschaubild der Übersicht, rückt jetzt das nächste nach (oder
   // die Karte zeigt gar keins mehr).
   revalidateContentImageLists(access.contentType);
+  await publishContentChanged();
   return { images: await listContentImages(access.contentType, contentId) };
 }
 
@@ -159,5 +162,6 @@ export async function setCharacterPortraitAction(
   if (!slug) return { error: "Bild nicht gefunden." };
 
   revalidateCharacter(slug);
+  await publishContentChanged();
   return {};
 }
