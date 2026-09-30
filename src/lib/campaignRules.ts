@@ -45,7 +45,7 @@ export type {
   CampaignRuleInput,
 } from "@/lib/campaignRuleTypes";
 
-// Alle Regeln. Gecacht: sie ändern sich nur über /gm/rules und stehen auf
+// Alle Regeln. Gecacht: sie ändern sich nur über /gm/campaign und stehen auf
 // jedem Spickzettel.
 export async function listCampaignRules(): Promise<CampaignRule[]> {
   "use cache";

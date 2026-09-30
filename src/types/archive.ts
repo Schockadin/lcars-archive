@@ -71,6 +71,8 @@ export interface ArchiveMetadata {
 // Listenvorschau für die Archiv-Übersicht (ohne content).
 export interface ArchiveEntryPreview {
   id: number;
+  ownerUserId: number | null;
+  isDraft: boolean;
   slug: string;
   title: string;
   category: ArchiveCategory;

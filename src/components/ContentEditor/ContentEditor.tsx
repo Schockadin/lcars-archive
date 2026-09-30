@@ -40,6 +40,8 @@ interface ContentEditorProps<FieldName extends string> {
   bodyDefaultValue?: string;
   bodyRequired?: boolean;
   bodyLarge?: boolean;
+  bodyHidden?: boolean;
+  bodyHiddenMessage?: ReactNode;
   // Nur im Edit-Modus sinnvoll (contentId bekannt) — siehe MarkdownEditor.tsx.
   insertImage?: { contentType: ContentImageType; contentId: number };
   // z.B. Mission-Logs Autor-/Missions-Select (dynamische Optionen, nur create).
@@ -76,6 +78,8 @@ export default function ContentEditor<FieldName extends string>({
   bodyDefaultValue,
   bodyRequired = false,
   bodyLarge = false,
+  bodyHidden = false,
+  bodyHiddenMessage,
   insertImage,
   extraHeadSlot,
   metadataFields,
@@ -153,7 +157,7 @@ export default function ContentEditor<FieldName extends string>({
         </label>
       </div>
 
-      <FormField label={bodyLabel} htmlFor={`${idPrefix}-body`} hint={bodyHint}>
+      {bodyHidden ? bodyHiddenMessage : <FormField label={bodyLabel} htmlFor={`${idPrefix}-body`} hint={bodyHint}>
         {/* Missionen, Logbücher und Datenbank-Einträge stehen allesamt in
             der Chronologie — der Kalender-Knopf für Zeitleisten-Marken gehört
             hier deshalb immer dazu (siehe TimelineMarkerButton.tsx). */}
@@ -166,14 +170,11 @@ export default function ContentEditor<FieldName extends string>({
           large={bodyLarge}
           insertImage={insertImage}
         />
-      </FormField>
+      </FormField>}
 
-      {/* Neue Inhalte: Autolinking standardmäßig aktiv (siehe AutoLinkCheckbox);
-          beim Bearbeiten bleibt es aus. */}
-      <AutoLinkCheckbox
-        idPrefix={idPrefix}
-        defaultChecked={mode === "create"}
-      />
+      {/* Autolinking startet bei neuen und bearbeiteten Inhalten aktiviert;
+          wer es nicht möchte, kann es vor dem Speichern ausschalten. */}
+      {!bodyHidden && <AutoLinkCheckbox idPrefix={idPrefix} defaultChecked />}
 
       <SubmitButton pending={pending} pendingLabel={submitPendingLabel}>
         {submitLabel}

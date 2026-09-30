@@ -45,7 +45,8 @@ export async function createRuleAction(
     throw err;
   }
 
-  revalidatePath("/gm/rules");
+  revalidatePath("/gm/campaign");
+  revalidatePath("/user/rules");
   return { success: `„${parsed.value.name}“ angelegt.` };
 }
 
@@ -71,7 +72,8 @@ export async function updateRuleAction(
     throw err;
   }
 
-  revalidatePath("/gm/rules");
+  revalidatePath("/gm/campaign");
+  revalidatePath("/user/rules");
   return { success: `„${parsed.value.name}“ gespeichert.` };
 }
 
@@ -90,6 +92,7 @@ export async function deleteRuleAction(
   const deleted = await deleteCampaignRule(id);
   if (!deleted) return { error: "Regel nicht gefunden." };
 
-  revalidatePath("/gm/rules");
+  revalidatePath("/gm/campaign");
+  revalidatePath("/user/rules");
   return { success: "Regel gelöscht." };
 }

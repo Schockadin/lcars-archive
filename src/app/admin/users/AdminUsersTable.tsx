@@ -5,6 +5,7 @@ import type { SortDir } from "@/components/lcars";
 import { formatDateTime } from "@/utils/formateISODate";
 import SortableHeader from "../SortableHeader";
 import type { User } from "@/types/db";
+import { PencilIcon } from "@/lib/icons";
 
 export interface AdminUserRow {
   id: number;
@@ -215,9 +216,11 @@ export default function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
                   <td className="py-[6px] whitespace-nowrap">
                     <Link
                       href={`/admin/${u.id}/edit`}
-                      className="lcars-link-text text-[14px]"
+                      className="lcars-icon-btn"
+                      aria-label={`User ${u.name} bearbeiten`}
+                      title={`User ${u.name} bearbeiten`}
                     >
-                      Verwalten
+                      <PencilIcon />
                     </Link>
                   </td>
                 </tr>

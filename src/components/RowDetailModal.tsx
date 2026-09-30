@@ -204,8 +204,7 @@ export default function RowDetailModal({
                       type="button"
                       onClick={handleDelete}
                       disabled={pending}
-                      className="lcars-icon-btn disabled:opacity-50"
-                      style={{ color: "var(--lcars-quinary)" }}
+                      className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
                       aria-label="Löschen"
                       title="Löschen"
                     >

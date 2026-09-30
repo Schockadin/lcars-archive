@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { fireEvent } from "@testing-library/react";
 import HeaderUserNav from "./HeaderUserNav";
+import { renderToStaticMarkup } from "react-dom/server";
+import { BookIcon } from "@/lib/icons";
 
 // usePathname/logout/Service-Worker-Cache brauchen einen Next-Runtime bzw. eine
 // Server-Action — hier stellvertretend gemockt, geprüft wird allein, welche
@@ -17,7 +19,7 @@ function menuButtons(): string[] {
   return screen
     .getAllByRole("button")
     .map((button) => button.textContent ?? "")
-    .filter((label) => label === "Leitung" || label === "Admin");
+    .filter((label) => label === "Regeln" || label === "Leitung" || label === "Admin");
 }
 
 function menuEintraege(): string[] {
@@ -25,9 +27,9 @@ function menuEintraege(): string[] {
 }
 
 describe("HeaderUserNav: getrennte Staff-Menüs", () => {
-  it("zeigt einem reinen GM nur das Leitungs-Menü", () => {
+  it("zeigt einem GM das Leitungs-Menü und mit Leserecht das Regel-Menü", () => {
     render(<HeaderUserNav permissions={["gm.access", "users.browse"]} />);
-    expect(menuButtons()).toEqual(["Leitung"]);
+    expect(menuButtons()).toEqual(["Regeln", "Leitung"]);
   });
 
   it("zeigt einer reinen Administration nur das Admin-Menü", () => {
@@ -37,9 +39,9 @@ describe("HeaderUserNav: getrennte Staff-Menüs", () => {
 
   it("zeigt bei kombinierten Rollen beide Menüs getrennt nebeneinander", () => {
     render(
-      <HeaderUserNav permissions={["gm.access", "admin.access", "users.manage"]} />,
+      <HeaderUserNav permissions={["gm.access", "admin.access", "users.manage", "users.browse"]} />,
     );
-    expect(menuButtons()).toEqual(["Leitung", "Admin"]);
+    expect(menuButtons()).toEqual(["Regeln", "Leitung", "Admin"]);
   });
 
   it("zeigt einem reinen db-admin nur das Admin-Menü (DB-Recht genügt)", () => {
@@ -47,9 +49,9 @@ describe("HeaderUserNav: getrennte Staff-Menüs", () => {
     expect(menuButtons()).toEqual(["Admin"]);
   });
 
-  it("zeigt ohne Staff-Rechte gar kein Staff-Menü", () => {
+  it("zeigt ohne Staff-Rechte nur das Regel-Menü, wenn Leserecht besteht", () => {
     render(<HeaderUserNav permissions={["content.follow", "users.browse"]} />);
-    expect(menuButtons()).toEqual([]);
+    expect(menuButtons()).toEqual(["Regeln"]);
   });
 });
 
@@ -116,6 +118,26 @@ describe("HeaderUserNav: Gliederung des Leitungs-Menüs", () => {
       "Regelwerk",
       "Inhalte",
     ]);
+  });
+
+  it("bietet Steigerungsregeln und Kataloge über das Buch-Menü an", () => {
+    render(<HeaderUserNav permissions={["users.browse"]} />);
+    expect(screen.getByRole("button", { name: /Regeln/ })).toContainHTML(renderToStaticMarkup(<BookIcon />));
+    fireEvent.click(screen.getByRole("button", { name: /Regeln/ }));
+    expect(menuEintraege()).toEqual(["Steigerungsregeln", "Schwerpunkte", "Talente"]);
+    expect(screen.getByRole("menuitem", { name: "Steigerungsregeln" })).toHaveAttribute("href", "/user/rules");
+    expect(screen.getByRole("menuitem", { name: "Schwerpunkte" })).toHaveAttribute("href", "/user/rules/focuses");
+    expect(screen.getByRole("menuitem", { name: "Talente" })).toHaveAttribute("href", "/user/rules/talents");
+  });
+
+  it("führt im Leitungs-Menü direkt zur Missionsverwaltung", () => {
+    render(<HeaderUserNav permissions={["gm.access"]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Leitung/ }));
+    expect(screen.getByRole("menuitem", { name: "Missionen" })).toHaveAttribute(
+      "href",
+      "/gm/missions",
+    );
   });
 });
 

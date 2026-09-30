@@ -226,6 +226,32 @@ describe("freie Chronologie-Ereignisse", () => {
 // Was in die Chronologie gehört und was nicht — zwei Regeln, die beim
 // Zusammenlegen von Datenbank und Chronologie unter die Räder kamen.
 describe("Chronologie: Umfang der Quellen", () => {
+  it("zeigt nur Session-Blöcke veröffentlichter Missionen mit Datum und bereinigtem Volltext", async () => {
+    const published = await insertMission({ title: "Öffentliche Mission" });
+    const draft = await insertMission();
+    const deleted = await insertMission();
+    await sql`UPDATE missions SET is_draft = false WHERE id = ${published.id}`;
+    await sql`UPDATE missions SET is_draft = true WHERE id = ${draft.id}`;
+    await sql`UPDATE missions SET deleted_at = NOW() WHERE id = ${deleted.id}`;
+    for (const mission of [published, draft, deleted]) {
+      await sql`INSERT INTO mission_synopsis_blocks (mission_id, ingame_date, body_md)
+        VALUES (${mission.id}, '2401-03-07', ${"Kontakt mit **Beteiligten**.\n\n<script>alert('xss')</script>"})`;
+    }
+    const blocks = (await getTimeline()).filter((entry) => entry.sessionBlockId != null);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]).toMatchObject({
+      category: "session", date: "2401-03-07", title: "07.03.2401",
+      sourceTitle: "Öffentliche Mission", origin: "metadata",
+      href: `/chronologie/mission/${published.slug}#mission-synopsis-${blocks[0].sessionBlockId}`,
+    });
+    expect(blocks[0].fullDetailHtml).toContain("<strong>Beteiligten</strong>");
+    expect(blocks[0].fullDetailHtml).not.toContain("<script");
+    expect(blocks[0].contentId).toBeUndefined();
+    const compact = (await getTimeline({ renderManualDetails: false }))
+      .find((entry) => entry.id === blocks[0].id);
+    expect(compact?.fullDetailHtml).toBeNull();
+  });
+
   it("führt ein LAUFENDES Gespräch nicht", async () => {
     // Ein offenes Gespräch ist kein abgeschlossenes Ereignis, und seine Karte
     // führte auf eine Seite, die alle außer den Beteiligten weiterleitet.

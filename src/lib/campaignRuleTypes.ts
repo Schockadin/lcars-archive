@@ -1,6 +1,6 @@
 // Konstanten, Typen und Validierung für die eigenen Regeln der Runde —
 // bewusst OHNE "server-only", damit die Bogen-Vorschau (Client-Komponente),
-// die Server-Actions von /gm/rules und die Tests dieselben Prüfungen nutzen.
+// die Server-Actions von /gm/campaign und die Tests dieselben Prüfungen nutzen.
 // Der DB-Zugriff liegt in campaignRules.ts, das von hier re-exportiert
 // (dieselbe Aufteilung wie focusCatalog.ts/focuses.ts).
 

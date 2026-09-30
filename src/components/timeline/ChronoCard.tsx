@@ -33,6 +33,7 @@ export default function ChronoCard({
   date,
   meta,
   children,
+  actions,
 }: {
   // Farbe der Fläche; kommt aus der Ereignisart bzw. der Kategorie.
   color: string;
@@ -64,6 +65,7 @@ export default function ChronoCard({
   meta?: React.ReactNode;
   // Die aufklappbaren Felder (ChronoPanel).
   children?: React.ReactNode;
+  actions?: React.ReactNode;
 }) {
   return (
     <div
@@ -113,6 +115,7 @@ export default function ChronoCard({
             <span className="timeline-card-title">{title}</span>
           )}
           {badge}
+          {actions}
         </div>
 
         {summary && <p className="timeline-card-summary">{summary}</p>}

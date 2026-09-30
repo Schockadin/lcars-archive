@@ -62,8 +62,7 @@ export default function NewContentButtons({
   const close = () => setOpen(null);
   const sichtbar = visibleNewContentForms(data, show);
 
-  // Breite und Umbruch kommen aus .lcars-btn-row (controls.css) — hier steht
-  // nur, was der Knopf ist, nicht wie breit er wird.
+  // Breite und Umbruch kommen aus .lcars-btn-row (controls.css).
   const button = (form: OpenForm) => {
     // Das Event-Formular verwaltet sein Fenster selbst, weil dieselbe
     // Komponente auch in Chronologie und Inhaltsliste zum Bearbeiten dient.
@@ -92,8 +91,6 @@ export default function NewContentButtons({
 
   return (
     <>
-      {/* Drei Stufen, siehe .lcars-btn-row in controls.css: schmal einer pro
-          Zeile, mittel zwei, breit alle nebeneinander. */}
       <div className="lcars-btn-row">
         {/* Welche Knöpfe hier stehen, entscheidet visibleNewContentForms —
             dieselbe Funktion, aus der der Abschnitt drumherum seine Kurzinfo

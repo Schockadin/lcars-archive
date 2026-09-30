@@ -16,7 +16,7 @@ import type { CampaignRule } from "@/lib/campaignRuleTypes";
 //   Blatt 1  das Personnel File mit Stammdaten und Werten
 //   Blatt 2  der Spickzettel: die Talente des Charakters
 //   Blatt 3  die Regeln: Kernregeln (Momentum, Bedrohung, Entschlossenheit)
-//            und die eigenen Regeln der Runde (/gm/rules)
+//            und die eigenen Regeln der Runde (/gm/campaign)
 //   Blatt 4  die Biografie im selben Papier-Look
 //
 // Talente und Regeln standen einmal auf einem Blatt. Getrennt, weil sie
@@ -80,7 +80,7 @@ export interface CharacterSheetPreviewInput {
   // Charakterseite reicht das gespeicherte HTML durch.
   bioHtml: string | null;
   talents: Talent[];
-  // Hausregeln der Runde für den Spickzettel (gepflegt unter /gm/rules).
+  // Hausregeln der Runde für den Spickzettel (gepflegt unter /gm/campaign).
   // Leer = es gibt keine, dann fällt der Abschnitt weg.
   campaignRules: CampaignRule[];
 }

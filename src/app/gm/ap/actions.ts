@@ -35,6 +35,7 @@ export async function saveRulesAction(
 
   // Die Regeln bestimmen Kosten und Budgets auf jedem Charakterbogen.
   revalidatePath("/gm/ap");
+  revalidatePath("/gm/campaign");
   revalidatePath("/gm/sessions");
   revalidatePath("/user/characters", "layout");
 
@@ -51,6 +52,7 @@ export async function resetRulesAction(
   await resetAdvancementRules();
 
   revalidatePath("/gm/ap");
+  revalidatePath("/gm/campaign");
   revalidatePath("/gm/sessions");
   revalidatePath("/user/characters", "layout");
 

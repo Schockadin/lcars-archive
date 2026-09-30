@@ -38,6 +38,19 @@ import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
+import type { MissionSynopsisBlock } from "@/lib/gameSessions";
+
+const DEMO_SESSION_BLOCKS: MissionSynopsisBlock[] = [8, 7].map((day, index) => ({
+  id: 7000 + day, sessionId: 42, missionSessionNumber: 1, missionBlockNumber: 2 - index,
+  ingameDate: `2401-03-0${day}`, body: `Bericht vom ${day}. März.`,
+  bodyHtml: `<p>Bericht vom ${day}. März.</p>`,
+}));
+const DEMO_SESSION_EVENTS: TimelineEvent[] = DEMO_SESSION_BLOCKS.map((block) => ({
+  id: `session:${block.id}`, sessionBlockId: block.id, date: block.ingameDate,
+  title: `${block.ingameDate.slice(-2)}.03.2401`, category: "session", origin: "metadata",
+  sourceType: "mission", sourceTitle: "Demo-Mission", people: [], detail: block.body,
+  fullDetailHtml: block.bodyHtml, href: `${missionHref("demo-mission")}#mission-synopsis-${block.id}`,
+}));
 
 // Zwei Katalog-Talente reichen für die Auswahl im Werte-Schritt und für den
 // Regeltext auf dem Spickzettel-Blatt — eines ohne, eines mit Voraussetzung.
@@ -66,7 +79,7 @@ const DEMO_FOCUSES: Focus[] = [
   { id: 3, name: "Diplomacy", discipline: "command", description: null },
 ].map((focus) => ({ ...focus, isCustom: false }) as Focus);
 
-// Und für die Hausregeln der Runde (siehe /gm/rules).
+// Und für die Hausregeln der Runde (siehe /gm/campaign).
 const DEMO_RULES: CampaignRule[] = [
   {
     id: 1,
@@ -194,6 +207,8 @@ const DEMO_CHARACTERS: CharacterListItem[] = [
     slug: "tuvok",
     name: "Tuvok",
     status: "active",
+    player_id: null,
+    is_draft: false,
     updated_at: "2401-06-12",
     // Eine Figur MIT Bild: auf der echten Seite das Portrait bzw. das erste
     // hochgeladene Bild, hier ein Symbol aus /public (die Galerie hat keine
@@ -224,6 +239,8 @@ const DEMO_CHARACTERS: CharacterListItem[] = [
     slug: "kira",
     name: "Kira Nerys",
     status: "retired",
+    player_id: null,
+    is_draft: false,
     updated_at: "2401-03-20",
     thumbnail: null,
     thumbnailCrop: null,
@@ -245,6 +262,8 @@ const DEMO_CHARACTERS: CharacterListItem[] = [
     slug: "shran",
     name: "Thy'lek Shran",
     status: "deceased",
+    player_id: null,
+    is_draft: false,
     updated_at: "2400-11-02",
     thumbnail: null,
     thumbnailCrop: null,
@@ -269,6 +288,8 @@ const DEMO_CHARACTERS: CharacterListItem[] = [
 const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
   {
     id: 1,
+    ownerUserId: null,
+    isDraft: false,
     slug: "andor",
     title: "Andor",
     category: "location",
@@ -293,6 +314,8 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
   },
   {
     id: 2,
+    ownerUserId: null,
+    isDraft: false,
     slug: "shran",
     title: "Thy'lek Shran",
     category: "npc",
@@ -312,6 +335,8 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
   },
   {
     id: 3,
+    ownerUserId: null,
+    isDraft: false,
     slug: "obsidianischer-orden",
     title: "Obsidianischer Orden",
     category: "faction",
@@ -348,6 +373,8 @@ const DEMO_MISSION_LOGS: MissionLogListItem[] = [
     log_date: "2400-09-15",
     author_name: "T'Lara",
     author_slug: "t-lara",
+    ownerUserId: null,
+    isDraft: false,
   },
   {
     id: 2,
@@ -357,6 +384,8 @@ const DEMO_MISSION_LOGS: MissionLogListItem[] = [
     log_date: "2400-09-22",
     author_name: "Marcus Hale",
     author_slug: "marcus-hale",
+    ownerUserId: null,
+    isDraft: false,
   },
   {
     id: 3,
@@ -366,6 +395,8 @@ const DEMO_MISSION_LOGS: MissionLogListItem[] = [
     log_date: "2400-10-02",
     author_name: "T'Lara",
     author_slug: "t-lara",
+    ownerUserId: null,
+    isDraft: false,
   },
 ];
 
@@ -645,7 +676,10 @@ export default function DevGalleryPage() {
         <h2 className="lcars-text">MissionLogOverview</h2>
         <MissionLogOverview
           missionSlug="demo-mission"
+          missionTitle="Demo-Mission"
+          fullSynopsisHtml={null}
           logs={DEMO_MISSION_LOGS}
+          synopsisBlocks={[]}
           canCreateLog
         />
       </section>
@@ -696,6 +730,16 @@ export default function DevGalleryPage() {
           ]}
         />
         <TimelineView events={DEMO_TIMELINE} />
+      </section>
+
+      <section id="timeline-sessions" className="mb-[24px]">
+        <h2 className="lcars-text">Session-Chronologie</h2>
+        <TimelineView events={DEMO_SESSION_EVENTS} initialScope="sessions" />
+      </section>
+      <section id="mission-session-panels" className="mb-[24px]">
+        <MissionLogOverview missionSlug="session-panels-demo" missionTitle="Demo-Mission"
+          logs={DEMO_MISSION_LOGS} synopsisBlocks={DEMO_SESSION_BLOCKS} canCreateLog={false}
+          fullSynopsisHtml="<h2>Synopsis 2401-03-08</h2><p>Veraltete Fassung</p>" />
       </section>
 
       {/* Die Datenbank (/archive) mit Attrappen-Einträgen: sie trägt seit der

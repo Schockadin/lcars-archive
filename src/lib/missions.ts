@@ -133,6 +133,7 @@ export interface GmMissionOverviewItem {
   slug: string;
   title: string;
   status: MissionStatus;
+  startedAt: string | null;
   isDraft: boolean;
   ownerId: number | null;
   ownerName: string | null;
@@ -154,12 +155,13 @@ export async function getAllMissionsForGmOverview(): Promise<
       slug: string;
       title: string;
       status: MissionStatus;
+      started_at: string | null;
       is_draft: boolean;
       owner_user_id: number | null;
       owner_name: string | null;
     }[]
   >`
-    SELECT m.id, m.slug, m.title, m.status, m.is_draft AS is_draft,
+    SELECT m.id, m.slug, m.title, m.status, m.started_at::text AS started_at, m.is_draft AS is_draft,
            m.owner_user_id, u.name AS owner_name
     FROM missions m
     LEFT JOIN users u ON u.id = m.owner_user_id
@@ -173,6 +175,7 @@ export async function getAllMissionsForGmOverview(): Promise<
     slug: row.slug,
     title: row.title,
     status: row.status,
+    startedAt: row.started_at,
     isDraft: row.is_draft,
     ownerId: row.owner_user_id,
     ownerName: row.owner_name,
@@ -416,19 +419,9 @@ export async function updateMissionContent(
     endedAt: string | null;
     tags: string[];
     teaser: string | null;
-    bodyMarkdown: string;
     isDraft: boolean;
-    // Siehe createMission oben — Opt-in "Automatisch verlinken".
-    bodyHtml?: string;
   },
-  // Nur für die Versionshistorie (siehe contentRevisions.ts).
-  editorId: number | null = null,
 ): Promise<UpdateMissionResult | null> {
-  await recordRevision("mission", missionId, editorId, input.bodyMarkdown);
-
-  const bodyHtml =
-    input.bodyHtml ?? (await renderContentHtml(input.bodyMarkdown));
-
   const rows = await sql<UpdateMissionResult[]>`
     WITH old AS (SELECT is_draft, title FROM missions WHERE id = ${missionId})
     UPDATE missions m
@@ -437,8 +430,7 @@ export async function updateMissionContent(
       status     = ${input.status},
       started_at = ${input.startedAt},
       ended_at   = ${input.endedAt},
-      metadata   = ${sql.json({ tags: input.tags, body: bodyHtml, teaser: input.teaser })},
-      source_md  = ${input.bodyMarkdown},
+      metadata   = COALESCE(m.metadata, '{}'::jsonb) || ${sql.json({ tags: input.tags, teaser: input.teaser })},
       is_draft   = ${input.isDraft},
       updated_at = NOW()
     FROM old
@@ -450,6 +442,27 @@ export async function updateMissionContent(
       old.title AS "previousTitle"
   `;
   if (rows[0]) syncEmbeddings("mission", missionId);
+  return rows[0] ?? null;
+}
+
+// Der Missions-Owner kann eine Mission aus dem Kartenmenü zurückziehen oder
+// wieder veröffentlichen. Das UPDATE ist owner-gescoped; GMs ohne Ownership
+// brauchen weiterhin die Moderations-Action.
+export async function setOwnMissionDraft(
+  userId: number,
+  missionId: number,
+  isDraft: boolean,
+): Promise<{ slug: string; title: string; sourceMarkdown: string | null } | null> {
+  const rows = await sql<
+    { slug: string; title: string; sourceMarkdown: string | null }[]
+  >`
+    UPDATE missions
+    SET is_draft = ${isDraft}, updated_at = NOW()
+    WHERE id = ${missionId} AND owner_user_id = ${userId}
+      AND deleted_at IS NULL
+    RETURNING slug, title, source_md AS "sourceMarkdown"
+  `;
+  if (rows[0]) syncEmbeddingDraft("mission", missionId, isDraft);
   return rows[0] ?? null;
 }
 
@@ -668,7 +681,9 @@ export async function getLogsByMissionId(
           ml.session_nr,
           ml.log_date::text AS log_date,
           c.name AS author_name,
-          c.slug AS author_slug
+          c.slug AS author_slug,
+          ml.owner_user_id AS "ownerUserId",
+          ml.is_draft AS "isDraft"
         FROM mission_logs ml
         LEFT JOIN characters c ON c.id = ml.author_id
         WHERE ml.mission_id = ${missionId} AND ml.deleted_at IS NULL

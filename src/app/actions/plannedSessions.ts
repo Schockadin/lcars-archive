@@ -4,6 +4,7 @@ import { requireGM } from "@/lib/dal";
 import {
   createPlannedSession,
   deletePlannedSession,
+  getPlannedSession,
   getPlannedSessionPlayers,
   updatePlannedSession,
 } from "@/lib/plannedSessions";
@@ -13,6 +14,14 @@ import {
   parsePlannedSession,
 } from "@/lib/plannedSessionFormat";
 import { listActiveCharactersForAp } from "@/lib/gameSessions";
+import { listActiveSessionMissions } from "@/lib/gameSessions";
+import { createMission, missionSlugExists, setMissionParticipants } from "@/lib/missions";
+import { getCharactersForParticipantPicker } from "@/lib/characters";
+import { slugifyBase } from "@/lib/slug";
+import { parseList } from "@/lib/formParsing";
+import { notifyContentChange } from "@/lib/follows";
+import { missionHref } from "@/lib/contentRoutes";
+import { notifyMissionParticipants } from "@/app/user/missions/_shared/contentAction";
 import { sendPlannedSessionAnnouncedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
@@ -30,17 +39,18 @@ export interface PlannedSessionState {
 // und genau sie scheiterte in der Netlify-Umgebung mit einem 403 (die
 // Begründung steht ausführlich in src/app/api/rsvp/route.ts).
 //
-// Nach jeder Änderung beide Seiten neu bauen: die Verwaltung unter
-// /gm/sessions und das Dashboard, auf dem der Termin steht.
+// Nach jeder Änderung die Kampagnenplanung und das Dashboard aktualisieren.
 function revalidateBoth(): void {
   revalidatePath("/gm/sessions");
+  revalidatePath("/gm/campaign");
+  revalidatePath("/gm/missions");
   revalidatePath("/");
 }
 
 function formFields(formData: FormData) {
   return {
     scheduledAt: String(formData.get("scheduledAt") ?? ""),
-    title: String(formData.get("title") ?? ""),
+    missionId: String(formData.get("missionId") ?? ""),
     location: String(formData.get("location") ?? ""),
     notes: String(formData.get("notes") ?? ""),
     characterIds: formData.getAll("characterIds").map(String),
@@ -63,7 +73,12 @@ export async function createPlannedSessionAction(
   formData: FormData,
 ): Promise<PlannedSessionState> {
   const user = await requireGM();
-  const parsed = parsePlannedSession(formFields(formData));
+  const rawFields = formFields(formData);
+  const createNewMission = rawFields.missionId === "new";
+  const parsed = parsePlannedSession({
+    ...rawFields,
+    missionId: createNewMission ? "1" : rawFields.missionId,
+  });
   if (!parsed.ok) return { error: parsed.error };
 
   const characterIds = await allowedCharacters(parsed.characterIds);
@@ -71,18 +86,86 @@ export async function createPlannedSessionAction(
     return { error: "Mindestens eine ausgewählte Figur ist nicht (mehr) aktiv." };
   }
 
-  await createPlannedSession({ ...parsed, characterIds }, user.id);
+  let missionId = parsed.missionId;
+  if (createNewMission) {
+    const title = String(formData.get("missionTitle") ?? "").trim();
+    const slugInput = String(formData.get("missionSlug") ?? "").trim();
+    const slug = slugifyBase(slugInput || title);
+    const startedAt = String(formData.get("missionStartedAt") ?? "").trim();
+    const endedAt = String(formData.get("missionEndedAt") ?? "").trim();
+    const teaser = String(formData.get("missionTeaser") ?? "").trim();
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+    if (!title || title.length > 200) return { error: "Bitte einen Missionsnamen mit höchstens 200 Zeichen angeben." };
+    if (!slug || slug.length > 200) return { error: "Bitte einen gültigen Missions-Slug angeben." };
+    if (startedAt && !datePattern.test(startedAt)) return { error: "Ungültiges Startdatum der Mission." };
+    if (endedAt && !datePattern.test(endedAt)) return { error: "Ungültiges Enddatum der Mission." };
+    if (startedAt && endedAt && endedAt < startedAt) return { error: "Das Missionsende darf nicht vor dem Start liegen." };
+    if (teaser.length > 1000) return { error: "Der Missionsteaser darf höchstens 1000 Zeichen lang sein." };
+    if (await missionSlugExists(slug)) return { error: "Dieser Missions-Slug ist bereits vergeben." };
+
+    const participantIds = formData.getAll("participantCharacterIds").map((value) => Number(value));
+    const available = new Set((await getCharactersForParticipantPicker()).filter((character) => character.status === "active").map((character) => character.id));
+    if (participantIds.some((id) => !Number.isInteger(id) || !available.has(id))) {
+      return { error: "Mindestens ein ausgewählter Missionscharakter ist nicht mehr verfügbar." };
+    }
+    const uniqueParticipantIds = [...new Set(participantIds)];
+    const createdMission = await createMission({
+      slug,
+      title,
+      status: "active",
+      startedAt: startedAt || null,
+      endedAt: endedAt || null,
+      tags: parseList(formData.get("missionTags")),
+      teaser: teaser || null,
+      bodyMarkdown: "",
+      bodyHtml: "",
+      ownerUserId: user.id,
+      isDraft: false,
+    });
+    await setMissionParticipants(createdMission.id, uniqueParticipantIds);
+    missionId = createdMission.id;
+    const missionPreview = synopsisExcerpt(teaser || title, 140);
+    await notifyContentChange({
+      contentType: "mission",
+      event: "created",
+      authorUserId: user.id,
+      authorName: user.name,
+      contentTypeLabel: "eine neue Mission",
+      contentTitle: title,
+      contentUrl: `${await getBaseUrl()}${missionHref(createdMission.slug)}`,
+      preview: missionPreview,
+      notifyPublic: false,
+    });
+    await notifyMissionParticipants(
+      createdMission.slug,
+      title,
+      uniqueParticipantIds,
+      missionPreview,
+      user.id,
+    );
+    revalidatePath(`/chronologie/mission/${encodeURIComponent(createdMission.slug)}`);
+    revalidatePath(`/gm/missions/${encodeURIComponent(createdMission.slug)}`);
+  } else {
+    const activeMissions = await listActiveSessionMissions();
+    if (!activeMissions.some((mission) => mission.id === missionId)) {
+      return { error: "Bitte eine laufende Mission auswählen." };
+    }
+  }
+
+  const sessionId = await createPlannedSession({ ...parsed, missionId, notes: "", characterIds }, user.id);
   revalidateBoth();
 
+  const created = await getPlannedSession(sessionId);
+
   const notified = await notifyPlannedSessionPlayers(
-    { ...parsed, characterIds },
+    { ...parsed, title: created?.title ?? "Spieltermin", characterIds },
     user.id,
   );
   return {
     success:
       notified > 0
-        ? `Termin angekündigt, ${notified} ${notified === 1 ? "Person" : "Personen"} benachrichtigt.`
-        : "Termin angekündigt.",
+        ? `Session geplant, ${notified} ${notified === 1 ? "Person" : "Personen"} benachrichtigt.`
+        : "Session geplant.",
   };
 }
 
@@ -181,13 +264,21 @@ export async function updatePlannedSessionAction(
 
   const parsed = parsePlannedSession(formFields(formData));
   if (!parsed.ok) return { error: parsed.error };
+  const existing = await getPlannedSession(id);
+  if (!existing) return { error: "Termin nicht gefunden." };
+  if (existing.gameSessionId !== null && existing.missionId !== parsed.missionId) {
+    return { error: "Die Mission einer bereits eingetragenen Session kann nicht geändert werden." };
+  }
+  if (existing.missionId !== parsed.missionId && !(await listActiveSessionMissions()).some((mission) => mission.id === parsed.missionId)) {
+    return { error: "Bitte eine laufende Mission auswählen." };
+  }
 
   const characterIds = await allowedCharacters(parsed.characterIds);
   if (characterIds === null) {
     return { error: "Mindestens eine ausgewählte Figur ist nicht (mehr) aktiv." };
   }
 
-  await updatePlannedSession(id, { ...parsed, characterIds });
+  await updatePlannedSession(id, { ...parsed, notes: existing.notes, characterIds });
   revalidateBoth();
   return { success: "Termin geändert." };
 }

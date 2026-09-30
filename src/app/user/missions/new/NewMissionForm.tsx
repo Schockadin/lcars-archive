@@ -6,7 +6,6 @@ import {
   missionMetadataFields,
 } from "../_shared/missionHeadFields";
 import MissionParticipantsField from "../_shared/MissionParticipantsField";
-import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
 import type { CharacterParticipantOption } from "@/lib/characters";
 
 const initialState: MissionFormState = {};
@@ -32,9 +31,8 @@ export default function NewMissionForm({
       idPrefix="mission"
       draftScope="mission:new"
       bodyLabel="Zusammenfassung"
-      bodyHint={<MarkdownFormatHint />}
-      bodyRequired
-      bodyLarge
+      bodyHidden
+      bodyHiddenMessage={<p className="lcars-empty-state">Die Missionszusammenfassung entsteht automatisch aus den Zusammenfassungsblöcken eingetragener Sessions.</p>}
       submitLabel="Speichern"
       submitPendingLabel="Speichern…"
       extraHeadSlot={

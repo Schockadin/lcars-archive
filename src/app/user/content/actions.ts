@@ -6,6 +6,7 @@ import { getActiveSession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { setCharacterDraft, deleteOwnCharacter } from "@/lib/characters";
 import {
+  setOwnMissionDraft,
   setMissionLogDraft,
   deleteMissionLog,
   deleteMission,
@@ -26,11 +27,13 @@ import {
   archiveHref,
   characterHref,
   dialogueHref,
+  missionHref,
   missionLogHref,
 } from "@/lib/contentRoutes";
 import { isContentState } from "@/lib/visibility";
 
 export type VisibilityContentType =
+  | "mission"
   | "character"
   | "mission_log"
   | "dialogue"
@@ -85,7 +88,21 @@ export async function setContentStateAction(
 
   const baseUrl = await getBaseUrl();
   let ok = false;
-  if (contentType === "character") {
+  if (contentType === "mission") {
+    const mission = await setOwnMissionDraft(session.userId, id, isDraft);
+    if (mission) {
+      revalidateMission(mission.slug);
+      ok = true;
+      await notifyIfPublished(isDraft, session.userId, {
+        contentTypeLabel: "eine Mission",
+        title: mission.title,
+        url: absoluteContentUrl(baseUrl, missionHref(mission.slug)),
+        preview: mission.sourceMarkdown
+          ? synopsisExcerpt(mission.sourceMarkdown, 140)
+          : "Die Mission wurde veröffentlicht.",
+      });
+    }
+  } else if (contentType === "character") {
     const character = await setCharacterDraft(session.userId, id, isDraft);
     if (character) {
       revalidateCharacter(character.slug);

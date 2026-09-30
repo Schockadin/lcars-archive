@@ -2,8 +2,10 @@ import "server-only";
 import sql from "@/lib/db";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { markdownToSafeHtml } from "@/lib/markdown";
+import { renderContentHtml } from "@/lib/autolink";
 import {
   eventId,
+  fmtDate,
   parseTimelineMarkers,
   isIsoDate,
   sortEvents,
@@ -46,6 +48,7 @@ import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 // Seite, nicht eine je Inhalt.
 
 interface MissionRow {
+  id: number;
   slug: string;
   title: string;
   started_at: string | null;
@@ -57,6 +60,7 @@ interface MissionRow {
 }
 
 interface LogRow {
+  id: number;
   slug: string;
   title: string;
   log_date: string | null;
@@ -68,6 +72,7 @@ interface LogRow {
 }
 
 interface ArchiveRow {
+  id: number;
   slug: string;
   title: string;
   category: string;
@@ -78,6 +83,7 @@ interface ArchiveRow {
 }
 
 interface CharacterRow {
+  id: number;
   slug: string;
   name: string;
   metadata: Record<string, unknown>;
@@ -179,8 +185,8 @@ export async function getTimeline({
   renderManualDetails = true,
 }: {
   // Zähler und andere reine Listenansichten brauchen den gerenderten
-  // Markdown-Volltext freier Ereignisse nicht. Die Chronologie selbst lässt
-  // die Vorgabe an, damit das Detail-Overlay vollständig bleibt.
+  // Markdown-Volltext freier Ereignisse und Session-Blöcke nicht. Die Chronologie
+  // selbst lässt die Vorgabe an, damit Overlay und Session-Panels vollständig bleiben.
   renderManualDetails?: boolean;
 } = {}): Promise<TimelineEvent[]> {
   const [
@@ -191,9 +197,10 @@ export async function getTimeline({
     inferred,
     eventCharacters,
     thumbnails,
+    sessionBlocks,
   ] = await Promise.all([
     sql<MissionRow[]>`
-      SELECT m.slug, m.title,
+      SELECT m.id, m.slug, m.title,
              m.started_at::text AS started_at,
              m.ended_at::text   AS ended_at,
              m.source_md, m.is_draft, m.owner_user_id,
@@ -208,7 +215,7 @@ export async function getTimeline({
       GROUP BY m.id
     `,
     sql<LogRow[]>`
-      SELECT ml.slug, ml.title,
+      SELECT ml.id, ml.slug, ml.title,
              ml.log_date::text AS log_date,
              ml.source_md, ml.owner_user_id, ml.is_draft,
              m.slug AS mission_slug,
@@ -219,7 +226,7 @@ export async function getTimeline({
       WHERE ml.deleted_at IS NULL
     `,
     sql<ArchiveRow[]>`
-      SELECT slug, title, category, metadata, source_md,
+      SELECT id, slug, title, category, metadata, source_md,
              owner_user_id, is_draft
       FROM archive_entries
       WHERE deleted_at IS NULL
@@ -231,7 +238,7 @@ export async function getTimeline({
         AND NOT (category = 'dialogue' AND dialogue_open)
     `,
     sql<CharacterRow[]>`
-      SELECT slug, name, metadata, source_md, bio, portrait,
+      SELECT id, slug, name, metadata, source_md, bio, portrait,
              player_id, is_draft
       FROM characters
       WHERE deleted_at IS NULL
@@ -264,6 +271,13 @@ export async function getTimeline({
     // Ereignisse; wer kein Bild hat, steht gar nicht in der Map und bekommt
     // auch keinen Platzhalter.
     getFirstContentImageIdsBySlug(),
+    sql<{ id: number; mission_id: number; ingame_date: string; body_md: string }[]>`
+      SELECT b.id, b.mission_id, b.ingame_date::text AS ingame_date, b.body_md
+      FROM mission_synopsis_blocks b
+      JOIN missions m ON m.id = b.mission_id
+      WHERE m.deleted_at IS NULL AND m.is_draft = false
+      ORDER BY b.ingame_date DESC, b.id DESC
+    `,
   ]);
 
   // Das Vorschaubild einer Quelle — der Charakter nimmt sein Portrait, sofern
@@ -313,7 +327,15 @@ export async function getTimeline({
   // werden weiter unten daran gemessen.
   const visibleSources = new Map<
     string,
-    { title: string; href: string; sourceType: TimelineSourceType }
+    {
+      id: number;
+      ownerUserId: number | null;
+      isDraft: boolean;
+      contentType: TimelineEvent["contentType"];
+      title: string;
+      href: string;
+      sourceType: TimelineSourceType;
+    }
   >();
   // Quelle + Tag jedes Ereignisses, das der Eintrag selbst hergibt (gepflegte
   // Angabe oder Marke). Ein abgeleitetes Ereignis auf demselben Tag derselben
@@ -334,6 +356,13 @@ export async function getTimeline({
       const thumbnail = thumbnailOf(event.sourceType, slug);
       event.thumbnail = thumbnail.src;
       event.thumbnailCrop = thumbnail.crop;
+      const owner = visibleSources.get(`${event.sourceType}:${slug}`);
+      if (owner) {
+        event.contentId = owner.id;
+        event.ownerUserId = owner.ownerUserId;
+        event.isDraft = owner.isDraft;
+        event.contentType = owner.contentType;
+      }
       events.push(event);
       deterministicDays.add(dayKey(event.sourceType, slug, event.date));
     }
@@ -353,6 +382,10 @@ export async function getTimeline({
     const href = missionHref(mission.slug);
     const people = mission.participants ?? [];
     visibleSources.set(`mission:${mission.slug}`, {
+      id: mission.id,
+      ownerUserId: mission.owner_user_id,
+      isDraft: mission.is_draft,
+      contentType: "mission",
       title: mission.title,
       href,
       sourceType: "mission",
@@ -402,6 +435,29 @@ export async function getTimeline({
     );
   }
 
+  // ── Session-Zusammenfassungen ────────────────────────────────────────────
+  // Öffentlich ist nur der Ingame-Bericht; Spieltermin, AP und GM-Verwaltung
+  // werden hier nicht ausgeliefert. Die Mission bestimmt die Sichtbarkeit.
+  const missionsById = new Map(missions.filter((mission) => !mission.is_draft).map((mission) => [mission.id, mission]));
+  for (const block of sessionBlocks) {
+    const mission = missionsById.get(block.mission_id);
+    if (!mission) continue;
+    events.push({
+      id: eventId("mission", mission.slug, `session-${block.id}`),
+      sessionBlockId: block.id,
+      date: block.ingame_date,
+      title: fmtDate(block.ingame_date),
+      detail: excerptOf(block.body_md),
+      fullDetailHtml: renderManualDetails ? await renderContentHtml(block.body_md) : null,
+      category: "session",
+      origin: "metadata",
+      sourceType: "mission",
+      sourceTitle: mission.title,
+      href: `${missionHref(mission.slug)}#mission-synopsis-${block.id}`,
+      people: mission.participants ?? [],
+    });
+  }
+
   // ── Logbücher ────────────────────────────────────────────────────────────
   for (const log of logs) {
     // Entwürfe bleiben draußen — auch für ihre Owner-Person: die Chronologie
@@ -410,6 +466,10 @@ export async function getTimeline({
     const href = missionLogHref(log.mission_slug, log.slug);
     const people = log.author_name ? [log.author_name] : [];
     visibleSources.set(`mission_log:${log.slug}`, {
+      id: log.id,
+      ownerUserId: log.owner_user_id,
+      isDraft: log.is_draft,
+      contentType: "mission_log",
       title: log.title,
       href,
       sourceType: "mission_log",
@@ -460,6 +520,10 @@ export async function getTimeline({
           .filter((n): n is string => Boolean(n))
       : [];
     visibleSources.set(`archive_entry:${entry.slug}`, {
+      id: entry.id,
+      ownerUserId: entry.owner_user_id,
+      isDraft: entry.is_draft,
+      contentType: entry.category === "dialogue" ? "dialogue" : "archive_entry",
       title: entry.title,
       href,
       sourceType: "archive_entry",
@@ -515,6 +579,10 @@ export async function getTimeline({
     const href = characterHref(character.slug);
     const metadata = character.metadata ?? {};
     visibleSources.set(`character:${character.slug}`, {
+      id: character.id,
+      ownerUserId: character.player_id,
+      isDraft: character.is_draft,
+      contentType: "character",
       title: character.name,
       href,
       sourceType: "character",
@@ -615,6 +683,10 @@ export async function getTimeline({
       people: [],
       thumbnail: thumbnail.src,
       thumbnailCrop: thumbnail.crop,
+      contentId: source.id,
+      ownerUserId: source.ownerUserId,
+      isDraft: source.isDraft,
+      contentType: source.contentType,
     });
   }
 

@@ -9,6 +9,7 @@ import { getCurrentUserPermissions } from "@/lib/dal";
 import { getCharactersForUser } from "@/lib/characters";
 import { getDialoguesForUser } from "@/lib/dialogues";
 import { getOwnDrafts } from "@/lib/drafts";
+import { listApBalances } from "@/lib/characterAp";
 import { getPendingActions } from "@/lib/pendingActions";
 import { listUpcomingSessions } from "@/lib/plannedSessions";
 import { getRoleMap } from "@/lib/roles";
@@ -288,7 +289,8 @@ async function UpcomingSessionsBlock({ userId }: { userId: number }) {
 }
 
 async function PendingActionsBlock({ userId }: { userId: number }) {
-  return <PendingActionsSection items={await getPendingActions(userId)} />;
+  const permissions = await getCurrentUserPermissions();
+  return <PendingActionsSection items={await getPendingActions(userId, permissions.has("missions.manage"))} />;
 }
 
 async function OpenDialoguesBlock({ userId }: { userId: number }) {
@@ -361,12 +363,21 @@ async function CharactersBlock({
   userId: number;
   prefs: ReturnType<typeof sanitizeDashboardPrefs>;
 }) {
-  const characters = await loadOwnCharacters(userId);
+  const [characters, apBalances] = await Promise.all([
+    loadOwnCharacters(userId),
+    listApBalances(),
+  ]);
+  const balances = new Map(
+    apBalances.map((row) => [row.characterId, row.available]),
+  );
   return (
     <DashboardCharactersSection
       characters={characters
         .filter((c) => dashboardCharacterVisible(prefs, c.id))
-        .map(toDashboardCharacterItem)}
+        .map((character) => ({
+          ...toDashboardCharacterItem(character),
+          availableAp: balances.get(character.id) ?? 0,
+        }))}
     />
   );
 }

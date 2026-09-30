@@ -8,9 +8,12 @@ function entry(
   title: string,
   category: ArchiveCategory = "location",
   thumbnail: string | null = null,
+  aliases: string[] = [],
 ): ArchiveEntryPreview {
   return {
     id,
+    ownerUserId: null,
+    isDraft: false,
     slug: `e-${id}`,
     title,
     category,
@@ -18,7 +21,7 @@ function entry(
     thumbnail,
     metadata: {
       summary: null,
-      aliases: [],
+      aliases,
       attributes: [],
       characters: [],
       missions: [],
@@ -31,7 +34,7 @@ function entry(
 }
 
 const ENTRIES = [
-  entry(1, "Erde"),
+  entry(1, "Erde", "location", null, ["Terra Nova"]),
   entry(2, "Mars"),
   entry(3, "Erdorbit"),
   entry(4, "Andor", "npc"),
@@ -57,6 +60,15 @@ describe("ArchiveEntryList", () => {
     });
     expect(screen.getByText("Erde")).toBeInTheDocument();
     expect(screen.getByText("Erdorbit")).toBeInTheDocument();
+    expect(screen.queryByText("Mars")).toBeNull();
+  });
+
+  it("berücksichtigt Aliase bei der Suche", () => {
+    render(<ArchiveEntryList entries={ENTRIES} />);
+    fireEvent.change(screen.getByLabelText("Einträge filtern"), {
+      target: { value: "terra" },
+    });
+    expect(screen.getByText("Erde")).toBeInTheDocument();
     expect(screen.queryByText("Mars")).toBeNull();
   });
 

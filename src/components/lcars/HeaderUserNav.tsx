@@ -13,6 +13,7 @@ import {
   GmNavIcon,
   LogoutNavIcon,
   HelpIcon,
+  BookIcon,
 } from "@/lib/icons";
 import { useAnchoredDropdown } from "./useAnchoredDropdown";
 
@@ -39,8 +40,8 @@ interface NavMenuItem {
 // was aus dem Regelwerk kommt, was am Archiv gepflegt wird.
 const GM_ITEMS: NavMenuItem[] = [
   {
-    href: "/gm/campaign",
-    label: "Kampagne",
+    href: "/gm/missions",
+    label: "Missionen",
     permission: "gm.access",
     group: "Kampagne",
   },
@@ -79,8 +80,8 @@ const GM_ITEMS: NavMenuItem[] = [
     group: "Regelwerk",
   },
   {
-    href: "/gm/rules",
-    label: "Regeln",
+    href: "/gm/campaign",
+    label: "Kampagne",
     permission: "gm.access",
     group: "Regelwerk",
   },
@@ -376,6 +377,11 @@ export default function HeaderUserNav({
     { href: "/user/content", label: "Meine Inhalte" },
     { href: "/user", label: "Einstellungen" },
   ];
+  const playerRulesItems = visibleItems([
+    { href: "/user/rules", label: "Steigerungsregeln", permission: "users.browse" },
+    { href: "/user/rules/focuses", label: "Schwerpunkte", permission: "users.browse" },
+    { href: "/user/rules/talents", label: "Talente", permission: "users.browse" },
+  ], permissions);
 
   const gmItems = visibleItems(GM_ITEMS, permissions);
   const adminItems = visibleItems(ADMIN_ITEMS, permissions);
@@ -393,9 +399,17 @@ export default function HeaderUserNav({
         label="Profil"
         icon={<ProfileNavIcon />}
         items={profileItems}
-        active={pathname === "/user" || pathname.startsWith("/user/")}
+        active={pathname === "/user" || (pathname.startsWith("/user/") && !pathname.startsWith("/user/rules"))}
         placement={placement}
       />
+
+      {playerRulesItems.length > 0 && <NavDropdown
+        label="Regeln"
+        icon={<BookIcon />}
+        items={playerRulesItems}
+        active={pathname.startsWith("/user/rules")}
+        placement={placement}
+      />}
 
       {gmItems.length > 0 && (
         <NavDropdown

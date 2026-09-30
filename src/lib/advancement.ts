@@ -140,7 +140,7 @@ export const ADVANCEMENT_RULE_FIELDS: AdvancementRuleField[] = [
   {
     key: "apPerSession",
     label: "AP je gespielter Session",
-    hint: "Vorbelegung beim Anlegen einer Session unter /gm/sessions.",
+    hint: "AP-Vorgabe für eine gespielte Session.",
     min: 0,
     max: 100,
   },
@@ -154,7 +154,7 @@ export const ADVANCEMENT_RULE_FIELDS: AdvancementRuleField[] = [
   {
     key: "apPerMission",
     label: "AP pro beendeter Mission",
-    hint: "Vorbelegung beim Missionsabschluss unter „Kampagne“ (dort je Charakter änderbar).",
+    hint: "AP-Vorgabe beim Missionsabschluss, von der Spielleitung je Charakter anpassbar.",
     min: 0,
     max: 500,
   },

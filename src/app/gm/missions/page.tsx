@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
-import { listAllUsers } from "@/lib/users";
 import { getAllMissionsForGmOverview } from "@/lib/missions";
 import AdminMissionsBrowser from "./AdminMissionsBrowser";
+import HelpHeading from "@/components/help/HelpHeading";
+import { GmMissionsOverviewGuide } from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "Missionen",
@@ -18,21 +19,23 @@ export const metadata: Metadata = {
 export default async function AdminMissionsPage() {
   await requireGM();
 
-  const [missions, users] = await Promise.all([
-    getAllMissionsForGmOverview(),
-    listAllUsers(),
-  ]);
-  const userOptions = users.map((u) => ({ id: u.id, name: u.name }));
+  const missions = await getAllMissionsForGmOverview();
 
   return (
     <>
       <PageMeta title="Missionen" section="users" />
       <article className="mb-[10px] lcars-wide-column">
-        <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
-        <h1>Missionen</h1>
+        <HelpHeading
+          eyebrow="Zugriff · Spielleitung"
+          title="Missionen"
+          helpTitle="Leitung · Missionen"
+          tutorial="spielleitung-admins"
+        >
+          <GmMissionsOverviewGuide />
+        </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[16px]">
-          <AdminMissionsBrowser missions={missions} users={userOptions} />
+          <AdminMissionsBrowser missions={missions} />
         </div>
       </article>
     </>

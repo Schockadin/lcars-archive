@@ -76,6 +76,8 @@ export interface MissionLogListItem {
   log_date: string | null;
   author_name: string | null;
   author_slug: string | null;
+  ownerUserId: number | null;
+  isDraft: boolean;
 }
 
 // Vollständiges Log inkl. content + Mission-Referenz.

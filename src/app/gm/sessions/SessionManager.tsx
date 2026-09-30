@@ -1,33 +1,220 @@
 "use client";
 import { useActionState, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
+import ModalOverlay from "@/components/ModalOverlay";
+import SessionsBrowser from "./SessionsBrowser";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
+import {
+  defaultSessionSynopsisDate,
+  getPreviousSessionSynopsisBlocks,
+} from "@/lib/sessionSynopsis";
+import { fmtDate } from "@/lib/missionFormat";
+import { CheckIcon, PencilIcon, TrashIcon } from "@/lib/icons";
 import type {
   GameSession,
   ActiveCharacter,
-  SessionLogbook,
+  SessionMissionOption,
 } from "@/lib/gameSessions";
 import {
   createSessionAction,
   deleteSessionAction,
   updateSessionAction,
-  setSessionLogbooksAction,
   type SessionFormState,
 } from "./actions";
 
 const initialState: SessionFormState = {};
 
-// Anlegen: Datum, Titel, AP-Beträge, Teilnehmende und Notizen. Die
+export function SessionContextFields({
+  missions,
+  idPrefix,
+  initialMissionId,
+  lockedMission = false,
+  allowNewMission = true,
+  initialBlocks = [],
+  sessionHistory = [],
+  beforeSessionNumber,
+}: {
+  missions: SessionMissionOption[];
+  idPrefix: string;
+  initialMissionId?: number | null;
+  lockedMission?: boolean;
+  allowNewMission?: boolean;
+  initialBlocks?: GameSession["synopsisBlocks"];
+  sessionHistory?: GameSession[];
+  beforeSessionNumber?: number | null;
+}) {
+  const [missionChoice, setMissionChoice] = useState(
+    initialMissionId ? `mission:${initialMissionId}` : "",
+  );
+  const [blocks, setBlocks] = useState(() =>
+    initialBlocks.map((block, index) => ({
+      key: `${idPrefix}-${index}`,
+      id: block.id as number | undefined,
+      ingameDate: block.ingameDate,
+      body: block.body,
+    })),
+  );
+  const selectedMissionId = missionChoice.startsWith("mission:")
+    ? Number(missionChoice.slice("mission:".length))
+    : null;
+  const previousSessionBlocks = getPreviousSessionSynopsisBlocks(
+    sessionHistory,
+    selectedMissionId,
+    selectedMissionId === initialMissionId ? beforeSessionNumber : undefined,
+  );
+  return (
+    <div className="flex flex-col gap-[8px]">
+      <label className="flex flex-col gap-[4px]">
+        <span className="lcars-eyebrow">Zugehörige Mission</span>
+        {lockedMission && initialMissionId ? (
+          <>
+            <input
+              type="hidden"
+              name="missionChoice"
+              value={`mission:${initialMissionId}`}
+            />
+            <span className="lcars-input rounded-full">
+              {missions.find((mission) => mission.id === initialMissionId)
+                ?.title ?? "Mission"}
+            </span>
+          </>
+        ) : (
+          <select
+            name="missionChoice"
+            required
+            value={missionChoice}
+            onChange={(event) => setMissionChoice(event.target.value)}
+            className="lcars-input rounded-full"
+          >
+            <option value="" disabled>
+              Mission auswählen
+            </option>
+            {missions.map((mission) => (
+              <option key={mission.id} value={`mission:${mission.id}`}>
+                {mission.title}
+              </option>
+            ))}
+            {allowNewMission && (
+              <option value="new">Neue Mission anlegen…</option>
+            )}
+          </select>
+        )}
+      </label>
+      {missions.length === 0 && !allowNewMission && (
+        <p className="lcars-empty-state">
+          Es gibt keine veröffentlichte Mission zur Auswahl.
+        </p>
+      )}
+      {missionChoice === "new" && (
+        <label className="flex flex-col gap-[4px]">
+          <span className="lcars-eyebrow">Titel der neuen Mission</span>
+          <input
+            name="newMissionTitle"
+            required
+            maxLength={200}
+            className="lcars-input rounded-full"
+          />
+        </label>
+      )}
+      <fieldset className="flex flex-col gap-[8px]">
+        <legend className="lcars-eyebrow">Zusammenfassung (optional)</legend>
+        {blocks.map((block, index) => (
+          <div
+            key={block.key}
+            id={`${idPrefix}-synopsis-block-${index}`}
+            className="scroll-mt-24 flex flex-col gap-[6px] rounded-lg border border-[var(--lcars-ink-dim)]/30 p-[8px]"
+          >
+            <input type="hidden" name="synopsisId" value={block.id ?? ""} />
+            <div className="flex flex-wrap gap-[8px]">
+              <label className="flex flex-col gap-[4px]">
+                <span className="lcars-eyebrow">Ingame-Datum</span>
+                <input
+                  type="date"
+                  name="synopsisDate"
+                  required
+                  value={block.ingameDate}
+                  onChange={(event) =>
+                    setBlocks((current) =>
+                      current.map((item, i) =>
+                        i === index
+                          ? {
+                              ...item,
+                              ingameDate: event.target.value,
+                            }
+                          : item,
+                      ),
+                    )
+                  }
+                  className="lcars-input rounded-full"
+                />
+              </label>
+              <button
+                type="button"
+                className="lcars-icon-btn lcars-icon-btn--danger self-end"
+                aria-label={`Log-Eintrag ${index + 1} entfernen`}
+                title="Log-Eintrag entfernen"
+                onClick={() =>
+                  setBlocks((current) => current.filter((_, i) => i !== index))
+                }
+              >
+                <TrashIcon />
+              </button>
+            </div>
+            <MarkdownEditor
+              id={`${idPrefix}-synopsis-${index}`}
+              name="synopsisText"
+              rows={6}
+              defaultValue={block.body}
+            />
+          </div>
+        ))}
+        <button
+          type="button"
+          className="lcars-pill-btn--outline self-start disabled:opacity-50"
+          disabled={!missionChoice}
+          onClick={() =>
+            setBlocks((current) => {
+              const ingameDate = defaultSessionSynopsisDate(
+                missions.find(
+                  (mission) => `mission:${mission.id}` === missionChoice,
+                )?.startedAt,
+                current,
+                previousSessionBlocks,
+              );
+              return [
+                ...current,
+                {
+                  key: crypto.randomUUID(),
+                  id: undefined,
+                  ingameDate,
+                  body: "",
+                },
+              ];
+            })
+          }
+        >
+          Hinzufügen
+        </button>
+      </fieldset>
+    </div>
+  );
+}
+
+// Anlegen: Datum, Mission, AP-Beträge, Teilnehmende und optionale Synopsisblöcke. Die
 // Teilnehmenden sind vorausgewählt — die Regel lautet „alle aktiven
 // Charaktere", wer gefehlt hat, wird abgewählt.
 function NewSessionForm({
   characters,
+  missions,
+  sessions,
   defaultSessionAp,
   today,
 }: {
   characters: ActiveCharacter[];
+  missions: SessionMissionOption[];
+  sessions: GameSession[];
   defaultSessionAp: number;
   today: string;
 }) {
@@ -43,6 +230,7 @@ function NewSessionForm({
       key={state.success ?? "new"}
       action={formAction}
       className="flex flex-col gap-[12px]"
+      data-no-draft
     >
       <div className="flex flex-wrap items-end gap-[8px]">
         <label className="flex flex-col gap-[4px]">
@@ -53,15 +241,6 @@ function NewSessionForm({
             required
             defaultValue={today}
             className="lcars-input rounded-full"
-          />
-        </label>
-        <label className="flex flex-col gap-[4px] flex-1 min-w-[200px]">
-          <span className="lcars-eyebrow">Titel (optional)</span>
-          <input
-            name="title"
-            type="text"
-            placeholder="z.B. Der Nebel von Cygnus IV"
-            className="lcars-input rounded-full w-full"
           />
         </label>
         <label className="flex flex-col gap-[4px]">
@@ -85,6 +264,12 @@ function NewSessionForm({
           />
         </label>
       </div>
+
+      <SessionContextFields
+        missions={missions}
+        idPrefix="new-session"
+        sessionHistory={sessions}
+      />
 
       <fieldset className="flex flex-col gap-[6px]">
         <legend className="lcars-eyebrow">Gutschreiben an</legend>
@@ -117,20 +302,12 @@ function NewSessionForm({
         )}
       </fieldset>
 
-      <div className="flex flex-col gap-[4px]">
-        <label htmlFor="new-session-notes" className="lcars-eyebrow">
-          Notizen (optional)
-        </label>
-        {/* Markdown wie in den übrigen Textfeldern des Projekts. */}
-        <MarkdownEditor id="new-session-notes" name="notes" rows={10} />
-      </div>
-
       <button
         type="submit"
         disabled={pending}
         className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
-        Session nachtragen
+        Hinzufügen
       </button>
 
       <FormError message={state.error} />
@@ -139,86 +316,19 @@ function NewSessionForm({
   );
 }
 
-// Logbücher einer Session zuordnen. Angeboten werden die bereits zugeordneten
-// und alle noch freien — ein Logbuch gehört zu höchstens einer Session.
-function SessionLogbookForm({
-  session,
-  logbooks,
-  apPerLogbook,
-}: {
-  session: GameSession;
-  logbooks: SessionLogbook[];
-  apPerLogbook: number;
-}) {
-  const [state, formAction, pending] = useActionState(
-    setSessionLogbooksAction,
-    initialState,
-  );
-
-  const own = logbooks.filter((log) => log.sessionId === session.id);
-  const free = logbooks.filter((log) => log.sessionId === null);
-
-  return (
-    <form action={formAction} className="flex flex-col gap-[8px]">
-      <input type="hidden" name="id" value={session.id} />
-      <fieldset className="flex flex-col gap-[6px]">
-        <legend className="lcars-eyebrow">Logbücher zu dieser Session</legend>
-        <p className="text-lcars-ink-dim text-[12px]">
-          Sobald mindestens ein Logbuch verknüpft ist, bekommen alle
-          Teilnehmenden automatisch {apPerLogbook} AP extra — einmal je Session,
-          egal wie viele Logbücher geschrieben werden.
-        </p>
-        {own.length + free.length === 0 ? (
-          <p className="lcars-empty-state">Keine Logbücher zur Auswahl.</p>
-        ) : (
-          <div className="flex flex-col gap-[4px]">
-            {[...own, ...free].map((log) => (
-              <label key={log.id} className="flex items-center gap-[6px]">
-                <input
-                  type="checkbox"
-                  name="logIds"
-                  value={log.id}
-                  defaultChecked={log.sessionId === session.id}
-                />
-                <span>
-                  {log.title}
-                  <span className="text-lcars-ink-dim text-[12px]">
-                    {" "}
-                    · {log.missionTitle}
-                    {log.authorName && ` · ${log.authorName}`}
-                    {log.logDate && ` · ${formatISODate(log.logDate)}`}
-                  </span>
-                </span>
-              </label>
-            ))}
-          </div>
-        )}
-      </fieldset>
-      <button
-        type="submit"
-        disabled={pending}
-        className="lcars-pill-btn--outline self-start disabled:opacity-50"
-      >
-        Logbücher übernehmen
-      </button>
-
-      <FormError message={state.error} />
-      {state.success && <FormSuccess>{state.success}</FormSuccess>}
-    </form>
-  );
-}
-
-function SessionRow({
+export function SessionDetails({
   session,
   characters,
-  logbooks,
-  apPerLogbook,
+  missions,
+  sessionHistory = [],
+  detailPage = false,
 }: {
   session: GameSession;
   // Auswahl für „Gutschreiben an" — dieselbe Liste wie beim Anlegen.
   characters: ActiveCharacter[];
-  logbooks: SessionLogbook[];
-  apPerLogbook: number;
+  missions: SessionMissionOption[];
+  sessionHistory?: GameSession[];
+  detailPage?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -230,44 +340,113 @@ function SessionRow({
     initialState,
   );
 
+  const summaries =
+    session.synopsisBlocks.length > 0 ? (
+      <div className="flex flex-col gap-[8px]">
+        {detailPage && (
+          <h2 className="text-lcars-primary-ink">Log-Einträge</h2>
+        )}
+        {session.synopsisBlocks.map((block, index) => (
+          <article
+            key={block.id}
+            id={`summary-${block.id}`}
+            className="scroll-mt-24 rounded-lg border border-[var(--lcars-ink-dim)]/25 p-[10px]"
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-[8px]">
+              <h3 className="font-semibold">
+                Session: {fmtDate(block.ingameDate)} - Eintrag{" "}
+                {block.missionBlockNumber}
+              </h3>
+              <span className="lcars-eyebrow">{fmtDate(block.ingameDate)}</span>
+            </div>
+            <div
+              className="mission-body"
+              dangerouslySetInnerHTML={{ __html: block.bodyHtml }}
+            />
+            <a
+              className="lcars-icon-btn mt-[6px] inline-flex"
+              aria-label="Log-Eintrag bearbeiten"
+              title="Log-Eintrag bearbeiten"
+              href={`#session-${session.id}-synopsis-block-${index}`}
+              onClick={() => setOpen(true)}
+            >
+              <PencilIcon />
+            </a>
+          </article>
+        ))}
+      </div>
+    ) : null;
+
   return (
-    <div className="flex flex-col gap-[6px] border-b border-[var(--lcars-ink-dim)]/30 pb-[8px]">
+    <div
+      id={`session-${session.id}`}
+      className="scroll-mt-24 flex flex-col gap-[6px] border-b border-[var(--lcars-ink-dim)]/30 pb-[8px]"
+    >
       <button
         type="button"
-        className="flex flex-wrap items-center gap-[8px] text-left"
+        className={
+          detailPage
+            ? "lcars-icon-btn self-start"
+            : "flex flex-wrap items-center gap-[8px] text-left"
+        }
         aria-expanded={open}
+        aria-controls={`session-editor-${session.id}`}
+        aria-label={detailPage ? "Session bearbeiten" : undefined}
+        title={detailPage ? "Session bearbeiten" : undefined}
         onClick={() => setOpen((v) => !v)}
       >
-        {/* Auf-/Zuklapp-Anzeige links wie bei den DataRow-Akkordeons — dreht
+        {detailPage ? (
+          <PencilIcon />
+        ) : (
+          <>
+            {/* Auf-/Zuklapp-Anzeige links wie bei den DataRow-Akkordeons — dreht
             sich, wenn die Session-Details offen sind. */}
-        <span
-          className={
-            open
-              ? "lcars-data-row-chevron lcars-data-row-chevron--open"
-              : "lcars-data-row-chevron"
-          }
-          style={{ margin: "0 4px 0 2px" }}
-          aria-hidden="true"
-        />
-        <span className="lcars-eyebrow">
-          {formatISODate(session.sessionDate)}
-        </span>
-        <span className="flex-1 min-w-[180px]">
-          {session.title || "Ohne Titel"}
-        </span>
-        <span className="stat-ap-amount">
-          {session.sessionAp}
-          {session.bonusAp > 0 && ` + ${session.bonusAp}`} AP
-        </span>
-        <span className="text-lcars-ink-dim text-[13px]">
-          {session.characterCount} Charaktere · {session.totalAp} AP gesamt ·{" "}
-          {session.logbookCount} Logbücher
-        </span>
+            <span
+              className={
+                open
+                  ? "lcars-data-row-chevron lcars-data-row-chevron--open"
+                  : "lcars-data-row-chevron"
+              }
+              style={{ margin: "0 4px 0 2px" }}
+              aria-hidden="true"
+            />
+            <span className="lcars-eyebrow">
+              {formatISODate(session.sessionDate)}
+            </span>
+            <span className="flex-1 min-w-[180px]">
+              {session.title || "Ohne Titel"}
+            </span>
+            {session.missionTitle && (
+              <span className="text-lcars-ink-dim text-[12px]">
+                {session.missionTitle}
+              </span>
+            )}
+            <span className="stat-ap-amount">
+              {session.sessionAp}
+              {session.bonusAp > 0 && ` + ${session.bonusAp}`} AP
+            </span>
+            <span className="text-lcars-ink-dim text-[13px]">
+              {session.characterCount} Charaktere · {session.totalAp} AP gesamt
+            </span>
+          </>
+        )}
       </button>
 
       {open && (
         <>
-          <form action={formAction} className="flex flex-col gap-[8px]">
+          <form
+            id={`session-editor-${session.id}`}
+            key={JSON.stringify([
+              session.sessionDate,
+              session.sessionAp,
+              session.bonusAp,
+              session.missionId,
+              session.characterIds,
+              session.synopsisBlocks,
+            ])}
+            action={formAction}
+            className="scroll-mt-24 flex flex-col gap-[8px]"
+          >
             <input type="hidden" name="id" value={session.id} />
             <div className="flex flex-wrap items-end gap-[8px]">
               <label className="flex flex-col gap-[4px]">
@@ -278,15 +457,6 @@ function SessionRow({
                   required
                   defaultValue={session.sessionDate.slice(0, 10)}
                   className="lcars-input rounded-full"
-                />
-              </label>
-              <label className="flex min-w-[200px] flex-1 flex-col gap-[4px]">
-                <span className="lcars-eyebrow">Titel</span>
-                <input
-                  name="title"
-                  type="text"
-                  defaultValue={session.title}
-                  className="lcars-input rounded-full w-full"
                 />
               </label>
               <label className="flex flex-col gap-[4px]">
@@ -310,6 +480,16 @@ function SessionRow({
                 />
               </label>
             </div>
+
+            <SessionContextFields
+              missions={missions}
+              idPrefix={`session-${session.id}`}
+              initialMissionId={session.missionId}
+              allowNewMission={false}
+              initialBlocks={session.synopsisBlocks}
+              sessionHistory={sessionHistory}
+              beforeSessionNumber={session.missionSessionNumber}
+            />
 
             <fieldset className="flex flex-col gap-[6px]">
               <legend className="lcars-eyebrow">Gutschreiben an</legend>
@@ -347,136 +527,143 @@ function SessionRow({
               )}
             </fieldset>
 
-            <div className="flex flex-col gap-[4px]">
-              <label
-                htmlFor={`session-${session.id}-notes`}
-                className="lcars-eyebrow"
-              >
-                Notizen
-              </label>
-              <MarkdownEditor
-                id={`session-${session.id}-notes`}
-                name="notes"
-                rows={10}
-                defaultValue={session.notes}
-              />
-            </div>
             <p className="text-lcars-ink-dim text-[12px]">
               Eingetragen von {session.createdByName ?? "unbekannt"}. Beim
               Speichern werden die Gutschriften dieser Session neu gebucht:
               geänderte Beträge und Teilnehmende schlagen also unmittelbar auf
               die Konten durch. Bereits ausgegebene AP holt das nicht zurück —
               ein Konto kann dadurch rechnerisch ins Minus laufen und ist dann
-              unter „Kampagne“ mit einer Korrekturbuchung geradezuziehen.
+              unter „AP“ mit einer Korrekturbuchung geradezuziehen.
             </p>
             <div className="flex flex-wrap gap-[8px]">
               <button
                 type="submit"
                 disabled={pending}
-                className="lcars-pill-btn--outline disabled:opacity-50"
+                className="lcars-icon-btn disabled:opacity-50"
+                aria-label="Session speichern"
+                title="Session speichern"
               >
-                Speichern
+                <CheckIcon />
               </button>
             </div>
           </form>
 
-          <SessionLogbookForm
-            session={session}
-            logbooks={logbooks}
-            apPerLogbook={apPerLogbook}
-          />
-
           <form action={deleteAction}>
             <input type="hidden" name="id" value={session.id} />
+            {detailPage && (
+              <input type="hidden" name="returnToSessions" value="true" />
+            )}
             <button
               type="submit"
               disabled={deletePending}
               onClick={confirmSubmit(
                 "Session zurücknehmen? Die Gutschriften dieser Session werden storniert — bereits ausgegebene AP kommen dadurch nicht zurück.",
               )}
-              className="lcars-pill-btn--outline disabled:opacity-50"
+              className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
+              aria-label="Session zurücknehmen"
+              title="Session zurücknehmen"
             >
-              Session zurücknehmen
+              <TrashIcon />
             </button>
           </form>
         </>
       )}
 
-      {!open && session.notes && (
-        // Zweizeilige Vorschau des Markdown-Textes (siehe listGameSessions).
-        <div
-          className="text-lcars-ink-dim mission-body line-clamp-2 text-[13px]"
-          dangerouslySetInnerHTML={{ __html: session.notesHtml }}
-        />
+      {detailPage && session.synopsisBlocks.length === 0 && (
+        <p className="lcars-empty-state">
+          Für diese Session gibt es noch keine Log-Einträge.
+        </p>
       )}
-
       <FormError message={state.error ?? deleteState.error} />
       {(state.success ?? deleteState.success) && (
         <FormSuccess>{state.success ?? deleteState.success}</FormSuccess>
       )}
+      {summaries}
     </div>
   );
 }
 
-// Sessions der Spielleitung: oben das (zugeklappte) Nachtragen von Hand,
-// darunter die Liste der bisherigen Sessions zum Aufklappen.
+// Sessions der Spielleitung: Nachtragen im Modal, darunter Missionsgruppen
+// mit Karten. Die Missionsverwaltung verwendet die eingebetteten Editoren.
 //
 // Der übliche Weg ist der Knopf „Session eintragen" am angekündigten Termin
-// (PlannedSessionManager) — er bringt Datum, Titel und Besetzung schon mit.
+// (PlannedSessionManager) — er bringt Datum, Mission und Besetzung schon mit.
 // Von Hand nachgetragen wird, was ohne Ankündigung gespielt wurde; deshalb
 // steht dieses Formular zugeklappt.
 export default function SessionManager({
   sessions,
   characters,
-  logbooks,
+  missions,
   defaultSessionAp,
-  apPerLogbook,
   today,
+  showCreateForm = true,
+  view = "cards",
+  sessionsHeading = "Bisherige Sessions",
 }: {
   sessions: GameSession[];
   characters: ActiveCharacter[];
-  // Logbücher zur Zuordnung: die bereits zugeordneten plus alle noch freien.
-  logbooks: SessionLogbook[];
+  missions: SessionMissionOption[];
   defaultSessionAp: number;
-  apPerLogbook: number;
   // Vom Server vorgegeben, damit Server- und Client-Render dasselbe Datum
   // vorbelegen (ein `new Date()` im Client wiche sonst ab und würde
   // hydrieren-Warnungen erzeugen).
   today: string;
+  showCreateForm?: boolean;
+  view?: "cards" | "inline";
+  sessionsHeading?: string;
 }) {
+  const [showCreate, setShowCreate] = useState(false);
   return (
     <div className="flex flex-col gap-[24px]">
-      <details className="lcars-collapsible">
-        <summary className="lcars-collapsible-summary">
-          <h2 className="text-lcars-primary-ink">Session nachtragen</h2>
-        </summary>
-        <div className="pt-[12px]">
-          <NewSessionForm
-            characters={characters}
-            defaultSessionAp={defaultSessionAp}
-            today={today}
-          />
-        </div>
-      </details>
-
-      <section className="flex flex-col gap-[12px]">
-        <h2 className="text-lcars-primary-ink">Bisherige Sessions</h2>
-        {sessions.length === 0 ? (
-          <p className="lcars-empty-state">Noch keine Session eingetragen.</p>
-        ) : (
-          <div className="flex flex-col gap-[8px]">
-            {sessions.map((session) => (
-              <SessionRow
-                key={session.id}
-                session={session}
+      {showCreateForm && (
+        <div>
+          <button
+            type="button"
+            className="lcars-pill-btn--outline"
+            onClick={() => setShowCreate(true)}
+          >
+            Session nachtragen
+          </button>
+          {showCreate && (
+            <ModalOverlay
+              title="Session nachtragen"
+              onClose={() => setShowCreate(false)}
+              width={720}
+            >
+              <NewSessionForm
                 characters={characters}
-                logbooks={logbooks}
-                apPerLogbook={apPerLogbook}
+                missions={missions}
+                sessions={sessions}
+                defaultSessionAp={defaultSessionAp}
+                today={today}
               />
-            ))}
-          </div>
-        )}
-      </section>
+            </ModalOverlay>
+          )}
+        </div>
+      )}
+
+      {view === "cards" ? (
+        <SessionsBrowser sessions={sessions} />
+      ) : (
+        <section className="flex flex-col gap-[12px]">
+          <h2 className="text-lcars-primary-ink">{sessionsHeading}</h2>
+          {sessions.length === 0 ? (
+            <p className="lcars-empty-state">Noch keine Session eingetragen.</p>
+          ) : (
+            <div className="flex flex-col gap-[8px]">
+              {sessions.map((session) => (
+                <SessionDetails
+                  key={session.id}
+                  session={session}
+                  characters={characters}
+                  missions={missions}
+                  sessionHistory={sessions}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

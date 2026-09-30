@@ -16,6 +16,9 @@ export interface PlannedSession {
   id: number;
   scheduledAt: string;
   title: string;
+  missionId: number | null;
+  missionTitle: string | null;
+  missionSessionNumber: number | null;
   location: string;
   // Rohtext (Markdown), wie er gespeichert ist — das Formular arbeitet damit.
   notes: string;

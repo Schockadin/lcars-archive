@@ -119,13 +119,35 @@ export function PublicChronologyGuide() {
           Ganz links im Umschalter steht <strong>„Missionen“</strong> — dann
           zeigt der Strahl je Einsatz einen Eintrag mit seinem ganzen Zeitraum,
           und ein Klick führt auf die Missionsseite mit ihren Einsatzberichten.
-          Daneben führen <strong>Events</strong>, <strong>Gespräche</strong> und{" "}
-          <strong>Logbücher</strong> direkt in ihre jeweilige Liste;{" "}
+          Daneben führen <strong>Events</strong>, <strong>Gespräche</strong>,{" "}
+          <strong>Logbücher</strong> und <strong>Sessions</strong> direkt in ihre jeweilige Liste;{" "}
           <strong>Alles</strong> verbindet den gesamten Zeitstrahl.
         </p>
         <p>
           Eigene Ereignisse zeigen auf der Karte einen kurzen Teaser. Ein Klick
           auf ihren Titel öffnet die Detailansicht mit Volltext und Bildern.
+        </p>
+        <p>
+          Unter <strong>Sessions</strong> findest du die datierten Log-Einträge
+          der Spielleitung. Auf der Missionsseite stehen sie zusammen mit den
+          Spieler-<strong>Logbüchern</strong> in der Missionschronik, nach
+          Ingame-Datum sortiert — neueste zuerst. Ein Klick auf ein Logbuch
+          öffnet den Spielerbericht; ein Log-Eintrag der Spielleitung lässt
+          sich direkt in der Karte auf- und zuklappen.
+        </p>
+        <p>
+          Das einklappbare <strong>Inhaltsverzeichnis</strong> enthält
+          Sprungmarken zu beiden Arten von Einträgen und zur vollständigen
+          <strong> Synopsis</strong> am Ende. Die Session-Panels sind zunächst
+          geöffnet. Mit <strong>+</strong> neben dem Inhaltsverzeichnis öffnest
+          du alle, mit <strong>−</strong> schließt du sie wieder; einzelne
+          Panels lassen sich unabhängig davon umschalten.
+        </p>
+        <p>
+          Über <strong>„Missionsakte (PDF)“</strong> lädst du Beschreibung,
+          Spieler-Logbücher und GM-Log-Einträge als eine Datei herunter. Das
+          Inhaltsverzeichnis im PDF springt ebenfalls zu den chronologisch
+          sortierten Einträgen.
         </p>
       </GuideSection>
 
@@ -168,10 +190,11 @@ export function PublicDatabaseGuide() {
         </p>
         <p>
           Oben grenzt das Auswahlfeld auf eine <strong>Kategorie</strong> ein,
-          das Filterfeld sucht im <strong>Titel</strong>, und der Knopf daneben
-          dreht die alphabetische Reihenfolge um. Gefiltert wird dabei im
-          Browser, ohne neue Anfrage — die Adresse ändert sich nicht. Wer einen
-          Link auf eine Kategorie weitergeben will, hängt sie an:{" "}
+          das Filterfeld sucht im <strong>Titel und in den Aliasen</strong>, und
+          der Knopf daneben dreht die alphabetische Reihenfolge um. Gefiltert
+          wird dabei im Browser, ohne neue Anfrage — die Adresse ändert sich
+          nicht. Wer einen Link auf eine Kategorie weitergeben will, hängt sie
+          an:{" "}
           <code>/archive?cat=person</code> öffnet die Datenbank gleich mit
           dieser Auswahl.
         </p>

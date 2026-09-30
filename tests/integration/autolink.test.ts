@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   applyAutolinks,
   autoLinkMarkdown,
+  addStoredContentLinkPreviews,
   getAutolinkTargets,
   renderContentHtml,
   resolveAllWikilinks,
@@ -47,7 +48,9 @@ describe("applyAutolinks", () => {
   it("uses the alias form when the matched alias differs from the canonical name", () => {
     const result = applyAutolinks("Wir trafen Desmond gestern.", targets);
 
-    expect(result.sourceMd).toBe("Wir trafen [[Desmond Hobbes|Desmond]] gestern.");
+    expect(result.sourceMd).toBe(
+      "Wir trafen [[Desmond Hobbes|Desmond]] gestern.",
+    );
   });
 
   it("does not link phrases inside code blocks, images, or existing links", () => {
@@ -117,9 +120,9 @@ describe("getAutolinkTargets", () => {
     const targets = await getAutolinkTargets();
 
     expect(targets.find((t) => t.slug === mission.slug)).toBeUndefined();
-    expect(applyAutolinks("Zurück zur Verschollene Mission.", targets).sourceMd).toBe(
-      "Zurück zur Verschollene Mission.",
-    );
+    expect(
+      applyAutolinks("Zurück zur Verschollene Mission.", targets).sourceMd,
+    ).toBe("Zurück zur Verschollene Mission.");
   });
 
   it("excludes the given target from the result", async () => {
@@ -135,6 +138,32 @@ describe("getAutolinkTargets", () => {
 });
 
 describe("resolveAllWikilinks", () => {
+  it("übernimmt keine Vorschautexte aus Entwürfen und hält die öffentliche Auflösung frei davon", async () => {
+    const character = await insertCharacter({ name: "Verborgene Person", isDraft: true });
+    const mission = await insertMission({ title: "Verborgene Mission" });
+    await sql`UPDATE characters SET bio = 'Geheime Biografie' WHERE id = ${character.id}`;
+    await sql`UPDATE missions SET is_draft = true, source_md = 'Geheimer Missionsplan' WHERE id = ${mission.id}`;
+    const html = await renderContentHtml("[[Verborgene Person]] [[Verborgene Mission]]");
+    expect(html).not.toContain("Geheime Biografie");
+    expect(html).not.toContain("Geheimer Missionsplan");
+    expect(html).not.toContain("data-preview");
+    expect(await resolvePublicWikilinks('<a href="wikilink://Verborgene Mission">Mission</a>')).toContain("lcars-wikilink--missing");
+    const stored = await addStoredContentLinkPreviews(`<a href="/characters/${character.slug}" data-preview="Geheime Biografie" title="Geheime Biografie">Person</a>`);
+    expect(stored).not.toContain("Geheime Biografie");
+    expect(stored).not.toContain("data-preview");
+  });
+
+  it("verwendet bei Alias-Kollisionen die Vorschau des tatsächlich verlinkten Ziels", async () => {
+    const mission = await insertMission({ title: "Gemeinsamer Name" });
+    const character = await insertCharacter({ name: "Andere Person" });
+    await sql`UPDATE characters SET metadata = jsonb_set(metadata, '{aliases}', '["Gemeinsamer Name"]'::jsonb) WHERE id = ${character.id}`;
+    await sql`UPDATE missions SET source_md = 'Missionsvorschau' WHERE id = ${mission.id}`;
+    await sql`UPDATE characters SET bio = 'Charaktervorschau' WHERE id = ${character.id}`;
+    const html = await renderContentHtml("[[Gemeinsamer Name]]");
+    expect(html).toContain(`/chronologie/mission/${mission.slug}`);
+    expect(html).toContain('data-preview="Missionsvorschau"');
+    expect(html).not.toContain("Charaktervorschau");
+  });
   it("resolves a wikilink anchor to the target's real href", async () => {
     const character = await insertCharacter({ name: "Ziel Person" });
     const html = `<a href="wikilink://Ziel Person">Ziel Person</a>`;
@@ -176,9 +205,77 @@ describe("renderContentHtml", () => {
   it("renders markdown to HTML and resolves any [[wikilinks]] against the DB", async () => {
     const character = await insertCharacter({ name: "Verlinkte Person" });
 
-    const html = await renderContentHtml("Ein Verweis auf [[Verlinkte Person]].");
+    const html = await renderContentHtml(
+      "Ein Verweis auf [[Verlinkte Person]].",
+    );
 
     expect(html).toContain(`href="/characters/${character.slug}"`);
+  });
+
+  it("adds a hover preview to automatically linked content", async () => {
+    const character = await insertCharacter({ name: "Vorschau Person" });
+    await sql`UPDATE characters SET source_md = ${"Eine kurze Beschreibung des Eintrags."} WHERE id = ${character.id}`;
+
+    const { html } = await autoLinkMarkdown("Vorschau Person ist anwesend.");
+
+    expect(html).toContain(`href="/characters/${character.slug}"`);
+    expect(html).toContain(
+      'data-preview="Eine kurze Beschreibung des Eintrags."',
+    );
+  });
+
+  it("adds a hover preview to manually written wikilinks", async () => {
+    const character = await insertCharacter({ name: "Manuell Vorschau" });
+    await sql`UPDATE characters SET source_md = ${"Auch manuelle Links zeigen diesen Text."} WHERE id = ${character.id}`;
+
+    const html = await renderContentHtml("Siehe [[Manuell Vorschau]].");
+
+    expect(html).toContain(`href="/characters/${character.slug}"`);
+    expect(html).toContain(
+      'data-preview="Auch manuelle Links zeigen diesen Text."',
+    );
+  });
+
+  it("adds previews to already-resolved character and archive links", async () => {
+    const character = await insertCharacter({ name: "Alter Charakter-Link" });
+    await sql`UPDATE characters SET source_md = ${"Vorschautext des Charakters."} WHERE id = ${character.id}`;
+    const user = await insertUser();
+    const entry = await createArchiveEntry({
+      title: "Alter Archiv-Link",
+      category: "location",
+      tags: [],
+      summary: "Vorschautext des Archivs.",
+      aliases: [],
+      attributeValues: {},
+      referenceValues: {},
+      bodyMarkdown: "",
+      ownerUserId: user.id,
+      isDraft: false,
+    });
+    const html =
+      `<a href="/characters/${character.slug}">Person</a>` +
+      `<a href="/archive/${entry.slug}" class="existing-link">Ort</a>`;
+
+    const result = await addStoredContentLinkPreviews(html);
+
+    expect(result).toContain('data-preview="Vorschautext des Charakters."');
+    expect(result).toContain('data-preview="Vorschautext des Archivs."');
+    expect(result).toContain('class="existing-link lcars-wikilink"');
+  });
+
+  it("does not expose previews for unpublished entries", async () => {
+    const character = await insertCharacter({
+      name: "Unveröffentlichter Charakter",
+      isDraft: true,
+    });
+    await sql`UPDATE characters SET source_md = ${"Geheimer Vorschautext."} WHERE id = ${character.id}`;
+
+    const result = await addStoredContentLinkPreviews(
+      `<a href="/characters/${character.slug}">Entwurf</a>`,
+    );
+
+    expect(result).not.toContain("Geheimer Vorschautext");
+    expect(result).not.toContain("data-preview");
   });
 });
 
@@ -303,9 +400,7 @@ describe("autoLinkMarkdown und von Hand gesetzte Wikilinks", () => {
 
     // Derselbe Anker, den rehypeSlug auf der Zielseite an die Überschrift
     // „Frühe Jahre" schreibt (siehe headingAnchor-Test in markdown.test.ts).
-    expect(html).toContain(
-      `href="/characters/${character.slug}#frühe-jahre"`,
-    );
+    expect(html).toContain(`href="/characters/${character.slug}#frühe-jahre"`);
   });
 
   it("behält Anzeigetext und Abschnitt gemeinsam bei", async () => {
@@ -343,9 +438,7 @@ describe("autoLinkMarkdown und von Hand gesetzte Wikilinks", () => {
 
     // Die freie Erwähnung wird zur Marke, die bereits gesetzte bleibt, wie
     // sie ist — und beide führen auf dieselbe Seite.
-    expect(sourceMd).toBe(
-      "[[Doppelt Genannt]] kam, [[Doppelt Genannt]] ging.",
-    );
+    expect(sourceMd).toBe("[[Doppelt Genannt]] kam, [[Doppelt Genannt]] ging.");
     expect(
       html.match(new RegExp(`href="/characters/${character.slug}"`, "g")),
     ).toHaveLength(2);

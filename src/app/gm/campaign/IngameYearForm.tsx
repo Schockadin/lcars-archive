@@ -18,7 +18,7 @@ export default function IngameYearForm({ info }: { info: IngameYearInfo }) {
   );
 
   return (
-    <form action={formAction} className="flex flex-col gap-[12px] max-w-[380px]">
+    <form action={formAction} className="flex flex-col gap-[12px]">
       <div className="flex items-center gap-[8px] flex-wrap">
         <span className="lcars-eyebrow">Aktuelles Ingame-Jahr</span>
         <span

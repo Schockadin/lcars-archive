@@ -192,29 +192,14 @@ test.describe("MissionLogOverview", () => {
     await expect(list.locator(".mission-log-entry")).toHaveCount(0);
   });
 
-  test("gruppiert von Haus aus nach Autor", async ({ page }) => {
+  test("zeigt Logbücher chronologisch ohne Autor-Gruppierung", async ({ page }) => {
     await page.goto("/dev-gallery");
     const list = page.locator("#mission-log-overview");
 
-    // Zwei Autoren in den Demo-Daten.
-    await expect(list.locator(".timeline-period")).toHaveCount(2);
-    await list.getByRole("button", { name: /Datum/ }).click();
     await expect(list.locator(".timeline-period")).toHaveCount(0);
-  });
-
-  // .mission-sort trug ein gap: 10px — die Füllung der aktiven Option ließ
-  // daneben einen dunklen Streifen stehen und wirkte zu schmal. Beide Hälften
-  // müssen gleich breit sein und bündig aneinanderstoßen.
-  test("füllt die aktive Sortier-Option über ihre ganze Hälfte", async ({
-    page,
-  }) => {
-    await page.goto("/dev-gallery");
-    const buttons = page.locator("#mission-log-overview .mission-sort button");
-    await expect(buttons).toHaveCount(2);
-
-    const first = await buttons.nth(0).boundingBox();
-    const second = await buttons.nth(1).boundingBox();
-    expect(Math.abs(first!.x + first!.width - second!.x)).toBeLessThan(1);
-    expect(Math.abs(first!.width - second!.width)).toBeLessThanOrEqual(1);
+    await expect(list.locator(".mission-sort")).toHaveCount(0);
+    await expect(list.locator(".timeline-card-title")).toHaveText([
+      "Nachspiel auf der Krankenstation", "Rückzug vom Orbit", "Erster Kontakt",
+    ]);
   });
 });

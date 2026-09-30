@@ -194,16 +194,19 @@ export default function TutorialPage() {
               </p>
               <p>
                 Die <strong>Missionsseite</strong> selbst zeigt oben Status,
-                Zeitraum und die beteiligten Figuren, darunter die{" "}
-                <strong>Zusammenfassung</strong> des Einsatzes — sie lässt sich
-                über die Zeile „Zusammenfassung“ ein- und ausklappen, wenn du
-                gleich zu den Berichten willst. Darunter steht die{" "}
-                <strong>Übersicht ihrer Logbücher</strong> — dieselbe Liste wie
-                hier in der Chronologie, von Haus aus nach{" "}
-                <strong>Autor</strong> gruppiert, auf Wunsch nach{" "}
-                <strong>Datum</strong> geordnet. Ein Klick öffnet den
-                Einsatzbericht; von dort führt der Link oben links zurück zur
-                Mission.
+                Zeitraum und die beteiligten Figuren. In der{" "}
+                <strong>Missionschronik</strong> stehen Spieler-Logbücher und
+                Log-Einträge der Spielleitung gemeinsam, neueste
+                zuerst. Das einklappbare Inhaltsverzeichnis springt zu beiden
+                Eintragsarten und zur Synopsis. Die Log-Einträge der
+                Spielleitung sind zunächst aufgeklappt; der +/−-Knopf neben
+                dem Inhaltsverzeichnis öffnet oder schließt alle gemeinsam.
+                Ein Klick auf ein Logbuch öffnet den Spielerbericht; von dort
+                führt der Link oben links zurück zur Mission. Über
+                „Missionsakte (PDF)“ lassen sich Beschreibung und Chronik als
+                Datei herunterladen. Sie enthält Spieler-Logbücher und
+                GM-Log-Einträge in chronologischer Reihenfolge; ihr
+                Inhaltsverzeichnis springt direkt zu den Berichten.
               </p>
               <p>
                 Einträge <strong>ohne Datum</strong> gehen dabei nicht verloren:
@@ -687,17 +690,25 @@ export default function TutorialPage() {
                 Inhalt noch ändert.
               </p>
               <p>
+                In den Listen der <strong>Chronologie</strong>,{" "}
+                <strong>Datenbank</strong> und{" "}
+                <strong>Charakterübersicht</strong> findest du die Aktionen im
+                Drei-Punkte-Menü oben rechts an der Karte. Alle können dort den
+                Inhalt teilen; Eigentümer:innen können zusätzlich bearbeiten,
+                veröffentlichen oder als Entwurf zurückziehen und löschen.
+              </p>
+              <p>
                 Auf der <strong>Seite einer Mission</strong> steht angemeldet
                 der Knopf <strong>„Missionsakte (PDF)“</strong>: er packt genau
                 diese Mission in eine Datei — Titelblatt mit Zeitraum, Status
                 und Beteiligten, ein <strong>Inhaltsverzeichnis</strong>
                 (jeder Eintrag springt im PDF zu seinem Bericht), danach die
-                Beschreibung und jedes Logbuch auf einer eigenen Seite,
-                chronologisch. Aufgemacht ist die Akte wie der Charakterbogen:
+                Beschreibung sowie Spieler-Logbücher und GM-Log-Einträge auf
+                jeweils eigenen Seiten, gemeinsam chronologisch. Aufgemacht ist die Akte wie der Charakterbogen:
                 derselbe blaue Rahmen, dieselbe Kopfzeile, formatierter Text mit
-                Überschriften, Aufzählungen und Zitaten. Die Akte enthält genau
-                das, was du auch sonst lesen darfst; nicht öffentliche Logbücher
-                stehen darin mit einem entsprechenden Hinweis.
+                Überschriften, Aufzählungen und Zitaten. Die Akte enthält
+                veröffentlichte Logbücher und die Session-Log-Einträge der
+                Mission; Logbuch-Entwürfe werden nicht aufgenommen.
               </p>
               <p>
                 Auf der Seite deines eigenen Charakters (und für die
@@ -729,10 +740,27 @@ export default function TutorialPage() {
                 ersetzt die alte. Wer zugesagt hat, steht am Termin.
               </p>
               <p>
+                Die Spielleitung plant Termine und verwaltet gespielte Abende
+                unter „Sessions“. Jede Session-Karte öffnet
+                eine Detailseite zum Bearbeiten der Session und ihrer Blöcke.
+                Jeder angekündigte Termin gehört zu einer Mission. Sein Titel
+                entsteht automatisch aus Missionsname und laufender Nummer;
+                beim Ankündigen kann die Spielleitung auch direkt eine neue
+                Mission anlegen. Nach dem Abend wird aus dem Termin eine
+                gespielte Session. Dabei kann die Spielleitung mehrere
+                Log-Einträge erfassen, jeweils mit Ingame-Datum und
+                Text. Sie erscheinen chronologisch zwischen den Missionslogs;
+                das Inhaltsverzeichnis der Missionschronik springt direkt zu den
+                einzelnen Einträgen. Unter „Synopsis“ am Ende steht die gesamte
+                Zusammenfassung. Mit + beziehungsweise − neben dem Inhaltsverzeichnis
+                öffnest oder schließt du alle Session-Blöcke. Die allgemeine
+                Chronologie führt sie zusätzlich in der Kategorie „Sessions“.
+              </p>
+              <p>
                 Ist einer deiner Charaktere für den Termin{" "}
                 <strong>eingeplant</strong>, erfährst du davon außerdem per{" "}
                 <strong>Mail und Push</strong>, sobald der Termin angekündigt
-                wird — samt Zeitpunkt, Ort und der Notiz der Spielleitung. Dafür
+                wird — samt Zeitpunkt und Ort. Dafür
                 musst du nichts abonnieren; es gelten nur deine allgemeinen
                 Schalter für Mail- und Push-Benachrichtigungen unter
                 „Einstellungen“. Auch mit zwei eingeplanten Figuren bekommst du
@@ -982,9 +1010,9 @@ export default function TutorialPage() {
                 Inhaltsformularen, sondern auch an den kleineren Textfeldern:{" "}
                 <strong>Notizen</strong> und Kommentare, eigenen{" "}
                 <strong>Regeln</strong>, Talent- und Schwerpunkt-Beschreibungen,{" "}
-                <strong>Session-Notizen</strong> sowie Antworten und Nachrichten
-                in Gesprächen. Überall dort wird der Text beim Anzeigen auch als
-                Markdown dargestellt — im PDF-Spickzettel werden Auszeichnungen
+                <strong>Log-Einträge aus Sessions</strong> sowie Antworten
+                und Nachrichten in Gesprächen. Überall dort wird der Text beim
+                Anzeigen auch als Markdown dargestellt — im PDF-Spickzettel werden Auszeichnungen
                 auf ihren Text zurückgeführt, Listen bleiben Listen.
               </p>
               <p>
@@ -1032,6 +1060,12 @@ export default function TutorialPage() {
                 geschrieben ist. Dasselbe zeigt dir schon der{" "}
                 <strong>Vorschau</strong>-Umschalter über dem Textfeld, bevor du
                 speicherst.
+              </p>
+              <p>
+                Die automatische Verlinkung erkennt bei Aliasen auch übliche
+                Genitivformen. Bei einem Wikilink zeigt ein kurzer Hover über
+                den Verweis eine Textvorschau des Ziels, sofern dort eine
+                Zusammenfassung oder Beschreibung hinterlegt ist.
               </p>
               <p>
                 Wer sich das Tippen der Klammern sparen will, nutzt beim
@@ -1093,8 +1127,10 @@ export default function TutorialPage() {
                 Zusätzlich zu allem oben Genannten hat die Spielleitung ein
                 eigenes <strong>„Leitung“</strong>-Menü. Es steht getrennt neben
                 dem Admin-Menü — wer beide Rollen hat, sieht beide nebeneinander
-                — und ist nach Aufgaben gegliedert: Kampagne, Charaktere,
-                Regelwerk, Inhalte. Jeder seiner zehn Bereiche ist hier erklärt;
+                — und ist nach Aufgaben gegliedert: Missionen und Sessions
+                unter „Kampagne“, Charaktere, Gruppenblatt und AP unter
+                „Charaktere“, Kampagneneinstellungen unter „Regelwerk“ sowie
+                Inhalte. Jeder seiner Bereiche ist hier erklärt;
                 denselben Text öffnet auf der jeweiligen Seite das{" "}
                 <strong>Fragezeichen</strong> neben der Überschrift.
               </p>
@@ -1167,6 +1203,13 @@ export default function TutorialPage() {
                   Schwerpunkte, Hausregeln, Spielabende, Notizen, frühere
                   Fassungen, Bilder und Rollen). Nutzerkonten haben eine eigene,
                   separate Sicherung.
+                </li>
+                <li>
+                  Unter <strong>„Datenbank → DB-Backup“</strong> findest du
+                  außerdem Befehle für ein vollständiges PostgreSQL-Backup mit
+                  <code>pg_dump</code>{" "}und zum atomaren Zurückspielen mit
+                  <code>pg_restore</code>. Diese beiden Befehle laufen lokal auf
+                  deinem Rechner und sichern auch Userkonten.
                 </li>
                 <li>
                   Unter <strong>„Import“</strong> eine oder mehrere

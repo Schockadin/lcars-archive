@@ -16,6 +16,8 @@ export function DangerZoneButton({
   label,
   pendingLabel,
   title,
+  ariaLabel,
+  children,
   className = "lcars-pill-btn--outline disabled:opacity-50",
 }: {
   formAction: (formData: FormData) => void;
@@ -26,6 +28,8 @@ export function DangerZoneButton({
   label: string;
   pendingLabel?: string;
   title?: string;
+  ariaLabel?: string;
+  children?: React.ReactNode;
   className?: string;
 }) {
   return (
@@ -38,9 +42,10 @@ export function DangerZoneButton({
         disabled={pending || disabled}
         className={className}
         title={title}
+        aria-label={ariaLabel}
         onClick={confirmSubmit(confirmMessage)}
       >
-        {pending && pendingLabel ? pendingLabel : label}
+        {children ?? (pending && pendingLabel ? pendingLabel : label)}
       </button>
     </form>
   );

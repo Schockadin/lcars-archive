@@ -13,6 +13,7 @@ export interface DashboardCharacterItem {
   rank: string | null;
   status: Character["status"];
   isDraft: boolean;
+  availableAp: number;
 }
 
 export function toDashboardCharacterItem(
@@ -24,6 +25,7 @@ export function toDashboardCharacterItem(
     rank: character.metadata.rank ?? null,
     status: character.status,
     isDraft: character.is_draft,
+    availableAp: 0,
   };
 }
 
@@ -74,6 +76,9 @@ export default function DashboardCharactersSection({
                       <b>Rang</b> {character.rank}
                     </span>
                   )}
+                  <span>
+                    <b>Verfügbare AP</b> {character.availableAp}
+                  </span>
                   {character.isDraft && (
                     <span>
                       <b>Typ</b> Entwurf

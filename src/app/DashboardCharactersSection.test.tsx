@@ -10,6 +10,7 @@ const TVEL: DashboardCharacterItem = {
   rank: "Lieutenant",
   status: "active",
   isDraft: false,
+  availableAp: 7,
 };
 
 describe("DashboardCharactersSection", () => {
@@ -21,6 +22,7 @@ describe("DashboardCharactersSection", () => {
       .map((link) => link.getAttribute("href"));
     expect(ziele).toEqual(["/user/characters/4"]);
     expect(screen.queryByLabelText("T'Vel bearbeiten")).toBeNull();
+    expect(screen.getByText("7")).toBeInTheDocument();
   });
 
   // Das Dashboard soll keine leeren Kästen zeigen — wer alle Charaktere

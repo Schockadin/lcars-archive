@@ -2,7 +2,6 @@ import GuideSection, { GuideBody } from "../GuideSection";
 import {
   ApLedgerFigure,
   CampaignFigure,
-  CampaignRulesFigure,
   CatalogEditorFigure,
   GmCharactersFigure,
   GmDialoguesFigure,
@@ -33,8 +32,8 @@ export function GmCampaignGuide() {
     <GuideBody>
       <GuideSection title="Kampagne · Ingame-Jahr" figure={<CampaignFigure />}>
         <p>
-          Die Kampagnen-Seite bündelt, was die Runde als Ganzes betrifft. Ganz
-          oben steht das <strong>Ingame-Jahr</strong> — das Jahr, in dem die
+          Die Kampagnen-Seite bündelt, was die Runde als Ganzes betrifft. Im
+          eingeklappten Bereich steht das <strong>Ingame-Jahr</strong> — das Jahr, in dem die
           Kampagne gerade spielt. Es ist mehr als eine Anzeige: Trägt eine Figur
           ein <strong>Geburtsdatum</strong>, wird ihr Alter überall aus
           Ingame-Jahr minus Geburtsjahr gerechnet. Ohne Geburtsdatum gilt
@@ -46,28 +45,26 @@ export function GmCampaignGuide() {
 
       <GuideSection title="Kampagne · AP und Missionen">
         <p>
-          Darunter liegt die <strong>AP-Vergabe</strong> für einzelne Figuren:
-          je Charakter eine Zeile mit ihrem Kontostand, den{" "}
-          <strong>Schnellknöpfen</strong> für eine Session und ein Logbuch
-          (Beträge aus dem Regelwerk unter „AP“) und einer{" "}
-          <strong>freien Buchung</strong> aus Betrag, Grund und Notiz. Für
-          alles, was eine ganze Session betrifft, ist der Bereich{" "}
-          <strong>„Sessions“</strong> der richtige Ort — hier geht es um die
-          Einzelbuchung, die dazwischen anfällt.
+          Die <strong>AP-Vergabe, AP-Konten und der Buchungsverlauf</strong>
+          liegen zusammen im Menüpunkt „AP“.
         </p>
         <p>
-          AP für einen <strong>Missionsabschluss</strong> gibt es nur über den
-          Abschnitt „Mission abschließen“: Dort wird die Mission ausgewählt und
-          die AP vergeben — und die Mission dabei zugleich auf „abgeschlossen“
-          gesetzt. Beides in einem Schritt, damit keine abgeschlossene Mission
-          ohne Gutschrift und keine Gutschrift ohne Abschluss entsteht.
+          AP für einen <strong>Missionsabschluss</strong> werden ebenfalls unter
+          „AP“ vergeben. Dabei wird die Mission ausgewählt und zugleich auf
+          „abgeschlossen“ gesetzt.
         </p>
         <p>
-          Ganz unten steht die <strong>Missionsverwaltung</strong>: alle
-          Missionen mit Bearbeiten, Löschen und der Zuordnung einer
-          Besitzerin/eines Besitzers pro Zeile. Sie löste den früheren Menüpunkt
-          „Missionen“ ab; die Adresse <strong>/gm/missions</strong> bleibt als
-          Direktlink erreichbar.
+          Die <strong>Missionsübersicht</strong> liegt im Leitungs-Menü unter
+          „Missionen“. Dort verwaltest du Missionen und ihre Inhalte.
+        </p>
+      </GuideSection>
+
+      <GuideSection title="Kampagne · Steigerungsregeln">
+        <p>
+          Im eingeklappten Bereich <strong>„Steigerungsregeln“</strong> legst du
+          Kosten, Erschaffungsbudgets und AP-Vorgaben fest. Spielende können
+          die aktuellen Werte unter <strong>„Regeln“ → „Steigerungsregeln“</strong>
+          {" "}nachlesen.
         </p>
       </GuideSection>
     </GuideBody>
@@ -83,17 +80,22 @@ export function GmSessionsGuide() {
         figure={<SessionsFigure />}
       >
         <p>
-          Mit <strong>„Termin ankündigen“</strong> setzt du den nächsten
-          Spielabend an: Zeitpunkt, Ort, eine Notiz und wer mitspielt — alle
+          Oben auf der Seite <strong>„Sessions“</strong> planst du den nächsten
+          Spielabend an: Zeitpunkt, Mission, Ort und wer mitspielt — alle
           aktiven Figuren sind vorausgewählt. Der Termin erscheint danach auf
           der Startseite aller Beteiligten, die dort zu- oder absagen können.
         </p>
         <p>
           Liegt er in der Zukunft, geht die Ankündigung zusätzlich als{" "}
           <strong>Mail und Push</strong> an die Spielenden der eingeplanten
-          Figuren — mit Zeitpunkt, Ort und deiner Notiz. Abonnieren muss dafür
+          Figuren — mit Zeitpunkt und Ort. Abonnieren muss dafür
           niemand etwas; die Rückmeldung im Formular nennt, wie viele Personen
           tatsächlich erreicht wurden.
+        </p>
+        <p>
+          Offene Termine stehen hier oberhalb der gespielten Sessions. Du kannst
+          sie bearbeiten, löschen oder nach dem Spiel direkt eintragen; neue
+          Termine legst du ebenfalls hier an.
         </p>
       </GuideSection>
 
@@ -101,32 +103,113 @@ export function GmSessionsGuide() {
         <p>
           Ist der Abend gespielt, macht <strong>„Session eintragen“</strong> am
           Termin daraus in einem Schritt die Nachbuchung: ein Fenster fragt
-          Session-AP, Bonus-AP und Notizen ab, übernimmt Datum, Titel und
-          Besetzung und bucht die AP. Der Termin bleibt mit seinen Zusagen in
-          der Liste stehen, verschwindet aber von der Startseite.
+          Session-AP, Bonus-AP und Zusammenfassungsblöcke ab, übernimmt Datum
+          und Besetzung und bucht die AP. Danach erscheint die gespielte Session
+          unter „Sessions“ und der Termin verschwindet aus den offenen Terminen.
         </p>
         <p>
           Ohne vorherigen Termin geht es genauso von Hand:{" "}
-          <strong>„Session nachtragen“</strong> fragt Datum, Titel, Session-AP,
-          Bonus-AP und Notizen ab und schreibt allen Beteiligten die AP in einem
-          Rutsch gut. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
+          <strong>„Session nachtragen“</strong> fragt Datum, Mission, Session-AP,
+          Bonus-AP und Zusammenfassungsblöcke ab und schreibt allen Beteiligten
+          die AP in einem Rutsch gut. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
           Konto — wer gefehlt hat, wird einfach abgewählt. Eine versehentlich
           eingetragene Session lässt sich zurücknehmen; die Gutschriften werden
           dann mit storniert.
         </p>
         <p>
-          Einer eingetragenen Session lassen sich <strong>Logbücher</strong>{" "}
-          zuordnen. Sobald mindestens eines daran hängt, bekommen alle
-          Teilnehmenden automatisch die Logbuch-AP extra — einmal je Session,
-          egal wie viele Logbücher geschrieben werden. Wird die Zuordnung gelöst
-          oder das letzte Logbuch entfernt, verschwindet die Gutschrift ebenso
-          automatisch; auch dann, wenn das Logbuch mit seiner ganzen Mission
-          gelöscht oder einer anderen Session zugeordnet wird (ein Logbuch hängt
-          immer an genau einer Session).
+          Die Vorbelegung der Session-AP kommt aus dem Regelwerk unter{" "}
+          <strong>„Kampagne“ → „Steigerungsregeln“</strong>.
         </p>
         <p>
-          Die Vorbelegung der Beträge kommt aus dem Regelwerk unter{" "}
-          <strong>„AP“</strong> — dort stehen die AP je Session und je Logbuch.
+          Die Karten der gespielten Sessions sind nach Mission gruppiert und
+          nach Mission, Datum oder Zusammenfassung durchsuchbar. Ein Klick
+          öffnet die Detailseite mit AP, Teilnehmenden und Log-Einträgen.
+          Über den Stift bearbeitest du die Session und ihre Log-Einträge; einzelne
+          Log-Einträge lassen sich im Formular entfernen. Die Missionschronik zeigt
+          sie mit ihrem Ingame-Datum als Titel und Sprungmarke.
+        </p>
+        <p>
+          Jede Session gehört zu einer Mission und erhält ihren Titel samt
+          fortlaufender Nummer automatisch. Beim Eintragen kannst du mehrere
+          Log-Einträge erfassen: jeder besteht aus Ingame-Datum und Text. Ein
+          Notizfeld gibt es nicht mehr. Aus den gespeicherten Einträgen baut
+          sich die Missions-Synopsis automatisch auf; du pflegst sie nicht
+          zusätzlich von Hand.
+        </p>
+        <p>
+          In der Missionschronik stehen diese GM-Log-Einträge gemeinsam mit den
+          Spieler-Logbüchern, nach Ingame-Datum sortiert. Das Inhaltsverzeichnis
+          springt zu beiden Arten von Einträgen und zur Synopsis am Ende. Die
+          Session-Panels sind einzeln aufklappbar; + und − öffnen oder schließen
+          alle zusammen. Die PDF-Missionsakte enthält dieselbe Chronik.
+        </p>
+        <p>
+          Auch die Missionsverwaltung zeigt die zugehörigen Sessions als Karten.
+          Von dort öffnest du dieselbe Session-Detailseite zum Bearbeiten.
+        </p>
+      </GuideSection>
+    </GuideBody>
+  );
+}
+
+// ── Missionen (Leitung) ──────────────────────────────────────────────
+export function GmMissionsOverviewGuide() {
+  return (
+    <GuideBody>
+      <GuideSection title="Missionen verwalten" figure={<SessionsFigure />}>
+        <p>
+          Die Übersicht enthält laufende, abgeschlossene und geplante Missionen.
+          Über die Sortierung und Gruppierung kannst du sie nach Datum oder
+          Status ordnen; die Suche grenzt die Karten ein. Das Plus legt eine
+          Mission an. Ein Klick auf eine Karte öffnet ihre Verwaltungsseite.
+        </p>
+        <p>
+          Die Karte öffnet die Leitungsverwaltung mit Session-Karten und
+          Missionseditor. Dort führt „Mission ansehen“ in die öffentliche
+          Chronik.
+        </p>
+      </GuideSection>
+    </GuideBody>
+  );
+}
+
+export function GmMissionDetailGuide() {
+  return (
+    <GuideBody>
+      <GuideSection title="Mission verwalten">
+        <p>
+          Oben führen die Session-Karten zu den Spielterminen dieser Mission.
+          Auf der Detailseite einer Session kannst du Datum, AP, Teilnehmende
+          und Log-Einträge anpassen. Der Missionseditor am Ende dieser Seite
+          pflegt Beschreibung, Zeitraum, Status und Besetzung.
+        </p>
+        <p>
+          „Mission ansehen“ öffnet die Missionschronik. Dort erscheinen die
+          Spieler-Logbücher und die datierten Log-Einträge der Spielleitung
+          gemeinsam nach Ingame-Datum. Das Inhaltsverzeichnis springt zu jedem
+          Eintrag; die vollständige Synopsis steht am Ende.
+        </p>
+      </GuideSection>
+    </GuideBody>
+  );
+}
+
+export function GmSessionDetailGuide() {
+  return (
+    <GuideBody>
+      <GuideSection title="Session bearbeiten">
+        <p>
+          Die Detailseite hält Spieltermin, zugehörige Mission, AP und
+          Teilnehmende zusammen. Über den Stift kannst du die Session und ihre
+          Log-Einträge bearbeiten; einzelne Einträge lassen sich dort entfernen.
+          Gelöscht wird die Session über den Papierkorb. Dabei werden auch ihre
+          AP-Buchungen zurückgenommen.
+        </p>
+        <p>
+          Ein Log-Eintrag ist ein datierter Abschnitt für die Missionschronik.
+          Seine Nummer läuft über alle Sessions der Mission weiter. Die
+          Missionschronik sortiert diese Einträge zusammen mit den Spieler-
+          Logbüchern nach Ingame-Datum.
         </p>
       </GuideSection>
     </GuideBody>
@@ -214,19 +297,19 @@ export function GmApGuide() {
         figure={<ApLedgerFigure />}
       >
         <p>
-          Oben stehen die <strong>Kontostände</strong> aller Figuren: erhalten,
-          ausgegeben, verfügbar. Darunter das gesamte{" "}
+          Oben vergibst du AP oder schließt eine Mission mit einer Gutschrift
+          ab. Danach folgen die <strong>Kontostände</strong> aller Figuren:
+          erhalten, ausgegeben, verfügbar. Darunter steht das gesamte{" "}
           <strong>Buchungsjournal</strong> — jede Gutschrift und jede Ausgabe
-          mit Datum und Grund, nach Charakter und Grund filterbar. Vergeben wird
-          hier nichts: Einzelbuchungen laufen über <strong>„Kampagne“</strong>,
-          Sammelgutschriften über <strong>„Sessions“</strong>. Dieser Bereich
-          ist zum Nachvollziehen da — und fürs Regelwerk darunter.
+          mit Datum und Grund, nach Charakter und Grund filterbar.
+          Sammelgutschriften für gespielte Abende entstehen bei der
+          Session-Erfassung.
         </p>
       </GuideSection>
 
-      <GuideSection title="AP · Das Regelwerk">
+      <GuideSection title="AP · Vorgaben aus dem Regelwerk">
         <p>
-          Im <strong>AP-Regelwerk</strong> stellst du ein, womit alle
+          Unter <strong>„Kampagne“ → „Steigerungsregeln“</strong> stellst du ein, womit alle
           Charakterbögen rechnen: die Kosten je Steigerungsschritt, die Kosten
           für Talente und Schwerpunkte, die Budgets und Freikontingente der
           Ersterschaffung, wie viele übrige AP beim Abschließen gutgeschrieben
@@ -299,28 +382,6 @@ export function GmFocusesGuide() {
         <p>
           Auch hier lassen sich nur <strong>selbst ergänzte</strong> Einträge
           wieder löschen.
-        </p>
-      </GuideSection>
-    </GuideBody>
-  );
-}
-
-// ── Eigene Regeln ────────────────────────────────────────────────────
-export function GmRulesGuide() {
-  return (
-    <GuideBody>
-      <GuideSection title="Eigene Regeln" figure={<CampaignRulesFigure />}>
-        <p>
-          Hier hinterlegst du die <strong>Hausregeln der Runde</strong>: Name,
-          Regeltext und eine Zahl für die Reihenfolge. Sie erscheinen auf dem
-          Spickzettel <em>jedes</em> Charakterbogens — auch im PDF — hinter den
-          Regeln aus dem Regelwerk, und gelten dort für alle gleich.
-        </p>
-        <p>
-          Anders als bei Talenten und Schwerpunkten lässt sich jede Regel wieder
-          löschen: Sie steht auf keinem Bogen als Eintrag, sondern wird bei
-          jeder Anzeige frisch dazugeholt. Eine gerade gespeicherte Änderung
-          steht beim Zurückkehren sofort in der Liste.
         </p>
       </GuideSection>
     </GuideBody>
@@ -404,13 +465,15 @@ export default function GmAreaGuides() {
   return (
     <GuideBody>
       <GmCampaignGuide />
+      <GmMissionsOverviewGuide />
+      <GmMissionDetailGuide />
       <GmSessionsGuide />
+      <GmSessionDetailGuide />
       <GmCharactersGuide />
       <GmPartySheetGuide />
       <GmApGuide />
       <GmTalentsGuide />
       <GmFocusesGuide />
-      <GmRulesGuide />
       <GmTimelineGuide />
       <GmDialoguesGuide />
     </GuideBody>

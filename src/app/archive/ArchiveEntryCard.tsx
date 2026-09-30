@@ -2,6 +2,7 @@ import { ArchiveEntryPreview } from "@/types/archive";
 import { CATEGORY_CONFIG, archiveTitle } from "@/lib/archiveFormat";
 import ChronoCard from "@/components/timeline/ChronoCard";
 import { archiveHref } from "@/lib/contentRoutes";
+import ContentCardMenu from "@/components/timeline/ContentCardMenu";
 
 // Eintrags-Karte der Datenbank — dieselbe Karte wie in der Chronologie
 // (ChronoCard): Kategorie-Etikett und Titel oben, darunter die Kurzfassung
@@ -11,8 +12,10 @@ import { archiveHref } from "@/lib/contentRoutes";
 // Chronologie (siehe getAllArchiveEntries in src/lib/archive.ts).
 export default function ArchiveEntryCard({
   entry,
+  currentUserId,
 }: {
   entry: ArchiveEntryPreview;
+  currentUserId: number | null;
 }) {
   const cfg = CATEGORY_CONFIG[entry.category];
   const m = entry.metadata;
@@ -28,6 +31,17 @@ export default function ArchiveEntryCard({
       title={title}
       ariaLabel={`${title} — ${cfg.label}`}
       href={archiveHref(entry.slug)}
+      actions={
+        <ContentCardMenu
+          contentType="archive_entry"
+          id={entry.id}
+          ownerUserId={entry.ownerUserId}
+          currentUserId={currentUserId}
+          isDraft={entry.isDraft}
+          title={title}
+          href={archiveHref(entry.slug)}
+        />
+      }
       summary={m.summary}
       meta={
         <>

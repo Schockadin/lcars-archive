@@ -20,7 +20,7 @@ import { isRecoverableRenderError } from "@/lib/recoverableRenderErrors";
 // Client-Verbindungen bei pgBouncer belegt.
 //
 // Nicht während `next build` (die Prerender-Worker laden instrumentation.ts
-// ebenfalls) und nicht ohne DATABASE_URL. Ein Fehlschlag ist egal: Die erste
+// ebenfalls) und nicht ohne konfigurierte Datenbank. Ein Fehlschlag ist egal: Die erste
 // echte Abfrage versucht es dann regulär erneut und meldet ihren Fehler selbst.
 export function register(): void {
   if (process.env.NEXT_PHASE === "phase-production-build") return;

@@ -89,6 +89,8 @@ export function SubmitButton({
   children,
   className = "lcars-pill-btn--outline self-start disabled:opacity-50 w-[100%]",
   onClick,
+  ariaLabel,
+  title,
 }: {
   pending: boolean;
   pendingLabel: string;
@@ -97,6 +99,8 @@ export function SubmitButton({
   // Optionaler Klick-Handler, z.B. für ein confirm() vor dem Absenden
   // (verhindert den Submit per preventDefault, siehe confirmSubmit).
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  ariaLabel?: string;
+  title?: string;
 }) {
   return (
     <button
@@ -104,6 +108,8 @@ export function SubmitButton({
       disabled={pending}
       className={className}
       onClick={onClick}
+      aria-label={ariaLabel}
+      title={title}
     >
       {pending ? pendingLabel : children}
     </button>

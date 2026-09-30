@@ -1,17 +1,22 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireGM } from "@/lib/dal";
 import {
   createGameSession,
   deleteGameSession,
   updateGameSession,
   listActiveCharactersForAp,
-  setSessionLogbooks,
+  listCharactersForSessionEdit,
+  listSessionMissions,
 } from "@/lib/gameSessions";
 import { validateGameSessionInput } from "@/lib/gameSessionFormat";
+import { isIsoDate } from "@/lib/gameSessionFormat";
+import { missionSlugExists } from "@/lib/missions";
+import { slugifyBase } from "@/lib/slug";
+import { revalidateMission } from "@/lib/revalidate";
 import {
   getPlannedSession,
-  linkPlannedSession,
 } from "@/lib/plannedSessions";
 
 export interface SessionFormState {
@@ -31,13 +36,13 @@ export async function createSessionAction(
 
   const parsed = validateGameSessionInput({
     sessionDate: String(formData.get("sessionDate") ?? ""),
-    title: String(formData.get("title") ?? ""),
     sessionAp: String(formData.get("sessionAp") ?? ""),
     bonusAp: String(formData.get("bonusAp") ?? ""),
-    notes: String(formData.get("notes") ?? ""),
     characterIds: formData.getAll("characterIds").map(String),
   });
   if (!parsed.ok) return { error: parsed.error };
+  const sessionContext = await readSessionContext(formData);
+  if ("error" in sessionContext) return { error: sessionContext.error };
 
   // Nur Charaktere gutschreiben, die auch wirklich gutschreibbar sind — ein
   // manipuliertes Formular soll keine fremde, zurückgezogene oder gelöschte
@@ -56,9 +61,13 @@ export async function createSessionAction(
 
   await createGameSession({
     ...parsed.value,
+    missionId: sessionContext.missionId!,
+    newMission: sessionContext.newMission,
+    synopsisBlocks: sessionContext.synopsisBlocks,
     characterIds,
     createdByUserId: user.id,
   });
+  revalidateMission(sessionContext.missionSlug);
 
   revalidatePath("/gm/sessions");
   revalidatePath("/gm/ap");
@@ -86,17 +95,24 @@ export async function deleteSessionAction(
   if (!Number.isInteger(id)) return { error: "Ungültige Session." };
 
   const deleted = await deleteGameSession(id);
-  if (!deleted) return { error: "Session nicht gefunden." };
+  if (deleted === null) return { error: "Session nicht gefunden." };
+  if (deleted) {
+    revalidateMission(deleted);
+    revalidatePath(`/gm/missions/${encodeURIComponent(deleted)}`);
+  }
 
   revalidatePath("/gm/sessions");
+  revalidatePath(`/gm/sessions/${id}`);
   revalidatePath("/gm/ap");
   revalidatePath("/gm/campaign");
+  revalidatePath("/");
+  if (formData.get("returnToSessions") === "true") redirect("/gm/sessions");
   return {
     success: "Session zurückgenommen, die Gutschriften wurden storniert.",
   };
 }
 
-// Eine eingetragene Session korrigieren — Datum, Titel, AP-Beträge, Notizen
+// Eine eingetragene Session korrigieren — Datum, Mission, AP-Beträge, Synopsisblöcke
 // und Teilnehmende. Die Gutschriften werden dabei mitgezogen (siehe
 // updateGameSession): eine Korrektur, die die Konten nicht mitnimmt, wäre
 // keine.
@@ -112,17 +128,17 @@ export async function updateSessionAction(
   // Dieselbe Prüfung wie beim Anlegen — Titel-/Notizlängen, Datum, Beträge.
   const parsed = validateGameSessionInput({
     sessionDate: String(formData.get("sessionDate") ?? ""),
-    title: String(formData.get("title") ?? ""),
     sessionAp: String(formData.get("sessionAp") ?? ""),
     bonusAp: String(formData.get("bonusAp") ?? ""),
-    notes: String(formData.get("notes") ?? ""),
     characterIds: formData.getAll("characterIds").map(String),
   });
   if (!parsed.ok) return { error: parsed.error };
+  const sessionContext = await readSessionContext(formData, false);
+  if ("error" in sessionContext) return { error: sessionContext.error };
 
-  // Wie beim Anlegen: nur aktive, gutschreibbare Akten kommen aufs Konto.
+  // Bestehende Teilnehmende behalten ihre Gutschrift auch nach dem Ruhestand.
   const allowed = new Set(
-    (await listActiveCharactersForAp()).map((character) => character.id),
+    (await listCharactersForSessionEdit(id)).map((character) => character.id),
   );
   const characterIds = parsed.value.characterIds.filter((cid) =>
     allowed.has(cid),
@@ -136,12 +152,19 @@ export async function updateSessionAction(
   const updated = await updateGameSession({
     id,
     ...parsed.value,
+    missionId: sessionContext.missionId!,
+    synopsisBlocks: sessionContext.synopsisBlocks,
     characterIds,
     actingUserId: user.id,
   });
   if (!updated) return { error: "Session nicht gefunden." };
+  revalidateMission(updated.missionSlug);
+  if (updated.oldMissionSlug) revalidateMission(updated.oldMissionSlug);
+  revalidatePath(`/gm/missions/${encodeURIComponent(updated.missionSlug)}`);
+  if (updated.oldMissionSlug) revalidatePath(`/gm/missions/${encodeURIComponent(updated.oldMissionSlug)}`);
 
   revalidatePath("/gm/sessions");
+  revalidatePath(`/gm/sessions/${id}`);
   revalidatePath("/gm/ap");
   revalidatePath("/gm/campaign");
   return {
@@ -149,44 +172,11 @@ export async function updateSessionAction(
   };
 }
 
-// Logbücher einer Session zuordnen. Sobald mindestens eines daran hängt,
-// schreibt setSessionLogbooks den Teilnehmenden automatisch die Logbuch-AP gut
-// (einmal je Session und Charakter); fällt das letzte wieder weg, wird die
-// Gutschrift zurückgenommen.
-export async function setSessionLogbooksAction(
-  state: SessionFormState,
-  formData: FormData,
-): Promise<SessionFormState> {
-  const user = await requireGM();
-
-  // > 0 statt nur isInteger: Number("") ist 0 und damit eine ganze Zahl — ein
-  // leeres Feld käme sonst als gültige ID durch.
-  const id = Number(formData.get("id"));
-  if (!Number.isInteger(id) || id <= 0) return { error: "Ungültige Session." };
-
-  const logIds = formData.getAll("logIds").map(Number);
-  if (logIds.some((logId) => !Number.isInteger(logId) || logId <= 0)) {
-    return { error: "Ungültige Logbuch-Auswahl." };
-  }
-
-  await setSessionLogbooks(id, logIds, user.id);
-
-  revalidatePath("/gm/sessions");
-  revalidatePath("/gm/ap");
-
-  return {
-    success:
-      logIds.length > 0
-        ? `${logIds.length} Logbuch/Logbücher verknüpft — die Logbuch-AP sind gebucht.`
-        : "Keine Logbücher mehr verknüpft — die Logbuch-AP wurden zurückgenommen.",
-  };
-}
-
-// Aus einem angekündigten Termin wird die gespielte Session: Datum, Titel und
-// die eingeplanten Figuren stehen schon, im Fenster kommen AP-Beträge, Notizen
+// Aus einem angekündigten Termin wird die gespielte Session: Datum, Mission und
+// die eingeplanten Figuren stehen schon, im Fenster kommen AP-Beträge und Synopsisblöcke
 // und die letzte Korrektur der Teilnehmerliste dazu.
 //
-// Danach zeigt der Termin auf die gebuchte Session (linkPlannedSession) und
+// In derselben Transaktion zeigt der Termin auf die gebuchte Session und
 // verschwindet von der Startseite — die Zusagen bleiben an ihm stehen. Wird
 // die Session später zurückgenommen, steht der Termin wieder als offen da
 // (ON DELETE SET NULL).
@@ -208,13 +198,16 @@ export async function recordPlannedSessionAction(
 
   const parsed = validateGameSessionInput({
     sessionDate: String(formData.get("sessionDate") ?? ""),
-    title: String(formData.get("title") ?? ""),
     sessionAp: String(formData.get("sessionAp") ?? ""),
     bonusAp: String(formData.get("bonusAp") ?? ""),
-    notes: String(formData.get("notes") ?? ""),
     characterIds: formData.getAll("characterIds").map(String),
   });
   if (!parsed.ok) return { error: parsed.error };
+  const sessionContext = await readSessionContext(formData);
+  if ("error" in sessionContext) return { error: sessionContext.error };
+  if (planned.missionId !== null && sessionContext.missionId !== planned.missionId) {
+    return { error: "Die geplante Session muss ihrer zugehörigen Mission folgen." };
+  }
 
   // Wie beim Anlegen von Hand: nur aktive, gutschreibbare Akten kommen aufs
   // Konto.
@@ -230,12 +223,16 @@ export async function recordPlannedSessionAction(
     };
   }
 
-  const sessionId = await createGameSession({
+  await createGameSession({
     ...parsed.value,
+    missionId: planned.missionId ?? sessionContext.missionId,
+    plannedSessionId: plannedId,
+    newMission: sessionContext.newMission,
+    synopsisBlocks: sessionContext.synopsisBlocks,
     characterIds,
     createdByUserId: user.id,
   });
-  await linkPlannedSession(plannedId, sessionId);
+  revalidateMission(sessionContext.missionSlug);
 
   revalidatePath("/gm/sessions");
   revalidatePath("/gm/ap");
@@ -249,4 +246,61 @@ export async function recordPlannedSessionAction(
         ? `Termin eingetragen, je ${perCharacter} AP an ${characterIds.length} Charaktere gebucht.`
         : "Termin eingetragen.",
   };
+}
+
+async function readSessionContext(
+  formData: FormData,
+  allowNewMission = true,
+): Promise<
+  | {
+      missionId?: number;
+      missionSlug: string;
+      newMission?: { slug: string; title: string; ownerUserId: number };
+      synopsisBlocks: { id?: number; ingameDate: string; body: string }[];
+    }
+  | { error: string }
+> {
+  const missionChoice = String(formData.get("missionChoice") ?? "");
+  let missionId: number | undefined;
+  let missionSlug: string;
+  let newMission: { slug: string; title: string; ownerUserId: number } | undefined;
+  if (missionChoice === "new" && allowNewMission) {
+    const title = String(formData.get("newMissionTitle") ?? "").trim();
+    const slug = slugifyBase(title);
+    if (!title || title.length > 200 || !slug) {
+      return { error: "Bitte einen gültigen Titel für die neue Mission angeben." };
+    }
+    if (await missionSlugExists(slug)) {
+      return { error: "Eine Mission mit diesem Titel existiert bereits. Bitte den Titel anpassen." };
+    }
+    missionSlug = slug;
+    newMission = { slug, title, ownerUserId: (await requireGM()).id };
+  } else {
+    const rawId = missionChoice.startsWith("mission:") ? missionChoice.slice(8) : "";
+    missionId = Number(rawId);
+    if (!Number.isInteger(missionId) || missionId <= 0) {
+      return { error: "Bitte eine Mission auswählen." };
+    }
+    const mission = (await listSessionMissions()).find((item) => item.id === missionId);
+    if (!mission) return { error: "Die ausgewählte Mission ist nicht verfügbar." };
+    missionSlug = mission.slug;
+  }
+
+  const dates = formData.getAll("synopsisDate").map((value) => String(value).trim());
+  const ids = formData.getAll("synopsisId").map(String);
+  const texts = formData.getAll("synopsisText").map((value) => String(value).trim());
+  if (dates.length !== texts.length || (ids.length > 0 && ids.length !== dates.length) || dates.length > 20) {
+    return { error: "Die Log-Einträge sind ungültig." };
+  }
+  const synopsisBlocks: { id?: number; ingameDate: string; body: string }[] = [];
+  for (let i = 0; i < dates.length; i++) {
+    const [ingameDate, body] = [dates[i], texts[i]];
+    if (!ingameDate && !body) continue;
+    if (!isIsoDate(ingameDate)) return { error: `Bitte ein gültiges Ingame-Datum für Log-Eintrag ${i + 1} angeben.` };
+    if (!body || body.length > 12_000) return { error: `Bitte Text für Log-Eintrag ${i + 1} angeben (maximal 12.000 Zeichen).` };
+    const id = ids[i] ? Number(ids[i]) : undefined;
+    if (id !== undefined && (!Number.isSafeInteger(id) || id <= 0)) return { error: "Ungültiger Log-Eintrag." };
+    synopsisBlocks.push({ ...(id !== undefined ? { id } : {}), ingameDate, body });
+  }
+  return { missionId, missionSlug, newMission, synopsisBlocks };
 }

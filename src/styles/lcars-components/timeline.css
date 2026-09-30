@@ -158,7 +158,7 @@
   background: var(--timeline-color, var(--lcars-primary));
   color: var(--lcars-ink-dark);
   border-radius: 4px 14px 14px 4px;
-  overflow: hidden;
+  overflow: visible;
   transition: filter 120ms;
 }
 /* Die ganze Karte ist anklickbar, nicht nur der Titel — aber NICHT als
@@ -220,6 +220,77 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+.timeline-card-actions {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 2;
+}
+.timeline-card-actions--open {
+  z-index: 20;
+}
+.timeline-card:has(.timeline-card-actions--open) {
+  z-index: 20;
+}
+.timeline-card-more {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.timeline-card-more:hover,
+.timeline-card-more:focus-visible {
+  background: transparent;
+  color: inherit;
+  opacity: 0.72;
+  outline: 1px solid currentColor;
+  outline-offset: 2px;
+}
+.timeline-card-menu {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  right: 0;
+  display: flex;
+  min-width: 180px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 8px;
+  background: var(--lcars-surface);
+  color: var(--lcars-ink);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 24%);
+}
+.timeline-card-menu-link {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.timeline-card-menu-link:hover,
+.timeline-card-menu-link:focus-visible {
+  background: rgb(0 0 0 / 8%);
+  outline: none;
+}
+.timeline-card-menu-link--danger {
+  color: var(--lcars-quinary-ink);
 }
 .timeline-card-title {
   font-family: var(--lcars-font-sans);

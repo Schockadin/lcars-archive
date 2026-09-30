@@ -182,7 +182,7 @@ describe("getOwnDrafts", () => {
       `/user/archive/${eintrag.id}/edit`,
     );
     expect(editHref("dialogue")).toMatch(/^\/user\/archive\/\d+\/edit$/);
-    expect(editHref("mission")).toBe(`/user/missions/${mission.id}/edit`);
+    expect(editHref("mission")).toBe(`/gm/missions/${mission.slug}`);
   });
 
   it("gibt für ein Konto ohne Entwürfe nichts zurück", async () => {

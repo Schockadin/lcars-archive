@@ -43,7 +43,8 @@ export async function getRecentContentActivity(
            c.created_at::text AS created_at, c.updated_at::text AS updated_at
     FROM characters c
     LEFT JOIN users pu ON pu.id = c.player_id
-    WHERE (c.created_at > ${since} OR c.updated_at > ${since}) AND c.is_draft = false
+    WHERE (c.created_at > ${since} OR c.updated_at > ${since})
+      AND c.is_draft = false AND c.deleted_at IS NULL
 
     UNION ALL
 
@@ -53,7 +54,8 @@ export async function getRecentContentActivity(
            m.created_at::text, m.updated_at::text
     FROM missions m
     LEFT JOIN users ou ON ou.id = m.owner_user_id
-    WHERE (m.created_at > ${since} OR m.updated_at > ${since}) AND m.is_draft = false
+    WHERE (m.created_at > ${since} OR m.updated_at > ${since})
+      AND m.is_draft = false AND m.deleted_at IS NULL
 
     UNION ALL
 
@@ -62,9 +64,10 @@ export async function getRecentContentActivity(
            ou.name,
            ml.created_at::text, ml.updated_at::text
     FROM mission_logs ml
-    JOIN missions m ON m.id = ml.mission_id
+    JOIN missions m ON m.id = ml.mission_id AND m.deleted_at IS NULL
     LEFT JOIN users ou ON ou.id = ml.owner_user_id
-    WHERE (ml.created_at > ${since} OR ml.updated_at > ${since}) AND ml.is_draft = false
+    WHERE (ml.created_at > ${since} OR ml.updated_at > ${since})
+      AND ml.is_draft = false AND ml.deleted_at IS NULL
 
     UNION ALL
 
@@ -75,6 +78,7 @@ export async function getRecentContentActivity(
     FROM archive_entries a
     LEFT JOIN users au ON au.id = a.owner_user_id
     WHERE (a.created_at > ${since} OR a.updated_at > ${since})
+      AND a.deleted_at IS NULL
       AND (a.category != 'dialogue' OR a.dialogue_open = FALSE)
       AND a.is_draft = false
   `;

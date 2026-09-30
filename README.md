@@ -54,7 +54,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Markdown in allen Freitextfeldern** — der `MarkdownEditor` (Toolbar +
   Rohtext/Vorschau) steht nicht nur an den Content-Formularen, sondern auch an
   Notizen, eigenen Regeln, Talent- und Schwerpunkt-Beschreibungen,
-  Session-Notizen, der Notiz eines angekündigten Spieltermins, der
+  Log-Einträgen aus Sessions,
+  der
   Beschreibung eines von Hand eingetragenen Chronologie-Ereignisses und den
   Gesprächs-Formularen; sein `rows`-Prop setzt die
   Höhe in Zeilen statt in Pixeln (Notizen und Regeln: 10). Die zugehörigen
@@ -253,7 +254,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Einsatzberichte/Gespräche bleibt dort erhalten.
 - **Erfahrungspunkte (AP)** — jeder Charakter hat ein AP-Konto als
   Buchungsjournal (`character_ap_entries`): die Spielleitung vergibt unter
-  „Kampagne" AP (je 1 AP für gespielte Session und geschriebenes Logbuch, ein
+  unter „AP" AP (je 1 AP für gespielte Session und geschriebenes Logbuch, ein
   freier Betrag für Missions-/Story-Abschlüsse, dazu Korrekturen), die
   Spieler:innen geben sie auf ihrem Charakterbogen beim Steigern aus. Der
   Kontostand ist immer die Summe der Buchungen — kein separates Saldo-Feld, das
@@ -269,7 +270,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   serverseitig erzwungen, nicht nur im Formular. Steigerung und Abbuchung
   laufen in einer Transaktion, damit nie das eine ohne das andere passiert.
   Alle Zahlen des Regelwerks sind Standardwerte: die Spielleitung stellt sie
-  unter `/gm/ap` ein, gespeichert in `campaign_settings.advancement_rules`
+  unter `/gm/campaign` ein, gespeichert in `campaign_settings.advancement_rules`
   (`src/lib/advancementSettings.ts`); die Funktionen in `advancement.ts` nehmen
   den geltenden Satz als Argument entgegen. Der Wertebereich des Charakterbogens
   rechnet **live** mit: der State der Attribut-/Disziplin-Eingaben liegt in der
@@ -304,15 +305,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Regeln und derselben Prüfung wie beim Steigern; was nicht mehr passt, wird in
   der Rückmeldung mit Grund genannt. Rücknahme, Notiz und Gegenbuchungen laufen
   wie das Festschreiben in EINER Transaktion.
-- **Eigene Regeln der Runde** — Hausregeln (Name, Regeltext, `sort_order`)
-  liegen in `campaign_rules`, gepflegt unter `/gm/rules`, und erscheinen auf
-  dem Spickzettel jedes Charakterbogens hinter den Kernregeln — in der
-  Bildschirm-Vorschau wie im PDF. Anders als Talente und Schwerpunkte hängen
-  sie an keinem Charakter, deshalb ist auch jede Regel löschbar: sie steht auf
-  keinem Bogen als Eintrag. Validierung und Sortierung liegen in
-  `src/lib/campaignRuleTypes.ts` (ohne `server-only`, damit die Vorschau sie
-  nutzen kann), der DB-Zugriff mit eigenem Cache-Tag in
-  `src/lib/campaignRules.ts`.
+- **Regeln der Runde** — `/user/rules` zeigt die aktuellen Steigerungsregeln
+  aus `campaign_settings.advancement_rules` schreibgeschützt. Der GM bearbeitet
+  diese Werte unter `/gm/campaign`; das Buch-Menü „Regeln“ führt außerdem zu
+  den Schwerpunkt- und Talentkatalogen. Die Oberfläche „Weitere Regeln“ ist
+  entfernt. Bestehende Hausregeln in `campaign_rules` bleiben für die
+  Charakterbogen-Vorschau und den PDF-Export erhalten.
 - **„Wer kennt wen"** — auf jeder Personalakte steht unter dem Inhalt, mit
   wem die Figur zu tun hat (`getRelationsOf` in `src/lib/relations.ts`,
   angezeigt von `src/app/_shared/RelationsSection.tsx`). Drei Quellen:
@@ -482,9 +480,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   liegenden Seiten `campaign`, `dialogues`, `characters` und `missions` sind
   hierher umgezogen, `/admin` ist dadurch reine Verwaltung (`requireStaff`
   verlangt dort kein `gm.access` mehr).
-  - `/gm/campaign` — Ingame-Jahr, AP-Vergabe, Missionsabschluss und
-    Missions-Übersicht an einem Ort (`/gm/missions` bleibt als Direktlink auf
-    die Einzelansicht erhalten).
+  - `/gm/missions` — nach Datum und Status gruppierbare Missionskarten.
+    Die Detailseite enthält den Missionseditor und verlinkt die zugehörigen
+    Sessions unter `/gm/sessions/[id]`.
   - `/gm/characters` — die Charakter-Verwaltung: Zuordnung der Figuren zu
     Konten und der Erschaffungs-Status samt „Erschaffung wieder öffnen“
     (siehe oben). Eigener Menüpunkt; die Zuordnung stand übergangsweise
@@ -506,58 +504,73 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     Seite einmal für alle Bögen, nicht je Zeile. Die Seite nutzt die **volle
     Breite** statt der 1100px-Spalte: bei fünfzehn Wertespalten ist jeder
     Deckel ein Scrollbalken.
-  - `/gm/sessions` — gespielte Sessions eintragen (Datum, Titel, Session-AP,
-    Bonus-AP, Notizen) und allen ausgewählten Charakteren in einem Rutsch
-    gutschreiben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
+  - `/gm/sessions` — gespielte Sessions als durchsuchbare, nach Mission
+    gruppierte Karten; „Session nachtragen“ öffnet ein Formular im Fenster.
+    `/gm/sessions/[id]` zeigt und bearbeitet Session und Log-Einträge. Eine
+    Session gehört zu einer Mission; Titel entstehen aus Missionsname und
+    laufender Nummer. Session-AP und Bonus-AP werden allen ausgewählten
+    Charakteren gutgeschrieben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
     Konto; Session, Teilnehmerliste (`game_session_characters`) und
     Gutschriften entstehen in einer Transaktion (`game_sessions` +
     `character_ap_entries.session_id`), das Zurücknehmen storniert sie per
-    `ON DELETE CASCADE` mit. Einer Session lassen sich **Logbücher**
-    zuordnen (`mission_logs.session_id`): ab dem ersten bucht
-    `syncSessionLogbookAp` allen Teilnehmenden automatisch die Logbuch-AP —
-    genau einmal je Session und Charakter, idempotent, und beim Wegfallen des
-    letzten Logbuchs wieder zurück (auch beim Löschen/Wiederherstellen eines
-    Logbuchs oder seiner ganzen Mission). Ein Logbuch hängt an genau EINER
-    Session; zieht `setSessionLogbooks` eines aus einer anderen herüber, wird
-    auch deren Gutschrift nachgezogen — Lösen, Zuordnen und Buchen laufen
-    dafür in einer Transaktion. Eine eingetragene Session lässt sich
-    **vollständig korrigieren** (Datum, Titel, AP-Beträge, Notizen,
-    Teilnehmende): `updateGameSession` schreibt dabei die `session`- und
+    `ON DELETE CASCADE` mit. Bei Abschluss können mehrere datierte
+    Log-Einträge mit Datum ergänzt werden; daraus entsteht automatisch die
+    Missions-Synopsis. Neue Sessions bieten keine Logbuch-Zuordnung an;
+    bestehende historische Verknüpfungen bleiben erhalten und ihre Logbuch-AP
+    werden weiterhin synchronisiert. Eine eingetragene Session lässt sich
+    **vollständig korrigieren** (Datum, Mission, AP-Beträge,
+    Log-Einträge, Teilnehmende): `updateGameSession` schreibt dabei die `session`- und
     `bonus`-Buchungen der Session neu statt sie fortzuschreiben und zieht die
-    Logbuch-AP nach — alles in einer Transaktion, damit Session und Konten
+    historischen Logbuch-AP nach — alles in einer Transaktion, damit Session und Konten
     nie auseinanderlaufen. Bereits ausgegebene AP holt das nicht zurück, ein
     Konto kann dadurch rechnerisch ins Minus laufen.
-  - **Missionsabschluss** (auf `/gm/campaign`) — AP für einen Missionsabschluss
+  - **Missionsabschluss** (auf `/gm/ap`) — AP für einen Missionsabschluss
     gibt es ausschließlich über die Missionsauswahl: die gewählte Mission wird
     dabei auf `completed` gesetzt und die Buchungen tragen
     `character_ap_entries.mission_id`. Vorbelegt ist der Betrag mit der Regel
     **„AP pro beendeter Mission"** (`apPerMission`, Standard 5) aus dem
-    Regelwerk unter `/gm/ap`; im Einzelfall bleibt er überschreibbar. Der Grund „Mission" ist deshalb aus der
+    Regelwerk unter `/gm/campaign`; im Einzelfall bleibt er überschreibbar. Der Grund „Mission" ist deshalb aus der
     freien Buchung entfernt (die Server-Action weist ihn ab).
-  - `/gm/ap` — Kontostände aller Charaktere, das Gesamtjournal aller Buchungen
-    (nach Charakter und Grund filterbar, serverseitig auf die letzten 500
-    begrenzt) und der Editor des AP-Regelwerks.
+  - `/gm/ap` — AP-Vergabe einschließlich Missionsabschluss, danach
+    Kontostände aller Charaktere und das Gesamtjournal aller Buchungen
+    (nach Charakter und Grund filterbar, serverseitig auf die letzten 500 begrenzt).
   - `/gm/talents` — Talent-Katalog durchsuchen, filtern und bearbeiten sowie
     eigene Talente ergänzen. Löschbar sind nur selbst ergänzte Talente, damit
     keine Einträge unter bereits gepflegten Charakterbögen verschwinden.
   - `/gm/focuses` — dasselbe für den Schwerpunkt-Katalog (Suche,
     Disziplin-Filter, bearbeiten, ergänzen; löschbar nur selbst ergänzte).
-  - `/gm/rules` — eigene Regeln der Runde für den Spickzettel (Name,
-    Regeltext, Reihenfolge). Hier ist jede Regel löschbar.
+  - `/gm/campaign` — eingeklappte Panels für das Ingame-Jahr und die
+    Steigerungsregeln.
+    Spieler lesen die Steigerungsregeln unter `/user/rules`.
 - **Session-Planer** — die Spielleitung kündigt Termine an (`/gm/sessions`,
-  Knopf „Termin ankündigen" über der Terminliste, Formular im Fenster), alle
-  Angemeldeten sehen sie auf der Startseite und sagen zu oder ab. Der Zeitpunkt
+  Knopf „Session planen" über der Terminliste, Formular im Fenster) und
+  ordnet sie einer Mission zu; eine neue Mission lässt sich dort ebenfalls
+  anlegen. Der Titel entsteht aus Missionsname und laufender Nummer. Alle
+  Angemeldeten sehen Termine auf der Startseite und sagen zu oder ab. Der
+  Zeitpunkt
   ist **ein** `datetime-local`-Feld (Datum und Uhrzeit gehören zusammen), und
   zu jedem Termin gehört eine **Besetzung** (`planned_session_characters`, alle
   aktiven Figuren vorausgewählt). Ist der Abend gespielt, macht der Knopf
   **„Session eintragen"** am Termin daraus in einem Schritt die Nachbuchung:
-  ein Fenster fragt AP-Beträge, Notizen und die letzte Korrektur der Besetzung
-  ab, legt die `game_sessions`-Zeile samt Gutschriften an und hängt sie über
+  ein Fenster fragt AP-Beträge, datierte Log-Einträge und die letzte
+  Korrektur der Besetzung ab, legt die `game_sessions`-Zeile samt Gutschriften
+  an und hängt sie über
   `planned_sessions.game_session_id` an den Termin. Der Termin bleibt stehen —
   er trägt die Zusagen —, verschwindet aber von der Startseite; wird die
   Session zurückgenommen, steht er per `ON DELETE SET NULL` wieder als offen
   da. Von Hand nachtragen lässt sich weiterhin alles, was ohne Ankündigung
-  gespielt wurde: „Session nachtragen" darunter, zugeklappt.
+  gespielt wurde: „Session nachtragen" unter `/gm/sessions` öffnet ein Fenster.
+
+  Log-Einträge werden automatisch in die Missions-Synopsis übernommen und
+  chronologisch mit den Spieler-Logbüchern angezeigt. Das Inhaltsverzeichnis
+  der Missionschronik bietet datierte Sprungmarken zu den Log-Einträgen.
+  Deren IDs bleiben bei Korrekturen erhalten. Die vollständige „Synopsis“
+  steht am Ende außerhalb der Chronik. Die Missionschronik bietet einen
+  wechselnden +/−-Schalter für alle standardmäßig offenen Session-Panels;
+  die allgemeine Chronologie zeigt die Kategorie „Sessions“ ohne ToC oder
+  gemeinsamen Schalter. Das Eintragen eines geplanten Termins verbindet
+  Termin, Session, AP-Buchungen und Log-Einträge in einer Transaktion und verhindert
+  eine doppelte Buchung desselben Termins.
 
   Zwei eigene Tabellen (`planned_sessions`,
   `planned_session_rsvps`): `game_sessions` ist die **Nachbuchung** einer
@@ -570,7 +583,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Stunden, damit ein Abend nicht mitten im Spielen aus der Liste fällt — das
   Dashboard zeigte dadurch aber stundenlang einen längst begonnenen Abend samt
   Zusage-Knöpfen. Die Spielleitung sieht die vergangenen weiterhin über
-  `listAllPlannedSessions` unter `/gm/sessions`. Eine zweite Antwort ersetzt
+  `listUnrecordedPlannedSessions` unter `/gm/campaign`. Eine zweite Antwort ersetzt
   die erste; eine verschobene Uhrzeit lässt die Zusagen stehen.
 
   Ein **neu angekündigter** Termin erreicht die Spielenden seiner eingeplanten
@@ -808,11 +821,7 @@ auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
   News auf einmal als gelesen. Im Profil lässt sich einstellen, welche News-Arten
   (neu/bearbeitet/gelöscht) überhaupt angezeigt werden (Standard: nur neue).
   Persistenz über die Tabelle `news_seen`.
-- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign`
-  („Kampagne", ersetzt das frühere reine „Missionen") an einem Ort das aktuelle
-  Ingame-Jahr, die Charakter-Zuweisung und die Missions-Übersicht. Charaktere
-  haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen
-  Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
+- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign` (im Leitungsmenü unter „Regelwerk") das aktuelle Ingame-Jahr und die Steigerungsregeln. Charakter-Zuweisungen liegen unter `/gm/characters`, die Missionsübersicht unter `/gm/missions`. Charaktere haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
 - **Eingaben überleben den Reload** — jede Eingabe in jedem Formular der App
   wird für die Browser-Sitzung gesichert (`sessionStorage`) und beim nächsten
   Aufbau derselben Seite wieder eingesetzt: Neuladen, versehentliches Zurück
@@ -1110,9 +1119,10 @@ LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
 - **Missionsakte als PDF** — `/api/export/mission-book/[missionSlug]` (Knopf
   auf der Mission-Detailseite, nur für Angemeldete) packt **eine** Mission in
   eine Datei: Titelblatt mit Zeitraum, Status und Beteiligten, ein
-  **Inhaltsverzeichnis**, danach die Beschreibung und jedes Logbuch auf einer
-  eigenen Seite, chronologisch. In der Akte stehen nur **veröffentlichte**
-  Logbücher (`src/lib/missionBook.ts`), und eine Entwurfs-Mission liefert
+  **Inhaltsverzeichnis**, danach die Beschreibung sowie Spieler-Logbücher und
+  datierte GM-Log-Einträge auf jeweils eigenen Seiten, gemeinsam chronologisch.
+  In der Akte stehen nur **veröffentlichte** Logbücher (`src/lib/missionBook.ts`),
+  und eine Entwurfs-Mission liefert
   dieselbe 404 wie ihre Seite. Layout: `src/lib/pdf/MissionBookPdfDocument.tsx` —
   dieselbe Aufmachung wie der Charakterbogen (blauer Rahmen, Kopfzeile aus
   Kampagne und Titelreiter, formatierter Markdown-Text), Farben und die
@@ -1363,9 +1373,10 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   Die Spielleitung hat ein eigenes „Leitung“-Dropdown im Header, das getrennt
   neben dem Admin-Menü steht (wer beide Rollen hat, sieht beide Menüs
   nebeneinander), wie dieses **nach Aufgabe gegliedert** ist (Kampagne ·
-  Charaktere · Regelwerk · Inhalte) und in den Bereich `/gm` führt: Kampagnen-Seite (Ingame-Jahr,
-  Charakter-Zuweisung, Missions-Übersicht mit Bearbeiten/Löschen/Besitzer:in-
-  Zuordnung), Sessions, AP, Talente sowie alle aktuell offenen Gespräche — auch
+  Charaktere · Regelwerk · Inhalte) und in den Bereich `/gm` führt: Missionen
+  und Sessions stehen unter „Kampagne“, Charaktere, Gruppenblatt und AP unter
+  „Charaktere“, Talente, Schwerpunkte und Kampagneneinstellungen unter
+  „Regelwerk“. Dazu kommen die Inhalte sowie alle aktuell offenen Gespräche — auch
   ohne eigene Teilnahme, verlinkt auf die read-only-Ansicht des jeweiligen
   Gesprächs. Über jedes neu
   begonnene Gespräch wird jeder aktive GM-Account zusätzlich automatisch per
@@ -1660,10 +1671,23 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:reset`          | Setzt die Datenbank zurück                                                                                                                                                                                                                                                                      |
 | `npm run db:backup`         | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup")                                                                                                                                                                                                           |
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                                                                                                                                                                   |
+| `npm run db:pg-dump`        | Erstellt mit `pg_dump` ein vollständiges lokales PostgreSQL-Backup (Custom-Format)                                                                                                                                                                                                              |
+| `npm run db:pg-restore -- "<Datei>"` | Spielt einen lokalen pg_dump nach ausdrücklicher Bestätigung atomar zurück; ersetzt Datenbankobjekte aus dem Dump                                                                                                                                              |
 | `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                                                                                                                                                                             |
 | `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                                                                                                                                                                   |
 | `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Zugangs-Gates der kontogebundenen Routen, Komponenten-Galerie inkl. Charakter-Assistent, Bogen-Ansicht, Chronologie, Einstiegs-Liste und aufklappbaren Abschnitten sowie Layout-/Schrift-Regressionen an beiden Viewports) |
 | `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz **mit pgvector**, siehe unten)                                                                                                                                                              |
+
+### Prüfungen vor dem Merge
+
+Der manuell gestartete GitHub-Workflow `CI` prüft Lint, Unit-Tests und
+Datenbankintegration für den abschließenden PR-Commit. Die vollständigen
+Playwright-E2E-Tests laufen lokal über `npm run test:e2e`; die Browserinstallation
+(`npx playwright install chromium`, einmalig) erfolgt ebenfalls lokal.
+Für diesen Lauf einen separaten Testserver mit einer Dummy-`DATABASE_URL`
+verwenden, etwa `postgresql://user:pass@127.0.0.1:5432/dummy`, und keinen
+bereits laufenden Server mit produktiver Datenbankverbindung wiederverwenden.
+Vor dem Merge müssen lokale E2E-Tests, GitHub CI und Netlify erfolgreich sein.
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
 (z.B. `db:setup:dev`, `db:ingest:dev`, `db:reset:dev`) — identisch, nur mit
@@ -1672,6 +1696,15 @@ Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
 R2-Zugangsdaten direkt aus der Prozessumgebung (kein `--env-file`, siehe
 GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
 „Dev-/Preview-Umgebung" unter Deployment.
+
+Die vollständigen PostgreSQL-Dumps dieser Datenbank verwenden `DIRECT_DATABASE_URL`
+(wenn gesetzt), sonst `DATABASE_URL` aus `.env.local`. `pg_dump` und `pg_restore`
+müssen lokal installiert sein. Ohne Ausgabepfad speichert `db:pg-dump` die
+Datei in `Dokumente/Neo-Archiv-Backups`. Ein Restore verlangt die Eingabe einer
+Bestätigung und läuft in einer Transaktion; dennoch sollte vor dem Aufruf
+geprüft werden, dass die Verbindungs-URL auf die richtige Datenbank zeigt.
+Beide Kommandos sind auch im Admin-Bereich unter „Datenbank → DB-Backup"
+beschrieben.
 
 ---
 
@@ -1685,6 +1718,8 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
 │   ├── setup-db.ts           # Schema anlegen
 │   ├── reset-db.ts           # Datenbank zurücksetzen
 │   ├── backup-db.ts          # Voll-Backup nach R2 (täglicher Cronjob)
+│   ├── pg-dump.ts            # Vollständiger lokaler PostgreSQL-Dump
+│   ├── pg-restore.ts         # Bestätigter atomarer Restore eines pg_dump
 │   ├── cleanup-db-backups.ts # Löscht R2-Backups älter als 30 Tage
 │   ├── purge-soft-deleted.ts # Entfernt weich gelöschte Inhalte älter als 7 Tage endgültig
 │   └── ingest/               # Markdown-Vault → Datenbank

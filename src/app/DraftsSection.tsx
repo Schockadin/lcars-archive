@@ -104,6 +104,11 @@ export default function DraftsSection({
                     <span>
                       <b>Zuletzt</b> {fmtDate(draft.updatedAt)}
                     </span>
+                    {draft.kind === "mission_log" && draft.logDate && (
+                      <span>
+                        <b>Log-Datum</b> {fmtDate(draft.logDate)}
+                      </span>
+                    )}
                   </>
                 }
               />

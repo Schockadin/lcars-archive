@@ -75,6 +75,7 @@ const LOG: DraftItem = {
   updatedAt: "2401-05-12T10:00:00Z",
   href: "/chronologie/mission/erste-mission/log-vom-rand",
   editHref: "/user/mission-logs/7/edit",
+  logDate: "2401-04-30",
 };
 
 const MISSION: DraftItem = {
@@ -84,7 +85,7 @@ const MISSION: DraftItem = {
   title: "Stille Grenze",
   updatedAt: "2401-05-10T10:00:00Z",
   href: "/chronologie/mission/stille-grenze",
-  editHref: "/user/missions/3/edit",
+  editHref: "/gm/missions/stille-grenze",
 };
 
 describe("DraftsSection", () => {
@@ -104,6 +105,7 @@ describe("DraftsSection", () => {
 
     expect(screen.getByText("Missionslog")).toBeInTheDocument();
     expect(screen.getByText("12.05.2401")).toBeInTheDocument();
+    expect(screen.getByText("30.04.2401")).toBeInTheDocument();
   });
 
   it("zählt die Entwürfe in der Kopfzeile", () => {

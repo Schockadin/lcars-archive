@@ -42,9 +42,8 @@ export default function ManualEventForm({
   // Mit Ereignis wird dasselbe Formular zum Editor. So bleiben Felder,
   // Validierung und Kategorien beim Anlegen und Bearbeiten identisch.
   event?: ManualEventForEdit;
-  // In der Chronologie und in Inhaltszeilen bleibt der kompakte Symbolknopf.
-  // Der gemeinsame „Neue Inhalte"-Abschnitt verwendet dieselbe Form dagegen
-  // als beschriftete Pille neben den übrigen Anlege-Knöpfen.
+  // Der gemeinsame „Neue Inhalte“-Bereich verwendet die beschriftete Pille;
+  // in der Chronologie und auf Karten bleibt der kompakte Symbolknopf.
   triggerVariant?: "icon" | "pill";
   dateHint?: string;
 }) {

@@ -14,12 +14,18 @@ import type { ExportContentType } from "@/lib/contentExport";
 // solange eine URL existiert).
 export default function ShareMenu({
   title,
+  href,
   exportType,
   exportSlug,
+  menuItems = false,
 }: {
   title: string;
+  href?: string;
   exportType?: ExportContentType;
   exportSlug?: string;
+  // In einem übergeordneten Aktions-Dropdown stehen die Teilen-Aktionen
+  // direkt als Textzeilen, ohne ein zweites Menü öffnen zu müssen.
+  menuItems?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -38,7 +44,7 @@ export default function ShareMenu({
 
   async function handleCopyLink() {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(new URL(href ?? window.location.href, window.location.origin).toString());
       showToast("Link kopiert!", { kind: "success" });
     } catch {
       showToast("Link konnte nicht kopiert werden.", { kind: "error" });
@@ -50,7 +56,7 @@ export default function ShareMenu({
   // Rendern — sonst würde die Server-seitige erste Renderpassage einer
   // Client-Komponente crashen (kein window dort).
   function handleShareWhatsApp() {
-    const text = `${title} ${window.location.href}`;
+    const text = `${title} ${new URL(href ?? window.location.href, window.location.origin).toString()}`;
     window.open(
       `https://wa.me/?text=${encodeURIComponent(text)}`,
       "_blank",
@@ -67,6 +73,49 @@ export default function ShareMenu({
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Ziel ist KEINE Next-Seite, sondern ein Datei-Download (Content-Disposition: attachment). router.push() würde hier eine Client-Navigation auf eine Route versuchen, die gar keine Seite rendert; der Download bliebe aus.
     window.location.href = `/api/export/${format}?type=${encodeURIComponent(exportType)}&slug=${encodeURIComponent(exportSlug)}`;
     setOpen(false);
+  }
+
+  if (menuItems) {
+    return (
+      <>
+        <button
+          type="button"
+          role="menuitem"
+          className="timeline-card-menu-link"
+          onClick={handleCopyLink}
+        >
+          Link kopieren
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          className="timeline-card-menu-link"
+          onClick={handleShareWhatsApp}
+        >
+          Per WhatsApp teilen
+        </button>
+        {exportType && exportSlug && (
+          <>
+            <button
+              type="button"
+              role="menuitem"
+              className="timeline-card-menu-link"
+              onClick={() => handleExport("markdown")}
+            >
+              Als Markdown exportieren
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className="timeline-card-menu-link"
+              onClick={() => handleExport("pdf")}
+            >
+              Als PDF exportieren
+            </button>
+          </>
+        )}
+      </>
+    );
   }
 
   return (

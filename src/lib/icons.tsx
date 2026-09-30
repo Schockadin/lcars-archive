@@ -8,6 +8,14 @@ export const ICON_PROPS = {
   "aria-hidden": true,
 };
 
+export function BookIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M12 5v15M12 5C9 3 5 3 2 4v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1Z" />
+    </svg>
+  );
+}
+
 export function BoldIcon() {
   return (
     <svg {...ICON_PROPS}>

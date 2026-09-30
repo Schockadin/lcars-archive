@@ -16,10 +16,12 @@ import { fmtDate } from "@/lib/missionFormat";
 // Bewusst ohne "use client": die Zeile ist reines Markup und wird von der
 // Client-Komponente TimelineView mitgezogen.
 export default function ChronoRow({
+  htmlId,
   date,
   color,
   children,
 }: {
+  htmlId?: string;
   // ISO-Datum des Eintrags. null lässt die Spalte leer — der Punkt steht
   // trotzdem, sonst risse die Linie. Wird die Angabe ganz weggelassen
   // (Datenbank), entfällt die Datumsspalte komplett.
@@ -33,6 +35,7 @@ export default function ChronoRow({
 
   return (
     <article
+      id={htmlId}
       className={dated ? "timeline-event" : "timeline-event timeline-event-undated"}
       style={{ "--timeline-color": color } as React.CSSProperties}
     >

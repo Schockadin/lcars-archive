@@ -3,6 +3,7 @@ import sql from "@/lib/db";
 import { markdownToHtml } from "@/lib/markdown";
 import { slugifyBase, normalizeWikilinkTarget } from "@/lib/slug";
 import { isRangeProtected, type ProtectedRange } from "@/lib/protectedRanges";
+import { aliasGenitives } from "@/lib/autolinkPhrases";
 import {
   archiveHref,
   characterHref,
@@ -20,6 +21,10 @@ export interface AutolinkTarget {
   // zusätzlich metadata.aliases — dasselbe gilt seit v1.34 für
   // Datenbank-Einträge; für Missionen nur der Titel.
   phrases: string[];
+  // Aus Aliases abgeleitete Genitivformen; explizite Ziele/Aliases haben
+  // Vorrang, falls eine solche Form mit einem echten Namen kollidiert.
+  genitives?: string[];
+  preview?: string | null;
 }
 
 export interface AutolinkMatch {
@@ -27,6 +32,7 @@ export interface AutolinkMatch {
   canonical: string;
   href: string;
   matchedText: string;
+  preview?: string;
 }
 
 export interface AutolinkResult {
@@ -78,6 +84,17 @@ export function applyAutolinks(
       }
     }
   }
+  for (const type of TYPE_PRIORITY) {
+    for (const target of targets.filter((t) => t.type === type)) {
+      for (const raw of target.genitives ?? []) {
+        const phrase = raw.trim();
+        if (phrase.length < 2) continue;
+        const key = phrase.toLowerCase();
+        if (!phraseToTarget.has(key)) phraseToTarget.set(key, target);
+        phraseSet.add(phrase);
+      }
+    }
+  }
 
   if (phraseSet.size === 0) return { sourceMd, matches: [] };
 
@@ -121,6 +138,7 @@ export function applyAutolinks(
       canonical: target.canonical,
       href: target.href,
       matchedText: m[0],
+      ...(target.preview ? { preview: target.preview } : {}),
     });
     lastIndex = end;
   }
@@ -146,16 +164,17 @@ export async function getAutolinkTargets(
   exclude?: AutolinkExclude,
 ): Promise<AutolinkTarget[]> {
   const [characters, missions, archiveEntries] = await Promise.all([
-    sql<{ slug: string; name: string; aliases: string[] | null }[]>`
-      SELECT slug, name, metadata->'aliases' AS aliases
+    sql<{ slug: string; name: string; aliases: string[] | null; source_md: string | null; bio: string | null }[]>`
+      SELECT slug, name, metadata->'aliases' AS aliases, source_md, bio
       FROM characters
       WHERE is_draft = false AND deleted_at IS NULL
     `,
-    sql<{ slug: string; title: string }[]>`
-      SELECT slug, title FROM missions WHERE deleted_at IS NULL
+    sql<{ slug: string; title: string; source_md: string | null }[]>`
+      SELECT slug, title, source_md FROM missions WHERE deleted_at IS NULL AND is_draft = false
     `,
-    sql<{ slug: string; title: string; aliases: string[] | null }[]>`
-      SELECT slug, title, metadata->'aliases' AS aliases
+    sql<{ slug: string; title: string; aliases: string[] | null; source_md: string | null; summary: string | null }[]>`
+      SELECT slug, title, metadata->'aliases' AS aliases, source_md,
+             metadata->>'summary' AS summary
       FROM archive_entries
       WHERE is_draft = false AND deleted_at IS NULL AND category != 'dialogue'
     `,
@@ -168,6 +187,8 @@ export async function getAutolinkTargets(
       href: characterHref(c.slug),
       canonical: c.name,
       phrases: [c.name, ...(c.aliases ?? [])],
+      genitives: aliasGenitives(c.aliases ?? []),
+      preview: previewText(c.bio || c.source_md),
     })),
     ...archiveEntries.map((a) => ({
       type: "archive" as const,
@@ -175,6 +196,8 @@ export async function getAutolinkTargets(
       href: archiveHref(a.slug),
       canonical: a.title,
       phrases: [a.title, ...(a.aliases ?? [])],
+      genitives: aliasGenitives(a.aliases ?? []),
+      preview: previewText(a.summary || a.source_md),
     })),
     ...missions.map((m) => ({
       type: "mission" as const,
@@ -182,6 +205,7 @@ export async function getAutolinkTargets(
       href: missionHref(m.slug),
       canonical: m.title,
       phrases: [m.title],
+      preview: previewText(m.source_md),
     })),
   ];
 
@@ -307,8 +331,8 @@ export function resolveAutolinkedWikilinks(
   html: string,
   matches: AutolinkMatch[],
 ): string {
-  const hrefByCanonical = new Map(
-    matches.map((m) => [normalizeWikilinkTarget(m.canonical), m.href]),
+  const matchByCanonical = new Map(
+    matches.map((m) => [normalizeWikilinkTarget(m.canonical), m]),
   );
   return html.replace(
     /<a href="wikilink:\/\/([^"]*)">/g,
@@ -316,8 +340,12 @@ export function resolveAutolinkedWikilinks(
       const target = normalizeWikilinkTarget(
         decodeHtmlEntities(decodeURIComponent(rawTarget)),
       );
-      const href = hrefByCanonical.get(target);
-      return href ? `<a href="${href}" class="lcars-wikilink">` : full;
+      const match = matchByCanonical.get(target);
+      if (!match) return full;
+      const preview = match.preview
+        ? ` data-preview="${escapeAttribute(match.preview)}" title="${escapeAttribute(match.preview)}"`
+        : "";
+      return `<a href="${escapeAttribute(match.href)}" class="lcars-wikilink"${preview}>`;
     },
   );
 }
@@ -357,13 +385,18 @@ export async function resolveAllWikilinks(html: string): Promise<string> {
   // `deleted_at IS NULL` — ein Wikilink darauf führte ins Leere. Solche Ziele
   // gelten deshalb als nicht gefunden, nicht als Link.
   const [characters, missions, archiveEntries] = await Promise.all([
-    sql<{ slug: string; name: string; aliases: string[] | null }[]>`
-      SELECT slug, name, metadata->'aliases' AS aliases
+    sql<{ slug: string; name: string; aliases: string[] | null; source_md: string | null; bio: string | null }[]>`
+      SELECT slug, name, metadata->'aliases' AS aliases,
+             CASE WHEN NOT is_draft THEN source_md END AS source_md,
+             CASE WHEN NOT is_draft THEN bio END AS bio
       FROM characters WHERE deleted_at IS NULL`,
-    sql<{ slug: string; title: string }[]>`
-      SELECT slug, title FROM missions`,
-    sql<{ slug: string; title: string; aliases: string[] | null }[]>`
-      SELECT slug, title, metadata->'aliases' AS aliases
+    sql<{ slug: string; title: string; source_md: string | null }[]>`
+      SELECT slug, title, CASE WHEN NOT is_draft THEN source_md END AS source_md
+      FROM missions WHERE deleted_at IS NULL`,
+    sql<{ slug: string; title: string; aliases: string[] | null; source_md: string | null; summary: string | null }[]>`
+      SELECT slug, title, metadata->'aliases' AS aliases,
+             CASE WHEN NOT is_draft AND category != 'dialogue' THEN source_md END AS source_md,
+             CASE WHEN NOT is_draft AND category != 'dialogue' THEN metadata->>'summary' END AS summary
       FROM archive_entries WHERE deleted_at IS NULL`,
   ]);
 
@@ -371,16 +404,24 @@ export async function resolveAllWikilinks(html: string): Promise<string> {
   // Missionen — dieselbe Reihenfolge wie TYPE_PRIORITY oben/beim Ingest.
   const lookup = emptyLookup();
   for (const m of missions) {
-    addToLookup(lookup, missionHref(m.slug), m.slug, m.title, null);
+    addToLookup(lookup, missionHref(m.slug), m.slug, m.title, null, previewText(m.source_md));
   }
   for (const a of archiveEntries) {
-    addToLookup(lookup, archiveHref(a.slug), a.slug, a.title, a.aliases);
+    addToLookup(lookup, archiveHref(a.slug), a.slug, a.title, a.aliases, previewText(a.summary || a.source_md));
   }
   for (const c of characters) {
-    addToLookup(lookup, characterHref(c.slug), c.slug, c.name, c.aliases);
+    addToLookup(lookup, characterHref(c.slug), c.slug, c.name, c.aliases, previewText(c.bio || c.source_md));
   }
 
-  return replaceWikilinkTags(html, (target) => hrefFromLookup(lookup, target));
+  return replaceWikilinkTags(html, (target) => {
+    const href = hrefFromLookup(lookup, target);
+    return href
+      ? {
+          href,
+          preview: lookup.byPreview.get(href) ?? null,
+        }
+      : undefined;
+  });
 }
 
 // Die Nachschlagetabellen beider Auflöser: Titel/Name, Slug und Zweitnamen.
@@ -388,10 +429,11 @@ interface WikilinkLookup {
   byTitle: Map<string, string>;
   bySlug: Map<string, string>;
   byAlias: Map<string, string>;
+  byPreview: Map<string, string | null>;
 }
 
 function emptyLookup(): WikilinkLookup {
-  return { byTitle: new Map(), bySlug: new Map(), byAlias: new Map() };
+  return { byTitle: new Map(), bySlug: new Map(), byAlias: new Map(), byPreview: new Map() };
 }
 
 function addToLookup(
@@ -400,13 +442,18 @@ function addToLookup(
   slug: string,
   title: string,
   aliases: string[] | null,
+  preview: string | null = null,
 ): void {
-  lookup.byTitle.set(normalizeWikilinkTarget(title), href);
+  const titleKey = normalizeWikilinkTarget(title);
+  lookup.byTitle.set(titleKey, href);
+  lookup.byPreview.set(href, preview);
   lookup.bySlug.set(slug, href);
   for (const alias of aliases ?? []) {
     if (typeof alias !== "string") continue;
     const key = normalizeWikilinkTarget(alias);
-    if (key) lookup.byAlias.set(key, href);
+    if (key) {
+      lookup.byAlias.set(key, href);
+    }
   }
 }
 
@@ -455,11 +502,138 @@ export async function resolvePublicWikilinks(html: string): Promise<string> {
         // phrases = kanonischer Name + Aliase; der kanonische Name steht
         // ohnehin schon in byTitle.
         target.phrases.filter((p) => p !== target.canonical),
+        target.preview,
       );
     }
   }
 
-  return replaceWikilinkTags(html, (target) => hrefFromLookup(lookup, target));
+  return replaceWikilinkTags(html, (target) => {
+    const href = hrefFromLookup(lookup, target);
+    return href
+      ? {
+          href,
+          preview: lookup.byPreview.get(href) ?? null,
+        }
+      : undefined;
+  });
+}
+
+function previewText(source: string | null | undefined): string | null {
+  if (!source) return null;
+  const text = source
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\[\[[^\]]*\]\]/g, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[#>*_`~|-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text ? text.slice(0, 220) : null;
+}
+
+// Ergaenzt Vorschauen bei bereits gespeichertem HTML. Der erste Renderer
+// kann data-preview nur bei neu aufgeloesten Wikilinks setzen; alte Vault-
+// Imports enthalten dagegen schon direkte hrefs. Es werden ausschliesslich
+// die im HTML referenzierten, veroeffentlichten Ziele nachgeladen.
+export async function addStoredContentLinkPreviews(html: string): Promise<string> {
+  const slugs = { characters: new Set<string>(), archive: new Set<string>() };
+  const hrefs = new Map<string, { type: "characters" | "archive"; slug: string }>();
+
+  for (const match of html.matchAll(/<a\b[^>]*\bhref="([^"]+)"[^>]*>/gi)) {
+    const href = match[1].replace(/&amp;/g, "&");
+    const target = href.match(
+      /^\/(characters|archive)\/([a-z0-9-]+)(?:\/(?:sheet|logs))?(?:[?#].*)?$/i,
+    );
+    if (!target) continue;
+    const type = target[1].toLowerCase() as "characters" | "archive";
+    const slug = target[2];
+    slugs[type].add(slug);
+    hrefs.set(href, { type, slug });
+  }
+
+  if (hrefs.size === 0) return html;
+
+  const [characters, archiveEntries] = await Promise.all([
+    slugs.characters.size > 0
+      ? sql<
+          { slug: string; name: string; bio: string | null; source_md: string | null }[]
+        >`
+          SELECT slug, name, bio, source_md FROM characters
+          WHERE slug = ANY(${[...slugs.characters]})
+            AND is_draft = false AND deleted_at IS NULL
+        `
+      : Promise.resolve([]),
+    slugs.archive.size > 0
+      ? sql<
+          {
+            slug: string;
+            title: string;
+            summary: string | null;
+            source_md: string | null;
+          }[]
+        >`
+          SELECT slug, title, metadata->>'summary' AS summary, source_md
+          FROM archive_entries
+          WHERE slug = ANY(${[...slugs.archive]})
+            AND is_draft = false AND deleted_at IS NULL
+            AND category != 'dialogue'
+        `
+      : Promise.resolve([]),
+  ]);
+
+  const previews = new Map<string, string>();
+  for (const character of characters) {
+    previews.set(
+      `/characters/${character.slug}`,
+      previewText(character.bio || character.source_md) ?? character.name,
+    );
+    previews.set(
+      `/characters/${character.slug}/sheet`,
+      previewText(character.bio || character.source_md) ?? character.name,
+    );
+    previews.set(
+      `/characters/${character.slug}/logs`,
+      previewText(character.bio || character.source_md) ?? character.name,
+    );
+  }
+  for (const entry of archiveEntries) {
+    previews.set(
+      `/archive/${entry.slug}`,
+      previewText(entry.summary || entry.source_md) ?? entry.title,
+    );
+  }
+
+  return html.replace(/<a\b[^>]*\bhref="([^"]+)"[^>]*>/gi, (tag, rawHref: string) => {
+    const href = rawHref.replace(/&amp;/g, "&");
+    const target = hrefs.get(href);
+    if (!target) return tag;
+    // Gespeicherte Vorschauen dürfen nach dem Zurückziehen eines Ziels nicht
+    // weiter dessen Text verraten. Öffentliche Ziele erhalten den aktuellen Text.
+    if (/\bdata-preview=/i.test(tag)) {
+      tag = tag.replace(/\sdata-preview="[^"]*"/gi, "").replace(/\stitle="[^"]*"/gi, "");
+    }
+    const baseHref = `/${target.type}/${target.slug}`;
+    const preview = previews.get(href) ?? previews.get(baseHref);
+    if (!preview) return tag;
+
+    const classMatch = tag.match(/\bclass="([^"]*)"/i);
+    let decoratedTag = classMatch
+      ? classMatch[1].split(/\s+/).includes("lcars-wikilink")
+        ? tag
+        : tag.replace(
+            /\bclass="([^"]*)"/i,
+            `class="${escapeAttribute(`${classMatch[1]} lcars-wikilink`)}"`,
+          )
+      : tag.replace(/>$/, ' class="lcars-wikilink">');
+    let attributes = "";
+    attributes += ` data-preview="${escapeAttribute(preview)}"`;
+    if (!/\btitle="/i.test(decoratedTag)) {
+      attributes += ` title="${escapeAttribute(preview)}"`;
+    }
+    decoratedTag = `${decoratedTag.slice(0, -1)}${attributes}>`;
+    return decoratedTag;
+  });
 }
 
 // Das Ziel eines nicht auflösbaren Verweises landet in einem title-Attribut
@@ -482,17 +656,20 @@ function escapeAttribute(value: string): string {
 // Ingest (scripts/ingest/wikilinks.ts).
 function replaceWikilinkTags(
   html: string,
-  hrefFor: (target: string) => string | undefined,
+  hrefFor: (target: string) => { href: string; preview?: string | null } | undefined,
 ): string {
   return html.replace(
     WIKILINK_TAG_RE,
     (_full, rawTarget: string, text: string) => {
       const { target, anchor } = splitWikilinkTarget(rawTarget);
-      const href = hrefFor(target);
-      if (!href) {
+      const match = hrefFor(target);
+      if (!match) {
         return `<span class="lcars-wikilink lcars-wikilink--missing" title="Kein Eintrag gefunden: ${escapeAttribute(target)}">${text}</span>`;
       }
-      return `<a href="${escapeAttribute(href + anchor)}" class="lcars-wikilink">${text}</a>`;
+      const preview = match.preview
+        ? ` data-preview="${escapeAttribute(match.preview)}" title="${escapeAttribute(match.preview)}"`
+        : "";
+      return `<a href="${escapeAttribute(match.href + anchor)}" class="lcars-wikilink"${preview}>${text}</a>`;
     },
   );
 }

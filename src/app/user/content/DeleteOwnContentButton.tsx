@@ -11,6 +11,7 @@ export default function DeleteOwnContentButton({
   contentType,
   id,
   onOptimisticDelete,
+  textAction = false,
 }: {
   contentType: DeleteContentType;
   id: number;
@@ -20,6 +21,7 @@ export default function DeleteOwnContentButton({
   // entfernt und bei einem Fehlschlag automatisch wieder zurückholt (kein
   // manueller Rollback-Code hier nötig).
   onOptimisticDelete: () => void;
+  textAction?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +31,12 @@ export default function DeleteOwnContentButton({
       <button
         type="button"
         disabled={pending}
-        className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
+        role={textAction ? "menuitem" : undefined}
+        className={
+          textAction
+            ? "timeline-card-menu-link timeline-card-menu-link--danger disabled:opacity-50"
+            : "lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
+        }
         aria-label="Löschen"
         title="Löschen"
         onClick={() => {
@@ -42,7 +49,7 @@ export default function DeleteOwnContentButton({
           });
         }}
       >
-        <TrashIcon />
+        {textAction ? "Löschen" : <TrashIcon />}
       </button>
       {error && (
         <p className="lcars-link-text text-lcars-quinary-ink text-[11px]" role="alert">

@@ -1,20 +1,20 @@
 "use client";
-import { useMemo, useState } from "react";
 import Link from "next/link";
-import { LcarsSortSwitch, type SortDir } from "@/components/lcars";
+import type { ReactNode } from "react";
 import ChronoRow from "@/components/timeline/ChronoRow";
 import ChronoCard from "@/components/timeline/ChronoCard";
 import { MissionLogListItem } from "@/types/missions";
-import {
-  byDateAsc,
-  byDateDesc,
-  fmtDate,
-  sessionLabel,
-} from "@/lib/missionFormat";
+import { fmtDate, sessionLabel } from "@/lib/missionFormat";
 import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import { missionLogHref } from "@/lib/contentRoutes";
-
-type LogSortMode = "date" | "author";
+import type { MissionSynopsisBlock } from "@/lib/gameSessions";
+import { LcarsCollapsiblePanel, LcarsToc } from "@/components/lcars";
+import ContentCardMenu from "@/components/timeline/ContentCardMenu";
+import {
+  SessionPanelControls,
+  SessionSummaryPanel,
+  useSessionPanels,
+} from "@/components/timeline/SessionPanels";
 
 // Die Übersicht der Logbücher INNERHALB einer Mission — dieselbe Liste wie
 // die Chronologie und die Datenbank: ChronoRow (Datumsspalte · Schiene mit
@@ -26,57 +26,103 @@ type LogSortMode = "date" | "author";
 // LcarsLogEntry bleibt bestehen: die Charakter-Log-Liste nutzt sie weiter.
 export default function MissionLogOverview({
   missionSlug,
+  missionTitle: _missionTitle,
+  fullSynopsisHtml,
   logs,
+  synopsisBlocks,
   canCreateLog,
+  currentUserId = null,
+  help,
 }: {
   missionSlug: string;
+  missionTitle: string;
+  fullSynopsisHtml: string | null;
   logs: MissionLogListItem[];
+  synopsisBlocks: MissionSynopsisBlock[];
   canCreateLog: boolean;
+  currentUserId?: number | null;
+  help?: ReactNode;
 }) {
-  // Vorgabe: nach Autor gruppiert — innerhalb einer Mission ist „wer hat
-  // geschrieben" die nützlichere Ordnung als die reine Chronologie.
-  const [sort, setSort] = useState<LogSortMode>("author");
-  const [dateDir, setDateDir] = useState<SortDir>("desc");
-
-  const dateView = useMemo(
-    () => [...logs].sort(dateDir === "desc" ? byDateDesc : byDateAsc),
-    [logs, dateDir],
+  const panels = useSessionPanels(
+    synopsisBlocks.map((block) => String(block.id)),
   );
-
-  // Autor-Gruppen sortieren intern immer absteigend; die Datum-Ansicht folgt
-  // der gewählten Richtung.
-  const authorGroups = useMemo(() => {
-    const sorted = [...logs].sort(byDateDesc);
-    const map = new Map<
-      string,
-      { key: string; name: string; logs: MissionLogListItem[] }
-    >();
-    for (const log of sorted) {
-      const key = log.author_slug ?? log.author_name ?? "none";
-      let group = map.get(key);
-      if (!group) {
-        group = { key, name: log.author_name ?? "Unbekannt", logs: [] };
-        map.set(key, group);
-      }
-      group.logs.push(log);
-    }
-    return [...map.values()];
-  }, [logs]);
+  const hasSynopsis = synopsisBlocks.length > 0 || Boolean(fullSynopsisHtml);
+  const entries = [
+    ...logs.map((log) => ({
+      kind: "log" as const,
+      date: log.log_date ?? "",
+      log,
+    })),
+    ...synopsisBlocks.map((block) => ({
+      kind: "synopsis" as const,
+      date: block.ingameDate,
+      block,
+    })),
+  ].sort(
+    (a, b) =>
+      b.date.localeCompare(a.date) ||
+      (a.kind === b.kind ? 0 : a.kind === "log" ? -1 : 1),
+  );
 
   return (
     <section className="mission-log-overview">
-      <h2 className="lcars-data-row-heading">Logbücher</h2>
+      <div className="flex items-start justify-between gap-[12px]">
+        <h2 className="lcars-data-row-heading">Missionschronik</h2>
+        {help}
+      </div>
       <p className="lcars-eyebrow">
-        {logs.length === 1 ? "1 Logbuch" : `${logs.length} Logbücher`}
-        {logs.length > 0 &&
-          ` · ${
-            sort === "author"
-              ? "nach Autor gruppiert"
-              : dateDir === "desc"
-                ? "neueste zuerst"
-                : "älteste zuerst"
-          }`}
+        {logs.length + synopsisBlocks.length}{" "}
+        {logs.length + synopsisBlocks.length === 1
+          ? "Logeintrag"
+          : "Logeinträge"}{" "}
+        chronologisch
       </p>
+
+      {(hasSynopsis || logs.length > 0) && (
+        <div className="mb-[16px] flex items-start gap-[8px]">
+          <div className="min-w-0 flex-1">
+            <LcarsCollapsiblePanel
+              title="Inhaltsverzeichnis"
+              storageId={`mission:${missionSlug}:chronicle-toc`}
+            >
+              <LcarsToc
+                title="Chronik"
+                ariaLabel="Inhaltsverzeichnis der Missionschronik"
+                onJump={(id) => {
+                  const block = synopsisBlocks.find(
+                    (item) => `mission-synopsis-${item.id}` === id,
+                  );
+                  if (block) panels.setOpen(String(block.id), true);
+                }}
+                headings={[
+                  ...entries.map((entry) =>
+                    entry.kind === "log"
+                      ? {
+                          id: `mission-log-${entry.log.id}`,
+                          text: [fmtDate(entry.log.log_date), entry.log.title]
+                            .filter(Boolean)
+                            .join(" · "),
+                        }
+                      : {
+                          id: `mission-synopsis-${entry.block.id}`,
+                          text: fmtDate(entry.block.ingameDate),
+                        },
+                  ),
+                  ...(hasSynopsis
+                    ? [{ id: "mission-full-synopsis", text: "Synopsis" }]
+                    : []),
+                ]}
+              />
+            </LcarsCollapsiblePanel>
+          </div>
+          {synopsisBlocks.length > 0 && (
+            <SessionPanelControls
+              allOpen={panels.allOpen}
+              onToggle={() => panels.setAll(!panels.allOpen)}
+            />
+          )}
+        </div>
+      )}
 
       {(canCreateLog || logs.length > 0) && (
         <div className="lcars-toolbar mt-[16px]">
@@ -88,85 +134,129 @@ export default function MissionLogOverview({
               Neues Log
             </Link>
           )}
-          {logs.length > 0 && (
-            <LcarsSortSwitch
-              className="mission-sort"
-              options={[
-                // Beim Wechsel auf Datum sind die neuesten Logbücher
-                // gemeint, nicht die ältesten.
-                { key: "date", label: "Datum", defaultDir: "desc" as const },
-                { key: "author", label: "Autor", sortable: false },
-              ]}
-              sortKey={sort}
-              sortDir={dateDir}
-              onChange={(key, dir) => {
-                setSort(key);
-                setDateDir(dir);
-              }}
-            />
-          )}
         </div>
       )}
 
-      {logs.length === 0 ? (
+      {entries.length === 0 ? (
         <p className="lcars-empty-state">
-          Keine Logs zu dieser Mission erfasst.
+          Noch keine Logs oder Session-Einträge vorhanden.
         </p>
-      ) : sort === "date" ? (
-        <div>
-          {dateView.map((log) => (
-            <LogRow
-              key={log.id}
-              log={log}
-              missionSlug={missionSlug}
-              withAuthor
-            />
-          ))}
-        </div>
       ) : (
-        authorGroups.map((group) => (
-          // Nach dem Slug, nicht nach dem Anzeigenamen: zwei Autoren
-          // dürfen gleich heißen.
-          <div key={group.key}>
-            <h3 className="timeline-period">
-              {group.name} · {group.logs.length}
-            </h3>
-            {group.logs.map((log) => (
-              <LogRow key={log.id} log={log} missionSlug={missionSlug} />
-            ))}
-          </div>
-        ))
+        <div>
+          {entries.map((entry) => {
+            if (entry.kind === "log") {
+              return (
+                <div
+                  key={`log-${entry.log.id}`}
+                  id={`mission-log-${entry.log.id}`}
+                  className="scroll-mt-24"
+                >
+                  <LogRow
+                    log={entry.log}
+                    missionSlug={missionSlug}
+                    currentUserId={currentUserId}
+                  />
+                </div>
+              );
+            }
+            return (
+              <div
+                key={`synopsis-${entry.block.id}`}
+                id={`mission-synopsis-${entry.block.id}`}
+                className="scroll-mt-24"
+              >
+                <ChronoRow
+                  date={entry.block.ingameDate}
+                  color={CONTENT_TYPE_COLOR.mission}
+                >
+                  <ChronoCard
+                    color={CONTENT_TYPE_COLOR.mission}
+                    tag="Log-Eintrag"
+                    title={fmtDate(entry.block.ingameDate)}
+                    date={fmtDate(entry.block.ingameDate)}
+                  >
+                    <SessionSummaryPanel
+                      bodyHtml={entry.block.bodyHtml}
+                      open={panels.isOpen(String(entry.block.id))}
+                      onOpenChange={(open) =>
+                        panels.setOpen(String(entry.block.id), open)
+                      }
+                    />
+                  </ChronoCard>
+                </ChronoRow>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {hasSynopsis && (
+        <section
+          id="mission-full-synopsis"
+          className="mission-full-synopsis scroll-mt-24"
+        >
+          <h3 className="lcars-data-row-heading">Synopsis</h3>
+          {synopsisBlocks.length > 0 ? (
+            <div className="mission-body">
+              {synopsisBlocks.toReversed().map((block) => (
+                <section key={block.id}>
+                  <h4>{fmtDate(block.ingameDate)}</h4>
+                  <div dangerouslySetInnerHTML={{ __html: block.bodyHtml }} />
+                </section>
+              ))}
+            </div>
+          ) : (
+            <div
+              className="mission-body"
+              dangerouslySetInnerHTML={{ __html: fullSynopsisHtml ?? "" }}
+            />
+          )}
+        </section>
       )}
     </section>
   );
 }
 
-// Eine Zeile der Übersicht. `withAuthor` nur in der Datums-Ansicht — in der
-// Autor-Gruppierung steht der Name schon in der Gruppenüberschrift.
+// Eine Log-Zeile in der chronologischen Missionsübersicht.
 function LogRow({
   log,
   missionSlug,
-  withAuthor = false,
+  currentUserId,
 }: {
   log: MissionLogListItem;
   missionSlug: string;
-  withAuthor?: boolean;
+  currentUserId: number | null;
 }) {
   return (
     <ChronoRow date={log.log_date} color={CONTENT_TYPE_COLOR.mission_log}>
       <ChronoCard
         color={CONTENT_TYPE_COLOR.mission_log}
-        tag={sessionLabel(log.session_nr)}
+        tag="Logbuch"
         title={log.title}
         href={missionLogHref(missionSlug, log.slug)}
         ariaLabel={`${log.title} — Logbuch`}
         date={fmtDate(log.log_date) || undefined}
         meta={
-          withAuthor && log.author_name ? (
-            <span>
-              <b>Autor</b> {log.author_name}
-            </span>
-          ) : undefined
+          <span>
+            <b>Session</b> {sessionLabel(log.session_nr)}
+            {log.author_name && (
+              <>
+                {" "}
+                · <b>Autor</b> {log.author_name}
+              </>
+            )}
+          </span>
+        }
+        actions={
+          <ContentCardMenu
+            contentType="mission_log"
+            id={log.id}
+            ownerUserId={log.ownerUserId}
+            currentUserId={currentUserId}
+            isDraft={log.isDraft}
+            title={log.title}
+            href={missionLogHref(missionSlug, log.slug)}
+          />
         }
       />
     </ChronoRow>

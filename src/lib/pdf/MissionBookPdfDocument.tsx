@@ -34,8 +34,12 @@ import {
 } from "./sheetTheme";
 import { STATUS_CONFIG } from "@/lib/missionFormat";
 import type { MissionStatus } from "@/types/missions";
-import type { MissionBook, MissionBookLog } from "@/lib/missionBook";
-import { missionLogHref } from "@/lib/contentRoutes";
+import type {
+  MissionBook,
+  MissionBookLog,
+  MissionBookSessionLog,
+} from "@/lib/missionBook";
+import { missionHref, missionLogHref } from "@/lib/contentRoutes";
 
 const styles = StyleSheet.create({
   // Innerhalb des Rahmens (siehe docFrame), wie auf den Zusatzblättern des
@@ -259,6 +263,7 @@ export function missionMetaLine(mission: {
   startedAt: string | null;
   endedAt: string | null;
   logs: unknown[];
+  sessionLogs?: unknown[];
 }): string {
   const parts: string[] = [];
   const from = formatDate(mission.startedAt);
@@ -277,6 +282,13 @@ export function missionMetaLine(mission: {
   parts.push(
     mission.logs.length === 1 ? "1 Logbuch" : `${mission.logs.length} Logbücher`,
   );
+  if (mission.sessionLogs?.length) {
+    parts.push(
+      mission.sessionLogs.length === 1
+        ? "1 Log-Eintrag"
+        : `${mission.sessionLogs.length} Log-Einträge`,
+    );
+  }
   return parts.join(" · ");
 }
 
@@ -294,6 +306,23 @@ export function logMetaLine(log: MissionBookLog): string {
 // Web-Link) — der Slug ist dafür eindeutig genug und schon da.
 export function logAnchor(slug: string): string {
   return `log-${slug}`;
+}
+
+export function sessionLogAnchor(id: number): string {
+  return `session-log-${id}`;
+}
+
+export function sessionLogTitle(log: MissionBookSessionLog): string {
+  return `Session: ${formatDate(log.ingameDate) ?? log.ingameDate} - Eintrag ${log.missionBlockNumber}`;
+}
+
+function sessionLogMetaLine(log: MissionBookSessionLog): string {
+  return [
+    log.sessionNr == null ? null : `Session ${log.sessionNr}`,
+    formatDate(log.ingameDate),
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 const MISSION_ANCHOR = "mission";
@@ -387,6 +416,14 @@ export interface MissionBookPdfInput {
 
 function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
   const { book, campaignTitle } = input;
+  const chronicleEntries = [
+    ...book.logs.map((log) => ({ kind: "player" as const, date: log.logDate, log })),
+    ...book.sessionLogs.map((log) => ({ kind: "gm" as const, date: log.ingameDate, log })),
+  ].sort(
+    (a, b) =>
+      (a.date ?? "9999-12-31").localeCompare(b.date ?? "9999-12-31") ||
+      (a.kind === b.kind ? 0 : a.kind === "player" ? -1 : 1),
+  );
   const generated = book.generatedAt.toLocaleDateString("de-DE", {
     day: "2-digit",
     month: "long",
@@ -413,8 +450,9 @@ function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
           Stand: {generated}
           {input.requestedBy ? `\nZusammengestellt für: ${input.requestedBy}` : ""}
           {"\n\n"}
-          Die Akte enthält, was die anfordernde Person lesen darf — nicht
-          öffentliche Logbücher sind im Text als solche gekennzeichnet.
+          Die Akte enthält, was die anfordernde Person lesen darf — Spieler-
+          Logbücher und datierte Log-Einträge der Spielleitung stehen gemeinsam
+          in der Missionschronik.
         </Text>
       </Page>
 
@@ -434,29 +472,39 @@ function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
           <Text style={styles.tocMeta}>{missionMetaLine(book)}</Text>
         </Link>
 
-        <Text style={styles.section}>LOGBÜCHER</Text>
-        {book.logs.length === 0 ? (
+        <Text style={styles.section}>CHRONIK</Text>
+        {chronicleEntries.length === 0 ? (
           <Text style={styles.empty}>
-            Zu dieser Mission ist (für dich) kein Logbuch hinterlegt.
+            Für diese Mission sind (für dich) noch keine Logbücher oder Log-Einträge hinterlegt.
           </Text>
         ) : (
           <>
             <Text style={styles.tocHint}>
-              Jeder Bericht beginnt auf einer neuen Seite; ein Klick auf den
-              Eintrag springt dorthin.
+              Spieler-Logbücher und Log-Einträge der Spielleitung sind nach
+              Ingame-Datum geordnet. Jeder Bericht beginnt auf einer neuen
+              Seite; ein Klick auf den Eintrag springt dorthin.
             </Text>
-            {book.logs.map((log) => (
-              <Link
-                key={log.slug}
-                src={`#${logAnchor(log.slug)}`}
-                style={styles.tocItem}
-              >
-                <Text style={styles.tocTitle}>{log.title.toUpperCase()}</Text>
-                {logMetaLine(log) !== "" && (
-                  <Text style={styles.tocMeta}>{logMetaLine(log)}</Text>
-                )}
-              </Link>
-            ))}
+            {chronicleEntries.map((entry) => {
+              const title =
+                entry.kind === "player" ? entry.log.title : sessionLogTitle(entry.log);
+              const meta =
+                entry.kind === "player"
+                  ? logMetaLine(entry.log)
+                  : sessionLogMetaLine(entry.log);
+              return (
+                <Link
+                  key={entry.kind === "player" ? entry.log.slug : entry.log.id}
+                  src={`#${entry.kind === "player" ? logAnchor(entry.log.slug) : sessionLogAnchor(entry.log.id)}`}
+                  style={styles.tocItem}
+                >
+                  <Text style={styles.tocTitle}>
+                    {entry.kind === "player" ? "LOGBUCH · " : "LOG-EINTRAG · "}
+                    {title.toUpperCase()}
+                  </Text>
+                  {meta !== "" && <Text style={styles.tocMeta}>{meta}</Text>}
+                </Link>
+              );
+            })}
           </>
         )}
         <Footer title={book.title} />
@@ -476,32 +524,66 @@ function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
         <Footer title={book.title} />
       </Page>
 
-      {/* Jedes Logbuch beginnt auf einer neuen Seite: die Akte wird am Tisch
-          durchgeblättert, und zwei Berichte auf einer Seite kleben aneinander.
-          Das Lesezeichen führt direkt zum jeweiligen Bericht. */}
-      {book.logs.map((log) => (
-        <Page key={log.slug} size="A4" style={styles.page} bookmark={log.title}>
-          <SheetHead
-            campaignTitle={campaignTitle}
-            tab="LOGBUCH"
-            subline={`${book.title} — Einsatzbericht`}
-          />
-          <Text id={logAnchor(log.slug)} style={styles.entryTitle}>
-            {log.title.toUpperCase()}
-          </Text>
-          {logMetaLine(log) !== "" && (
-            <Text style={styles.meta}>{logMetaLine(log)}</Text>
-          )}
-          <Blocks markdown={log.sourceMarkdown} />
-          <Link
-            src={`${input.baseUrl}${missionLogHref(book.slug, log.slug)}`}
-            style={styles.link}
+      {/* Spieler-Logbücher und GM-Log-Einträge folgen derselben Chronologie
+          wie im Inhaltsverzeichnis; jeder Bericht beginnt auf einer neuen
+          Seite und bekommt ein eigenes PDF-Lesezeichen. */}
+      {chronicleEntries.map((entry) =>
+        entry.kind === "player" ? (
+          <Page
+            key={`log-${entry.log.slug}`}
+            size="A4"
+            style={styles.page}
+            bookmark={entry.log.title}
           >
-            Im Archiv lesen
-          </Link>
-          <Footer title={book.title} />
-        </Page>
-      ))}
+            <SheetHead
+              campaignTitle={campaignTitle}
+              tab="LOGBUCH"
+              subline={`${book.title} — Einsatzbericht`}
+            />
+            <Text id={logAnchor(entry.log.slug)} style={styles.entryTitle}>
+              {entry.log.title.toUpperCase()}
+            </Text>
+            {logMetaLine(entry.log) !== "" && (
+              <Text style={styles.meta}>{logMetaLine(entry.log)}</Text>
+            )}
+            <Blocks markdown={entry.log.sourceMarkdown} />
+            <Link
+              src={`${input.baseUrl}${missionLogHref(book.slug, entry.log.slug)}`}
+              style={styles.link}
+            >
+              Im Archiv lesen
+            </Link>
+            <Footer title={book.title} />
+          </Page>
+        ) : (
+          <Page
+            key={`session-log-${entry.log.id}`}
+            size="A4"
+            style={styles.page}
+            bookmark={sessionLogTitle(entry.log)}
+          >
+            <SheetHead
+              campaignTitle={campaignTitle}
+              tab="LOG-EINTRAG"
+              subline={`${book.title} — Eintrag der Spielleitung`}
+            />
+            <Text id={sessionLogAnchor(entry.log.id)} style={styles.entryTitle}>
+              {sessionLogTitle(entry.log).toUpperCase()}
+            </Text>
+            {sessionLogMetaLine(entry.log) !== "" && (
+              <Text style={styles.meta}>{sessionLogMetaLine(entry.log)}</Text>
+            )}
+            <Blocks markdown={entry.log.sourceMarkdown} />
+            <Link
+              src={`${input.baseUrl}${missionHref(book.slug)}`}
+              style={styles.link}
+            >
+              Zur Missionschronik
+            </Link>
+            <Footer title={book.title} />
+          </Page>
+        ),
+      )}
     </Document>
   );
 }

@@ -147,6 +147,80 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.59",
+    title: "Kartenaktionen und Session-Verwaltung",
+    items: [
+      {
+        text: "Automatische Verlinkung startet jetzt auch beim Bearbeiten eines Inhalts; Aliase werden in Genitivformen erkannt und Wikilinks zeigen eine Kurzvorschau.",
+        category: "inhalte",
+        tutorial: "verlinkung",
+      },
+      {
+        text: "Chronologie, Datenbank und Charakterübersicht bieten ein Kartenmenü zum Teilen; eigene Einträge lassen sich dort auch bearbeiten, löschen und veröffentlichen oder als Entwurf zurückziehen.",
+        category: "inhalte",
+      },
+      {
+        text: "Auf dem Dashboard sehen Charakterbesitzer die verfügbaren Abenteuerpunkte direkt bei ihren Charakteren.",
+        category: "charaktere",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Missionslog-Entwürfe zeigen ihr Log-Datum, wenn eines eingetragen ist.",
+        category: "inhalte",
+      },
+      {
+        text: "Beim Eintragen einer Session ergänzt die Spielleitung datierte Zusammenfassungsblöcke, die chronologisch zwischen den Logbüchern erscheinen und über ihr Datum im Inhaltsverzeichnis erreichbar sind.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Die Chronologie bietet einen eigenen Bereich für Sessions mit einzeln aufklappbaren Zusammenfassungsblöcken. In der Missionschronik lassen sich alle Blöcke zusätzlich gemeinsam über einen wechselnden Plus-/Minus-Button öffnen und schließen.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Spieltermine werden auf der Sessions-Seite geplant: Die Spielleitung wählt eine laufende Mission oder legt direkt eine neue an. Der Termin erhält automatisch den Missionsnamen und seine laufende Nummer; vergangene, noch nicht eingetragene Abende erscheinen als Aufgabe auf dem Dashboard.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Die Missionsverwaltung ist über das Leitungs-Menü erreichbar; pro Mission lassen sich gespielte Sessions und deren Log-Einträge bearbeiten oder löschen.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Die Administration kann zusätzlich vollständige PostgreSQL-Dumps lokal speichern und nach Bestätigung atomar zurückspielen.",
+        category: "export",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Die Datenbank-Übersicht findet Einträge jetzt auch über ihre Aliase.",
+        category: "inhalte",
+        tutorial: "seiten-im-ueberblick",
+      },
+      {
+        text: "Angekündigte Termine gehören zu einer Mission und erhalten fortlaufende Namen; in der Missionschronik führen Sprungmarken direkt zu den Log-Einträgen der Spielleitung.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Die Session-Übersicht zeigt durchsuchbare Karten nach Mission gruppiert. Auch die Missionsdetailseite verlinkt ihre Sessions als Karten auf die jeweilige Detailseite mit Teilnehmenden, AP und bearbeitbaren Zusammenfassungsblöcken. AP-Vergabe, Konten und Verlauf liegen unter AP.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Spielende können die aktuellen Steigerungsregeln nachlesen sowie Talent- und Schwerpunktkataloge nach Attribut beziehungsweise Department gruppieren und alphabetisch sortieren.",
+        category: "spielleitung",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Die herunterladbare Missionsakte enthält jetzt auch die datierten Log-Einträge der Spielleitung, gemeinsam mit den Spieler-Logbüchern und chronologisch geordnet.",
+        category: "export",
+        tutorial: "chronologie",
+      },
+    ],
+  },
+  {
     version: "1.58",
     title: "Inhaltsverzeichnisse für Datenbankeinträge",
     items: [

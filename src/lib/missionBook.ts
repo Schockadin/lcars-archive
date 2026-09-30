@@ -1,8 +1,8 @@
 import "server-only";
 import sql from "@/lib/db";
 
-// Die Missionsakte: EINE Mission mit ihrer Beschreibung und allen
-// veröffentlichten Logbüchern — die Datenseite dazu (das Layout steht in
+// Die Missionsakte: EINE Mission mit ihrer Beschreibung, allen veröffentlichten
+// Logbüchern und den datierten GM-Log-Einträgen — die Datenseite dazu (das Layout steht in
 // src/lib/pdf/MissionBookPdfDocument.tsx).
 //
 // Vorher war das ein Kampagnenband über alle Missionen. Der Band war ein
@@ -24,6 +24,14 @@ export interface MissionBookLog {
   sourceMarkdown: string;
 }
 
+export interface MissionBookSessionLog {
+  id: number;
+  sessionNr: number | null;
+  missionBlockNumber: number;
+  ingameDate: string;
+  sourceMarkdown: string;
+}
+
 export interface MissionBook {
   generatedAt: Date;
   slug: string;
@@ -35,6 +43,7 @@ export interface MissionBook {
   isDraft: boolean;
   participants: string[];
   logs: MissionBookLog[];
+  sessionLogs: MissionBookSessionLog[];
 }
 
 interface MissionRow {
@@ -54,6 +63,14 @@ interface LogRow {
   session_nr: number | null;
   log_date: string | null;
   author_name: string | null;
+  source_md: string | null;
+}
+
+interface SessionLogRow {
+  id: number;
+  session_nr: number | null;
+  mission_block_number: number;
+  ingame_date: string;
   source_md: string | null;
 }
 
@@ -77,9 +94,9 @@ export async function getMissionBook(
   `;
   if (!mission) return null;
 
-  // Logbücher und Teilnehmer hängen beide nur an der Mission-Id — zusammen
-  // holen statt nacheinander.
-  const [logRows, participantRows] = await Promise.all([
+  // Spieler-Logbücher, GM-Log-Einträge und Teilnehmer hängen alle an der
+  // Mission-Id — zusammen holen statt nacheinander.
+  const [logRows, participantRows, sessionLogRows] = await Promise.all([
     sql<LogRow[]>`
       SELECT ml.slug,
              ml.title,
@@ -101,6 +118,19 @@ export async function getMissionBook(
       WHERE mp.mission_id = ${mission.id}
       ORDER BY c.name ASC
     `,
+    sql<SessionLogRow[]>`
+      SELECT b.id,
+             s.mission_session_number AS session_nr,
+             ROW_NUMBER() OVER (
+               PARTITION BY b.mission_id
+               ORDER BY COALESCE(s.mission_session_number, 0), b.block_order, b.id
+             )::int AS mission_block_number,
+             b.ingame_date::text AS ingame_date,
+             b.body_md AS source_md
+      FROM mission_synopsis_blocks b
+      LEFT JOIN game_sessions s ON s.id = b.session_id
+      WHERE b.mission_id = ${mission.id}
+    `,
   ]);
 
   // Die Akte führt nur veröffentlichte Logbücher (is_draft = false in der
@@ -114,6 +144,13 @@ export async function getMissionBook(
       authorName: row.author_name,
       sourceMarkdown: row.source_md ?? "",
     }));
+  const sessionLogs = sessionLogRows.map((row) => ({
+    id: row.id,
+    sessionNr: row.session_nr,
+    missionBlockNumber: row.mission_block_number,
+    ingameDate: row.ingame_date,
+    sourceMarkdown: row.source_md ?? "",
+  }));
 
   return {
     generatedAt: new Date(),
@@ -126,5 +163,6 @@ export async function getMissionBook(
     isDraft: mission.is_draft,
     participants: participantRows.map((row) => row.name),
     logs,
+    sessionLogs,
   };
 }

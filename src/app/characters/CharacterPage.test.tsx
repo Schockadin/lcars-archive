@@ -26,6 +26,8 @@ const CHARACTERS: CharacterListItem[] = [
     slug: "tuvok",
     name: "Tuvok",
     status: "active",
+    player_id: null,
+    is_draft: false,
     updated_at: "2401-06-12",
     // Eine Figur MIT Bild — die beiden anderen ohne, damit beide Fälle in der
     // Liste vorkommen.
@@ -44,6 +46,8 @@ const CHARACTERS: CharacterListItem[] = [
     slug: "kira",
     name: "Kira Nerys",
     status: "retired",
+    player_id: null,
+    is_draft: false,
     updated_at: "2401-03-20",
     thumbnail: null,
     thumbnailCrop: null,
@@ -54,6 +58,8 @@ const CHARACTERS: CharacterListItem[] = [
     slug: "shran",
     name: "Shran",
     status: "deceased",
+    player_id: null,
+    is_draft: false,
     updated_at: "2400-11-02",
     thumbnail: null,
     thumbnailCrop: null,

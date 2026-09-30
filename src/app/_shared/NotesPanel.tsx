@@ -13,6 +13,7 @@ import {
   type ContentNote,
   type NoteContentType,
 } from "@/lib/contentNoteTypes";
+import { TrashIcon } from "@/lib/icons";
 
 const initialState: NoteActionState = {};
 
@@ -202,9 +203,11 @@ function NoteItem({ note, path }: { note: ContentNote; path: string }) {
             <button
               type="submit"
               disabled={pending}
-              className="lcars-link-text text-lcars-quinary-ink text-[11px] disabled:opacity-50"
+              className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
+              aria-label={pending ? "Notiz wird gelöscht" : "Notiz löschen"}
+              title="Notiz löschen"
             >
-              {pending ? "Löschen…" : "Löschen"}
+              {pending ? "…" : <TrashIcon />}
             </button>
             <FormError message={state.error} />
           </form>

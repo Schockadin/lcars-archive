@@ -107,43 +107,7 @@ describe("MissionSynopsis", () => {
     expect(screen.queryByText("Teilnehmer")).toBeNull();
   });
 
-  it("legt die Zusammenfassung in ein aufklappbares Feld — offen", () => {
-    // Dasselbe Feld wie auf den Missions-Karten der Chronologie (ChronoPanel).
-    const { container } = render(
-      <MissionSynopsis mission={mission()} viewer={null} owners={[]} />,
-    );
-
-    const panel = container.querySelector("details.timeline-panel");
-    expect(panel).toBeTruthy();
-    expect(panel).toHaveAttribute("open");
-    // Eigene Klasse: auf der Seite muss der Schalter deutlicher zu sehen
-    // sein als der Nebentext auf einer Karte (siehe mission-detail.css).
-    expect(panel).toHaveClass("mission-synopsis-panel");
-    expect(panel?.querySelector(".timeline-panel-head")).toHaveTextContent(
-      "Zusammenfassung",
-    );
-    expect(panel?.querySelector(".mission-body")).toBeTruthy();
-  });
-
-  it("zeigt einen Hinweis, wenn keine Zusammenfassung vorliegt", () => {
-    const { container } = render(
-      <MissionSynopsis
-        mission={mission({ metadata: { tags: [], body: null, teaser: null } })}
-        viewer={null}
-        owners={[]}
-      />,
-    );
-
-    expect(screen.getByText("Keine Zusammenfassung vorhanden")).toHaveClass(
-      "lcars-empty-state",
-    );
-    expect(container.querySelector(".mission-body")).toBeNull();
-  });
-
-  it("zeigt die Zusammenfassung auch der Spielleitung nur zum Lesen", () => {
-    // Bis v1.34 klappte hier für missions.manage ein Inline-Editor auf, der
-    // nur den Fließtext kannte. Bearbeitet wird jetzt im vollen Editor, in
-    // den der Stift des Aktionen-Panels springt.
+  it("zeigt die generierte Synopsis in der chronologischen Übersicht statt doppelt im Kopf", () => {
     const { container } = render(
       <MissionSynopsis
         mission={mission()}
@@ -152,7 +116,8 @@ describe("MissionSynopsis", () => {
       />,
     );
 
-    expect(container.querySelector("details.timeline-panel")).toBeTruthy();
+    expect(container.querySelector("details.timeline-panel")).toBeNull();
+    expect(container.querySelector(".mission-body")).toBeNull();
     expect(container.querySelector("form")).toBeNull();
     expect(container.querySelector("textarea")).toBeNull();
   });

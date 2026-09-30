@@ -38,6 +38,23 @@
   min-width: 0;
 }
 
+/* Die Leiste für „Neue Inhalte“ füllt die Breite mit gleich breiten
+   Aktionsspalten. Auf schmalen Ansichten bleibt eine Spalte übrig; längere
+   Beschriftungen können die Spalte nicht über ihren Container hinausziehen. */
+.lcars-btn-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+.lcars-btn-row > * {
+  min-width: 0;
+}
+.lcars-btn-row > .lcars-pill-btn,
+.lcars-btn-row > .lcars-pill-btn--outline {
+  width: 100%;
+  min-width: 0;
+}
+
 /* Meta-/Nebentext („2 Einträge", „Bearbeitet von …", Zähler, Leerhinweise):
    klein, in der Datenschrift und gedimmt. Domänenübergreifend dieselbe Rolle,
    deshalb EINE Regel statt bislang elf gleichlautender Deklarationen in fünf
@@ -180,6 +197,30 @@
   color: var(--lcars-tertiary-ink);
   text-decoration: underline;
 }
+.lcars-wikilink[data-preview] {
+  position: relative;
+}
+.lcars-wikilink[data-preview]:hover::after,
+.lcars-wikilink[data-preview]:focus-visible::after {
+  content: attr(data-preview);
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  bottom: calc(100% + 8px);
+  width: min(320px, 75vw);
+  padding: 10px 12px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 8px;
+  background: var(--lcars-surface);
+  color: var(--lcars-ink);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 24%);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+  text-decoration: none;
+  white-space: normal;
+  pointer-events: none;
+}
 .lcars-link-text {
   cursor: pointer;
 }
@@ -229,6 +270,10 @@
 }
 
 /* Inhaltsverzeichnis (wiederverwendbar) */
+.lcars-toc {
+  width: 100%;
+  max-width: 500px;
+}
 .lcars-toc-title {
   margin-bottom: 6px;
   font-family: var(--lcars-font-sans);

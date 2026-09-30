@@ -118,16 +118,16 @@ export function dialoguesHref(personName?: string | null): string {
     : `${CHRONOLOGY_PATH}/dialogue`;
 }
 
-// ── Die Bearbeitungsseiten im eigenen Bereich ───────────────────────────
-// Adressiert über die ID, nicht den Slug: der Slug kann sich mit dem Titel
-// ändern, die Bearbeitungsseite soll unter derselben Adresse bleiben.
+// ── Bearbeitungsseiten ──────────────────────────────────────────────────
+// Missionen verwenden ihre GM-Detailseite; Charaktere, Logs und Archive
+// bleiben über IDs adressiert.
 
 export function characterEditHref(id: number | string): string {
   return `/user/characters/${id}`;
 }
 
-export function missionEditHref(id: number | string): string {
-  return `/user/missions/${id}/edit`;
+export function missionEditHref(slug: string): string {
+  return `/gm/missions/${encodeURIComponent(slug)}`;
 }
 
 export function missionLogEditHref(id: number | string): string {
@@ -146,12 +146,13 @@ export function archiveEditHref(id: number | string): string {
 export function contentEditHref(
   type: "character" | "mission" | "missionLog" | "archiveEntry",
   id: number | string,
+  slug?: string,
 ): string {
   switch (type) {
     case "character":
       return characterEditHref(id);
     case "mission":
-      return missionEditHref(id);
+      return missionEditHref(slug ?? String(id));
     case "missionLog":
       return missionLogEditHref(id);
     case "archiveEntry":
@@ -190,5 +191,6 @@ export const RESERVED_CHRONOLOGY_SEGMENTS: readonly string[] = [
   "events",
   "dialogues",
   "logs",
+  "sessions",
   "all",
 ];

@@ -41,7 +41,14 @@ export default function ArchiveEntryList({
     const q = query.trim().toLowerCase();
     return entries
       .filter((entry) => !category || entry.category === category)
-      .filter((entry) => !q || entry.title.toLowerCase().includes(q))
+      .filter(
+        (entry) =>
+          !q ||
+          entry.title.toLowerCase().includes(q) ||
+          entry.metadata.aliases.some((alias) =>
+            alias.toLowerCase().includes(q),
+          ),
+      )
       .sort((a, b) => {
         const comparison = a.title.localeCompare(b.title, "de");
         return sortDir === "asc" ? comparison : -comparison;
@@ -111,7 +118,7 @@ export default function ArchiveEntryList({
                       {letter}
                     </h2>
                   )}
-                  <ArchiveEntryRow entry={entry} />
+                  <ArchiveEntryRow entry={entry} currentUserId={userId ?? null} />
                 </Fragment>
               );
             })}

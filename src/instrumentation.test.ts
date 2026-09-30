@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
+import { ModuleKind, transpileModule } from "typescript";
 
 const { logServerError } = vi.hoisted(() => ({ logServerError: vi.fn() }));
 vi.mock("@/lib/errorLog", () => ({ logServerError }));
@@ -43,6 +46,32 @@ describe("onRequestError", () => {
     await onRequestError(error, request, context);
 
     expect(logServerError).not.toHaveBeenCalled();
+  });
+});
+
+describe("runtime-spezifische Instrumentation", () => {
+  const source = readFileSync("src/instrumentation.ts", "utf8");
+  const compiled = transpileModule(source, { compilerOptions: { module: ModuleKind.CommonJS } }).outputText;
+  function load(runtime: string, requireModule: ReturnType<typeof vi.fn>) {
+    const exports: { register?: () => void } = {};
+    runInNewContext(compiled, { exports, require: requireModule, process: { env: { NEXT_RUNTIME: runtime } } });
+    exports.register!();
+  }
+  it("lädt das Node-Bootstrap-Modul für den Node-Runtime", () => {
+    const loadNodeInstrumentation = vi.fn();
+
+    load("nodejs", loadNodeInstrumentation);
+
+    expect(loadNodeInstrumentation).toHaveBeenCalledOnce();
+  });
+
+  it("lädt das Node-Bootstrap-Modul nicht für die Edge-Runtime", () => {
+    const loadNodeInstrumentation = vi.fn();
+
+    load("edge", loadNodeInstrumentation);
+
+    expect(loadNodeInstrumentation).not.toHaveBeenCalled();
+    expect(source).toContain('if (process.env.NEXT_RUNTIME === "edge")');
   });
 });
 

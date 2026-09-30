@@ -25,11 +25,14 @@ export function register(): void {
   if (process.env.NEXT_RUNTIME === "edge") {
     return;
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Next dokumentiert require() für runtime-spezifische Instrumentation.
-    const nodeInstrumentation = require("./instrumentation.node") as {
-      register: () => void;
-    };
-    nodeInstrumentation.register();
+    // Next lädt das runtime-spezifische Modul über require(). Seine
+    // Initialisierung läuft beim Laden des Moduls. Das Modul nicht über ein
+    // erwartetes `register`-Export aufrufen: Netlify/Next kann den Export in
+    // der gebündelten Server-Instrumentation anders interop'en.
+    // Der direkte Vergleich ist für Webpacks statische Auswertung nötig.
+    // Eine Hilfsfunktion mit Runtime-Parameter verhindert das Entfernen des Imports.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Runtime-spezifischer Node-Import.
+    require("./instrumentation.node-runtime");
   }
 }
 

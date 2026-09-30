@@ -1,9 +1,13 @@
 import "server-only";
-import { markdownToHtml } from "@/lib/markdown";
+import { renderContentHtml } from "@/lib/autolink";
 import postgres from "postgres";
 import sql from "@/lib/db";
 import type { ApReason } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
+import {
+  buildMissionSynopsisMarkdown,
+  type SessionSynopsisBlockInput,
+} from "@/lib/sessionSynopsis";
 import type { AdvancementRules } from "@/lib/advancement";
 
 // Client-Parameter für Aufrufe innerhalb einer bestehenden Transaktion —
@@ -22,38 +26,62 @@ export interface GameSession {
   id: number;
   sessionDate: string;
   title: string;
+  missionId: number | null;
+  missionTitle: string | null;
+  missionSlug: string | null;
+  missionSessionNumber: number | null;
   sessionAp: number;
   bonusAp: number;
-  // Rohtext (Markdown), wie er gespeichert ist — das Formular arbeitet damit.
-  notes: string;
-  // Derselbe Text als bereinigtes HTML für die zusammengeklappte Vorschau.
-  notesHtml: string;
   createdByName: string | null;
   createdAt: string;
   // Wie vielen Charakteren wurde gutgeschrieben und wie viele AP insgesamt.
   characterCount: number;
   totalAp: number;
-  // Wie viele Logbücher an dieser Session hängen (siehe
-  // syncSessionLogbookAp): ab dem ersten gibt es die Logbuch-AP automatisch.
-  logbookCount: number;
   // Wem sie gutgeschrieben wurde — das Bearbeiten-Formular hakt daraus seine
   // Teilnehmer-Auswahl vor.
   characterIds: number[];
+  synopsisBlocks: GameSessionSynopsisBlock[];
+}
+
+export interface GameSessionSynopsisBlock extends SessionSynopsisBlockInput {
+  id: number;
+  blockOrder: number;
+  missionBlockNumber: number;
+  bodyHtml: string;
+}
+
+export interface MissionSynopsisBlock extends SessionSynopsisBlockInput {
+  id: number;
+  sessionId: number | null;
+  missionSessionNumber: number | null;
+  missionBlockNumber: number;
+  bodyHtml: string;
 }
 
 export async function listGameSessions(): Promise<GameSession[]> {
-  const rows = await sql<Omit<GameSession, "notesHtml">[]>`
+  return readGameSessions();
+}
+
+export async function getGameSession(id: number): Promise<GameSession | null> {
+  const [session] = await readGameSessions(id);
+  return session ?? null;
+}
+
+async function readGameSessions(id?: number): Promise<GameSession[]> {
+  const rows = await sql<GameSession[]>`
     SELECT s.id,
            s.session_date::text AS "sessionDate",
-           s.title, s.session_ap AS "sessionAp", s.bonus_ap AS "bonusAp",
-           s.notes,
+           s.title, s.mission_id AS "missionId", m.title AS "missionTitle",
+           m.slug AS "missionSlug",
+           s.mission_session_number AS "missionSessionNumber",
+           s.session_ap AS "sessionAp", s.bonus_ap AS "bonusAp",
            u.name AS "createdByName",
            s.created_at::text AS "createdAt",
            COALESCE(p.character_count, 0)::int AS "characterCount",
            COALESCE(p.character_ids, ARRAY[]::int[]) AS "characterIds",
-           COALESCE(e.total_ap, 0)::int AS "totalAp",
-           COALESCE(l.logbook_count, 0)::int AS "logbookCount"
+           COALESCE(e.total_ap, 0)::int AS "totalAp"
     FROM game_sessions s
+    LEFT JOIN missions m ON m.id = s.mission_id
     LEFT JOIN users u ON u.id = s.created_by
     LEFT JOIN (
       SELECT session_id, SUM(amount) AS total_ap
@@ -67,20 +95,122 @@ export async function listGameSessions(): Promise<GameSession[]> {
       FROM game_session_characters
       GROUP BY session_id
     ) p ON p.session_id = s.id
-    LEFT JOIN (
-      SELECT session_id, COUNT(*) AS logbook_count
-      FROM mission_logs
-      WHERE session_id IS NOT NULL AND deleted_at IS NULL
-      GROUP BY session_id
-    ) l ON l.session_id = s.id
+    ${id === undefined ? sql`` : sql`WHERE s.id = ${id}`}
     ORDER BY s.session_date DESC, s.id DESC
   `;
 
-  // Notizen sind Markdown; für die zusammengeklappte Vorschau in
-  // /gm/sessions wird daraus HTML. Die Liste ist kurz (eine Kampagne hat
-  // Dutzende Sessions, nicht Tausende).
-  const html = await Promise.all(rows.map((r) => markdownToHtml(r.notes)));
-  return rows.map((r, index) => ({ ...r, notesHtml: html[index] }));
+  const ids = rows.map((row) => row.id);
+  const blockRows = ids.length
+    ? await sql<
+        {
+          id: number;
+          session_id: number;
+          block_order: number;
+          missionBlockNumber: number;
+          ingame_date: string;
+          body_md: string;
+        }[]
+      >`
+        SELECT id, session_id, block_order,
+               mission_block_number AS "missionBlockNumber",
+               ingame_date::text AS ingame_date, body_md
+        FROM (
+          SELECT b.id, b.session_id, b.block_order, b.ingame_date, b.body_md,
+                 ROW_NUMBER() OVER (
+                   PARTITION BY b.mission_id
+                   ORDER BY COALESCE(s.mission_session_number, 0), b.block_order, b.id
+                 )::int AS mission_block_number
+          FROM mission_synopsis_blocks b
+          LEFT JOIN game_sessions s ON s.id = b.session_id
+        ) numbered_blocks
+        WHERE session_id = ANY(${sql.array(ids, 23)})
+        ORDER BY session_id, block_order, id
+      `
+    : [];
+  const blocksBySession = new Map<number, GameSessionSynopsisBlock[]>();
+  for (const row of blockRows) {
+    const blocks = blocksBySession.get(row.session_id) ?? [];
+    blocks.push({
+      id: row.id,
+      blockOrder: row.block_order,
+      missionBlockNumber: row.missionBlockNumber,
+      ingameDate: row.ingame_date,
+      body: row.body_md,
+      bodyHtml: await renderContentHtml(row.body_md),
+    });
+    blocksBySession.set(row.session_id, blocks);
+  }
+  return rows.map((r) => ({
+    ...r,
+    synopsisBlocks: blocksBySession.get(r.id) ?? [],
+  }));
+}
+
+export async function listMissionSynopsisBlocks(
+  missionId: number,
+): Promise<MissionSynopsisBlock[]> {
+  const rows = await sql<
+    {
+      id: number;
+      session_id: number | null;
+      mission_session_number: number | null;
+      mission_block_number: number;
+      ingame_date: string;
+      body_md: string;
+    }[]
+  >`
+    SELECT b.id, b.session_id,
+           s.mission_session_number AS mission_session_number,
+           ROW_NUMBER() OVER (
+             PARTITION BY b.mission_id
+             ORDER BY COALESCE(s.mission_session_number, 0), b.block_order, b.id
+           )::int AS mission_block_number,
+           b.ingame_date::text AS ingame_date,
+           b.body_md
+    FROM mission_synopsis_blocks b
+    LEFT JOIN game_sessions s ON s.id = b.session_id
+    WHERE b.mission_id = ${missionId}
+    ORDER BY b.ingame_date DESC, b.id DESC
+  `;
+  return Promise.all(
+    rows.map(async (row) => ({
+      id: row.id,
+      sessionId: row.session_id,
+      missionSessionNumber: row.mission_session_number,
+      missionBlockNumber: row.mission_block_number,
+      ingameDate: row.ingame_date,
+      body: row.body_md,
+      bodyHtml: await renderContentHtml(row.body_md),
+    })),
+  );
+}
+
+export interface SessionMissionOption {
+  id: number;
+  title: string;
+  slug: string;
+  startedAt: string | null;
+}
+
+export async function listSessionMissions(): Promise<SessionMissionOption[]> {
+  return sql<SessionMissionOption[]>`
+    SELECT id, title, slug, started_at::text AS "startedAt"
+    FROM missions m
+    WHERE deleted_at IS NULL AND is_draft = false
+    ORDER BY started_at DESC NULLS LAST, created_at DESC, id DESC
+  `;
+}
+
+// Beim Planen eines neuen Termins stehen nur laufende Missionen zur Auswahl.
+// Der vollständige Bestand bleibt für historische Sessions und Bearbeitungen
+// über listSessionMissions verfügbar.
+export async function listActiveSessionMissions(): Promise<SessionMissionOption[]> {
+  return sql<SessionMissionOption[]>`
+    SELECT id, title, slug, started_at::text AS "startedAt"
+    FROM missions m
+    WHERE deleted_at IS NULL AND is_draft = false AND status = 'active'
+    ORDER BY started_at DESC NULLS LAST, created_at DESC, id DESC
+  `;
 }
 
 // Charaktere, denen eine Session gutgeschrieben werden kann: aktive, nicht
@@ -107,10 +237,12 @@ export async function listActiveCharactersForAp(): Promise<ActiveCharacter[]> {
 
 export interface CreateGameSessionInput {
   sessionDate: string;
-  title: string;
+  missionId?: number;
+  plannedSessionId?: number;
+  newMission?: { slug: string; title: string; ownerUserId: number };
+  synopsisBlocks: SessionSynopsisBlockInput[];
   sessionAp: number;
   bonusAp: number;
-  notes: string;
   characterIds: number[];
   createdByUserId: number;
 }
@@ -122,13 +254,64 @@ export interface CreateGameSessionInput {
 export async function createGameSession(
   input: CreateGameSessionInput,
 ): Promise<number> {
-  return sql.begin(async (tx) => {
+  const { sessionId, missionId } = await sql.begin(async (tx) => {
+    let missionId = input.missionId;
+    let reservedNumber: number | undefined;
+    if (input.plannedSessionId != null) {
+      const [planned] = await tx<{ mission_id: number | null; mission_session_number: number | null; game_session_id: number | null }[]>`
+        SELECT mission_id, mission_session_number, game_session_id FROM planned_sessions
+        WHERE id = ${input.plannedSessionId} FOR UPDATE
+      `;
+      if (!planned || planned.game_session_id != null) throw new Error("Dieser Termin ist nicht mehr offen.");
+      if (planned.mission_id != null) {
+        if (missionId !== planned.mission_id || input.newMission) throw new Error("Die Mission des Termins wurde geändert. Bitte neu laden.");
+        reservedNumber = planned.mission_session_number ?? undefined;
+      }
+    }
+    if (input.newMission) {
+      const [createdMission] = await tx<{ id: number }[]>`
+        INSERT INTO missions (
+          slug, title, status, started_at, ended_at, metadata, source_md,
+          owner_user_id, is_draft, updated_at
+        ) VALUES (
+          ${input.newMission.slug}, ${input.newMission.title}, 'active',
+          NULL, NULL,
+          ${tx.json({ tags: [], body: "", teaser: null })},
+          '', ${input.newMission.ownerUserId}, false, NOW()
+        )
+        RETURNING id
+      `;
+      missionId = createdMission.id;
+    }
+    if (!missionId) throw new Error("Für die Session ist eine Mission erforderlich.");
+
+    const [mission] = await tx<{ id: number; title: string }[]>`
+      SELECT id, title FROM missions
+      WHERE id = ${missionId} AND deleted_at IS NULL AND is_draft = false
+      FOR UPDATE
+    `;
+    if (!mission) throw new Error("Mission für diese Session nicht gefunden.");
+
+    let missionSessionNumber = reservedNumber;
+    if (missionSessionNumber == null) {
+      const [sequence] = await tx<{ number: number }[]>`
+        SELECT GREATEST(
+          COALESCE((SELECT MAX(mission_session_number) FROM game_sessions WHERE mission_id = ${missionId}), 0),
+          COALESCE((SELECT MAX(mission_session_number) FROM planned_sessions WHERE mission_id = ${missionId}), 0)
+        ) + 1 AS number
+      `;
+      missionSessionNumber = sequence.number;
+    }
+    const title = `${mission.title} ${missionSessionNumber}`;
+
     const [session] = await tx<{ id: number }[]>`
-      INSERT INTO game_sessions (session_date, title, session_ap, bonus_ap, notes, created_by)
-      VALUES (${input.sessionDate}, ${input.title}, ${input.sessionAp},
-              ${input.bonusAp}, ${input.notes}, ${input.createdByUserId})
+      INSERT INTO game_sessions (session_date, mission_id, mission_session_number, title, session_ap, bonus_ap, notes, created_by)
+      VALUES (${input.sessionDate}, ${missionId}, ${missionSessionNumber}, ${title}, ${input.sessionAp},
+              ${input.bonusAp}, '', ${input.createdByUserId})
       RETURNING id
     `;
+
+    await replaceSessionSynopsisBlocks(tx, session.id, missionId, input.synopsisBlocks);
 
     // Teilnehmende festhalten — auch wenn es (noch) keine AP gibt: die
     // automatische Logbuch-AP braucht später diese Liste.
@@ -140,7 +323,7 @@ export async function createGameSession(
       `;
     }
 
-    const note = input.title.trim() || `Session vom ${input.sessionDate}`;
+    const note = title;
     const bookings: { amount: number; reason: ApReason }[] = [];
     if (input.sessionAp > 0)
       bookings.push({ amount: input.sessionAp, reason: "session" });
@@ -158,8 +341,114 @@ export async function createGameSession(
       }
     }
 
-    return session.id;
+    if (input.plannedSessionId != null) {
+      await tx`UPDATE planned_sessions SET game_session_id = ${session.id}, mission_id = ${missionId},
+        mission_session_number = ${missionSessionNumber}, title = ${title}, updated_at = NOW()
+        WHERE id = ${input.plannedSessionId}`;
+    }
+    return { sessionId: session.id, missionId };
   });
+  await syncMissionSynopsis(missionId);
+  return sessionId;
+}
+
+// Bereits gutgeschriebene Figuren bleiben bei Korrekturen auswählbar, auch
+// wenn sie inzwischen inaktiv sind. Sonst würde Speichern ihre AP entfernen.
+export async function listCharactersForSessionEdit(sessionId: number): Promise<ActiveCharacter[]> {
+  return sql<ActiveCharacter[]>`
+    SELECT c.id, c.name, u.name AS "playerName"
+    FROM characters c
+    LEFT JOIN users u ON u.id = c.player_id
+    WHERE (c.deleted_at IS NULL AND c.is_draft = false
+           AND c.status = 'active' AND c.player_id IS NOT NULL)
+       OR EXISTS (
+         SELECT 1 FROM game_session_characters p
+         WHERE p.session_id = ${sessionId} AND p.character_id = c.id
+       )
+    ORDER BY c.name
+  `;
+}
+
+async function replaceSessionSynopsisBlocks(
+  tx: SqlClient,
+  sessionId: number,
+  missionId: number,
+  blocks: SessionSynopsisBlockInput[],
+): Promise<void> {
+  const existing = await tx<{ id: number }[]>`
+    SELECT id FROM mission_synopsis_blocks WHERE session_id = ${sessionId} FOR UPDATE
+  `;
+  const existingIds = new Set(existing.map((block) => block.id));
+  const retained = blocks.flatMap((block) => block.id == null ? [] : [block.id]);
+  if (new Set(retained).size !== retained.length || retained.some((id) => !existingIds.has(id))) {
+    throw new Error("Ein Zusammenfassungsblock gehört nicht zu dieser Session oder wurde inzwischen gelöscht.");
+  }
+  await tx`DELETE FROM mission_synopsis_blocks WHERE session_id = ${sessionId}
+    AND NOT (id = ANY(${sql.array(retained, 23)}))`;
+  for (const [blockOrder, block] of blocks.entries()) {
+    if (block.id != null) {
+      await tx`UPDATE mission_synopsis_blocks
+        SET mission_id = ${missionId}, block_order = ${blockOrder}, ingame_date = ${block.ingameDate},
+            end_date = NULL, body_md = ${block.body}
+        WHERE id = ${block.id} AND session_id = ${sessionId}`;
+      continue;
+    }
+    await tx`
+      INSERT INTO mission_synopsis_blocks
+        (mission_id, session_id, block_order, ingame_date, body_md)
+      VALUES (${missionId}, ${sessionId}, ${blockOrder}, ${block.ingameDate},
+              ${block.body})
+    `;
+  }
+}
+
+export async function updateMissionSynopsisBlock(input: {
+  id: number;
+  missionId: number;
+  ingameDate: string;
+  body: string;
+}): Promise<boolean> {
+  const [updated] = await sql<{ id: number }[]>`
+    UPDATE mission_synopsis_blocks
+    SET ingame_date = ${input.ingameDate}, body_md = ${input.body}
+    WHERE id = ${input.id} AND mission_id = ${input.missionId}
+    RETURNING id
+  `;
+  if (!updated) return false;
+  await syncMissionSynopsis(input.missionId);
+  return true;
+}
+
+export async function deleteMissionSynopsisBlock(
+  id: number,
+  missionId: number,
+): Promise<boolean> {
+  const [deleted] = await sql<{ id: number }[]>`
+    DELETE FROM mission_synopsis_blocks
+    WHERE id = ${id} AND mission_id = ${missionId}
+    RETURNING id
+  `;
+  if (!deleted) return false;
+  await syncMissionSynopsis(missionId);
+  return true;
+}
+
+async function syncMissionSynopsis(missionId: number): Promise<void> {
+  const rows = await sql<SessionSynopsisBlockInput[]>`
+    SELECT ingame_date::text AS "ingameDate", body_md AS body
+    FROM mission_synopsis_blocks
+    WHERE mission_id = ${missionId}
+    ORDER BY ingame_date DESC, id DESC
+  `;
+  const sourceMarkdown = buildMissionSynopsisMarkdown(rows);
+  const bodyHtml = sourceMarkdown ? await renderContentHtml(sourceMarkdown) : "";
+  await sql`
+    UPDATE missions
+    SET source_md = ${sourceMarkdown},
+        metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{body}', to_jsonb(${bodyHtml}::text)),
+        updated_at = NOW()
+    WHERE id = ${missionId}
+  `;
 }
 
 // Session zurücknehmen. Die Gutschriften verschwinden per ON DELETE CASCADE
@@ -167,14 +456,23 @@ export async function createGameSession(
 // Bereits ausgegebene AP holt das nicht zurück; der Kontostand kann dadurch
 // rechnerisch negativ werden, was die Spielleitung im Journal sieht und mit
 // einer Korrekturbuchung geradeziehen kann.
-export async function deleteGameSession(id: number): Promise<boolean> {
-  const rows =
-    await sql`DELETE FROM game_sessions WHERE id = ${id} RETURNING id`;
-  return rows.length > 0;
+export async function deleteGameSession(id: number): Promise<string | null> {
+  const [deleted] = await sql<{ missionId: number | null }[]>`
+    DELETE FROM game_sessions
+    WHERE id = ${id}
+    RETURNING mission_id AS "missionId"
+  `;
+  if (!deleted) return null;
+  if (deleted.missionId == null) return "";
+  const [mission] = await sql<{ slug: string }[]>`
+    SELECT slug FROM missions WHERE id = ${deleted.missionId}
+  `;
+  await syncMissionSynopsis(deleted.missionId);
+  return mission?.slug ?? "";
 }
 
 // Eine eingetragene Session vollständig korrigieren: Datum, Titel, AP-Beträge,
-// Notizen und Teilnehmende. Die Gutschriften der Session werden dabei neu
+// Synopsisblöcke und Teilnehmende. Die Gutschriften der Session werden dabei neu
 // geschrieben statt fortgeschrieben — die alten `session`- und `bonus`-
 // Buchungen dieser Session fallen weg, die neuen entstehen aus den frischen
 // Beträgen und der frischen Teilnehmerliste. Das ist der einzige Weg, der
@@ -191,31 +489,73 @@ export async function deleteGameSession(id: number): Promise<boolean> {
 export interface UpdateGameSessionInput {
   id: number;
   sessionDate: string;
-  title: string;
+  missionId: number;
+  synopsisBlocks: SessionSynopsisBlockInput[];
   sessionAp: number;
   bonusAp: number;
-  notes: string;
   characterIds: number[];
   actingUserId: number;
 }
 
 export async function updateGameSession(
   input: UpdateGameSessionInput,
-): Promise<boolean> {
+): Promise<{
+  oldMissionId: number | null;
+  oldMissionSlug: string | null;
+  missionSlug: string;
+} | null> {
   // Vor der Transaktion laden: src/lib/db.ts hält nur EINE Connection, eine
   // Abfrage über den globalen Client währenddessen würde blockieren.
   const rules = await getAdvancementRules();
 
-  return sql.begin(async (tx) => {
+  const result = await sql.begin(async (tx) => {
+    const [existing] = await tx<{ missionId: number | null; missionSessionNumber: number | null }[]>`
+      SELECT mission_id AS "missionId", mission_session_number AS "missionSessionNumber"
+      FROM game_sessions WHERE id = ${input.id} FOR UPDATE
+    `;
+    if (!existing) return null;
+    const [mission] = await tx<{ slug: string; title: string }[]>`
+      SELECT slug, title FROM missions
+      WHERE id = ${input.missionId} AND deleted_at IS NULL AND is_draft = false
+      FOR UPDATE
+    `;
+    if (!mission) throw new Error("Mission für diese Session nicht gefunden.");
+
+    let missionSessionNumber = existing.missionSessionNumber;
+    if (existing.missionId !== input.missionId || missionSessionNumber == null) {
+      const [sequence] = await tx<{ number: number }[]>`
+        SELECT GREATEST(
+          COALESCE((SELECT MAX(mission_session_number) FROM game_sessions WHERE mission_id = ${input.missionId} AND id <> ${input.id}), 0),
+          COALESCE((SELECT MAX(mission_session_number) FROM planned_sessions WHERE mission_id = ${input.missionId}), 0)
+        ) + 1 AS number
+      `;
+      missionSessionNumber = sequence.number;
+    }
+    const title = `${mission.title} ${missionSessionNumber}`;
+
     const rows = await tx<{ id: number }[]>`
       UPDATE game_sessions
-      SET session_date = ${input.sessionDate}, title = ${input.title},
+      SET session_date = ${input.sessionDate}, mission_id = ${input.missionId},
+          mission_session_number = ${missionSessionNumber}, title = ${title},
           session_ap = ${input.sessionAp}, bonus_ap = ${input.bonusAp},
-          notes = ${input.notes}, updated_at = NOW()
+          updated_at = NOW()
       WHERE id = ${input.id}
       RETURNING id
     `;
-    if (rows.length === 0) return false;
+    if (rows.length === 0) return null;
+    await tx`
+      UPDATE planned_sessions
+      SET mission_id = ${input.missionId},
+          mission_session_number = ${missionSessionNumber},
+          title = ${title}, updated_at = NOW()
+      WHERE game_session_id = ${input.id}
+    `;
+    await replaceSessionSynopsisBlocks(
+      tx,
+      input.id,
+      input.missionId,
+      input.synopsisBlocks,
+    );
 
     // Teilnehmerliste neu setzen.
     await tx`
@@ -237,7 +577,7 @@ export async function updateGameSession(
       WHERE session_id = ${input.id} AND reason IN ('session', 'bonus')
     `;
 
-    const note = input.title.trim() || `Session vom ${input.sessionDate}`;
+    const note = title;
     const bookings: { amount: number; reason: ApReason }[] = [];
     if (input.sessionAp > 0)
       bookings.push({ amount: input.sessionAp, reason: "session" });
@@ -258,103 +598,29 @@ export async function updateGameSession(
     // Logbuch-AP an die neue Teilnehmerliste angleichen (idempotent).
     await syncSessionLogbookAp(input.id, input.actingUserId, rules, tx);
 
-    return true;
-  });
-}
-
-// ── Logbücher an Sessions ──────────────────────────────────────────────
-// Ein Logbuch (mission_log) kann zu einer Session gehören. Sobald mindestens
-// eines an einer Session hängt, bekommen die Charaktere, denen diese Session
-// gutgeschrieben wurde, automatisch zusätzlich die Logbuch-AP — genau EINMAL
-// je Session und Charakter, egal wie viele Logbücher geschrieben werden.
-
-export interface SessionLogbook {
-  id: number;
-  slug: string;
-  title: string;
-  logDate: string | null;
-  missionTitle: string;
-  authorName: string | null;
-  // An welcher Session das Logbuch hängt (null = an keiner).
-  sessionId: number | null;
-}
-
-// Logbücher für die Zuordnung — die jüngsten, mit ihrer aktuellen Session (oder
-// null). Die Oberfläche zeigt je Session daraus die eigenen und die noch
-// freien; ein Logbuch, das schon an einer ANDEREN Session hängt, taucht dort
-// nicht auf. Begrenzt, weil ältere Logs für eine neue Session praktisch nicht
-// mehr in Frage kommen und die Auswahlliste nur zumüllen würden.
-export async function listAssignableLogbooks(
-  limit = 100,
-): Promise<SessionLogbook[]> {
-  return sql<SessionLogbook[]>`
-    SELECT l.id, l.slug, l.title, l.log_date::text AS "logDate",
-           m.title AS "missionTitle",
-           c.name AS "authorName",
-           l.session_id AS "sessionId"
-    FROM mission_logs l
-    JOIN missions m ON m.id = l.mission_id
-    LEFT JOIN characters c ON c.id = l.author_id
-    WHERE l.deleted_at IS NULL
-      AND l.is_draft = false
-    ORDER BY l.log_date DESC NULLS LAST, l.id DESC
-    LIMIT ${limit}
-  `;
-}
-
-// Setzt die Logbuch-Zuordnung einer Session auf genau diese Liste und zieht
-// die automatische Logbuch-AP nach.
-//
-// Alles in EINER Transaktion: Lösen, Zuordnen und die AP-Buchungen gehören
-// zusammen — bricht etwas dazwischen ab, stünde sonst die Zuordnung ohne ihre
-// Gutschrift da (oder umgekehrt).
-//
-// Ein Logbuch kann nur an EINER Session hängen. Wird eines aus einer anderen
-// Session hierher gezogen, verliert jene es — ihre Logbuch-AP muss deshalb
-// mitgezogen werden, sonst behielte sie Buchungen für Logbücher, die sie gar
-// nicht mehr hat. Die Regelwerks-Abfrage läuft VOR der Transaktion (sonst
-// wartete sie auf die einzige Connection, siehe getAdvancementRules).
-export async function setSessionLogbooks(
-  sessionId: number,
-  logIds: number[],
-  actingUserId: number,
-): Promise<void> {
-  const rules = await getAdvancementRules();
-
-  await sql.begin(async (tx) => {
-    // Welche anderen Sessions verlieren hier ein Logbuch? Vor dem UPDATE
-    // ermitteln — danach steht die alte Zuordnung nicht mehr in der Tabelle.
-    const affected =
-      logIds.length > 0
-        ? await tx<{ sessionId: number }[]>`
-            SELECT DISTINCT session_id AS "sessionId" FROM mission_logs
-            WHERE id = ANY(${logIds}::int[])
-              AND session_id IS NOT NULL AND session_id <> ${sessionId}
-          `
-        : [];
-
-    await tx`
-      UPDATE mission_logs SET session_id = NULL
-      WHERE session_id = ${sessionId}
-        AND NOT (id = ANY(${logIds.length > 0 ? logIds : [0]}::int[]))
-    `;
-    if (logIds.length > 0) {
-      await tx`
-        UPDATE mission_logs SET session_id = ${sessionId}
-        WHERE id = ANY(${logIds}::int[]) AND deleted_at IS NULL
+    let oldMissionSlug: string | null = null;
+    if (existing.missionId != null && existing.missionId !== input.missionId) {
+      const [oldMission] = await tx<{ slug: string }[]>`
+        SELECT slug FROM missions WHERE id = ${existing.missionId}
       `;
+      oldMissionSlug = oldMission?.slug ?? null;
     }
-
-    await syncSessionLogbookAp(sessionId, actingUserId, rules, tx);
-    for (const row of affected) {
-      await syncSessionLogbookAp(row.sessionId, actingUserId, rules, tx);
-    }
+    return {
+      oldMissionId: existing.missionId,
+      oldMissionSlug,
+      missionSlug: mission.slug,
+    };
   });
+  if (!result) return null;
+  if (result.oldMissionId != null && result.oldMissionId !== input.missionId) {
+    await syncMissionSynopsis(result.oldMissionId);
+  }
+  await syncMissionSynopsis(input.missionId);
+  return result;
 }
 
-// Bringt die automatischen Logbuch-Buchungen einer Session in den Stand, den
-// ihre Logbücher vorgeben: mindestens ein Logbuch → je gutgeschriebenem
-// Charakter genau eine Buchung; kein Logbuch mehr → keine.
+// Erhält automatische Logbuch-AP aus bestehenden historischen Zuordnungen.
+// Neue Sessions bieten keine Logbuch-Zuordnung mehr an.
 //
 // Idempotent und darum gefahrlos mehrfach aufrufbar (nach dem Verknüpfen, nach
 // dem Löschen eines Logs, nach dem Ändern der Teilnehmenden). Die Buchungen
@@ -364,7 +630,7 @@ export async function syncSessionLogbookAp(
   sessionId: number,
   actingUserId: number,
   // Vorgeladenes Regelwerk und Transaktions-Client für Aufrufe aus einer
-  // offenen Transaktion heraus (setSessionLogbooks) — src/lib/db.ts hält nur
+  // offenen Transaktion heraus — src/lib/db.ts hält nur
   // EINE Connection (max: 1), eine Abfrage über den globalen Client während
   // einer laufenden sql.begin()-Transaktion würde auf eine nie freiwerdende
   // Connection warten. Ohne beide Argumente unverändertes Verhalten.
@@ -410,10 +676,8 @@ export async function syncSessionLogbookAp(
   return { added: added.length, removed: 0 };
 }
 
-// Nach dem Löschen/Wiederherstellen eines Logbuchs die automatische Logbuch-AP
-// seiner Session nachziehen — verliert eine Session ihr letztes Logbuch, fällt
-// die Gutschrift wieder weg; kommt es zurück, kommt sie wieder. Ohne Session
-// am Logbuch ist das ein No-op.
+// Nach dem Löschen/Wiederherstellen eines Logbuchs historische Logbuch-AP
+// nachziehen. Ohne bestehende Session-Zuordnung ist das ein No-op.
 export async function resyncSessionLogbookApForLog(
   logId: number,
   actingUserId: number,

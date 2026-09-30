@@ -27,7 +27,7 @@ export default function DeleteContentButton({
       <button
         type="button"
         disabled={pending}
-        className="lcars-icon-btn self-start disabled:opacity-50 text-lcars-quinary-ink border-lcars-quinary"
+        className="lcars-icon-btn lcars-icon-btn--danger self-start disabled:opacity-50"
         aria-label="Löschen"
         title="Löschen"
         onClick={() => {

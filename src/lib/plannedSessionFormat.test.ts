@@ -12,7 +12,7 @@ import type { PlannedSession } from "./plannedSessionTypes";
 function form(overrides: Record<string, unknown> = {}) {
   return {
     scheduledAt: "2026-06-12T19:30",
-    title: "Fortsetzung",
+    missionId: "42",
     location: "Bei Anna",
     notes: "",
     characterIds: [] as string[],
@@ -26,7 +26,7 @@ describe("parsePlannedSession", () => {
     expect(result).toMatchObject({
       ok: true,
       scheduledAt: "2026-06-12 19:30",
-      title: "Fortsetzung",
+      missionId: 42,
       location: "Bei Anna",
     });
   });
@@ -59,10 +59,8 @@ describe("parsePlannedSession", () => {
     ).toMatchObject({ ok: false });
   });
 
-  it("weist einen Titel ab, der zu lang ist", () => {
-    expect(parsePlannedSession(form({ title: "x".repeat(201) }))).toMatchObject(
-      { ok: false },
-    );
+  it("verlangt eine zugehörige Mission", () => {
+    expect(parsePlannedSession(form({ missionId: "" }))).toMatchObject({ ok: false });
   });
 });
 
@@ -88,6 +86,9 @@ function session(rsvps: PlannedSession["rsvps"]): PlannedSession {
     id: 1,
     scheduledAt: "2026-06-12 19:30",
     title: "",
+    missionId: null,
+    missionTitle: null,
+    missionSessionNumber: null,
     location: "",
     notes: "",
     notesHtml: "",

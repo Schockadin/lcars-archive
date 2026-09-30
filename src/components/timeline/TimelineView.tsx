@@ -17,6 +17,7 @@ import {
   filterEvents,
   fmtDate,
   isTimelineScope,
+  isSessionEvent,
   missionEndDates,
   peopleOf,
   periodKey,
@@ -32,6 +33,8 @@ import ManualEventForm from "./ManualEventForm";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
 import ModalOverlay from "@/components/ModalOverlay";
 import ContentImageGallery from "@/components/ContentImageGallery";
+import ContentCardMenu from "@/components/timeline/ContentCardMenu";
+import { SessionSummaryPanel, useSessionPanels } from "./SessionPanels";
 
 // Die Chronologie als Zeitstrahl: links Datum und Schiene, rechts die
 // Ereigniskarte. Aufbau nach dem Entwurf (Jahresleiste, Monats-Trenner,
@@ -86,6 +89,7 @@ const SCOPE_DESCRIPTIONS: Record<TimelineScope, string> = {
   events: "Ereignisse und Meilensteine der Kampagne",
   dialogues: "Abgeschlossene Gespräche der Kampagne",
   logs: "Logbücher aus den Missionen",
+  sessions: "Datierte Log-Einträge der Spielleitung",
   all: "Alle datierten Inhalte der Kampagne",
 };
 
@@ -93,6 +97,7 @@ function scopeCount(scope: TimelineScope, count: number): string {
   if (scope === "missions") return count === 1 ? "Mission" : "Missionen";
   if (scope === "dialogues") return count === 1 ? "Gespräch" : "Gespräche";
   if (scope === "logs") return count === 1 ? "Logbuch" : "Logbücher";
+  if (scope === "sessions") return count === 1 ? "Session-Block" : "Session-Blöcke";
   return count === 1 ? "Ereignis" : "Ereignisse";
 }
 
@@ -151,6 +156,7 @@ export default function TimelineView({
   const [person, setPerson] = useState<string | null>(initialPerson);
   const [year, setYear] = useState<string | null>(null);
   const [manualDetail, setManualDetail] = useState<TimelineEvent | null>(null);
+  const panels = useSessionPanels(events.filter(isSessionEvent).map((event) => event.id));
 
   // Ereignisart und Beteiligte richten sich nach dem UMFANG, nicht nach dem
   // ganzen Bestand: in der Missions-Ansicht gäbe es sonst Einträge, die
@@ -427,7 +433,10 @@ export default function TimelineView({
                     )}
                     <EventRow
                       event={event}
+                      currentUserId={currentUserId}
                       onOpenManual={() => setManualDetail(event)}
+                      sessionOpen={panels.isOpen(event.id)}
+                      onSessionOpenChange={(open) => panels.setOpen(event.id, open)}
                       endDate={
                         scope === "missions" && event.href
                           ? missionEnds.get(event.href)
@@ -509,19 +518,26 @@ export default function TimelineView({
 // steht nur, was ein Ereignis von einem Datenbank-Eintrag unterscheidet.
 function EventRow({
   event,
+  currentUserId,
   endDate,
   onOpenManual,
+  sessionOpen,
+  onSessionOpenChange,
 }: {
   event: TimelineEvent;
+  currentUserId: number | null;
   // Nur im Umfang „Missionen" gesetzt: dann trägt die Karte den Zeitraum des
   // Einsatzes statt des Datums seines Beginns.
   endDate?: string;
   onOpenManual: () => void;
+  sessionOpen: boolean;
+  onSessionOpenChange: (open: boolean) => void;
 }) {
   const visual = categoryVisual(event.category);
+  const session = isSessionEvent(event);
 
   return (
-    <ChronoRow date={event.date} color={visual.color}>
+    <ChronoRow htmlId={session ? `timeline-session-${event.sessionBlockId}` : undefined} date={event.date} color={visual.color}>
       <ChronoCard
         color={visual.color}
         // Bild des Quell-Inhalts als Vorschaubild links in der Karte; ohne
@@ -533,7 +549,29 @@ function EventRow({
         // Ein von Hand eingetragenes Ereignis hat keinen Inhalt, auf den zu
         // zeigen wäre — dann steht der Titel als reiner Text.
         href={event.href ?? undefined}
+        actions={
+          !session && event.href && event.contentId != null ? (
+            <ContentCardMenu
+              contentType={event.contentType ?? (
+                event.sourceType === "mission_log"
+                  ? "mission_log"
+                  : event.sourceType === "character"
+                    ? "character"
+                    : event.sourceType === "mission"
+                      ? "mission"
+                      : "archive_entry"
+              )}
+              id={event.contentId}
+              ownerUserId={event.ownerUserId ?? null}
+              currentUserId={currentUserId}
+              isDraft={event.isDraft ?? false}
+              title={event.sourceTitle}
+              href={event.href}
+            />
+          ) : undefined
+        }
         onActivate={event.origin === "manual" ? onOpenManual : undefined}
+        meta={session ? <span><b>Mission</b> {event.sourceTitle}</span> : undefined}
         ariaLabel={
           event.date
             ? `${event.title} — ${visual.label}, ${fmtDate(event.date)}`
@@ -565,7 +603,9 @@ function EventRow({
           )
         }
       >
-        {event.detail && (
+        {session ? (
+          <SessionSummaryPanel bodyHtml={event.fullDetailHtml ?? ""} open={sessionOpen} onOpenChange={onSessionOpenChange} />
+        ) : event.detail && (
           <ChronoPanel label="Teaser" open>
             {event.detail}
           </ChronoPanel>

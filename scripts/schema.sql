@@ -831,6 +831,8 @@ CREATE INDEX IF NOT EXISTS idx_talents_category ON talents(category);
 CREATE TABLE IF NOT EXISTS game_sessions (
   id           SERIAL PRIMARY KEY,
   session_date DATE NOT NULL,
+  mission_id   INT REFERENCES missions(id) ON DELETE SET NULL,
+  mission_session_number INTEGER,
   title        TEXT NOT NULL DEFAULT '',
   session_ap   INT NOT NULL DEFAULT 0 CHECK (session_ap >= 0),
   bonus_ap     INT NOT NULL DEFAULT 0 CHECK (bonus_ap >= 0),
@@ -839,7 +841,33 @@ CREATE TABLE IF NOT EXISTS game_sessions (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE game_sessions
+  ADD COLUMN IF NOT EXISTS mission_id INT REFERENCES missions(id) ON DELETE SET NULL;
+ALTER TABLE game_sessions
+  ADD COLUMN IF NOT EXISTS mission_session_number INTEGER;
 CREATE INDEX IF NOT EXISTS idx_game_sessions_date ON game_sessions(session_date DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_game_sessions_mission_number
+  ON game_sessions (mission_id, mission_session_number)
+  WHERE mission_id IS NOT NULL AND mission_session_number IS NOT NULL;
+
+-- Automatisch aufgebaute Synopsis-Blöcke. Neue Blöcke gehören zu einer
+-- Session; session_id bleibt für die aus früheren Missions-Synopsen
+-- übernommenen Bestandsblöcke NULL.
+CREATE TABLE IF NOT EXISTS mission_synopsis_blocks (
+  id           SERIAL PRIMARY KEY,
+  mission_id   INT NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+  session_id   INT REFERENCES game_sessions(id) ON DELETE CASCADE,
+  block_order  INT NOT NULL DEFAULT 0,
+  ingame_date  DATE NOT NULL,
+  end_date     DATE,
+  body_md      TEXT NOT NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CHECK (end_date IS NULL OR end_date >= ingame_date)
+);
+CREATE INDEX IF NOT EXISTS idx_mission_synopsis_blocks_chronology
+  ON mission_synopsis_blocks(mission_id, ingame_date DESC, end_date DESC, id);
+CREATE INDEX IF NOT EXISTS idx_mission_synopsis_blocks_session
+  ON mission_synopsis_blocks(session_id);
 
 -- ---------------------------------------------------------------------------
 -- game_session_characters
@@ -960,6 +988,8 @@ CREATE TABLE IF NOT EXISTS planned_sessions (
   -- Zeitpunkt mit Uhrzeit: „Freitag" allein reicht nicht, um zuzusagen.
   scheduled_at  TIMESTAMPTZ NOT NULL,
   title         TEXT NOT NULL DEFAULT '',
+  mission_id    INTEGER REFERENCES missions(id) ON DELETE SET NULL,
+  mission_session_number INTEGER,
   -- Wo gespielt wird (Adresse, „bei Anna", ein Videolink).
   location      TEXT NOT NULL DEFAULT '',
   notes         TEXT NOT NULL DEFAULT '',
@@ -967,8 +997,14 @@ CREATE TABLE IF NOT EXISTS planned_sessions (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE planned_sessions
+  ADD COLUMN IF NOT EXISTS mission_id INTEGER REFERENCES missions(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS mission_session_number INTEGER;
 CREATE INDEX IF NOT EXISTS idx_planned_sessions_date
   ON planned_sessions (scheduled_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_planned_sessions_mission_number
+  ON planned_sessions (mission_id, mission_session_number)
+  WHERE mission_id IS NOT NULL AND mission_session_number IS NOT NULL;
 
 -- Zu- und Absagen. Eine Zeile je Person und Termin; wer nicht geantwortet
 -- hat, hat keine Zeile — „noch offen" ist damit die Abwesenheit einer
