@@ -6,7 +6,10 @@ import SessionsBrowser from "./SessionsBrowser";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
-import { defaultSessionSynopsisDate } from "@/lib/sessionSynopsis";
+import {
+  defaultSessionSynopsisDate,
+  getPreviousSessionSynopsisBlocks,
+} from "@/lib/sessionSynopsis";
 import { fmtDate } from "@/lib/missionFormat";
 import { CheckIcon, PencilIcon, TrashIcon } from "@/lib/icons";
 import type {
@@ -30,6 +33,8 @@ export function SessionContextFields({
   lockedMission = false,
   allowNewMission = true,
   initialBlocks = [],
+  sessionHistory = [],
+  beforeSessionNumber,
 }: {
   missions: SessionMissionOption[];
   idPrefix: string;
@@ -37,6 +42,8 @@ export function SessionContextFields({
   lockedMission?: boolean;
   allowNewMission?: boolean;
   initialBlocks?: GameSession["synopsisBlocks"];
+  sessionHistory?: GameSession[];
+  beforeSessionNumber?: number | null;
 }) {
   const [missionChoice, setMissionChoice] = useState(
     initialMissionId ? `mission:${initialMissionId}` : "",
@@ -48,6 +55,14 @@ export function SessionContextFields({
       ingameDate: block.ingameDate,
       body: block.body,
     })),
+  );
+  const selectedMissionId = missionChoice.startsWith("mission:")
+    ? Number(missionChoice.slice("mission:".length))
+    : null;
+  const previousSessionBlocks = getPreviousSessionSynopsisBlocks(
+    sessionHistory,
+    selectedMissionId,
+    selectedMissionId === initialMissionId ? beforeSessionNumber : undefined,
   );
   return (
     <div className="flex flex-col gap-[8px]">
@@ -166,6 +181,7 @@ export function SessionContextFields({
                   (mission) => `mission:${mission.id}` === missionChoice,
                 )?.startedAt,
                 current,
+                previousSessionBlocks,
               );
               return [
                 ...current,
@@ -192,11 +208,13 @@ export function SessionContextFields({
 function NewSessionForm({
   characters,
   missions,
+  sessions,
   defaultSessionAp,
   today,
 }: {
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
+  sessions: GameSession[];
   defaultSessionAp: number;
   today: string;
 }) {
@@ -247,7 +265,11 @@ function NewSessionForm({
         </label>
       </div>
 
-      <SessionContextFields missions={missions} idPrefix="new-session" />
+      <SessionContextFields
+        missions={missions}
+        idPrefix="new-session"
+        sessionHistory={sessions}
+      />
 
       <fieldset className="flex flex-col gap-[6px]">
         <legend className="lcars-eyebrow">Gutschreiben an</legend>
@@ -298,12 +320,14 @@ export function SessionDetails({
   session,
   characters,
   missions,
+  sessionHistory = [],
   detailPage = false,
 }: {
   session: GameSession;
   // Auswahl für „Gutschreiben an" — dieselbe Liste wie beim Anlegen.
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
+  sessionHistory?: GameSession[];
   detailPage?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -463,6 +487,8 @@ export function SessionDetails({
               initialMissionId={session.missionId}
               allowNewMission={false}
               initialBlocks={session.synopsisBlocks}
+              sessionHistory={sessionHistory}
+              beforeSessionNumber={session.missionSessionNumber}
             />
 
             <fieldset className="flex flex-col gap-[6px]">
@@ -607,6 +633,7 @@ export default function SessionManager({
               <NewSessionForm
                 characters={characters}
                 missions={missions}
+                sessions={sessions}
                 defaultSessionAp={defaultSessionAp}
                 today={today}
               />
@@ -630,6 +657,7 @@ export default function SessionManager({
                   session={session}
                   characters={characters}
                   missions={missions}
+                  sessionHistory={sessions}
                 />
               ))}
             </div>

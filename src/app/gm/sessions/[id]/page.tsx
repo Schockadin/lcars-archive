@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
-import { getGameSession, listCharactersForSessionEdit, listSessionMissions } from "@/lib/gameSessions";
+import { getGameSession, listCharactersForSessionEdit, listGameSessions, listSessionMissions } from "@/lib/gameSessions";
 import { missionEditHref, missionHref } from "@/lib/contentRoutes";
 import { fmtDate } from "@/lib/missionFormat";
 import { SessionDetails } from "../SessionManager";
@@ -20,9 +20,10 @@ export default async function GmSessionDetailPage({ params }: { params: Promise<
   if (!/^\d+$/.test(rawId) || !Number.isSafeInteger(id) || id <= 0 || id > 2147483647) notFound();
   const session = await getGameSession(id);
   if (!session) notFound();
-  const [characters, missions] = await Promise.all([
+  const [characters, missions, sessionHistory] = await Promise.all([
     listCharactersForSessionEdit(id),
     listSessionMissions(),
+    listGameSessions(),
   ]);
   const participants = characters.filter((character) => session.characterIds.includes(character.id));
 
@@ -57,7 +58,7 @@ export default async function GmSessionDetailPage({ params }: { params: Promise<
               </ul>
             )}
           </section>
-          <SessionDetails session={session} characters={characters} missions={missions} detailPage />
+          <SessionDetails session={session} characters={characters} missions={missions} sessionHistory={sessionHistory} detailPage />
         </div>
       </article>
     </>

@@ -12,6 +12,7 @@ import {
   listActiveCharactersForAp,
   listActiveSessionMissions,
   listSessionMissions,
+  listGameSessions,
 } from "@/lib/gameSessions";
 import { listUnrecordedPlannedSessions } from "@/lib/plannedSessions";
 import { getMostRecentLogDate } from "@/lib/missions";
@@ -40,6 +41,7 @@ export default async function AdminCampaignPage() {
     recordMissions,
     missionCharacters,
     defaultMissionStartedAt,
+    playedSessions,
   ] = await Promise.all([
     getIngameYearInfo(),
     getAdvancementRules(),
@@ -49,6 +51,7 @@ export default async function AdminCampaignPage() {
     listSessionMissions(),
     getCharactersForParticipantPicker(),
     getMostRecentLogDate(),
+    listGameSessions(),
   ]);
 
   return (
@@ -70,6 +73,7 @@ export default async function AdminCampaignPage() {
             characters={characters}
             missions={missions}
             recordMissions={recordMissions}
+            playedSessions={playedSessions}
             missionCharacters={missionCharacters}
             defaultSessionAp={rules.apPerSession}
             defaultMissionStartedAt={defaultMissionStartedAt}

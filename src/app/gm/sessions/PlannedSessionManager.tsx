@@ -25,6 +25,7 @@ import {
 import type { PlannedSession } from "@/lib/plannedSessionTypes";
 import type { ActiveCharacter } from "@/lib/gameSessions";
 import type { SessionMissionOption } from "@/lib/gameSessions";
+import type { GameSession } from "@/lib/gameSessions";
 import type { CharacterParticipantOption } from "@/lib/characters";
 import { SessionContextFields } from "./SessionManager";
 import { CheckIcon, PencilIcon, TrashIcon, XIcon } from "@/lib/icons";
@@ -215,12 +216,14 @@ function RecordSessionModal({
   session,
   characters,
   missions,
+  playedSessions,
   defaultSessionAp,
   onClose,
 }: {
   session: PlannedSession;
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
+  playedSessions: GameSession[];
   defaultSessionAp: number;
   onClose: () => void;
 }) {
@@ -249,6 +252,8 @@ function RecordSessionModal({
           idPrefix={`record-session-${session.id}`}
           initialMissionId={session.missionId}
           lockedMission={session.missionId !== null}
+          sessionHistory={playedSessions}
+          beforeSessionNumber={session.missionSessionNumber}
         />
         <div className="flex flex-wrap items-end gap-[8px]">
           <label className="flex flex-col gap-[4px]">
@@ -299,6 +304,7 @@ function PlannedSessionRow({
   characters,
   missions,
   recordMissions,
+  playedSessions,
   missionCharacters,
   defaultSessionAp,
   defaultMissionStartedAt,
@@ -307,6 +313,7 @@ function PlannedSessionRow({
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
   recordMissions: SessionMissionOption[];
+  playedSessions: GameSession[];
   missionCharacters: CharacterParticipantOption[];
   defaultSessionAp: number;
   defaultMissionStartedAt: string | null;
@@ -401,6 +408,7 @@ function PlannedSessionRow({
           session={session}
           characters={characters}
           missions={recordMissions}
+          playedSessions={playedSessions}
           defaultSessionAp={defaultSessionAp}
           onClose={() => setRecord(false)}
         />
@@ -415,6 +423,7 @@ export default function PlannedSessionManager({
   characters,
   missions,
   recordMissions,
+  playedSessions = [],
   missionCharacters,
   defaultSessionAp,
   defaultMissionStartedAt,
@@ -424,6 +433,7 @@ export default function PlannedSessionManager({
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
   recordMissions: SessionMissionOption[];
+  playedSessions?: GameSession[];
   missionCharacters: CharacterParticipantOption[];
   defaultSessionAp: number;
   defaultMissionStartedAt: string | null;
@@ -472,6 +482,7 @@ export default function PlannedSessionManager({
               characters={characters}
               missions={missions}
               recordMissions={recordMissions}
+              playedSessions={playedSessions}
               missionCharacters={missionCharacters}
               defaultSessionAp={defaultSessionAp}
               defaultMissionStartedAt={defaultMissionStartedAt}
