@@ -32,8 +32,8 @@ export function GmCampaignGuide() {
     <GuideBody>
       <GuideSection title="Kampagne · Ingame-Jahr" figure={<CampaignFigure />}>
         <p>
-          Die Kampagnen-Seite bündelt, was die Runde als Ganzes betrifft. Ganz
-          oben steht das <strong>Ingame-Jahr</strong> — das Jahr, in dem die
+          Die Kampagnen-Seite bündelt, was die Runde als Ganzes betrifft. Unter
+          den Spielterminen steht das eingeklappte <strong>Ingame-Jahr</strong> — das Jahr, in dem die
           Kampagne gerade spielt. Es ist mehr als eine Anzeige: Trägt eine Figur
           ein <strong>Geburtsdatum</strong>, wird ihr Alter überall aus
           Ingame-Jahr minus Geburtsjahr gerechnet. Ohne Geburtsdatum gilt
@@ -83,7 +83,7 @@ export function GmSessionsGuide() {
         figure={<SessionsFigure />}
       >
         <p>
-          Unter <strong>„Kampagne“ → „Termin planen“</strong> setzt du den nächsten
+          Unter <strong>„Kampagne“ → „Session planen“</strong> setzt du den nächsten
           Spielabend an: Zeitpunkt, Mission, Ort und wer mitspielt — alle
           aktiven Figuren sind vorausgewählt. Der Termin erscheint danach auf
           der Startseite aller Beteiligten, die dort zu- oder absagen können.
@@ -216,19 +216,19 @@ export function GmApGuide() {
         figure={<ApLedgerFigure />}
       >
         <p>
-          Oben stehen die <strong>Kontostände</strong> aller Figuren: erhalten,
-          ausgegeben, verfügbar. Darunter das gesamte{" "}
+          Oben vergibst du AP oder schließt eine Mission mit einer Gutschrift
+          ab. Danach folgen die <strong>Kontostände</strong> aller Figuren:
+          erhalten, ausgegeben, verfügbar. Darunter steht das gesamte{" "}
           <strong>Buchungsjournal</strong> — jede Gutschrift und jede Ausgabe
-          mit Datum und Grund, nach Charakter und Grund filterbar. Vergeben wird
-          hier nichts: Einzelbuchungen laufen über <strong>„Kampagne“</strong>,
-          Sammelgutschriften über <strong>„Sessions“</strong>. Dieser Bereich
-          ist zum Nachvollziehen da — und fürs Regelwerk darunter.
+          mit Datum und Grund, nach Charakter und Grund filterbar.
+          Sammelgutschriften für gespielte Abende entstehen bei der
+          Session-Erfassung.
         </p>
       </GuideSection>
 
-      <GuideSection title="AP · Das Regelwerk">
+      <GuideSection title="AP · Vorgaben aus dem Regelwerk">
         <p>
-          Im <strong>AP-Regelwerk</strong> stellst du ein, womit alle
+          Unter <strong>„Kampagne“ → „Steigerungsregeln“</strong> stellst du ein, womit alle
           Charakterbögen rechnen: die Kosten je Steigerungsschritt, die Kosten
           für Talente und Schwerpunkte, die Budgets und Freikontingente der
           Ersterschaffung, wie viele übrige AP beim Abschließen gutgeschrieben
@@ -384,6 +384,21 @@ export default function GmAreaGuides() {
   return (
     <GuideBody>
       <GmCampaignGuide />
+      <GuideSection title="Missionen · Sessions und Synopsis" figure={<SessionsFigure />}>
+        <p>
+          Unter „Missionen“ kannst du die Karten nach Datum oder Status gruppieren
+          und sortieren. Das Plus legt eine neue Mission an. Eine Karte öffnet
+          die Verwaltung mit den zugehörigen Sessions und dem Missionseditor.
+          Jede Session-Karte führt zur Detailseite, auf der du AP, Teilnehmende
+          und datierte Zusammenfassungsblöcke bearbeitest oder entfernst.
+        </p>
+        <p>
+          Aus den Blöcken entsteht automatisch die Synopsis. „Mission ansehen“
+          führt zur Chronik mit Logs und Session-Blöcken. Ihr Inhaltsverzeichnis
+          bietet datierte Sprungmarken; + beziehungsweise − öffnet oder schließt
+          alle Session-Panels. Die vollständige Synopsis steht am Ende.
+        </p>
+      </GuideSection>
       <GmSessionsGuide />
       <GmCharactersGuide />
       <GmPartySheetGuide />

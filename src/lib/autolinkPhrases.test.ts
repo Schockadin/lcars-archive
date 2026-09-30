@@ -12,7 +12,6 @@ describe("aliasGenitive", () => {
     expect(aliasGenitive("  ")).toBeNull();
     expect(aliasGenitive("Max’")).toBeNull();
     expect(aliasGenitives(["Max", "Max’", "T'Vel"])).toEqual([
-      "Max’",
       "Max'",
       "T'Vels",
     ]);

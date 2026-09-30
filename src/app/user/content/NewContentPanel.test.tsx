@@ -67,7 +67,7 @@ describe("NewContentPanel", () => {
   it("zählt den Import mit", () => {
     render(<NewContentPanel data={data()} canImport />);
 
-    expect(screen.getByRole("link", { name: "Import" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Inhalte importieren" })).toBeInTheDocument();
     expect(screen.getByText("7")).toBeInTheDocument();
   });
 

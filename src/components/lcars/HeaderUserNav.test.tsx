@@ -39,7 +39,7 @@ describe("HeaderUserNav: getrennte Staff-Menüs", () => {
 
   it("zeigt bei kombinierten Rollen beide Menüs getrennt nebeneinander", () => {
     render(
-      <HeaderUserNav permissions={["gm.access", "admin.access", "users.manage"]} />,
+      <HeaderUserNav permissions={["gm.access", "admin.access", "users.manage", "users.browse"]} />,
     );
     expect(menuButtons()).toEqual(["Regeln", "Leitung", "Admin"]);
   });
@@ -125,16 +125,16 @@ describe("HeaderUserNav: Gliederung des Leitungs-Menüs", () => {
     expect(screen.getByRole("button", { name: /Regeln/ })).toContainHTML(renderToStaticMarkup(<BookIcon />));
     fireEvent.click(screen.getByRole("button", { name: /Regeln/ }));
     expect(menuEintraege()).toEqual(["Steigerungsregeln", "Schwerpunkte", "Talente"]);
-    expect(screen.getByRole("link", { name: "Steigerungsregeln" })).toHaveAttribute("href", "/user/rules");
-    expect(screen.getByRole("link", { name: "Schwerpunkte" })).toHaveAttribute("href", "/user/rules/focuses");
-    expect(screen.getByRole("link", { name: "Talente" })).toHaveAttribute("href", "/user/rules/talents");
+    expect(screen.getByRole("menuitem", { name: "Steigerungsregeln" })).toHaveAttribute("href", "/user/rules");
+    expect(screen.getByRole("menuitem", { name: "Schwerpunkte" })).toHaveAttribute("href", "/user/rules/focuses");
+    expect(screen.getByRole("menuitem", { name: "Talente" })).toHaveAttribute("href", "/user/rules/talents");
   });
 
   it("führt im Leitungs-Menü direkt zur Missionsverwaltung", () => {
     render(<HeaderUserNav permissions={["gm.access"]} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Leitung/ }));
-    expect(screen.getByRole("link", { name: "Missionen" })).toHaveAttribute(
+    expect(screen.getByRole("menuitem", { name: "Missionen" })).toHaveAttribute(
       "href",
       "/gm/missions",
     );

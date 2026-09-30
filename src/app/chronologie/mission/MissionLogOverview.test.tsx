@@ -1,7 +1,16 @@
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import MissionLogOverview from "./MissionLogOverview";
 import type { MissionLogListItem } from "@/types/missions";
+
+beforeEach(() => {
+  vi.stubGlobal("IntersectionObserver", class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  });
+});
+afterEach(() => vi.unstubAllGlobals());
 
 function log(
   id: number,
@@ -65,7 +74,7 @@ describe("MissionLogOverview", () => {
   it("zählt ein einzelnes Logbuch im Singular", () => {
     renderOverview({ logs: [log(1, "Allein")] });
 
-    expect(screen.getByText(/1 Log · 0 Session-Block/)).toBeInTheDocument();
+    expect(screen.getByText(/1 Log · 0 Session-Blöcke/)).toBeInTheDocument();
   });
 
   it("verlinkt jede Karte auf das Logbuch in dieser Mission", () => {

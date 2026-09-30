@@ -17,7 +17,7 @@ export function getPgDatabaseUrl(
     );
   }
   if (parsed.protocol !== "postgres:" && parsed.protocol !== "postgresql:") {
-    throw new Error("Die Datenbankverbindung muss mit postgres:// beginnen.");
+    throw new Error("Die PostgreSQL-URL muss mit postgres:// oder postgresql:// beginnen.");
   }
 
   return databaseUrl;

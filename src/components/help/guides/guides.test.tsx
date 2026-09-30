@@ -40,7 +40,7 @@ describe("Anleitungen zu den Leitungs-Bereichen", () => {
       "AP",
       "Talente",
       "Schwerpunkte",
-      "Eigene Regeln",
+      "Missionen",
       "Chronologie",
       "Gespräche",
     ]) {
