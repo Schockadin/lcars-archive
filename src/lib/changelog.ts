@@ -156,6 +156,13 @@ export const CHANGELOG: ChangelogEntry[] = [
     items: [],
   },
   {
+    version: "1.63",
+    title: "Realtime-Verbindungen",
+    // Bewusst ohne Stichpunkte: Erlaubt die im Browser benötigten Ably-Hosts
+    // in connect-src. Das behebt einen Verbindungsfehler, keine neue Funktion.
+    items: [],
+  },
+  {
     version: "1.61",
     title: "Missionschroniken",
     items: [

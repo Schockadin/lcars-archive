@@ -25,7 +25,19 @@ function buildCspHeader(): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' https: data: blob:",
     "font-src 'self'",
-    "connect-src 'self'",
+    // Ably Realtime: primäre REST/WebSocket-Hosts, Ausweichhosts und deren
+    // CNAME-Ziele. Ohne diese Freigaben blockiert CSP die Browserverbindung,
+    // bevor CORS oder die Ably-Tokenauthentifizierung greifen können.
+    [
+      "connect-src 'self'",
+      "https://rest.ably.io",
+      "https://realtime.ably.io",
+      "wss://realtime.ably.io",
+      "https://*.ably-realtime.com",
+      "wss://*.ably-realtime.com",
+      "https://*.ably.net",
+      "wss://*.ably.net",
+    ].join(" "),
     "worker-src 'self'",
     "manifest-src 'self'",
     // Netlifys eigenes Deploy-Preview-Toolbar/CDP-Overlay bettet sich selbst
