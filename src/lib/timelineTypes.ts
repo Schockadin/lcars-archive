@@ -50,7 +50,7 @@ export const SOURCE_TYPE_LABELS: Record<TimelineSourceType, string> = {
 export const EVENT_CATEGORIES = [
   { key: "mission", label: "Mission", color: "var(--lcars-primary)" },
   { key: "log", label: "Logbuch", color: "var(--lcars-primary-light)" },
-  { key: "session", label: "Session", color: "var(--lcars-senary)" },
+  { key: "session", label: "Log-Eintrag", color: "var(--lcars-senary)" },
   { key: "discovery", label: "Entdeckung", color: "var(--lcars-tertiary)" },
   { key: "conflict", label: "Konflikt", color: "var(--lcars-quinary)" },
   { key: "political", label: "Politik", color: "var(--lcars-quaternary)" },
