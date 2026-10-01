@@ -97,7 +97,9 @@ function scopeCount(scope: TimelineScope, count: number): string {
   if (scope === "missions") return count === 1 ? "Mission" : "Missionen";
   if (scope === "dialogues") return count === 1 ? "Gespräch" : "Gespräche";
   if (scope === "logs") return count === 1 ? "Logbuch" : "Logbücher";
-  if (scope === "sessions") return count === 1 ? "Session-Block" : "Session-Blöcke";
+  if (scope === "sessions") {
+    return count === 1 ? "Log-Eintrag" : "Log-Einträge";
+  }
   return count === 1 ? "Ereignis" : "Ereignisse";
 }
 

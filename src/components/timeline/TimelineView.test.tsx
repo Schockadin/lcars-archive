@@ -177,7 +177,14 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
       Array.from((scope as HTMLSelectElement).options).map(
         (option) => option.text,
       ),
-    ).toEqual(["Missionen", "Events", "Gespräche", "Logbücher", "Sessions", "Alles"]);
+    ).toEqual([
+      "Missionen",
+      "Events",
+      "Gespräche",
+      "Logbücher",
+      "Log-Einträge",
+      "Alles",
+    ]);
     expect(artFilter()).toBeInTheDocument();
 
     fireEvent.change(scope, { target: { value: "logs" } });

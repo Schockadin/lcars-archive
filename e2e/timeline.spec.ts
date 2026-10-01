@@ -75,10 +75,18 @@ test.describe("Chronologie", () => {
 
   test("beschriftet Session-Karten als Log-Eintrag", async ({ page }) => {
     const sessions = page.locator("#timeline-sessions");
+    await expect(
+      sessions
+        .getByLabel("Umfang der Chronologie")
+        .locator('option[value="sessions"]'),
+    ).toHaveText("Log-Einträge");
     await expect(sessions.locator(".timeline-tag")).toHaveText([
       "Log-Eintrag",
       "Log-Eintrag",
     ]);
+    await expect(
+      sessions.getByText("2 Log-Einträge", { exact: true }),
+    ).toBeVisible();
   });
 
   test(
