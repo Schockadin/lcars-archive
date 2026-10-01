@@ -60,8 +60,11 @@ export default function ImpressumContent() {
           werden nach Seite, Formular und bearbeitetem Eintrag getrennt, damit
           etwa der Text eines Entwurfs nicht in einem anderen Editor erscheint.
           Die Zwischenstände verlassen das Gerät nicht und werden erst durch das
-          ausdrückliche Speichern zu einem Beitrag im Archiv; die Einzelheiten
-          stehen in der Datenschutzerklärung.
+          ausdrückliche Speichern zu einem Beitrag im Archiv. Die Texte und
+          Ingame-Daten der GM-Session-Synopsisblöcke werden nicht
+          zwischengespeichert; ältere Zwischenstände solcher Felder werden beim
+          Anzeigen des Editors entfernt. Die Einzelheiten stehen in der
+          Datenschutzerklärung.
         </p>
 
         <h2>Urheberrecht</h2>

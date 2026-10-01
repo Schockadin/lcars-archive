@@ -70,11 +70,10 @@ export function isDraftField(el: Element | null): el is DraftField {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
-// Darf dieses Feld gesichert werden? Prüft Typ, autocomplete und die
-// Abwahl per data-no-draft (am Feld oder an einem Vorfahren).
-export function isDraftableField(el: Element | null): el is DraftField {
+// Prüft, ob Feldtyp und autocomplete grundsätzlich sicherbar sind; die
+// Abwahl per data-no-draft wird danach separat berücksichtigt.
+function isOtherwiseDraftableField(el: Element | null): el is DraftField {
   if (!isDraftField(el)) return false;
-  if (el.closest(`[${INPUT_DRAFT_OPT_OUT_ATTR}]`)) return false;
   if (el.tagName === "INPUT") {
     const input = el as HTMLInputElement;
     if (SKIPPED_INPUT_TYPES.has(input.type)) return false;
@@ -86,6 +85,15 @@ export function isDraftableField(el: Element | null): el is DraftField {
       return false;
   }
   return true;
+}
+
+// Darf dieses Feld gesichert werden? Prüft Typ, autocomplete und die
+// Abwahl per data-no-draft (am Feld oder an einem Vorfahren).
+export function isDraftableField(el: Element | null): el is DraftField {
+  return (
+    isOtherwiseDraftableField(el) &&
+    !el.closest(`[${INPUT_DRAFT_OPT_OUT_ATTR}]`)
+  );
 }
 
 // Welchem Formular gehört das Feld? Ein ausdrücklicher data-draft-scope hat
@@ -164,6 +172,31 @@ export function draftFieldKeys(root: ParentNode): Map<DraftField, string> {
     const ordinal = counters.get(counterKey) ?? 0;
     counters.set(counterKey, ordinal + 1);
     keys.set(el, `${scope}|${fieldIdentityKey(el, ordinal)}`);
+  }
+  return keys;
+}
+
+/**
+ * Schlüssel von Feldern unterhalb eines data-no-draft-Bereichs.
+ * Sie werden beim Einsetzen übersprungen, können aber noch aus einer älteren
+ * Sitzung stammen und müssen dann aus dem Speicher entfernt werden.
+ */
+export function optedOutDraftFieldKeys(root: ParentNode): Set<string> {
+  const keys = new Set<string>();
+  const counters = new Map<string, number>();
+  const candidates = Array.from(
+    root.querySelectorAll("input, textarea, select"),
+  );
+  for (const el of candidates) {
+    if (!isOtherwiseDraftableField(el)) continue;
+    if (!hasStableKey(el)) continue;
+    const scope = formScopeKey(el);
+    const counterKey = `${scope}|${el.tagName}`;
+    const ordinal = counters.get(counterKey) ?? 0;
+    counters.set(counterKey, ordinal + 1);
+    if (el.closest(`[${INPUT_DRAFT_OPT_OUT_ATTR}]`)) {
+      keys.add(`${scope}|${fieldIdentityKey(el, ordinal)}`);
+    }
   }
   return keys;
 }

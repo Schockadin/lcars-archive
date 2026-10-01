@@ -208,6 +208,10 @@ export default function DSGVOContent({ year }: { year: number }) {
           übernommen werden. Gemeinsame Inhaltseditoren verwenden dafür einen
           stabilen lokalen Geltungsbereich aus Inhaltsart und interner Kennung;
           die Kennung dient nur als Teil des Schlüssels im Sitzungsspeicher.
+          Ausdrücklich ausgenommene Felder werden nicht gesichert; dazu zählen
+          die Texte und Ingame-Daten der GM-Session-Synopsisblöcke. Ältere
+          gespeicherte Werte solcher Felder werden entfernt, sobald sie im
+          Formular erkannt werden.
           Diese Zwischenstände verbleiben ausschließlich auf dem jeweiligen
           Gerät, werden nicht an den Server oder Dritte übertragen und vom
           Browser spätestens beim Schließen des Tabs bzw. Fensters gelöscht —

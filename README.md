@@ -573,7 +573,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Chronik bleiben getrennt. Die Missionschronik bietet einen
   wechselnden +/−-Schalter für alle standardmäßig offenen Session-Panels;
   Einträge lassen sich auf- oder absteigend nach Datum sortieren und nach
-  Logbüchern oder Log-Einträgen filtern. Die allgemeine Chronologie zeigt
+  Logbüchern oder Log-Einträgen filtern. Lange Inhaltsverzeichnisse sind auf
+  55 % der dynamischen Fensterhöhe begrenzt und im Verzeichnis selbst vertikal
+  scrollbar. Die allgemeine Chronologie zeigt
   Session-Blöcke unter der Kategorie „Log-Einträge“ ohne ToC oder gemeinsamen
   Schalter. Das Eintragen eines geplanten Termins verbindet
   Termin, Session, AP-Buchungen und Log-Einträge in einer Transaktion und verhindert
@@ -862,8 +864,10 @@ auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
   `data-no-draft` — das trägt u.a. `PasswordInput` (ihr Feld wechselt beim
   Anzeigen auf `type="text"`), die globale Kopfzeilen-Suche und
   `AdminSelectField` (ein Befehlsfeld, das bei jeder Änderung schreibt, ist
-  kein Entwurf). Ein
-  zurückgesetztes Formular (`reset`) verliert seinen Stand — sofort, nicht im
+  kein Entwurf). Auch die Texte und Ingame-Daten der GM-Session-Synopsisblöcke
+  tragen `data-no-draft` und werden nicht zwischengespeichert; bereits
+  vorhandene ältere Entwürfe werden entfernt, sobald der Editor angezeigt wird.
+  Ein zurückgesetztes Formular (`reset`) verliert seinen Stand — sofort, nicht im
   nächsten Tick, damit ein Formular, das sich per neuem `key` neu aufbaut
   (Notiz-Editor), nicht doch wieder mit dem eben abgeschickten Text gefüllt
   wird; `NotesPanel` löst dafür nach dem Speichern ein echtes `reset()` aus,

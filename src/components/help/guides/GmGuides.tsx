@@ -150,12 +150,15 @@ export function GmSessionsGuide() {
           Log-Einträge erfassen: jeder besteht aus Ingame-Datum und Text. Ein
           Notizfeld gibt es nicht mehr. Aus den gespeicherten Einträgen baut
           sich die Missions-Synopsis automatisch auf; du pflegst sie nicht
-          zusätzlich von Hand.
+          zusätzlich von Hand. Die Texte und Ingame-Daten dieser Einträge
+          werden nicht als Browserentwurf zwischengespeichert — sichere die
+          Session, bevor du das Formular verlässt.
         </p>
         <p>
           In der Missionschronik stehen diese GM-Log-Einträge gemeinsam mit den
           Spieler-Logbüchern, nach Ingame-Datum sortiert. Das Inhaltsverzeichnis
-          springt zu beiden Arten von Einträgen und zur Synopsis am Ende. Die
+          springt zu beiden Arten von Einträgen und zur Synopsis am Ende. Lange
+          Inhaltsverzeichnisse lassen sich direkt darin vertikal scrollen. Die
           Session-Panels sind einzeln aufklappbar; + und − öffnen oder schließen
           alle zusammen. Die PDF-Missionsakte enthält dieselbe Chronik.
         </p>
