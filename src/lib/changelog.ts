@@ -150,9 +150,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "1.62",
     title: "Bedienkomfort",
     // Bewusst ohne Stichpunkte: Dieser PR begrenzt lange Inhaltsverzeichnisse
-    // auf die Fensterhöhe und nimmt Synopsis-Texte aus der temporären
-    // Entwurfssicherung heraus. Beides ist eine Verhaltenskorrektur, keine
-    // neue Funktion für Spielende oder Spielleitung.
+    // auf die Fensterhöhe, vermeidet verschachtelte Scrollflächen und nimmt
+    // Synopsis-Texte aus der temporären Entwurfssicherung heraus. Das sind
+    // Verhaltenskorrekturen, keine neuen Funktionen für Spielende oder Leitung.
     items: [],
   },
   {
