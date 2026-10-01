@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useRealtimeUpdates } from "@/components/RealtimeUpdatesProvider";
 import {
   getDialogueSnapshotAction,
@@ -96,6 +97,7 @@ export default function DialogueLiveView({
   // abgeschlossene/gelöschte Dialoge, bevor diese Komponente je gerendert
   // wird. Kann danach nur noch durch einen Poll auf false wechseln.
   const [open, setOpen] = useState(true);
+  const router = useRouter();
   const { connected, subscribe } = useRealtimeUpdates();
   const stoppedRef = useRef(false);
   const mountedRef = useRef(true);
@@ -128,7 +130,12 @@ export default function DialogueLiveView({
 
   useEffect(() => {
     const unsubscribe = subscribe(() => {
-      if (!stoppedRef.current && !document.hidden) refreshSnapshot();
+      if (stoppedRef.current || document.hidden) return;
+      refreshSnapshot();
+      // The live snapshot updates the thread and reply state; refresh the RSC
+      // page too so title, participants and permission-derived controls change
+      // immediately when dialogue metadata or access is edited elsewhere.
+      router.refresh();
     });
     const intervalId = connected
       ? null
@@ -146,7 +153,7 @@ export default function DialogueLiveView({
       unsubscribe();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [connected, refreshSnapshot, subscribe]);
+  }, [connected, refreshSnapshot, router, subscribe]);
 
   const multiParty = participants.length > 2;
 
@@ -322,3 +329,4 @@ export default function DialogueLiveView({
     </>
   );
 }
+

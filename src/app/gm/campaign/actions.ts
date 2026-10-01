@@ -1,6 +1,7 @@
 "use server";
 import { requireGM } from "@/lib/dal";
 import { setIngameYear } from "@/lib/campaign";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 export interface IngameYearState {
   error?: string;
@@ -25,6 +26,7 @@ export async function setIngameYearAction(
   const mode = String(formData.get("mode") ?? "manual");
   if (mode === "auto") {
     await setIngameYear(null);
+    await publishContentChanged();
     return { success: true, auto: true };
   }
 
@@ -41,5 +43,7 @@ export async function setIngameYearAction(
   }
 
   await setIngameYear(year);
+  await publishContentChanged();
   return { success: true, year, auto: false };
 }
+

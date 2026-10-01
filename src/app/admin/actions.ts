@@ -81,6 +81,7 @@ export async function createUserAction(
     `${newUser.name} <${newUser.email}>, Rolle: ${role}`,
     await getClientIp(),
   );
+  await publishContentChanged();
 
   const rawToken = await createPasswordSetupToken(newUser.id);
   const activationUrl = `${await getBaseUrl()}/activate?token=${rawToken}`;
@@ -187,6 +188,7 @@ export async function forceLogoutUserAction(
     `${user.name} <${user.email}>`,
     await getClientIp(),
   );
+  await publishContentChanged();
 
   return { loggedOut: true };
 }
@@ -237,3 +239,4 @@ export async function assignCharacterAction(
 
   redirect("/gm/characters");
 }
+
