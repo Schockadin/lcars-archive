@@ -1,9 +1,12 @@
 import { Rest } from "ably";
+import { connection } from "next/server";
 import { REALTIME_REFRESH_CHANNEL } from "@/lib/realtimeShared";
 
-export const dynamic = "force-dynamic";
-
 export async function GET() {
+  // The token request contains a fresh timestamp and nonce and must never be
+  // generated as part of the build-time response.
+  await connection();
+
   const key = process.env.ABLY_API_KEY?.trim();
   if (!key) {
     return Response.json(
