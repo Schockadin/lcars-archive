@@ -17,7 +17,7 @@ export default function TypographyFixPanel() {
           in deutsche typografische Anführungszeichen („…“) um und rendert die
           Inhalte neu. Typografische Hochkommata und apostrophähnliche
           Akzentzeichen (etwa „’“ und „´“) werden außerdem zu geraden
-          Apostrophen (') vereinheitlicht. Läuft in Blöcken mit
+          Apostrophen (&apos;) vereinheitlicht. Läuft in Blöcken mit
           Fortschrittsanzeige. Nur Inhalte mit tatsächlichen Änderungen werden
           gespeichert (ein zweiter Lauf meldet 0).
         </>
