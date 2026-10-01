@@ -43,6 +43,16 @@ export function GmCampaignGuide() {
         </p>
       </GuideSection>
 
+      <GuideSection title="Kampagne · Session-Voreinstellungen">
+        <p>
+          Unter <strong>„Voreinstellungen für neue Sessions“</strong> legst du
+          Wochentag, gerade oder ungerade ISO-Kalenderwoche, Uhrzeit und Ort
+          fest. Diese Werte werden beim Anlegen eines neuen Termins übernommen;
+          als Datum wird der nächste passende Spielabend vorausgewählt. Bereits
+          angelegte Termine ändern sich dadurch nicht.
+        </p>
+      </GuideSection>
+
       <GuideSection title="Kampagne · AP und Missionen">
         <p>
           Die <strong>AP-Vergabe, AP-Konten und der Buchungsverlauf</strong>
@@ -84,6 +94,12 @@ export function GmSessionsGuide() {
           Spielabend an: Zeitpunkt, Mission, Ort und wer mitspielt — alle
           aktiven Figuren sind vorausgewählt. Der Termin erscheint danach auf
           der Startseite aller Beteiligten, die dort zu- oder absagen können.
+        </p>
+        <p>
+          Wochentag, Kalenderwochen-Rhythmus, Uhrzeit und Ort kannst du vorher
+          auf <strong>„Kampagne“</strong> als Voreinstellungen speichern. Beim
+          Planen wählt das Formular automatisch den nächsten passenden Termin
+          aus. Die Voreinstellungen gelten nur für neu angelegte Termine.
         </p>
         <p>
           Liegt er in der Zukunft, geht die Ankündigung zusätzlich als{" "}
@@ -479,3 +495,4 @@ export default function GmAreaGuides() {
     </GuideBody>
   );
 }
+

@@ -148,12 +148,17 @@ export function sortChangelogItemsByCategory(
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: "1.60",
-    title: "Live-Aktualisierungen",
+    title: "Live-Aktualisierungen und Sessionplanung",
     items: [
       {
         text: "Neue Nachrichten und geänderte Inhalte erscheinen direkt, ohne Neuladen — auch auf der Startseite und in offenen Gesprächen.",
         category: "darstellung",
         tutorial: "mein-bereich",
+      },
+      {
+        text: "Für neue Sessions lassen sich Wochentag, Kalenderwochen-Rhythmus, Uhrzeit und Ort voreinstellen; der nächste passende Termin wird automatisch ausgewählt.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
       },
     ],
   },
@@ -2258,3 +2263,4 @@ export function featuredChangelogEntries(
     .filter((entry) => wanted.has(entry.version))
     .sort((a, b) => compareVersions(b.version, a.version));
 }
+

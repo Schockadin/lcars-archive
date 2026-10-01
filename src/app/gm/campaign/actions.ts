@@ -2,6 +2,9 @@
 import { requireGM } from "@/lib/dal";
 import { setIngameYear } from "@/lib/campaign";
 import { publishContentChanged } from "@/lib/realtimeServer";
+import { revalidatePath } from "next/cache";
+import { saveSessionDefaults } from "@/lib/sessionDefaults";
+import { isSessionDefaultTime } from "@/lib/sessionDefaultsFormat";
 
 export interface IngameYearState {
   error?: string;
@@ -45,5 +48,48 @@ export async function setIngameYearAction(
   await setIngameYear(year);
   await publishContentChanged();
   return { success: true, year, auto: false };
+}
+
+export interface SessionDefaultsState {
+  error?: string;
+  success?: boolean;
+}
+
+export async function saveSessionDefaultsAction(
+  _state: SessionDefaultsState,
+  formData: FormData,
+): Promise<SessionDefaultsState> {
+  await requireGM();
+
+  const rawWeekday = String(formData.get("weekday") ?? "").trim();
+  if (!/^[0-6]$/.test(rawWeekday)) {
+    return { error: "Bitte einen gültigen Wochentag auswählen." };
+  }
+
+  const weekParity = String(formData.get("weekParity") ?? "").trim();
+  if (weekParity !== "odd" && weekParity !== "even") {
+    return { error: "Bitte eine gültige Kalenderwochen-Parität auswählen." };
+  }
+
+  const time = String(formData.get("time") ?? "").trim();
+  if (!isSessionDefaultTime(time)) {
+    return { error: "Bitte eine gültige Uhrzeit im 24-Stunden-Format angeben." };
+  }
+
+  const location = String(formData.get("location") ?? "").trim();
+  if (location.length > 200) {
+    return { error: "Der Ort darf höchstens 200 Zeichen lang sein." };
+  }
+
+  await saveSessionDefaults({
+    weekday: Number(rawWeekday),
+    weekParity,
+    time,
+    location,
+  });
+  revalidatePath("/gm/campaign");
+  revalidatePath("/gm/sessions");
+  await publishContentChanged();
+  return { success: true };
 }
 

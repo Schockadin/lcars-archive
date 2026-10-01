@@ -240,6 +240,10 @@ export const DB_TABLE_COLUMNS = {
     "advancement_rules",
     "changelog_featured_versions",
     "changelog_hidden_categories",
+    "session_default_weekday",
+    "session_default_week_parity",
+    "session_default_time",
+    "session_default_location",
   ],
   campaign_rules: [
     "id",
@@ -555,3 +559,4 @@ export const BACKUP_EXCLUDED_TABLES = [
 ] as const satisfies readonly TableName[];
 
 export type BackupTableName = (typeof BACKUP_TABLES)[number];
+

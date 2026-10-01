@@ -25,6 +25,7 @@ import {
   toDateTimeLocal,
 } from "@/lib/plannedSessionFormat";
 import type { PlannedSession } from "@/lib/plannedSessionTypes";
+import { nextSessionDateTime, type SessionDefaults } from "@/lib/sessionDefaultsFormat";
 import type { ActiveCharacter } from "@/lib/gameSessions";
 import type { SessionMissionOption } from "@/lib/gameSessions";
 import type { GameSession } from "@/lib/gameSessions";
@@ -99,12 +100,14 @@ function SessionFields({
   missions,
   missionCharacters,
   defaultMissionStartedAt,
+  sessionDefaults,
 }: {
   session?: PlannedSession;
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
   missionCharacters: CharacterParticipantOption[];
   defaultMissionStartedAt: string | null;
+  sessionDefaults: SessionDefaults;
 }) {
   const id = session ? `p${session.id}` : "neu";
   const [missionChoice, setMissionChoice] = useState(String(session?.missionId ?? ""));
@@ -117,7 +120,9 @@ function SessionFields({
           name="scheduledAt"
           required
           defaultValue={
-            session ? toDateTimeLocal(session.scheduledAt) : defaultMoment()
+            session
+              ? toDateTimeLocal(session.scheduledAt)
+              : nextSessionDateTime(sessionDefaults)
           }
           className="lcars-input"
         />
@@ -190,7 +195,7 @@ function SessionFields({
           id={`ps-loc-${id}`}
           type="text"
           name="location"
-          defaultValue={session?.location ?? ""}
+          defaultValue={session ? (session.location ?? "") : sessionDefaults.location}
           maxLength={200}
           className="lcars-input"
         />
@@ -202,16 +207,6 @@ function SessionFields({
       />
     </>
   );
-}
-
-// Vorbelegung für einen neuen Termin: der nächste Tag, 19:30. Nur im Browser
-// gebildet — das Fenster wird erst durch einen Klick gerendert, ein
-// Server-Render mit abweichender Uhr gibt es also nicht.
-function defaultMoment(): string {
-  const at = new Date();
-  at.setDate(at.getDate() + 1);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}T19:30`;
 }
 
 // Aus dem Termin wird die gespielte Session: Zeitpunkt, Mission und Besetzung
@@ -312,6 +307,7 @@ function PlannedSessionRow({
   missionCharacters,
   defaultSessionAp,
   defaultMissionStartedAt,
+  sessionDefaults,
 }: {
   session: PlannedSession;
   characters: ActiveCharacter[];
@@ -321,6 +317,7 @@ function PlannedSessionRow({
   missionCharacters: CharacterParticipantOption[];
   defaultSessionAp: number;
   defaultMissionStartedAt: string | null;
+  sessionDefaults: SessionDefaults;
 }) {
   const [edit, setEdit] = useState(false);
   const [record, setRecord] = useState(false);
@@ -401,7 +398,7 @@ function PlannedSessionRow({
       {edit && (
         <form action={updateAction} className="flex flex-col" data-no-draft>
           <input type="hidden" name="id" value={session.id} />
-          <SessionFields session={session} characters={characters} missions={missions} missionCharacters={missionCharacters} defaultMissionStartedAt={defaultMissionStartedAt} />
+          <SessionFields session={session} characters={characters} missions={missions} missionCharacters={missionCharacters} defaultMissionStartedAt={defaultMissionStartedAt} sessionDefaults={sessionDefaults} />
           <SubmitButton pending={updatePending} pendingLabel="Speichert…" className="lcars-icon-btn" ariaLabel="Termin speichern" title="Termin speichern">
             <CheckIcon />
           </SubmitButton>
@@ -431,6 +428,7 @@ export default function PlannedSessionManager({
   missionCharacters,
   defaultSessionAp,
   defaultMissionStartedAt,
+  sessionDefaults,
   showCreateForm = true,
 }: {
   sessions: PlannedSession[];
@@ -441,6 +439,7 @@ export default function PlannedSessionManager({
   missionCharacters: CharacterParticipantOption[];
   defaultSessionAp: number;
   defaultMissionStartedAt: string | null;
+  sessionDefaults: SessionDefaults;
   showCreateForm?: boolean;
 }) {
   const [announce, setAnnounce] = useState(false);
@@ -493,6 +492,7 @@ export default function PlannedSessionManager({
           missions={missions}
           missionCharacters={missionCharacters}
           defaultMissionStartedAt={defaultMissionStartedAt}
+          sessionDefaults={sessionDefaults}
           onClose={() => setAnnounce(false)}
         />
       )}
@@ -512,6 +512,7 @@ export default function PlannedSessionManager({
               missionCharacters={missionCharacters}
               defaultSessionAp={defaultSessionAp}
               defaultMissionStartedAt={defaultMissionStartedAt}
+              sessionDefaults={sessionDefaults}
             />
           ))}
         </ul>
@@ -525,12 +526,14 @@ function CreatePlannedSessionModal({
   missions,
   missionCharacters,
   defaultMissionStartedAt,
+  sessionDefaults,
   onClose,
 }: {
   characters: ActiveCharacter[];
   missions: SessionMissionOption[];
   missionCharacters: CharacterParticipantOption[];
   defaultMissionStartedAt: string | null;
+  sessionDefaults: SessionDefaults;
   onClose: () => void;
 }) {
   const [state, formAction, pending] = useActionState<PlannedSessionState, FormData>(
@@ -546,7 +549,7 @@ function CreatePlannedSessionModal({
         </div>
       ) : (
         <form action={formAction} className="flex flex-col gap-[12px]" data-no-draft>
-          <SessionFields characters={characters} missions={missions} missionCharacters={missionCharacters} defaultMissionStartedAt={defaultMissionStartedAt} />
+          <SessionFields characters={characters} missions={missions} missionCharacters={missionCharacters} defaultMissionStartedAt={defaultMissionStartedAt} sessionDefaults={sessionDefaults} />
           <SubmitButton pending={pending} pendingLabel="Wird geplant…" className="lcars-pill-btn--outline">Session planen</SubmitButton>
           <FormError message={state.error} />
         </form>

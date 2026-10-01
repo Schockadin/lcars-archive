@@ -8,6 +8,7 @@ import {
   listSessionMissions,
 } from "@/lib/gameSessions";
 import { getAdvancementRules } from "@/lib/advancementSettings";
+import { getSessionDefaults } from "@/lib/sessionDefaults";
 import { listUnrecordedPlannedSessions } from "@/lib/plannedSessions";
 import { getMostRecentLogDate } from "@/lib/missions";
 import { getCharactersForParticipantPicker } from "@/lib/characters";
@@ -35,6 +36,7 @@ export default async function GmSessionsPage() {
     plannedMissions,
     missionCharacters,
     defaultMissionStartedAt,
+    sessionDefaults,
   ] = await Promise.all([
     listGameSessions(),
     listActiveCharactersForAp(),
@@ -44,6 +46,7 @@ export default async function GmSessionsPage() {
     listActiveSessionMissions(),
     getCharactersForParticipantPicker(),
     getMostRecentLogDate(),
+    getSessionDefaults(),
   ]);
 
   // Serverseitig gebildet, damit Formular-Vorbelegung und Server-Render
@@ -76,6 +79,7 @@ export default async function GmSessionsPage() {
             missionCharacters={missionCharacters}
             defaultSessionAp={rules.apPerSession}
             defaultMissionStartedAt={defaultMissionStartedAt}
+            sessionDefaults={sessionDefaults}
           />
           <p className="text-lcars-ink-dim text-[13px]">
             Eine eingetragene Session schreibt allen ausgewählten Charakteren
@@ -95,3 +99,4 @@ export default async function GmSessionsPage() {
     </>
   );
 }
+
