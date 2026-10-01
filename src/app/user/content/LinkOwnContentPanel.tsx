@@ -8,8 +8,8 @@ export default function LinkOwnContentPanel() {
     <BatchScriptPanel
       description={
         <>
-          Erkennt in deinen Charakteren, Missionen, Logbüchern und
-          Datenbank-Einträgen bekannte Namen und verlinkt sie automatisch.
+          Erkennt in deinen Charakteren, Missionen, Synopsis-Blöcken, Logbüchern
+          und Datenbank-Einträgen bekannte Namen und verlinkt sie automatisch.
           Gespräche bleiben dabei unberührt. Läuft in kleinen Blöcken; nur
           Inhalte mit neuen Verknüpfungen werden geändert.
         </>

@@ -217,48 +217,62 @@ export async function getAutolinkTargets(
 }
 
 // Inhaltstyp für das Bulk-Autolinking (admin-only "Alle Inhalte verlinken",
-// siehe src/app/actions/autolinkAll.ts). Deckt genau die vier Inhaltstypen
-// mit rohem Markdown-Body ab (Gespräche haben keinen source_md und sind kein
+// siehe src/app/actions/autolinkAll.ts). Deckt Markdown-Body-Inhalte und
+// Synopsis-Blöcke ab (Gespräche haben keinen source_md und sind kein
 // Autolink-Ziel, siehe getAutolinkTargets).
 export type AutolinkContentType =
   | "character"
   | "mission"
   | "missionLog"
+  | "missionSynopsisBlock"
   | "archiveEntry";
 
 export interface AutolinkableContent {
   contentType: AutolinkContentType;
   id: number;
   slug: string;
-  // Für die Revalidierung nach dem Speichern (Mission-Log braucht zusätzlich
-  // die Mission-ID, siehe revalidateLog).
+  // Für die Revalidierung nach dem Speichern (Mission-Logs und
+  // Synopsis-Blöcke brauchen die übergeordnete Mission-ID).
   missionId: number | null;
   sourceMd: string;
 }
 
-// Alle Inhalte mit rohem Markdown-Quelltext (source_md) — Grundlage für das
+// Alle Inhalte mit rohem Markdown-Quelltext — Grundlage für das
 // Bulk-Autolinking. Nur Inhalte mit tatsächlichem Text (source_md IS NOT NULL
 // / != ''); Gespräche (category = 'dialogue') sind ausgeschlossen (kein
-// source_md). Bewusst OHNE Sichtbarkeits-/Draft-Filter: das Werkzeug ist
-// admin-only und soll alle Inhalte verlinken, nicht nur öffentliche.
+// source_md). Missionen mit Synopsis-Blöcken werden über ihre Quellblöcke
+// verarbeitet, nicht zusätzlich über den daraus abgeleiteten Gesamttext.
+// Bewusst OHNE Sichtbarkeits-/Draft-Filter: das Werkzeug ist admin-only und
+// soll alle Inhalte verlinken, nicht nur öffentliche.
 export async function getAllAutolinkableContent(): Promise<
   AutolinkableContent[]
 > {
-  const [characters, missions, logs, archiveEntries] = await Promise.all([
+  const queryResults = await Promise.all([
     sql<{ id: number; slug: string; source_md: string }[]>`
       SELECT id, slug, source_md FROM characters
       WHERE source_md IS NOT NULL AND source_md <> '' AND deleted_at IS NULL
       ORDER BY id
     `,
     sql<{ id: number; slug: string; source_md: string }[]>`
-      SELECT id, slug, source_md FROM missions
-      WHERE source_md IS NOT NULL AND source_md <> '' AND deleted_at IS NULL
-      ORDER BY id
+      SELECT m.id, m.slug, m.source_md FROM missions m
+      WHERE m.source_md IS NOT NULL AND m.source_md <> ''
+        AND m.deleted_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM mission_synopsis_blocks b WHERE b.mission_id = m.id
+        )
+      ORDER BY m.id
     `,
     sql<{ id: number; slug: string; mission_id: number; source_md: string }[]>`
       SELECT id, slug, mission_id, source_md FROM mission_logs
       WHERE source_md IS NOT NULL AND source_md <> '' AND deleted_at IS NULL
       ORDER BY id
+    `,
+    sql<{ id: number; slug: string; mission_id: number; source_md: string }[]>`
+      SELECT b.id, m.slug, b.mission_id, b.body_md AS source_md
+      FROM mission_synopsis_blocks b
+      JOIN missions m ON m.id = b.mission_id
+      WHERE b.body_md <> '' AND m.deleted_at IS NULL
+      ORDER BY b.id
     `,
     sql<{ id: number; slug: string; source_md: string }[]>`
       SELECT id, slug, source_md FROM archive_entries
@@ -267,6 +281,8 @@ export async function getAllAutolinkableContent(): Promise<
       ORDER BY id
     `,
   ]);
+  const [characters, missions, logs, synopsisBlocks, archiveEntries] =
+    queryResults;
 
   return [
     ...characters.map((c) => ({
@@ -289,6 +305,13 @@ export async function getAllAutolinkableContent(): Promise<
       slug: l.slug,
       missionId: l.mission_id,
       sourceMd: l.source_md,
+    })),
+    ...synopsisBlocks.map((block) => ({
+      contentType: "missionSynopsisBlock" as const,
+      id: block.id,
+      slug: block.slug,
+      missionId: block.mission_id,
+      sourceMd: block.source_md,
     })),
     ...archiveEntries.map((a) => ({
       contentType: "archiveEntry" as const,
@@ -303,12 +326,14 @@ export async function getAllAutolinkableContent(): Promise<
 // Alle autolinkfähigen Inhalte, die dem angemeldeten Konto gehören — für
 // „Alles verlinken“ unter /user/content. Die Ownership wird hier serverseitig
 // und je Inhaltstyp geprüft; der Client übergibt weder eine User-ID noch
-// einzelne Inhalts-IDs. Gespräche sind Archiv-Einträge ohne Markdown-Body und
-// werden ausdrücklich ausgeschlossen.
+// einzelne Inhalts-IDs. Missionen mit Synopsis-Blöcken werden über die Blöcke
+// verarbeitet. Blöcke gehören dem Ersteller ihrer Session; fehlt dieser,
+// werden sie anhand des Missionsinhabers zugeordnet. Gespräche sind
+// Archiv-Einträge ohne Markdown-Body und werden ausdrücklich ausgeschlossen.
 export async function getOwnAutolinkableContent(
   userId: number,
 ): Promise<AutolinkableContent[]> {
-  const [characters, missions, logs, archiveEntries] = await Promise.all([
+  const queryResults = await Promise.all([
     sql<{ id: number; slug: string; source_md: string }[]>`
       SELECT id, slug, source_md FROM characters
       WHERE player_id = ${userId} AND source_md IS NOT NULL AND source_md <> ''
@@ -316,16 +341,29 @@ export async function getOwnAutolinkableContent(
       ORDER BY id
     `,
     sql<{ id: number; slug: string; source_md: string }[]>`
-      SELECT id, slug, source_md FROM missions
-      WHERE owner_user_id = ${userId} AND source_md IS NOT NULL AND source_md <> ''
-        AND deleted_at IS NULL
-      ORDER BY id
+      SELECT m.id, m.slug, m.source_md FROM missions m
+      WHERE m.owner_user_id = ${userId}
+        AND m.source_md IS NOT NULL AND m.source_md <> ''
+        AND m.deleted_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM mission_synopsis_blocks b WHERE b.mission_id = m.id
+        )
+      ORDER BY m.id
     `,
     sql<{ id: number; slug: string; mission_id: number; source_md: string }[]>`
       SELECT id, slug, mission_id, source_md FROM mission_logs
       WHERE owner_user_id = ${userId} AND source_md IS NOT NULL AND source_md <> ''
         AND deleted_at IS NULL
       ORDER BY id
+    `,
+    sql<{ id: number; slug: string; mission_id: number; source_md: string }[]>`
+      SELECT b.id, m.slug, b.mission_id, b.body_md AS source_md
+      FROM mission_synopsis_blocks b
+      JOIN missions m ON m.id = b.mission_id
+      LEFT JOIN game_sessions s ON s.id = b.session_id
+      WHERE COALESCE(s.created_by, m.owner_user_id) = ${userId}
+        AND b.body_md <> '' AND m.deleted_at IS NULL
+      ORDER BY b.id
     `,
     sql<{ id: number; slug: string; source_md: string }[]>`
       SELECT id, slug, source_md FROM archive_entries
@@ -334,6 +372,8 @@ export async function getOwnAutolinkableContent(
       ORDER BY id
     `,
   ]);
+  const [characters, missions, logs, synopsisBlocks, archiveEntries] =
+    queryResults;
 
   return [
     ...characters.map((c) => ({
@@ -356,6 +396,13 @@ export async function getOwnAutolinkableContent(
       slug: l.slug,
       missionId: l.mission_id,
       sourceMd: l.source_md,
+    })),
+    ...synopsisBlocks.map((block) => ({
+      contentType: "missionSynopsisBlock" as const,
+      id: block.id,
+      slug: block.slug,
+      missionId: block.mission_id,
+      sourceMd: block.source_md,
     })),
     ...archiveEntries.map((a) => ({
       contentType: "archiveEntry" as const,

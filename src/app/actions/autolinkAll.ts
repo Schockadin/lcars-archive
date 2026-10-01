@@ -34,6 +34,8 @@ function selfKey(
       return { type: "character", slug };
     case "mission":
       return { type: "mission", slug };
+    case "missionSynopsisBlock":
+      return { type: "mission", slug };
     case "archiveEntry":
       return { type: "archive", slug };
     case "missionLog":

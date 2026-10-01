@@ -151,7 +151,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Verknüpfungen für eigene Inhalte",
     items: [
       {
-        text: "Eigene Charaktere, Missionen, Logbücher und Datenbank-Einträge lassen sich gesammelt automatisch verlinken; Gespräche bleiben dabei unberührt.",
+        text: "Eigene Charaktere, Missionen, Synopsis-Blöcke, Logbücher und Datenbank-Einträge lassen sich gesammelt automatisch verlinken; Gespräche bleiben dabei unberührt.",
         category: "inhalte",
         tutorial: "verlinkung",
       },

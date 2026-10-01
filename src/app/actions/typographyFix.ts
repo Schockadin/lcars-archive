@@ -5,18 +5,7 @@ import {
   renderContentHtml,
 } from "@/lib/autolink";
 import { applyGermanTypography } from "@/lib/typography";
-import { updateCharacterBio } from "@/lib/characters";
-import {
-  updateMissionSynopsisWithHtml,
-  updateMissionLogSourceMd,
-} from "@/lib/missions";
-import { updateArchiveEntryContent } from "@/lib/archive";
-import {
-  revalidateCharacter,
-  revalidateMission,
-  revalidateLog,
-  revalidateArchiveEntry,
-} from "@/lib/revalidate";
+import { saveAutolinkedContent } from "@/lib/autolinkWrite";
 import { publishContentChanged } from "@/lib/realtimeServer";
 
 export interface TypographyFixBatchResult {
@@ -64,26 +53,7 @@ export async function typographyFixBatchAction(
       if (newSource === content.sourceMd) continue;
 
       const html = await renderContentHtml(newSource);
-      switch (content.contentType) {
-        case "character":
-          await updateCharacterBio(content.id, newSource, html);
-          revalidateCharacter(content.slug);
-          break;
-        case "mission":
-          await updateMissionSynopsisWithHtml(content.id, newSource, html);
-          revalidateMission(content.slug);
-          break;
-        case "missionLog":
-          await updateMissionLogSourceMd(content.id, newSource, html);
-          if (content.missionId != null) {
-            revalidateLog(content.missionId, content.slug);
-          }
-          break;
-        case "archiveEntry":
-          await updateArchiveEntryContent(content.id, newSource, html);
-          revalidateArchiveEntry(content.slug);
-          break;
-      }
+      await saveAutolinkedContent(content, newSource, html);
       changedInBatch += 1;
     }
     if (changedInBatch > 0) await publishContentChanged();

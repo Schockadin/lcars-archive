@@ -104,4 +104,45 @@ describe("linkOwnContentBatchAction", () => {
       "<p>Verlinkter Text</p>",
     );
   });
+
+  it("verlinkt eigene Synopsis-Blöcke ohne Link auf ihre eigene Mission", async () => {
+    mocks.getActiveUser.mockResolvedValue({ id: 7 });
+    mocks.getOwnAutolinkableContent.mockResolvedValue([
+      {
+        contentType: "missionSynopsisBlock",
+        id: 30,
+        slug: "eigene-mission",
+        missionId: 12,
+        sourceMd: "Text der Synopsis",
+      },
+    ]);
+    mocks.getAutolinkTargets.mockResolvedValue([
+      {
+        type: "mission",
+        slug: "eigene-mission",
+        canonical: "Eigene Mission",
+        phrases: ["Eigene Mission"],
+        href: "/chronologie/mission/eigene-mission",
+      },
+      {
+        type: "character",
+        slug: "ziel-charakter",
+        canonical: "Ziel Charakter",
+        phrases: ["Ziel Charakter"],
+        href: "/characters/ziel-charakter",
+      },
+    ]);
+
+    const result = await linkOwnContentBatchAction(0, 15);
+
+    expect(result).toMatchObject({ total: 1, processed: 1, done: true });
+    expect(mocks.applyAutolinks).toHaveBeenCalledWith("Text der Synopsis", [
+      expect.objectContaining({ slug: "ziel-charakter" }),
+    ]);
+    expect(mocks.saveAutolinkedContent).toHaveBeenCalledWith(
+      expect.objectContaining({ contentType: "missionSynopsisBlock", id: 30 }),
+      "Verlinkter Text",
+      "<p>Verlinkter Text</p>",
+    );
+  });
 });
