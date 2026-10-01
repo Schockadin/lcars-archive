@@ -1,5 +1,7 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useRealtimeUpdates } from "@/components/RealtimeUpdatesProvider";
 import {
   FormError,
   FormField,
@@ -29,6 +31,8 @@ import type { GameSession } from "@/lib/gameSessions";
 import type { CharacterParticipantOption } from "@/lib/characters";
 import { SessionContextFields } from "./SessionManager";
 import { CheckIcon, PencilIcon, TrashIcon, XIcon } from "@/lib/icons";
+
+const FALLBACK_REFRESH_INTERVAL_MS = 10_000;
 
 // Die anstehenden Spieltermine — angekündigt von der Spielleitung, mit den
 // Zu- und Absagen der Runde daneben.
@@ -440,6 +444,28 @@ export default function PlannedSessionManager({
   showCreateForm?: boolean;
 }) {
   const [announce, setAnnounce] = useState(false);
+  const router = useRouter();
+  const { connected, subscribe } = useRealtimeUpdates();
+
+  useEffect(() => {
+    const unsubscribe = subscribe(() => router.refresh());
+    if (connected) return unsubscribe;
+
+    const intervalId = setInterval(() => {
+      if (!document.hidden) router.refresh();
+    }, FALLBACK_REFRESH_INTERVAL_MS);
+
+    function handleVisibilityChange() {
+      if (!document.hidden) router.refresh();
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      unsubscribe();
+    };
+  }, [connected, router, subscribe]);
 
   return (
     <section className="mb-[24px]">
@@ -528,3 +554,4 @@ function CreatePlannedSessionModal({
     </ModalOverlay>
   );
 }
+
