@@ -1481,7 +1481,7 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
 
 ### Voraussetzungen
 
-- Node.js 20+
+- Node.js 22.23.3 (siehe `.nvmrc`)
 - Zugriff auf eine PostgreSQL-Datenbank
 - Ein Markdown-Vault mit den Inhalten (Ordner `Charaktere/`, `Missionen/` …)
 
