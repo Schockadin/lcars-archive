@@ -17,6 +17,8 @@ import {
 import { PencilIcon, PlusIcon } from "@/lib/icons";
 import type { ManualEventForEdit } from "@/lib/timelineManualEventTypes";
 
+const SOURCE_DERIVED_CATEGORIES = new Set(["mission", "session", "log"]);
+
 // „Ereignis eintragen" über dem Zeitstrahl: ein Knopf, der ein Fenster mit dem
 // Formular öffnet — für alles, was zur Kampagne gehört, aber in keinem Eintrag
 // steht: der Vertrag, der unterzeichnet wird, die Sonnenfinsternis, der
@@ -40,7 +42,7 @@ export default function ManualEventForm({
   // Dienst sind. Keine davon ist vorausgewählt.
   characters: { id: number; name: string }[];
   // Mit Ereignis wird dasselbe Formular zum Editor. So bleiben Felder,
-  // Validierung und Kategorien beim Anlegen und Bearbeiten identisch.
+  // Validierung und bestehende Kategorien beim Bearbeiten erhalten.
   event?: ManualEventForEdit;
   // Der gemeinsame „Neue Inhalte“-Bereich verwendet die beschriftete Pille;
   // in der Chronologie und auf Karten bleibt der kompakte Symbolknopf.
@@ -48,6 +50,11 @@ export default function ManualEventForm({
   dateHint?: string;
 }) {
   const editing = event !== undefined;
+  const availableCategories = EVENT_CATEGORIES.filter(
+    (category) =>
+      !SOURCE_DERIVED_CATEGORIES.has(category.key) ||
+      category.key === event?.category,
+  );
   const [state, formAction, pending] = useActionState<
     ManualEventState,
     FormData
@@ -125,7 +132,7 @@ export default function ManualEventForm({
                   defaultValue={event?.category ?? "other"}
                   className="lcars-input"
                 >
-                  {EVENT_CATEGORIES.map((c) => (
+                  {availableCategories.map((c) => (
                     <option key={c.key} value={c.key}>
                       {c.label}
                     </option>

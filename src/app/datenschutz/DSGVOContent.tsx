@@ -111,7 +111,10 @@ export default function DSGVOContent({ year }: { year: number }) {
           erfassen. Bei veröffentlichten Missionen sind diese Texte mit ihrem
           Ingame-Datum in der allgemeinen Chronologie, der Missionschronik und
           der daraus zusammengestellten Synopsis öffentlich sichtbar. Die
-          Spielleitung kann außerdem kampagnenweite Vorgaben für neue Termine
+          Missionschronik lässt sich nach Datum sortieren und nach Logbüchern
+          oder Log-Einträgen filtern; diese Auswahl ändert nur die Anzeige und
+          legt keine zusätzlichen Inhalte an. Die Spielleitung kann außerdem
+          kampagnenweite Vorgaben für neue Termine
           speichern: Wochentag, Kalenderwochen-Parität, Uhrzeit und Ort. Diese
           Werte werden beim Planen eines Termins vorausgewählt. Die
           öffentliche Session-Ansicht enthält keine AP-Buchungen oder realen

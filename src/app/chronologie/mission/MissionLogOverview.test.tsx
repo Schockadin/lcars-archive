@@ -102,7 +102,7 @@ describe("MissionLogOverview", () => {
     expect(screen.getAllByText("11.09.2400").length).toBeGreaterThan(0);
   });
 
-  it("ordnet Logs und Synopsisblöcke gemeinsam chronologisch absteigend", () => {
+  it("ordnet Logs und Synopsisblöcke gemeinsam chronologisch absteigend und aufsteigend", () => {
     const { container } = renderOverview({
       logs: [log(1, "Log eins", "T'Lara", "2234-12-20"), log(2, "Log zwei", "T'Lara", "2234-12-21")],
       synopsisBlocks: [{ id: 7, sessionId: 8, missionSessionNumber: 8, missionBlockNumber: 8, ingameDate: "2234-12-20", body: "Zwischenfall", bodyHtml: "<p>Zwischenfall</p>" }],
@@ -128,6 +128,46 @@ describe("MissionLogOverview", () => {
     fireEvent.click(tocEntries[2]);
     expect(summary.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
     expect(screen.getAllByText("20.12.2234").length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole("button", { name: /Datum/ }));
+    expect([...container.querySelectorAll(".timeline-card-title")].map((node) => node.textContent)).toEqual([
+      "Log eins",
+      "20.12.2234",
+      "Log zwei",
+    ]);
+  });
+
+  it("filtert die Chronik nach Logbüchern und Log-Einträgen", () => {
+    const { container } = renderOverview({
+      logs: [log(1, "Log eins", "T'Lara", "2234-12-20")],
+      synopsisBlocks: [{
+        id: 7,
+        sessionId: 8,
+        missionSessionNumber: 8,
+        missionBlockNumber: 8,
+        ingameDate: "2234-12-21",
+        body: "Zwischenfall",
+        bodyHtml: "<p>Zwischenfall</p>",
+      }],
+    });
+    const filter = screen.getByRole("combobox", { name: "Chronik filtern" });
+    expect([...filter.querySelectorAll("option")].map((option) => option.textContent)).toEqual([
+      "Alles",
+      "Nur Logbücher",
+      "Nur Log-Einträge",
+    ]);
+
+    fireEvent.change(filter, { target: { value: "logs" } });
+    expect(container.querySelectorAll(".timeline-card")).toHaveLength(1);
+    expect(container.querySelector(".timeline-tag")).toHaveTextContent("Logbuch");
+    expect([...container.querySelectorAll(".lcars-toc-link")].map((item) => item.textContent)).toEqual([
+      "20.12.2234 · Log eins",
+      "Synopsis",
+    ]);
+
+    fireEvent.change(filter, { target: { value: "synopsis" } });
+    expect(container.querySelectorAll(".timeline-card")).toHaveLength(1);
+    expect(container.querySelector(".timeline-tag")).toHaveTextContent("Log-Eintrag");
   });
 
   it("zeigt die vollständige Synopsis nach der Chronik und verlinkt sie im ToC", () => {
@@ -150,11 +190,11 @@ describe("MissionLogOverview", () => {
     expect(fullSynopsis?.querySelector("h4")).toHaveTextContent("20.12.2234");
     expect(fullSynopsis).not.toHaveTextContent("Synopsis 2234-12-20");
     expect(fullSynopsis).not.toHaveTextContent("Veralteter Text");
-    expect(container.querySelector(".mission-log-overview")?.lastElementChild).toBe(fullSynopsis);
+    expect(container.querySelector(".mission-chronicle-main")?.lastElementChild).toBe(fullSynopsis);
     expect([...container.querySelectorAll(".lcars-toc-link")].map((item) => item.textContent)).toContain("Synopsis");
   });
 
-  it("führt gleiche Synopsis-Daten in Missionsreihenfolge zusammen", () => {
+  it("führt gleiche Synopsis-Daten zusammen und lässt die Karten einzeln", () => {
     const { container } = renderOverview({
       logs: [],
       synopsisBlocks: [
@@ -191,6 +231,28 @@ describe("MissionLogOverview", () => {
     expect(groupedEntries.map((entry) => entry.textContent)).toEqual([
       "Erster Eintrag",
       "Zweiter Eintrag",
+    ]);
+  });
+
+  it("ordnet die vollständige Synopsis chronologisch aufsteigend", () => {
+    const { container } = renderOverview({
+      logs: [],
+      synopsisBlocks: ["2234-12-22", "2234-12-20", "2234-12-21"].map(
+        (ingameDate, index) => ({
+          id: 20 + index,
+          sessionId: 8,
+          missionSessionNumber: 8,
+          missionBlockNumber: index + 1,
+          ingameDate,
+          body: `Eintrag ${index}`,
+          bodyHtml: `<p>Eintrag ${index}</p>`,
+        }),
+      ),
+    });
+    expect([...container.querySelectorAll("#mission-full-synopsis h4")].map((heading) => heading.textContent)).toEqual([
+      "20.12.2234",
+      "21.12.2234",
+      "22.12.2234",
     ]);
   });
 
@@ -235,7 +297,7 @@ describe("MissionLogOverview", () => {
     expect(screen.queryByRole("group", { name: "Session-Panels" })).not.toBeInTheDocument();
   });
 
-  it("bietet „Neues Log“ nur an, wenn der Betrachter teilnimmt", () => {
+  it("bietet „Neues Log“ nur bei erlaubter Erstellung an", () => {
     renderOverview();
     expect(screen.queryByRole("link", { name: "Neues Log" })).toBeNull();
 
@@ -251,5 +313,12 @@ describe("MissionLogOverview", () => {
 
     expect(screen.getByText("Noch keine Logs oder Session-Einträge vorhanden.")).toHaveClass("lcars-empty-state");
     expect(container.querySelector(".mission-sort")).toBeNull();
+  });
+
+  it("ordnet ToC und Chronik in einem eigenen zweispaltigen Gerüst an", () => {
+    const { container } = renderOverview({ logs: [log(1, "Log eins")] });
+    const grid = container.querySelector(".mission-chronicle-grid--with-toc");
+    expect(grid?.firstElementChild).toHaveClass("mission-chronicle-toc-column");
+    expect(grid?.lastElementChild).toHaveClass("mission-chronicle-main");
   });
 });

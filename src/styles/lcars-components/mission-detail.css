@@ -16,6 +16,50 @@
    Liste mit dem Text fluchten. */
 .mission-log-overview {
   margin-top: 32px;
+  container: mission-log-overview / inline-size;
+}
+
+/* Chronik mit eigener Navigation: Auf ausreichend breiten Inhaltsflächen
+   bleibt das Inhaltsverzeichnis links sichtbar, während rechts die Einträge
+   und die Synopsis laufen. Der Scroll-Container ist .lcars-main-content. */
+.mission-chronicle-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+.mission-chronicle-toc-column {
+  min-width: 0;
+  width: 100%;
+  max-width: 500px;
+}
+.mission-chronicle-toc-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.mission-chronicle-toc-row > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.mission-chronicle-main {
+  min-width: 0;
+}
+.mission-chronicle-filter {
+  text-transform: none;
+}
+
+@container mission-log-overview (min-width: 900px) {
+  .mission-chronicle-grid--with-toc {
+    grid-template-columns: minmax(0, min(500px, 40%)) minmax(0, 1fr);
+  }
+  .mission-chronicle-toc-column {
+    position: sticky;
+    top: 12px;
+    align-self: start;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
 }
 
 /* ── Zusammenfassung im aufklappbaren Feld ────────────────────────────

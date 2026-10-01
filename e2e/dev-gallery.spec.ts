@@ -197,9 +197,59 @@ test.describe("MissionLogOverview", () => {
     const list = page.locator("#mission-log-overview");
 
     await expect(list.locator(".timeline-period")).toHaveCount(0);
-    await expect(list.locator(".mission-sort")).toHaveCount(0);
+    await expect(list.locator(".mission-sort")).toHaveCount(1);
     await expect(list.locator(".timeline-card-title")).toHaveText([
       "Nachspiel auf der Krankenstation", "Rückzug vom Orbit", "Erster Kontakt",
     ]);
+  });
+
+  test("sortiert und filtert Logbücher und Log-Einträge", async ({ page }) => {
+    await page.goto("/dev-gallery");
+    const logs = page.locator("#mission-log-overview .mission-log-overview");
+    const sort = logs.getByRole("button", { name: /Datum/ });
+    await sort.click();
+    await expect(logs.locator(".timeline-card-title")).toHaveText([
+      "Erster Kontakt", "Rückzug vom Orbit", "Nachspiel auf der Krankenstation",
+    ]);
+
+    const filter = logs.getByRole("combobox", { name: "Chronik filtern" });
+    await expect(filter.locator("option")).toHaveText([
+      "Alles", "Nur Logbücher", "Nur Log-Einträge",
+    ]);
+    await filter.selectOption("logs");
+    await expect(logs.locator(".timeline-card")).toHaveCount(3);
+    await expect(logs.locator(".timeline-tag")).toHaveText([
+      "Logbuch", "Logbuch", "Logbuch",
+    ]);
+
+    const sessionChronicle = page.locator("#mission-session-panels .mission-log-overview");
+    await sessionChronicle.getByRole("combobox", { name: "Chronik filtern" }).selectOption("synopsis");
+    await expect(sessionChronicle.locator(".timeline-card")).toHaveCount(2);
+    await expect(sessionChronicle.locator(".timeline-tag")).toHaveText([
+      "Log-Eintrag", "Log-Eintrag",
+    ]);
+  });
+
+  test("stellt das ToC auf Desktop sticky links neben die Chronik", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/dev-gallery");
+    const chronicle = page.locator("#mission-log-overview .mission-log-overview");
+    const toc = chronicle.locator(".mission-chronicle-toc-column");
+    const main = chronicle.locator(".mission-chronicle-main");
+    await expect(toc).toHaveCSS("position", "sticky");
+    const tocBox = await toc.boundingBox();
+    const mainBox = await main.boundingBox();
+    expect(tocBox).not.toBeNull();
+    expect(mainBox).not.toBeNull();
+    expect(tocBox!.width).toBeLessThanOrEqual(500);
+    expect(mainBox!.x).toBeGreaterThanOrEqual(tocBox!.x + tocBox!.width);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(toc).toHaveCSS("position", "static");
+    const mobileTocBox = await toc.boundingBox();
+    const mobileMainBox = await main.boundingBox();
+    expect(mobileTocBox).not.toBeNull();
+    expect(mobileMainBox).not.toBeNull();
+    expect(mobileMainBox!.y).toBeGreaterThanOrEqual(mobileTocBox!.y + mobileTocBox!.height);
   });
 });

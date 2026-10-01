@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import ChronoRow from "@/components/timeline/ChronoRow";
 import ChronoCard from "@/components/timeline/ChronoCard";
 import { MissionLogListItem } from "@/types/missions";
@@ -9,7 +9,12 @@ import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import { missionLogHref } from "@/lib/contentRoutes";
 import type { MissionSynopsisBlock } from "@/lib/gameSessions";
 import { groupSynopsisBlocksByDate } from "@/lib/sessionSynopsis";
-import { LcarsCollapsiblePanel, LcarsToc } from "@/components/lcars";
+import {
+  LcarsCollapsiblePanel,
+  LcarsSortSwitch,
+  LcarsToc,
+  type SortDir,
+} from "@/components/lcars";
 import ContentCardMenu from "@/components/timeline/ContentCardMenu";
 import {
   SessionPanelControls,
@@ -44,10 +49,15 @@ export default function MissionLogOverview({
   currentUserId?: number | null;
   help?: ReactNode;
 }) {
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [entryFilter, setEntryFilter] = useState<
+    "all" | "logs" | "synopsis"
+  >("all");
   const panels = useSessionPanels(
     synopsisBlocks.map((block) => String(block.id)),
   );
   const hasSynopsis = synopsisBlocks.length > 0 || Boolean(fullSynopsisHtml);
+  const hasToc = hasSynopsis || logs.length > 0;
   // Nur die vollständige Synopsis bündelt gleiche Daten. In der Chronik
   // bleibt jeder Block ein eigener Eintrag mit eigener Karte.
   const synopsisGroups = groupSynopsisBlocksByDate(synopsisBlocks)
@@ -57,8 +67,8 @@ export default function MissionLogOverview({
         (a, b) => a.missionBlockNumber - b.missionBlockNumber,
       ),
     }))
-    .sort((a, b) => b.ingameDate.localeCompare(a.ingameDate));
-  const entries = [
+    .sort((a, b) => a.ingameDate.localeCompare(b.ingameDate));
+  const allEntries = [
     ...logs.map((log) => ({
       kind: "log" as const,
       date: log.log_date ?? "",
@@ -69,11 +79,22 @@ export default function MissionLogOverview({
       date: block.ingameDate,
       block,
     })),
-  ].sort(
-    (a, b) =>
-      b.date.localeCompare(a.date) ||
-      (a.kind === b.kind ? 0 : a.kind === "log" ? -1 : 1),
-  );
+  ];
+  const entries = allEntries
+    .filter(
+      (entry) =>
+        entryFilter === "all" ||
+        entry.kind === (entryFilter === "logs" ? "log" : "synopsis"),
+    )
+    .sort((a, b) => {
+      if (!a.date && b.date) return 1;
+      if (a.date && !b.date) return -1;
+      const dateOrder = a.date.localeCompare(b.date);
+      return (
+        (sortDir === "asc" ? dateOrder : -dateOrder) ||
+        (a.kind === b.kind ? 0 : a.kind === "log" ? -1 : 1)
+      );
+    });
 
   return (
     <section className="mission-log-overview">
@@ -89,146 +110,186 @@ export default function MissionLogOverview({
         chronologisch
       </p>
 
-      {(hasSynopsis || logs.length > 0) && (
-        <div className="mb-[16px] flex items-start gap-[8px]">
-          <div className="min-w-0 flex-1">
-            <LcarsCollapsiblePanel
-              title="Inhaltsverzeichnis"
-              storageId={`mission:${missionSlug}:chronicle-toc`}
-            >
-              <LcarsToc
-                title="Chronik"
-                ariaLabel="Inhaltsverzeichnis der Missionschronik"
-                onJump={(id) => {
-                  const block = synopsisBlocks.find(
-                    (item) => `mission-synopsis-${item.id}` === id,
-                  );
-                  if (block) panels.setOpen(String(block.id), true);
-                }}
-                headings={[
-                  ...entries.map((entry) =>
-                    entry.kind === "log"
-                      ? {
-                          id: `mission-log-${entry.log.id}`,
-                          text: [fmtDate(entry.log.log_date), entry.log.title]
-                            .filter(Boolean)
-                            .join(" · "),
-                        }
-                      : {
-                          id: `mission-synopsis-${entry.block.id}`,
-                          text: fmtDate(entry.block.ingameDate),
-                        },
-                  ),
-                  ...(hasSynopsis
-                    ? [{ id: "mission-full-synopsis", text: "Synopsis" }]
-                    : []),
-                ]}
-              />
-            </LcarsCollapsiblePanel>
-          </div>
-          {synopsisBlocks.length > 0 && (
-            <SessionPanelControls
-              allOpen={panels.allOpen}
-              onToggle={() => panels.setAll(!panels.allOpen)}
-            />
-          )}
-        </div>
-      )}
-
-      {(canCreateLog || logs.length > 0) && (
-        <div className="lcars-toolbar mt-[16px]">
-          {canCreateLog && (
-            <Link
-              href={`/user/mission-logs/new?mission=${missionSlug}`}
-              className="lcars-pill-btn"
-            >
-              Neues Log
-            </Link>
-          )}
-        </div>
-      )}
-
-      {entries.length === 0 ? (
-        <p className="lcars-empty-state">
-          Noch keine Logs oder Session-Einträge vorhanden.
-        </p>
-      ) : (
-        <div>
-          {entries.map((entry) => {
-            if (entry.kind === "log") {
-              return (
-                <div
-                  key={`log-${entry.log.id}`}
-                  id={`mission-log-${entry.log.id}`}
-                  className="scroll-mt-24"
-                >
-                  <LogRow
-                    log={entry.log}
-                    missionSlug={missionSlug}
-                    currentUserId={currentUserId}
-                  />
-                </div>
-              );
-            }
-            return (
-              <div
-                key={`synopsis-${entry.block.id}`}
-                id={`mission-synopsis-${entry.block.id}`}
-                className="scroll-mt-24"
+      <div
+        className={`mission-chronicle-grid ${
+          hasToc
+            ? "mission-chronicle-grid--with-toc"
+            : "mission-chronicle-grid--without-toc"
+        }`}
+      >
+        {hasToc && (
+          <aside
+            className="mission-chronicle-toc-column"
+            aria-label="Navigation der Missionschronik"
+          >
+            <div className="mission-chronicle-toc-row">
+              <LcarsCollapsiblePanel
+                title="Inhaltsverzeichnis"
+                storageId={`mission:${missionSlug}:chronicle-toc`}
               >
-                <ChronoRow
-                  date={entry.block.ingameDate}
-                  color={CONTENT_TYPE_COLOR.mission}
-                >
-                  <ChronoCard
-                    color={CONTENT_TYPE_COLOR.mission}
-                    tag="Log-Eintrag"
-                    title={fmtDate(entry.block.ingameDate)}
-                    date={fmtDate(entry.block.ingameDate)}
-                  >
-                    <SessionSummaryPanel
-                      bodyHtml={entry.block.bodyHtml}
-                      open={panels.isOpen(String(entry.block.id))}
-                      onOpenChange={(open) =>
-                        panels.setOpen(String(entry.block.id), open)
-                      }
-                    />
-                  </ChronoCard>
-                </ChronoRow>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {hasSynopsis && (
-        <section
-          id="mission-full-synopsis"
-          className="mission-full-synopsis scroll-mt-24"
-        >
-          <h3 className="lcars-data-row-heading">Synopsis</h3>
-          {synopsisBlocks.length > 0 ? (
-            <div className="mission-body">
-              {synopsisGroups.map((group) => (
-                <section key={group.ingameDate}>
-                  <h4>{fmtDate(group.ingameDate)}</h4>
-                  {group.blocks.map((block) => (
-                    <div
-                      key={block.id}
-                      dangerouslySetInnerHTML={{ __html: block.bodyHtml }}
-                    />
-                  ))}
-                </section>
-              ))}
+                <LcarsToc
+                  title="Chronik"
+                  ariaLabel="Inhaltsverzeichnis der Missionschronik"
+                  onJump={(id) => {
+                    const block = synopsisBlocks.find(
+                      (item) => `mission-synopsis-${item.id}` === id,
+                    );
+                    if (block) panels.setOpen(String(block.id), true);
+                  }}
+                  headings={[
+                    ...entries.map((entry) =>
+                      entry.kind === "log"
+                        ? {
+                            id: `mission-log-${entry.log.id}`,
+                            text: [fmtDate(entry.log.log_date), entry.log.title]
+                              .filter(Boolean)
+                              .join(" · "),
+                          }
+                        : {
+                            id: `mission-synopsis-${entry.block.id}`,
+                            text: fmtDate(entry.block.ingameDate),
+                          },
+                    ),
+                    ...(hasSynopsis
+                      ? [{ id: "mission-full-synopsis", text: "Synopsis" }]
+                      : []),
+                  ]}
+                />
+              </LcarsCollapsiblePanel>
+              {synopsisBlocks.length > 0 && (
+                <SessionPanelControls
+                  allOpen={panels.allOpen}
+                  onToggle={() => panels.setAll(!panels.allOpen)}
+                />
+              )}
             </div>
-          ) : (
-            <div
-              className="mission-body"
-              dangerouslySetInnerHTML={{ __html: fullSynopsisHtml ?? "" }}
-            />
+          </aside>
+        )}
+
+        <div className="mission-chronicle-main">
+          {(canCreateLog || allEntries.length > 0) && (
+            <div className="lcars-toolbar mt-[16px]">
+              {canCreateLog && (
+                <Link
+                  href={`/user/mission-logs/new?mission=${missionSlug}`}
+                  className="lcars-pill-btn"
+                >
+                  Neues Log
+                </Link>
+              )}
+              {allEntries.length > 0 && (
+                <>
+                  <select
+                    className="mission-author-filter mission-chronicle-filter rounded-full"
+                    value={entryFilter}
+                    onChange={(event) =>
+                      setEntryFilter(event.target.value as typeof entryFilter)
+                    }
+                    aria-label="Chronik filtern"
+                  >
+                    <option value="all">Alles</option>
+                    <option value="logs">Nur Logbücher</option>
+                    <option value="synopsis">Nur Log-Einträge</option>
+                  </select>
+                  <LcarsSortSwitch
+                    className="mission-sort"
+                    options={[{ key: "date", label: "Datum", defaultDir: "desc" }]}
+                    sortKey="date"
+                    sortDir={sortDir}
+                    onChange={(_key, direction) => setSortDir(direction)}
+                  />
+                </>
+              )}
+            </div>
           )}
-        </section>
-      )}
+
+          {allEntries.length === 0 ? (
+            <p className="lcars-empty-state">
+              Noch keine Logs oder Session-Einträge vorhanden.
+            </p>
+          ) : entries.length === 0 ? (
+            <p className="lcars-empty-state">
+              Für diese Auswahl sind keine Einträge vorhanden.
+            </p>
+          ) : (
+            <div>
+              {entries.map((entry) => {
+                if (entry.kind === "log") {
+                  return (
+                    <div
+                      key={`log-${entry.log.id}`}
+                      id={`mission-log-${entry.log.id}`}
+                      className="scroll-mt-24"
+                    >
+                      <LogRow
+                        log={entry.log}
+                        missionSlug={missionSlug}
+                        currentUserId={currentUserId}
+                      />
+                    </div>
+                  );
+                }
+                return (
+                  <div
+                    key={`synopsis-${entry.block.id}`}
+                    id={`mission-synopsis-${entry.block.id}`}
+                    className="scroll-mt-24"
+                  >
+                    <ChronoRow
+                      date={entry.block.ingameDate}
+                      color={CONTENT_TYPE_COLOR.mission}
+                    >
+                      <ChronoCard
+                        color={CONTENT_TYPE_COLOR.mission}
+                        tag="Log-Eintrag"
+                        title={fmtDate(entry.block.ingameDate)}
+                        date={fmtDate(entry.block.ingameDate)}
+                      >
+                        <SessionSummaryPanel
+                          bodyHtml={entry.block.bodyHtml}
+                          open={panels.isOpen(String(entry.block.id))}
+                          onOpenChange={(open) =>
+                            panels.setOpen(String(entry.block.id), open)
+                          }
+                        />
+                      </ChronoCard>
+                    </ChronoRow>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {hasSynopsis && (
+            <section
+              id="mission-full-synopsis"
+              className="mission-full-synopsis scroll-mt-24"
+            >
+              <h3 className="lcars-data-row-heading">Synopsis</h3>
+              {synopsisBlocks.length > 0 ? (
+                <div className="mission-body">
+                  {synopsisGroups.map((group) => (
+                    <section key={group.ingameDate}>
+                      <h4>{fmtDate(group.ingameDate)}</h4>
+                      {group.blocks.map((block) => (
+                        <div
+                          key={block.id}
+                          dangerouslySetInnerHTML={{ __html: block.bodyHtml }}
+                        />
+                      ))}
+                    </section>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className="mission-body"
+                  dangerouslySetInnerHTML={{ __html: fullSynopsisHtml ?? "" }}
+                />
+              )}
+            </section>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

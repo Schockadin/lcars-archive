@@ -9,6 +9,19 @@ import type { TimelineEvent } from "@/lib/timelineTypes";
 vi.mock("@/components/ContentImageGallery", () => ({
   default: () => <button type="button">Bilder</button>,
 }));
+// ManualEventForm nutzt MarkdownEditor, dessen Mount-Effekt eine Server-Action
+// mit cookies() aufruft. Die Timeline-Tests brauchen nur die Event-Auswahl.
+vi.mock("@/app/_shared/MarkdownEditor", () => ({
+  default: ({
+    id,
+    name,
+    rows,
+  }: {
+    id: string;
+    name?: string;
+    rows?: number;
+  }) => <textarea id={id} name={name} rows={rows} />,
+}));
 
 // Die vorgewählte Ereignisart kommt aus der Route (/chronologie/[kategorie]).
 // Sie kann eine Art benennen, zu der es (noch) kein Ereignis gibt — die
@@ -177,7 +190,14 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
       Array.from((scope as HTMLSelectElement).options).map(
         (option) => option.text,
       ),
-    ).toEqual(["Missionen", "Events", "Gespräche", "Logbücher", "Sessions", "Alles"]);
+    ).toEqual([
+      "Missionen",
+      "Events",
+      "Gespräche",
+      "Logbücher",
+      "Log-Einträge",
+      "Alles",
+    ]);
     expect(artFilter()).toBeInTheDocument();
 
     fireEvent.change(scope, { target: { value: "logs" } });
@@ -188,6 +208,32 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
 });
 
 describe("TimelineView – Sessions", () => {
+  it("nennt die Kategorie Session im Filter und Karten-Tag Log-Eintrag", () => {
+    const { container } = render(
+      <TimelineView
+        events={[
+          event({
+            id: "manual-session",
+            category: "session",
+            origin: "manual",
+            sourceType: "archive_entry",
+            sourceTitle: "Freies Ereignis",
+            href: null,
+            phase: undefined,
+          }),
+        ]}
+        initialScope="events"
+      />,
+    );
+
+    expect(
+      [...artFilter().options].map((option) => option.textContent),
+    ).toEqual(["Alle Arten", "Log-Eintrag"]);
+    expect(container.querySelector(".timeline-tag")).toHaveTextContent(
+      "Log-Eintrag",
+    );
+  });
+
   it("zeigt datierte Blöcke ohne Inhaltsverzeichnis oder Sammelsteuerung", () => {
     const { container } = render(<TimelineView initialCategory="session" events={[
       ...EVENTS,
@@ -236,6 +282,21 @@ describe("TimelineView – Ereignis eintragen", () => {
     expect(
       screen.getByRole("button", { name: "Event hinzufügen" }),
     ).toBeInTheDocument();
+  });
+
+  it("bietet beim Hinzufügen nur manuelle Ereignisarten an", () => {
+    render(<TimelineView events={[]} canAddEvent latestEventDate={null} />);
+    fireEvent.click(screen.getByRole("button", { name: "Event hinzufügen" }));
+
+    const category = screen.getByLabelText("Ereignisart") as HTMLSelectElement;
+    expect([...category.options].map((option) => option.value)).toEqual([
+      "discovery",
+      "conflict",
+      "political",
+      "character",
+      "dialogue",
+      "other",
+    ]);
   });
 
   it("zeigt ihn nicht ohne das nötige Recht", () => {

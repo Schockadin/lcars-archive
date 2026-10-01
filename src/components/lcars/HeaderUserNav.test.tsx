@@ -120,6 +120,26 @@ describe("HeaderUserNav: Gliederung des Leitungs-Menüs", () => {
     ]);
   });
 
+  it("hält die sechs Header-Plätze in der gewünschten Reihenfolge fest", () => {
+    const { container } = render(
+      <HeaderUserNav
+        permissions={["gm.access", "admin.access", "users.manage", "users.browse"]}
+      />,
+    );
+    const nav = container.querySelector(".lcars-usernav--header");
+    const slots = [...(nav?.children ?? [])].map((item) =>
+      [...item.classList].find((className) => className.startsWith("lcars-usernav-slot--")),
+    );
+    expect(slots).toEqual([
+      "lcars-usernav-slot--profile",
+      "lcars-usernav-slot--rules",
+      "lcars-usernav-slot--gm",
+      "lcars-usernav-slot--admin",
+      "lcars-usernav-slot--help",
+      "lcars-usernav-slot--logout",
+    ]);
+  });
+
   it("bietet Steigerungsregeln und Kataloge über das Buch-Menü an", () => {
     render(<HeaderUserNav permissions={["users.browse"]} />);
     expect(screen.getByRole("button", { name: /Regeln/ })).toContainHTML(renderToStaticMarkup(<BookIcon />));
@@ -170,6 +190,6 @@ describe("HeaderUserNav: Hilfe", () => {
 
     const hilfe = screen.getByRole("link", { name: "Hilfe" });
     expect(hilfe.className).toContain("lcars-usernav-pill--help");
-    expect(hilfe.querySelector(".lcars-usernav-icon svg")).not.toBeNull();
+    expect(hilfe.querySelector(".lcars-usernav-icon--always svg")).not.toBeNull();
   });
 });
