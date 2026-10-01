@@ -178,6 +178,11 @@ export function ImportGuide() {
           <code>---</code>-Zeilen am Anfang) mit mindestens <code>type</code>,{" "}
           <code>slug</code> und Titel bzw. Name.
         </p>
+        <p>
+          Du öffnest den Import über den eigenen Link unter den Anlege-Knöpfen
+          auf „Meine Inhalte“; im Anlege-Panel und auf dem Dashboard steht er
+          nicht.
+        </p>
       </GuideSection>
 
       <GuideSection title="Import · Was du hochladen darfst">
@@ -313,3 +318,4 @@ export default function UserAreaGuides() {
     </GuideBody>
   );
 }
+

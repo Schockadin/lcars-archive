@@ -539,13 +539,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     keine Einträge unter bereits gepflegten Charakterbögen verschwinden.
   - `/gm/focuses` — dasselbe für den Schwerpunkt-Katalog (Suche,
     Disziplin-Filter, bearbeiten, ergänzen; löschbar nur selbst ergänzte).
-  - `/gm/campaign` — eingeklappte Panels für das Ingame-Jahr und die
-    Steigerungsregeln.
+  - `/gm/campaign` — eingeklappte Panels für das Ingame-Jahr, die
+    Steigerungsregeln und Standardwerte für neue Session-Termine.
     Spieler lesen die Steigerungsregeln unter `/user/rules`.
 - **Session-Planer** — die Spielleitung kündigt Termine an (`/gm/sessions`,
   Knopf „Session planen" über der Terminliste, Formular im Fenster) und
   ordnet sie einer Mission zu; eine neue Mission lässt sich dort ebenfalls
-  anlegen. Der Titel entsteht aus Missionsname und laufender Nummer. Alle
+  anlegen. Unter `/gm/campaign` legt sie dafür Wochentag, gerade oder ungerade
+  ISO-Kalenderwoche, Uhrzeit und Ort als Standard fest. Das Formular wählt den
+  nächsten passenden Termin voraus; Uhrzeit und Ort werden ebenfalls
+  übernommen. Der Titel entsteht aus Missionsname und laufender Nummer. Alle
   Angemeldeten sehen Termine auf der Startseite und sagen zu oder ab. Der
   Zeitpunkt
   ist **ein** `datetime-local`-Feld (Datum und Uhrzeit gehören zusammen), und
@@ -564,8 +567,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Log-Einträge werden automatisch in die Missions-Synopsis übernommen und
   chronologisch mit den Spieler-Logbüchern angezeigt. Das Inhaltsverzeichnis
   der Missionschronik bietet datierte Sprungmarken zu den Log-Einträgen.
-  Deren IDs bleiben bei Korrekturen erhalten. Die vollständige „Synopsis“
-  steht am Ende außerhalb der Chronik. Die Missionschronik bietet einen
+  Deren IDs bleiben bei Korrekturen erhalten. Die vollständige „Synopsis"
+  steht am Ende außerhalb der Chronik. Einträge mit gleichem Ingame-Datum
+  stehen dort unter einer Datumsüberschrift; die einzelnen Karten in der
+  Chronik bleiben getrennt. Die Missionschronik bietet einen
   wechselnden +/−-Schalter für alle standardmäßig offenen Session-Panels;
   die allgemeine Chronologie zeigt die Kategorie „Sessions“ ohne ToC oder
   gemeinsamen Schalter. Das Eintragen eines geplanten Termins verbindet
@@ -631,7 +636,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Konfigurierbares Dashboard** — jede Person stellt unter `/user` (Klappe
   „Startseite", Anker `#dashboard`) selbst ein, welche Abschnitte auf `"/"`
   erscheinen: Erste Schritte, Spielabende, To Dos, offene Gespräche, die
-  Anlege-Knöpfe samt Import, die eigenen Entwürfe, die eigenen Charaktere,
+  Anlege-Knöpfe, die eigenen Entwürfe, die eigenen Charaktere,
   Versionen, News und Lesezeichen. Das
   Zahnrad neben der Dashboard-Überschrift springt direkt dorthin — es trägt
   `ProfileNavIcon`, dasselbe Symbol, mit dem das minimalistische Interface auf
@@ -703,11 +708,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Chronologie und die Bearbeiten-Aktion unter „Meine Inhalte“. Auf dem
   Dashboard lässt sich der Knopf im Profil einzeln ein- oder ausblenden; unter
   `/user/content` gehört er zum vollständigen Angebot.
-  Dazu kommt **„Import"** (`/user/import`) — als Link statt Fenster: Der
-  Import blättert durch mehrere Dateien und bestätigt jede einzeln, dafür ist
-  ein Fenster zu klein (dieselbe Überlegung wie beim Charakter-Assistenten).
-  Der Knopf hängt an keinem Recht mehr, weil die Seite dahinter je Inhaltsart
-  gatet (siehe **Markdown-Import für alle** unten).
+  Unter `/user/content` steht **„Import"** (`/user/import`) als separater Link
+  unterhalb der Anlege-Knöpfe; auf dem Dashboard erscheint er nicht. Der Import
+  blättert durch mehrere Dateien und bestätigt jede einzeln, dafür ist ein
+  Fenster zu klein (dieselbe Überlegung wie beim Charakter-Assistenten). Der
+  Link hängt an keinem Recht mehr, weil die Seite dahinter je Inhaltsart gatet
+  (siehe **Markdown-Import für alle** unten).
   Die Leiste selbst bricht in drei Stufen um (`.lcars-btn-row` in
   `controls.css`): schmal einer pro Zeile, ab 640px zwei, ab 1024px alle
   nebeneinander. Als Klasse statt Utility-Kette, weil der Outline-Knopf ein
@@ -2263,6 +2269,24 @@ mitgelesen — fehlt sie, scheitern Dashboard und Profil mit
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr87.sql
 ```
 
+Ebenso `scripts/migrate-pr101.sql`: Sie ergänzt `campaign_settings` um die
+Vorgaben für neue Session-Termine. Die App liest diese Spalten bereits beim
+Laden der Kampagneneinstellungen; die Migration muss deshalb vor dem
+Ausliefern des neuen Stands angewendet werden:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr101.sql
+```
+
+Ebenso `scripts/migrate-pr101.sql`: Sie ergänzt `campaign_settings` um die
+Vorgaben für neue Session-Termine. Die App liest diese Spalten bereits beim
+Laden der Kampagneneinstellungen; die Migration muss deshalb vor dem
+Ausliefern des neuen Stands angewendet werden:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr101.sql
+```
+
 Ebenso `scripts/migrate-pr78.sql`: Es ergänzt `error_logs` um die drei
 Herkunfts-Spalten (`app_version`, `deploy_context`, `commit_ref`, siehe
 [`src/lib/deployInfo.ts`](src/lib/deployInfo.ts)). Fehlt die Migration, gibt es
@@ -2303,3 +2327,4 @@ Dieses Fan-Projekt steht in keiner Verbindung zu den Rechteinhabern.
 ---
 
 <p align="center"><em>„Live long and prosper.“ 🖖</em></p>
+

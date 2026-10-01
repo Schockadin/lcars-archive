@@ -111,6 +111,9 @@ export default function DSGVOContent({ year }: { year: number }) {
           erfassen. Bei veröffentlichten Missionen sind diese Texte mit ihrem
           Ingame-Datum in der allgemeinen Chronologie, der Missionschronik und
           der daraus zusammengestellten Synopsis öffentlich sichtbar. Die
+          Spielleitung kann außerdem kampagnenweite Vorgaben für neue Termine
+          speichern: Wochentag, Kalenderwochen-Parität, Uhrzeit und Ort. Diese
+          Werte werden beim Planen eines Termins vorausgewählt. Die
           öffentliche Session-Ansicht enthält keine AP-Buchungen oder realen
           Spieltermine. Die
           Teilnehmerzuordnung wird mit dem Charakter entfernt, die Session und
@@ -504,3 +507,4 @@ export default function DSGVOContent({ year }: { year: number }) {
     </>
   );
 }
+

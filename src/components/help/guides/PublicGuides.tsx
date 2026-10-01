@@ -141,7 +141,9 @@ export function PublicChronologyGuide() {
           <strong> Synopsis</strong> am Ende. Die Session-Panels sind zunächst
           geöffnet. Mit <strong>+</strong> neben dem Inhaltsverzeichnis öffnest
           du alle, mit <strong>−</strong> schließt du sie wieder; einzelne
-          Panels lassen sich unabhängig davon umschalten.
+          Panels lassen sich unabhängig davon umschalten. In der vollständigen
+          Synopsis teilen sich Einträge mit gleichem Ingame-Datum eine
+          Überschrift; die Karten in der Chronik bleiben einzeln.
         </p>
         <p>
           Über <strong>„Missionsakte (PDF)“</strong> lädst du Beschreibung,
@@ -262,3 +264,4 @@ export default function PublicAreaGuides() {
     </GuideBody>
   );
 }
+

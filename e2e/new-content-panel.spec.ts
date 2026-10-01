@@ -27,4 +27,9 @@ test("GM-Aktionen öffnen die Missions- und Terminformulare in Fenstern", async 
   const sessionDialog = page.getByRole("dialog", { name: "Session planen" });
   await expect(sessionDialog).toBeVisible();
   await expect(sessionDialog.locator("form")).toBeVisible();
+  await expect(sessionDialog.locator("#ps-at-neu")).toHaveValue(
+    /^\d{4}-\d{2}-\d{2}T16:00$/,
+  );
+  await expect(sessionDialog.locator("#ps-loc-neu")).toHaveValue("David");
 });
+

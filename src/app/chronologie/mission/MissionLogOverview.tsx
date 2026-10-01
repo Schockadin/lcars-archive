@@ -50,7 +50,14 @@ export default function MissionLogOverview({
   const hasSynopsis = synopsisBlocks.length > 0 || Boolean(fullSynopsisHtml);
   // Nur die vollständige Synopsis bündelt gleiche Daten. In der Chronik
   // bleibt jeder Block ein eigener Eintrag mit eigener Karte.
-  const synopsisGroups = groupSynopsisBlocksByDate(synopsisBlocks.toReversed());
+  const synopsisGroups = groupSynopsisBlocksByDate(synopsisBlocks)
+    .map((group) => ({
+      ...group,
+      blocks: [...group.blocks].sort(
+        (a, b) => a.missionBlockNumber - b.missionBlockNumber,
+      ),
+    }))
+    .sort((a, b) => b.ingameDate.localeCompare(a.ingameDate));
   const entries = [
     ...logs.map((log) => ({
       kind: "log" as const,
@@ -271,3 +278,4 @@ function LogRow({
     </ChronoRow>
   );
 }
+

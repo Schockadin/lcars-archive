@@ -19,10 +19,9 @@ export const metadata: Metadata = {
 
 export const maxDuration = 60;
 
-// Der Import für die normale Nutzerschaft — erreichbar über den Knopf im
-// Abschnitt „Neue Inhalte" (Startseite und „Meine Inhalte"). Bis v1.49 gab
-// es ihn nur unter /admin/import; wer kein Admin war, sah den Knopf gar
-// nicht erst.
+// Der Import für die normale Nutzerschaft — erreichbar über einen eigenen
+// Link unter „Meine Inhalte“. Bis v1.49 gab es ihn nur unter /admin/import;
+// wer kein Admin war, sah den Knopf gar nicht erst.
 //
 // Was hier anders ist als unter /admin/import, entscheidet nicht diese
 // Seite, sondern src/lib/importAccess.ts und die beiden Actions:
@@ -88,3 +87,4 @@ export default async function UserImportPage() {
     </>
   );
 }
+

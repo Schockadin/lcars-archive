@@ -157,15 +157,26 @@ describe("MissionLogOverview", () => {
   it("führt gleiche Synopsis-Daten zusammen und lässt die Karten einzeln", () => {
     const { container } = renderOverview({
       logs: [],
-      synopsisBlocks: [7, 8].map((id) => ({
-        id,
-        sessionId: 8,
-        missionSessionNumber: 8,
-        missionBlockNumber: id,
-        ingameDate: "2234-12-20",
-        body: `Eintrag ${id}`,
-        bodyHtml: `<p>Eintrag ${id}</p>`,
-      })),
+      synopsisBlocks: [
+        {
+          id: 7,
+          sessionId: 8,
+          missionSessionNumber: 8,
+          missionBlockNumber: 2,
+          ingameDate: "2234-12-20",
+          body: "Zweiter Eintrag",
+          bodyHtml: "<p>Zweiter Eintrag</p>",
+        },
+        {
+          id: 8,
+          sessionId: 8,
+          missionSessionNumber: 8,
+          missionBlockNumber: 1,
+          ingameDate: "2234-12-20",
+          body: "Erster Eintrag",
+          bodyHtml: "<p>Erster Eintrag</p>",
+        },
+      ],
     });
 
     expect(container.querySelectorAll(".timeline-card")).toHaveLength(2);
@@ -174,8 +185,13 @@ describe("MissionLogOverview", () => {
     )!;
     expect(fullSynopsis.querySelectorAll("h4")).toHaveLength(1);
     expect(fullSynopsis.querySelector("h4")).toHaveTextContent("20.12.2234");
-    expect(fullSynopsis).toHaveTextContent("Eintrag 7");
-    expect(fullSynopsis).toHaveTextContent("Eintrag 8");
+    const groupedEntries = [
+      ...fullSynopsis.querySelectorAll(".mission-body > section > div"),
+    ];
+    expect(groupedEntries.map((entry) => entry.textContent)).toEqual([
+      "Erster Eintrag",
+      "Zweiter Eintrag",
+    ]);
   });
 
   it("steuert Session-Inhalte mit einem wechselnden Textbutton neben dem ToC", () => {
@@ -237,3 +253,4 @@ describe("MissionLogOverview", () => {
     expect(container.querySelector(".mission-sort")).toBeNull();
   });
 });
+

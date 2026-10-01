@@ -396,7 +396,9 @@ export default function TutorialPage() {
                 </li>
               </ul>
               <p>
-                Neben den Anlegen-Knöpfen steht <strong>„Import“</strong>. Hast
+                Unterhalb der Anlegen-Knöpfe führt auf „Meine Inhalte“ ein
+                eigener Link zum <strong>„Import“</strong>; auf der Startseite
+                steht er nicht. Hast
                 du einen Eintrag schon fertig als{" "}
                 <strong>Markdown-Datei</strong> — aus deinen Notizen, einem
                 Vault, einem anderen Werkzeug —, musst du ihn nicht abtippen:
@@ -756,6 +758,17 @@ export default function TutorialPage() {
                 Zusammenfassung. Mit + beziehungsweise − neben dem Inhaltsverzeichnis
                 öffnest oder schließt du alle Session-Blöcke. Die allgemeine
                 Chronologie führt sie zusätzlich in der Kategorie „Sessions“.
+                In der vollständigen Synopsis stehen mehrere Einträge desselben
+                Ingame-Datums unter einer gemeinsamen Datumsüberschrift; ihre
+                Karten in der Chronik bleiben einzelne Einträge.
+              </p>
+              <p>
+                Unter <strong>„Leitung → Regelwerk → Kampagne“</strong> kann die
+                Spielleitung den Standard-Wochentag, die Parität der ISO-
+                Kalenderwoche, Uhrzeit und Ort für neue Termine festlegen
+                (anfangs Sonntag, ungerade Woche, 16:00 Uhr und „David“). Das
+                Formular wählt automatisch den nächsten passenden Termin aus
+                und übernimmt Uhrzeit und Ort.
               </p>
               <p>
                 Ist einer deiner Charaktere für den Termin{" "}
@@ -1338,3 +1351,4 @@ export default function TutorialPage() {
     </>
   );
 }
+
