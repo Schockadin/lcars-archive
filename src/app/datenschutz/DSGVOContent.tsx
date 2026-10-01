@@ -274,13 +274,16 @@ export default function DSGVOContent({ year }: { year: number }) {
         <p>
           Für Live-Aktualisierungen der Website nutzen wir{" "}
           <strong>Ably Realtime Ltd.</strong> (London, Vereinigtes Königreich).
-          Beim Aufbau und Betrieb einer WebSocket-Verbindung verarbeitet Ably
-          technisch notwendige Verbindungsdaten wie IP-Adresse, Zeitpunkt und
-          Verbindungsstatus. Übertragen wird ausschließlich ein allgemeines,
-          inhaltsloses Signal, dass sich Inhalte geändert haben; Nachrichten,
-          Texte, Nutzerkennungen oder andere Kampagnendaten werden nicht über
-          Ably gesendet. Der Browser erhält ein kurzlebiges Zugriffstoken, das
-          nur das Abonnieren dieses Signals erlaubt (Rechtsgrundlage: Art. 6
+          Der Browser verbindet sich dafür über HTTPS und WebSocket mit den
+          benötigten Ably-Realtime-Endpunkten; andere externe Verbindungen
+          erlaubt die Browserrichtlinie dafür nicht. Beim Aufbau und Betrieb
+          verarbeitet Ably technisch notwendige Verbindungsdaten wie IP-Adresse,
+          Zeitpunkt und Verbindungsstatus. Übertragen wird ausschließlich ein
+          allgemeines, inhaltsloses Signal, dass sich Inhalte geändert haben;
+          Nachrichten, Texte, Nutzerkennungen oder andere Kampagnendaten werden
+          nicht über Ably gesendet. Der Browser erhält ein kurzlebiges
+          Zugriffstoken, das nur das Abonnieren dieses Signals erlaubt
+          (Rechtsgrundlage: Art. 6
           Abs. 1 lit. f DSGVO — berechtigtes Interesse an unmittelbar aktuellen
           Seiten). Ably verarbeitet die Verbindungsdaten als
           Auftragsverarbeiter gemäß Art. 28 DSGVO. Mehr Informationen:{" "}

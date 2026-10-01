@@ -66,6 +66,12 @@ export default function ImpressumContent() {
           Anzeigen des Editors entfernt. Die Einzelheiten stehen in der
           Datenschutzerklärung.
         </p>
+        <p>
+          Live-Aktualisierungen verwenden den externen Dienst Ably Realtime.
+          Welche Verbindungsdaten dabei verarbeitet und welche Inhalte nicht
+          übertragen werden, steht in der{" "}
+          <a href="/datenschutz">Datenschutzerklärung</a>.
+        </p>
 
         <h2>Urheberrecht</h2>
         <p>

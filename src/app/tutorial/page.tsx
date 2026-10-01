@@ -584,7 +584,10 @@ export default function TutorialPage() {
                 aktualisiert sich dabei automatisch — neue Nachrichten und
                 Änderungen am Antwortrecht erscheinen von selbst, ohne dass du
                 die Seite neu laden musst. Bei aktiver Verbindung kommen diese
-                Aktualisierungen direkt über WebSockets. An jeder Nachrichtenkarte eines
+                Aktualisierungen direkt über WebSockets. Dafür muss dein Browser
+                Ably Realtime erreichen können. Wenn dein Netzwerk die Verbindung
+                blockiert oder sie gestört ist, lade die Seite neu, um den
+                aktuellen Stand abzurufen. An jeder Nachrichtenkarte eines
                 laufenden Gesprächs steht neben dem Namen der sprechenden
                 Person, <strong>wann sie verschickt wurde</strong> (Datum und
                 Uhrzeit) — so siehst du, ob zwischen zwei Beiträgen Minuten oder

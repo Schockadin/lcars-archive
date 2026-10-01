@@ -156,6 +156,13 @@ export const CHANGELOG: ChangelogEntry[] = [
     items: [],
   },
   {
+    version: "1.63",
+    title: "Realtime-Verbindungen",
+    // Bewusst ohne Stichpunkte: Behebt Ably-CSP- und Node-Buildfehler; das
+    // korrigiert bestehende Funktionen, führt aber keine neue ein.
+    items: [],
+  },
+  {
     version: "1.61",
     title: "Missionschroniken",
     items: [
