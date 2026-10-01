@@ -1186,6 +1186,8 @@ export default function TutorialPage() {
                   einen Rutsch über alle bestehenden Inhalte laufen lassen sowie
                   mit <strong>„Typografie korrigieren“</strong> gerade
                   Anführungszeichen in allen Inhalten in deutsche („…“)
+                  umwandeln und typografische Hochkommata sowie
+                  apostrophähnliche Akzentzeichen in gerade Apostrophe
                   umwandeln (alles blockweise mit Fortschrittsbalken).
                 </li>
                 <li>

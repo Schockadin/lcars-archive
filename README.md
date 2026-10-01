@@ -1360,14 +1360,17 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   freie Feld wie über den zeilenweisen Editor. Ein
   Audit-Log protokolliert sicherheitsrelevante Useraccount- sowie Rollen-/
   Rechteänderungen (inkl. IP-Adresse) sowie, separat, eine 3-Tage-Übersicht aller
-  neu angelegten, bearbeiteten und gelöschten Inhalte. Zwei Wartungs-Skripte
+  neu angelegten, bearbeiteten und gelöschten Inhalte. Drei Wartungs-Skripte
   laufen blockweise mit Fortschrittsanzeige (jeweils ausblendbar): „Alle Inhalte
   verlinken" (Bulk-Autolinking; Autolinking ist bei neuen Inhalten außerdem
   standardmäßig vorausgewählt — und ändern sich Name/Titel oder Aliase eines
   Inhalts, zieht `src/lib/autolinkSync.ts` die Verlinkungen aller anderen
   Inhalte per `after()` im Hintergrund nach: neue Schreibweisen werden
-  verlinkt, bestehende `[[Wikilinks]]` auf den alten Namen umgeschrieben) und „Gespräche-Fließtext erzeugen" (Backfill für
-  vor Einführung des Features abgeschlossene Dialoge). Wer `dialogues.moderate`
+  verlinkt, bestehende `[[Wikilinks]]` auf den alten Namen umgeschrieben),
+  „Typografie korrigieren" (deutsche Anführungszeichen setzen und
+  apostrophähnliche Hochkommata sowie Akzentzeichen zu geraden Apostrophen
+  vereinheitlichen) und „Gespräche-Fließtext erzeugen" (Backfill für vor
+  Einführung des Features abgeschlossene Dialoge). Wer `dialogues.moderate`
   hat (per Default Admins), darf als Moderation jede Nachricht in jedem Gespräch
   bearbeiten oder löschen, auch fremde und auch in bereits abgeschlossenen
   Gesprächen, dessen Metadaten (Titel/Datum/Schauplatz/Ort/Tags — nicht den

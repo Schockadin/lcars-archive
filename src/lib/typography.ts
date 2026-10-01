@@ -8,6 +8,11 @@ import { isIndexProtected, type ProtectedRange } from "@/lib/protectedRanges";
 export const GERMAN_QUOTE_OPEN = "„"; // „
 export const GERMAN_QUOTE_CLOSE = "“"; // “
 
+// Apostrophähnliche Satzzeichen und Akzentzeichen wie ‚, ’, ʼ, ′ und ´
+// werden auf das gerade ASCII-Apostroph vereinheitlicht. Das ASCII-Backtick
+// bleibt außen vor, weil es zugleich Markdown-Code begrenzt.
+const APOSTROPHE_VARIANT_RE = /[‘’‚‛ʻʼʹ′‵´ˊˋ]/u;
+
 // Entscheidet KONTEXTBASIERT (nicht paritätsbasiert), ob ein gerades " ein
 // ÖFFNENDES Anführungszeichen ist: nur wenn davor nichts „Wort-artiges" steht
 // (Zeilen-/Textanfang, Leerraum, öffnende Klammer, Gedanken-/Bindestrich,
@@ -27,17 +32,18 @@ export function opensQuote(prevChar: string | undefined | null): boolean {
 }
 
 // Bereiche, die NICHT angetastet werden: Code-Fences (``` / ~~~), Inline-Code,
-// Bilder, Wikilinks und Markdown-Links (deren URL). Innerhalb dieser bleibt ein
-// gerades " unverändert (z.B. Attribut-Werte, Pfade).
+// Bilder, Wikilinks und Markdown-Links (deren URL). Innerhalb dieser bleiben
+// Anführungszeichen und Apostrophvarianten unverändert (z.B. in Code und Pfaden).
 const PROTECTED_RE =
   /```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`|!\[[^\]]*\]\([^)]*\)|\[\[[^\]]*\]\]|\[[^\]]*\]\([^)]*\)/g;
 
 // Wandelt gerade Anführungszeichen (") in einem Markdown-String in deutsche
-// typografische um. Idempotent (bereits gesetzte „ " bleiben unberührt), lässt
-// Code/Links unangetastet. Wird vom Bulk-Skript genutzt, um den gespeicherten
-// Quelltext (source_md) dauerhaft zu korrigieren.
+// typografische um und vereinheitlicht apostrophähnliche Hochkommata und
+// Akzentzeichen zu geraden Apostrophen. Idempotent, lässt Code/Links
+// unangetastet. Wird vom Bulk-Skript genutzt, um den gespeicherten Quelltext
+// (source_md) dauerhaft zu korrigieren.
 export function applyGermanTypography(input: string): string {
-  if (!input.includes('"')) return input;
+  if (!input.includes('"') && !APOSTROPHE_VARIANT_RE.test(input)) return input;
 
   const protectedRanges: ProtectedRange[] = [];
   PROTECTED_RE.lastIndex = 0;
@@ -52,8 +58,12 @@ export function applyGermanTypography(input: string): string {
   let out = "";
   for (let i = 0; i < input.length; i++) {
     const ch = input[i];
-    if (ch === '"' && !isProtected(i)) {
+    if (isProtected(i)) {
+      out += ch;
+    } else if (ch === '"') {
       out += opensQuote(input[i - 1]) ? GERMAN_QUOTE_OPEN : GERMAN_QUOTE_CLOSE;
+    } else if (APOSTROPHE_VARIANT_RE.test(ch)) {
+      out += "'";
     } else {
       out += ch;
     }

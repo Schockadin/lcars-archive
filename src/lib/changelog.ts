@@ -165,6 +165,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "spielleitung",
         tutorial: "mein-bereich",
       },
+      {
+        text: "Der Typografie-Check vereinheitlicht typografische Hochkommata und apostrophähnliche Akzentzeichen zu geraden Apostrophen.",
+        category: "darstellung",
+        tutorial: "spielleitung-admins",
+      },
     ],
   },
   {
