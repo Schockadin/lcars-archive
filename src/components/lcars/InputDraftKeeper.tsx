@@ -7,6 +7,7 @@ import {
   draftFieldKeys,
   isDraftableField,
   isFieldAtDefault,
+  optedOutDraftFieldKeys,
   readDraftRecord,
   readFieldValue,
   withDraftValue,
@@ -108,6 +109,26 @@ export default function InputDraftKeeper() {
     const isCurrentPage = () => currentPathRef.current === pathname;
     recordRef.current = readDraftRecord(storage, path);
 
+    // Felder, die inzwischen explizit vom Draft ausgeschlossen sind, können
+    // noch ältere Werte in der Sitzung haben. Entferne sie auch aus dem
+    // Arbeitsspeicher, damit pagehide sie nicht erneut zurückschreibt.
+    const removeOptedOutDrafts = () => {
+      const excludedKeys = optedOutDraftFieldKeys(document);
+      if (excludedKeys.size === 0) return;
+      const next = { ...recordRef.current };
+      let changed = false;
+      for (const key of excludedKeys) {
+        if (key in next) {
+          delete next[key];
+          changed = true;
+        }
+      }
+      if (changed) {
+        recordRef.current = next;
+        writeDraftRecord(storage, path, next);
+      }
+    };
+
     // Schlüssel je Feld zwischenspeichern: das Ermitteln läuft über das
     // gesamte Formular und soll nicht an jedem Tastendruck hängen. Bei jeder
     // DOM-Änderung wird der Cache verworfen (Felder können dazukommen).
@@ -180,6 +201,7 @@ export default function InputDraftKeeper() {
 
     const restore = (pinning: boolean) => {
       if (!isCurrentPage()) return;
+      removeOptedOutDrafts();
       const record = recordRef.current;
       // Ohne gesicherten Stand gibt es nichts einzusetzen — und damit auch
       // keinen Grund, das Dokument abzusuchen. Das ist der Normalfall (jede

@@ -51,6 +51,44 @@ afterEach(() => {
 });
 
 describe("InputDraftKeeper", () => {
+  it("löscht alte Entwürfe für inzwischen abgewählte Felder", () => {
+    const storageKey = draftStorageKey("/testseite");
+    window.sessionStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        "form#session-editor-7|n:sessionDate": {
+          kind: "text",
+          value: "2026-10-03",
+        },
+        "form#session-editor-7|n:synopsisText": {
+          kind: "text",
+          value: "alter Synopsis-Entwurf",
+        },
+      }),
+    );
+
+    const { container } = render(
+      <>
+        <InputDraftKeeper />
+        <form id="session-editor-7">
+          <input name="sessionDate" defaultValue="2026-09-20" />
+          <div data-no-draft>
+            <textarea name="synopsisText" defaultValue="Synopsis vom Server" />
+          </div>
+        </form>
+      </>,
+    );
+
+    expect(container.querySelector<HTMLInputElement>("[name=\"sessionDate\"]")?.value).toBe("2026-10-03");
+    expect(container.querySelector<HTMLTextAreaElement>("[name=\"synopsisText\"]")?.value).toBe("Synopsis vom Server");
+    expect(JSON.parse(window.sessionStorage.getItem(storageKey) ?? "{}")).toEqual({
+      "form#session-editor-7|n:sessionDate": {
+        kind: "text",
+        value: "2026-10-03",
+      },
+    });
+  });
+
   it("setzt den gesicherten Stand ein", () => {
     seedDraft("doc|n:body", "Mein Entwurf");
     render(<Seite />);
