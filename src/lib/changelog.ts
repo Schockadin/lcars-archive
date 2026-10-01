@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.64",
+    title: "Verknüpfungen für eigene Inhalte",
+    items: [
+      {
+        text: "Eigene Charaktere, Missionen, Logbücher und Datenbank-Einträge lassen sich gesammelt automatisch verlinken; Gespräche bleiben dabei unberührt.",
+        category: "inhalte",
+        tutorial: "verlinkung",
+      },
+    ],
+  },
+  {
     version: "1.62",
     title: "Bedienkomfort",
     // Bewusst ohne Stichpunkte: Dieser PR begrenzt lange Inhaltsverzeichnisse

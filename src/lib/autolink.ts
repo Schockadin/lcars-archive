@@ -300,6 +300,73 @@ export async function getAllAutolinkableContent(): Promise<
   ];
 }
 
+// Alle autolinkfähigen Inhalte, die dem angemeldeten Konto gehören — für
+// „Alles verlinken“ unter /user/content. Die Ownership wird hier serverseitig
+// und je Inhaltstyp geprüft; der Client übergibt weder eine User-ID noch
+// einzelne Inhalts-IDs. Gespräche sind Archiv-Einträge ohne Markdown-Body und
+// werden ausdrücklich ausgeschlossen.
+export async function getOwnAutolinkableContent(
+  userId: number,
+): Promise<AutolinkableContent[]> {
+  const [characters, missions, logs, archiveEntries] = await Promise.all([
+    sql<{ id: number; slug: string; source_md: string }[]>`
+      SELECT id, slug, source_md FROM characters
+      WHERE player_id = ${userId} AND source_md IS NOT NULL AND source_md <> ''
+        AND deleted_at IS NULL
+      ORDER BY id
+    `,
+    sql<{ id: number; slug: string; source_md: string }[]>`
+      SELECT id, slug, source_md FROM missions
+      WHERE owner_user_id = ${userId} AND source_md IS NOT NULL AND source_md <> ''
+        AND deleted_at IS NULL
+      ORDER BY id
+    `,
+    sql<{ id: number; slug: string; mission_id: number; source_md: string }[]>`
+      SELECT id, slug, mission_id, source_md FROM mission_logs
+      WHERE owner_user_id = ${userId} AND source_md IS NOT NULL AND source_md <> ''
+        AND deleted_at IS NULL
+      ORDER BY id
+    `,
+    sql<{ id: number; slug: string; source_md: string }[]>`
+      SELECT id, slug, source_md FROM archive_entries
+      WHERE owner_user_id = ${userId} AND source_md IS NOT NULL AND source_md <> ''
+        AND category <> 'dialogue' AND deleted_at IS NULL
+      ORDER BY id
+    `,
+  ]);
+
+  return [
+    ...characters.map((c) => ({
+      contentType: "character" as const,
+      id: c.id,
+      slug: c.slug,
+      missionId: null,
+      sourceMd: c.source_md,
+    })),
+    ...missions.map((m) => ({
+      contentType: "mission" as const,
+      id: m.id,
+      slug: m.slug,
+      missionId: null,
+      sourceMd: m.source_md,
+    })),
+    ...logs.map((l) => ({
+      contentType: "missionLog" as const,
+      id: l.id,
+      slug: l.slug,
+      missionId: l.mission_id,
+      sourceMd: l.source_md,
+    })),
+    ...archiveEntries.map((a) => ({
+      contentType: "archiveEntry" as const,
+      id: a.id,
+      slug: a.slug,
+      missionId: null,
+      sourceMd: a.source_md,
+    })),
+  ];
+}
+
 // Weiterhin von hier aus verfügbar (die Auflösung der Wikilinks ist das
 // Thema dieses Moduls), die Funktion selbst steht in slug.ts.
 export { normalizeWikilinkTarget };

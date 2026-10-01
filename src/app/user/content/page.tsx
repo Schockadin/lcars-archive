@@ -13,6 +13,7 @@ import { getAllMissionsIncludingDrafts } from "@/lib/missions";
 import UserContentBrowser from "./UserContentBrowser";
 import DraftsSection from "@/app/DraftsSection";
 import NewContentPanel from "./NewContentPanel";
+import LinkOwnContentPanel from "./LinkOwnContentPanel";
 import { loadNewContentData } from "./newContentData";
 import HelpHeading from "@/components/help/HelpHeading";
 import { MyContentGuide } from "@/components/help/guides/UserGuides";
@@ -98,6 +99,8 @@ export default async function UserContentPage() {
               Import
             </Link>
           </div>
+
+          <LinkOwnContentPanel />
 
           {/* Über der Liste: was noch unfertig ist. Dieselbe Komponente wie
               auf der Startseite. */}
