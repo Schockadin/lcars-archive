@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.61",
+    title: "Missionschroniken",
+    items: [
+      {
+        text: "Missionschroniken lassen sich nach Datum sortieren und gezielt nach Logbüchern oder einzelnen Log-Einträgen filtern.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+    ],
+  },
+  {
     version: "1.60",
     title: "Live-Aktualisierungen und Sessionplanung",
     items: [

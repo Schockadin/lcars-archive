@@ -231,6 +231,12 @@ html[data-ui^="minimal"] .lcars-usernav-pill {
   align-items: center;
   margin-right: 6px;
 }
+.lcars-usernav-icon--always {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
 .lcars-usernav-pill--help .lcars-usernav-icon svg {
   width: 18px;
   height: 18px;

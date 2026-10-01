@@ -201,13 +201,24 @@ function visibleItems(
   });
 }
 
-// Kleines Icon vor dem Label — im Header/Desktop per CSS ausgeblendet, im
-// minimalistischen UI auf Mobile das einzige sichtbare Element (siehe
-// minimal-ui.css). aria-hidden, da das Label die Bedeutung trägt.
-function NavPillContent({ icon, label }: { icon: ReactNode; label: string }) {
+// Kleines Icon vor dem Label — meist im Header/Desktop per CSS ausgeblendet,
+// im minimalistischen UI auf Mobile sichtbar. Die Hilfe bleibt immer sichtbar
+// (siehe minimal-ui.css). aria-hidden, da das Label die Bedeutung trägt.
+function NavPillContent({
+  icon,
+  label,
+  iconAlwaysVisible = false,
+}: {
+  icon: ReactNode;
+  label: string;
+  iconAlwaysVisible?: boolean;
+}) {
   return (
     <>
-      <span className="lcars-usernav-icon" aria-hidden="true">
+      <span
+        className={`lcars-usernav-icon${iconAlwaysVisible ? " lcars-usernav-icon--always" : ""}`}
+        aria-hidden="true"
+      >
         {icon}
       </span>
       <span className="lcars-usernav-label">{label}</span>
@@ -224,6 +235,7 @@ function NavDropdown({
   items,
   active,
   placement,
+  slotClassName,
 }: {
   label: string;
   icon: ReactNode;
@@ -231,6 +243,7 @@ function NavDropdown({
   // true = der aktuelle Pfad liegt im Bereich dieses Menüs.
   active: boolean;
   placement: "bottom" | "right" | "right-bottom";
+  slotClassName: string;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -266,9 +279,7 @@ function NavDropdown({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="true"
         aria-expanded={open}
-        className={
-          active ? "lcars-usernav-pill lcars-menu-active" : "lcars-usernav-pill"
-        }
+        className={`${active ? "lcars-usernav-pill lcars-menu-active" : "lcars-usernav-pill"} ${slotClassName}`}
       >
         <NavPillContent icon={icon} label={label} />
       </button>
@@ -401,6 +412,7 @@ export default function HeaderUserNav({
         items={profileItems}
         active={pathname === "/user" || (pathname.startsWith("/user/") && !pathname.startsWith("/user/rules"))}
         placement={placement}
+        slotClassName="lcars-usernav-slot--profile"
       />
 
       {playerRulesItems.length > 0 && <NavDropdown
@@ -409,6 +421,7 @@ export default function HeaderUserNav({
         items={playerRulesItems}
         active={pathname.startsWith("/user/rules")}
         placement={placement}
+        slotClassName="lcars-usernav-slot--rules"
       />}
 
       {gmItems.length > 0 && (
@@ -418,6 +431,7 @@ export default function HeaderUserNav({
           items={gmItems}
           active={pathname.startsWith("/gm")}
           placement={placement}
+          slotClassName="lcars-usernav-slot--gm"
         />
       )}
 
@@ -428,6 +442,7 @@ export default function HeaderUserNav({
           items={adminItems}
           active={pathname.startsWith("/admin")}
           placement={placement}
+          slotClassName="lcars-usernav-slot--admin"
         />
       )}
 
@@ -443,7 +458,7 @@ export default function HeaderUserNav({
           minimal-ui.css) — das Fragezeichen IST hier die Beschriftung, in
           jeder Oberfläche dasselbe Zeichen wie auf den Seiten. Im
           Header-Raster rutscht er per CSS neben den Logout in die untere
-          Reihe: die obere ist mit Profil/Leitung/Admin schon voll (siehe
+          Reihe. Die erste Reihe enthält Profil, Regeln und Leitung (siehe
           header.css). */}
       <Link
         href="/tutorial"
@@ -454,16 +469,16 @@ export default function HeaderUserNav({
         aria-label="Hilfe"
         className={
           pathname === "/tutorial"
-            ? "lcars-usernav-pill lcars-usernav-pill--help lcars-menu-active"
-            : "lcars-usernav-pill lcars-usernav-pill--help"
+            ? "lcars-usernav-pill lcars-usernav-pill--help lcars-usernav-slot--help lcars-menu-active"
+            : "lcars-usernav-pill lcars-usernav-pill--help lcars-usernav-slot--help"
         }
       >
-        <NavPillContent icon={<HelpIcon />} label="Hilfe" />
+        <NavPillContent icon={<HelpIcon />} label="Hilfe" iconAlwaysVisible />
       </Link>
 
       <form
         action={logout}
-        className="lcars-usernav-form"
+        className="lcars-usernav-form lcars-usernav-slot--logout"
         // Vor dem Abmelden den Offline-Seiten-Cache des Service Workers leeren,
         // damit personalisierte Seiten nach dem Logout nicht offline abrufbar
         // bleiben (siehe public/sw.js) — und aus demselben Grund die

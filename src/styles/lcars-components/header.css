@@ -250,19 +250,34 @@
   max-width: 720px;
   column-gap: 5px;
 }
+.lcars-usernav--header {
+  grid-template-areas:
+    "profile rules gm"
+    "admin help logout";
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.lcars-usernav--header .lcars-usernav-slot--profile {
+  grid-area: profile;
+}
+.lcars-usernav--header .lcars-usernav-slot--rules {
+  grid-area: rules;
+}
+.lcars-usernav--header .lcars-usernav-slot--gm {
+  grid-area: gm;
+}
+.lcars-usernav--header .lcars-usernav-slot--admin {
+  grid-area: admin;
+}
+.lcars-usernav--header .lcars-usernav-slot--help {
+  grid-area: help;
+}
+.lcars-usernav--header .lcars-usernav-slot--logout {
+  grid-area: logout;
+}
 .lcars-usernav-form {
   display: flex;
   min-height: 0;
   width: 200px;
-}
-/* Der Logout steht IMMER allein in der unteren Reihe, die übrigen Pills
-   (Profil, Leitung, Admin) in der oberen. grid-column: 1 erzwingt das ohne
-   Rechnerei: die erste Spalte der aktuellen Reihe ist schon belegt, also
-   rutscht das Element in die nächste — egal, ob eine, zwei oder drei Pills
-   davor stehen. In der Sidebar (minimalistisches UI) ist die Nav eine
-   flex-Spalte, dort greift die Regel nicht und muss es auch nicht. */
-.lcars-usernav--header .lcars-usernav-form {
-  grid-column: 1;
 }
 .lcars-usernav-form .lcars-usernav-pill {
   width: 100%;
@@ -288,19 +303,6 @@
   background-color: var(--lcars-tertiary);
 }
 
-/* ── „Hilfe" — der Fragezeichen-Menüpunkt ──────────────────────────── */
-/* Er sitzt im Header-Raster in der UNTEREN Reihe neben dem Logout: die obere
-   ist mit Profil/Leitung/Admin schon voll (drei Spalten), ein vierter Punkt
-   dort erzwänge eine dritte Reihe und ließe alle Pillen schrumpfen. order
-   statt einer anderen Markup-Reihenfolge, weil in der Sidebar
-   (minimalistisches UI) die Reihenfolge des Markups gilt — dort steht „Hilfe"
-   über dem Logout, wo man einen Menüpunkt erwartet. */
-.lcars-usernav--header .lcars-usernav-form {
-  order: 1;
-}
-.lcars-usernav--header .lcars-usernav-pill--help {
-  order: 2;
-}
 /* Dass „Hilfe" als einziger Menüpunkt sein Icon IMMER zeigt, steht in
    minimal-ui.css: Die Regel, die die Icons ausblendet, wohnt dort — und weil
    diese Datei unter layer(components) importiert wird, verlöre ein Override
