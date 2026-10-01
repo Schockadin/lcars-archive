@@ -9,6 +9,19 @@ import type { TimelineEvent } from "@/lib/timelineTypes";
 vi.mock("@/components/ContentImageGallery", () => ({
   default: () => <button type="button">Bilder</button>,
 }));
+// ManualEventForm nutzt MarkdownEditor, dessen Mount-Effekt eine Server-Action
+// mit cookies() aufruft. Die Timeline-Tests brauchen nur die Event-Auswahl.
+vi.mock("@/app/_shared/MarkdownEditor", () => ({
+  default: ({
+    id,
+    name,
+    rows,
+  }: {
+    id: string;
+    name?: string;
+    rows?: number;
+  }) => <textarea id={id} name={name} rows={rows} />,
+}));
 
 // Die vorgewählte Ereignisart kommt aus der Route (/chronologie/[kategorie]).
 // Sie kann eine Art benennen, zu der es (noch) kein Ereignis gibt — die
