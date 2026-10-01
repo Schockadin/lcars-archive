@@ -11,6 +11,11 @@ const realtimeState = vi.hoisted(() => ({
   connected: false,
   listener: null as null | (() => void),
 }));
+const routerState = vi.hoisted(() => ({ refresh: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: routerState.refresh }),
+}));
 
 // Alles, was an Server Actions hängt: gemockt. Geprüft wird die Komposition
 // aus Verlauf und klebendem Antwortfeld — und der Sprung ans Verlaufsende.
@@ -88,6 +93,7 @@ function resetLocalStorage() {
 
 beforeEach(() => {
   realtimeState.connected = false;
+  routerState.refresh.mockClear();
   realtimeState.listener = null;
   resetLocalStorage();
   scrollIntoView = vi.fn<Element["scrollIntoView"]>();
@@ -161,6 +167,7 @@ describe("DialogueLiveView", () => {
       );
     });
     expect(getDialogueSnapshotAction).toHaveBeenCalledWith("gespraech");
+    expect(routerState.refresh).toHaveBeenCalledTimes(1);
   });
 
   it("stellt Verlauf und Antwortfeld in denselben Block", () => {
