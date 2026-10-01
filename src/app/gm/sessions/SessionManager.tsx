@@ -124,6 +124,7 @@ export function SessionContextFields({
           <div
             key={block.key}
             id={`${idPrefix}-synopsis-block-${index}`}
+            data-no-draft
             className="scroll-mt-24 flex flex-col gap-[6px] rounded-lg border border-[var(--lcars-ink-dim)]/30 p-[8px]"
           >
             <input type="hidden" name="synopsisId" value={block.id ?? ""} />

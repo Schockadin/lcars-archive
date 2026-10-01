@@ -147,6 +147,15 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.62",
+    title: "Bedienkomfort",
+    // Bewusst ohne Stichpunkte: Dieser PR begrenzt lange Inhaltsverzeichnisse
+    // auf die Fensterhöhe und nimmt Synopsis-Texte aus der temporären
+    // Entwurfssicherung heraus. Beides ist eine Verhaltenskorrektur, keine
+    // neue Funktion für Spielende oder Spielleitung.
+    items: [],
+  },
+  {
     version: "1.61",
     title: "Missionschroniken",
     items: [

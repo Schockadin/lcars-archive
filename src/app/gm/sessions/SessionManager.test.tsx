@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { GameSession } from "@/lib/gameSessions";
+import { isDraftableField } from "@/lib/inputDraft";
 
 vi.mock("./actions", () => ({ createSessionAction: vi.fn(), updateSessionAction: vi.fn(), deleteSessionAction: vi.fn() }));
 vi.mock("@/app/_shared/FormPrimitives", () => ({ FormError: () => null, FormSuccess: () => null }));
@@ -35,7 +36,10 @@ describe("SessionManager", () => {
     const editLink = screen.getByRole("link", { name: "Log-Eintrag bearbeiten" });
     fireEvent.click(editLink);
     expect(editLink).toHaveAttribute("href", "#session-7-synopsis-block-0");
-    expect(container.querySelector("#session-7-synopsis-block-0")).toBeInTheDocument();
+    const synopsisBlock = container.querySelector("#session-7-synopsis-block-0");
+    expect(synopsisBlock).toHaveAttribute("data-no-draft");
+    expect(isDraftableField(synopsisBlock?.querySelector("input[name=\"synopsisDate\"]") ?? null)).toBe(false);
+    expect(isDraftableField(synopsisBlock?.querySelector("textarea[name=\"synopsisText\"]") ?? null)).toBe(false);
     expect(screen.getByLabelText("Ingame-Datum")).toHaveValue("2400-05-12");
     expect(container.querySelector('input[name="synopsisId"]')).toHaveValue("11");
     expect(screen.getByRole("checkbox", { name: /T'Lara/ })).toBeChecked();

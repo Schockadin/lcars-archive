@@ -65,3 +65,41 @@ test("fasst gleiche Synopsis-Daten zusammen, lässt die Karten aber separat", as
   await expect(synopsis).toContainText("Eintrag 1 vom selben Tag.");
   await expect(synopsis).toContainText("Eintrag 2 vom selben Tag.");
 });
+
+
+test("Missionschronik-ToC bleibt auf 85dvh begrenzt und ist vertikal scrollbar", async ({ page }) => {
+  await page.goto("/dev-gallery");
+  const panel = page.locator("#mission-synopsis-same-date .mission-chronicle-toc-column details").first();
+  if (!(await panel.evaluate((node) => (node as HTMLDetailsElement).open))) {
+    await panel.locator("summary").click();
+  }
+
+  const toc = page.locator("#mission-synopsis-same-date .mission-chronicle-toc-column .lcars-toc");
+  await expect(toc).toBeVisible();
+  const metrics = await toc.evaluate((node) => {
+    const list = node.querySelector("ul");
+    if (!list) throw new Error("ToC-Liste fehlt");
+    list.replaceChildren(...Array.from({ length: 50 }, (_, index) => {
+      const item = document.createElement("li");
+      const link = document.createElement("div");
+      link.className = "lcars-toc-link";
+      link.textContent = "Zusätzlicher Eintrag " + (index + 1);
+      item.appendChild(link);
+      return item;
+    }));
+    const style = getComputedStyle(node);
+    return {
+      maxHeight: parseFloat(style.maxHeight),
+      overflowY: style.overflowY,
+      clientHeight: node.clientHeight,
+      scrollHeight: node.scrollHeight,
+      viewportHeight: window.innerHeight,
+    };
+  });
+
+  expect(metrics.overflowY).toBe("auto");
+  expect(metrics.maxHeight).toBeCloseTo(metrics.viewportHeight * 0.85, 0);
+  expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
+  await toc.evaluate((node) => { node.scrollTop = node.scrollHeight; });
+  expect(await toc.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+});
