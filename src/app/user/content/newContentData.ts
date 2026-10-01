@@ -13,12 +13,20 @@ import {
 } from "@/lib/missions";
 import { listGmUsers } from "@/lib/users";
 import { listCharactersForEvents } from "@/lib/timelineManualEvents";
+import {
+  listActiveCharactersForAp,
+  listActiveSessionMissions,
+  type ActiveCharacter,
+  type SessionMissionOption,
+} from "@/lib/gameSessions";
 import type { CharacterWithOwner } from "@/lib/characters";
 import type { CharacterParticipantOption } from "@/lib/characters";
 import type { NpcOption } from "@/lib/archive";
 import type { GmContact } from "@/lib/users";
 import type { Character } from "@/types/character";
 import type { User } from "@/types/db";
+import { getSessionDefaults } from "@/lib/sessionDefaults";
+import type { SessionDefaults } from "@/lib/sessionDefaultsFormat";
 
 // Die Auswahllisten und Vorbelegungen der Anlege-Formulare (siehe
 // NewContentButtons.tsx). Sie öffnen sich in einem Fenster und können darin
@@ -49,13 +57,22 @@ export interface NewContentData {
     defaultDate: string | null;
     characters: { id: number; name: string }[];
   } | null;
+  // Direktaktion für die Spielleitung auf Dashboard und /user/content.
+  // Optional für bestehende Aufrufer, die diese Anlege-Leiste nicht zeigen.
+  sessionPlan?: {
+    characters: ActiveCharacter[];
+    missions: SessionMissionOption[];
+    missionCharacters: CharacterParticipantOption[];
+    defaultMissionStartedAt: string | null;
+    sessionDefaults: SessionDefaults;
+  } | null;
 }
 
-// Welche Formulare überhaupt gebraucht werden. „Meine Inhalte" zeigt alle
-// Knöpfe, das Dashboard nur die dort eingeschalteten — und was
-// niemand zeigt, wird auch nicht geladen. Die Abfragen darunter sind nicht
-// billig (alle Missionen, alle Datenbank-Einträge, alle Charaktere mit ihren
-// Spielern), und das Dashboard ist die meistbesuchte Seite der Anwendung.
+// Welche persönlichen Formulare gebraucht werden. „Meine Inhalte" zeigt alle
+// Knöpfe, das Dashboard nur die dort eingeschalteten. GM-Aktionen werden
+// unabhängig davon bei passender Berechtigung geladen. Was niemand braucht,
+// wird nicht abgefragt: Die Listen darunter sind nicht billig und das
+// Dashboard ist die meistbesuchte Seite der Anwendung.
 export interface NewContentWanted {
   missionLog?: boolean;
   dialogue?: boolean;
@@ -76,7 +93,8 @@ export async function loadNewContentData(
   roleMap: RoleMap,
   wanted: NewContentWanted,
 ): Promise<NewContentData> {
-  const isGM = userCan(user, "missions.manage", roleMap);
+  const canManageMissions = userCan(user, "missions.manage", roleMap);
+  const canPlanSessions = userCan(user, "gm.access", roleMap);
   // Die Spielleitung kann ein Gespräch auch ohne eigenen Charakter beginnen —
   // aus Sicht eines NPC (siehe /user/dialogues/new). Maßgeblich ist dieselbe
   // Regel wie dort (canPlayNpcs = gm.access ODER admin.access), sonst fehlte
@@ -95,7 +113,7 @@ export async function loadNewContentData(
 
   const wantMissionLog = wanted.missionLog === true;
   const wantDialogue = wanted.dialogue === true;
-  const wantMission = wanted.mission === true && isGM;
+  const wantMission = wanted.mission === true && canManageMissions;
   const wantEvent =
     wanted.event === true && userCan(user, "content.create", roleMap);
 
@@ -120,10 +138,13 @@ export async function loadNewContentData(
     gms,
     participantOptions,
     eventCharacters,
+    plannedCharacters,
+    plannedMissions,
+    sessionDefaults,
   ] = await Promise.all([
     canWriteLog ? getAllMissions() : Promise.resolve([]),
     // Auch das Missions-Formular belegt damit sein Startdatum vor.
-    canWriteLog || canStartDialogue || wantMission || wantEvent
+    canWriteLog || canStartDialogue || wantMission || wantEvent || canPlanSessions
       ? getMostRecentLogDate()
       : Promise.resolve(null),
     canStartDialogue ? getCharactersWithPlayers(user.id) : Promise.resolve([]),
@@ -133,8 +154,13 @@ export async function loadNewContentData(
     canStartDialogue && npcOptions.length > 0 && !playsNpcs
       ? listGmUsers()
       : Promise.resolve([]),
-    wantMission ? getCharactersForParticipantPicker() : Promise.resolve([]),
+    wantMission || canPlanSessions
+      ? getCharactersForParticipantPicker()
+      : Promise.resolve([]),
     wantEvent ? listCharactersForEvents() : Promise.resolve([]),
+    canPlanSessions ? listActiveCharactersForAp() : Promise.resolve([]),
+    canPlanSessions ? listActiveSessionMissions() : Promise.resolve([]),
+    canPlanSessions ? getSessionDefaults() : Promise.resolve(null),
   ]);
 
   // Grober Vorschlagswert für die Session-Nr (erster eigener Charakter, erste
@@ -179,5 +205,15 @@ export async function loadNewContentData(
     event: wantEvent
       ? { defaultDate: defaultLogDate, characters: eventCharacters }
       : null,
+    sessionPlan:
+      canPlanSessions && sessionDefaults
+        ? {
+            characters: plannedCharacters,
+            missions: plannedMissions,
+            missionCharacters: participantOptions,
+            defaultMissionStartedAt: defaultLogDate,
+            sessionDefaults,
+          }
+        : null,
   };
 }

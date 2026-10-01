@@ -68,12 +68,6 @@ export const DASHBOARD_SECTIONS = [
     default: true,
   },
   {
-    id: "import",
-    label: "Import",
-    hint: "Knopf zum Markdown-Import fertiger .md-Dateien.",
-    default: true,
-  },
-  {
     id: "entwuerfe",
     label: "Entwürfe",
     hint: "Deine unfertigen Inhalte mit dem Weg zurück in den Editor.",

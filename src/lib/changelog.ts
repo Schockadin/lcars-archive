@@ -160,6 +160,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },
+      {
+        text: "Die Spielleitung legt Missionen und geplante Termine jetzt direkt auf der Startseite oder unter „Meine Inhalte“ an. Beide Formulare öffnen sich dort in einem Fenster; ein neuer Termin übernimmt die gespeicherten Session-Vorgaben.",
+        category: "spielleitung",
+        tutorial: "mein-bereich",
+      },
     ],
   },
   {
@@ -2263,4 +2268,3 @@ export function featuredChangelogEntries(
     .filter((entry) => wanted.has(entry.version))
     .sort((a, b) => compareVersions(b.version, a.version));
 }
-

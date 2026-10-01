@@ -39,6 +39,8 @@ import type { Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
 import type { MissionSynopsisBlock } from "@/lib/gameSessions";
+import NewContentButtons from "@/app/user/content/NewContentButtons";
+import type { NewContentData } from "@/app/user/content/newContentData";
 
 const DEMO_SESSION_BLOCKS: MissionSynopsisBlock[] = [8, 7].map((day, index) => ({
   id: 7000 + day, sessionId: 42, missionSessionNumber: 1, missionBlockNumber: 2 - index,
@@ -99,6 +101,28 @@ const DEMO_ONBOARDING = buildOnboardingSteps({
   lockedCharacterCount: 0,
   logCount: 0,
 });
+
+// Die GM-Aktionen aus „Neue Inhalte“ — im E2E-Test ohne Login und Datenbank
+// prüfbar, weil nur die Interaktionen mit den Formularfenstern wichtig sind.
+const DEMO_GM_NEW_CONTENT: NewContentData = {
+  userId: 1,
+  missionLog: null,
+  dialogue: null,
+  mission: { defaultStartedAt: null, characters: [] },
+  event: null,
+  sessionPlan: {
+    characters: [],
+    missions: [],
+    missionCharacters: [],
+    defaultMissionStartedAt: null,
+    sessionDefaults: {
+      weekday: 0,
+      weekParity: "odd",
+      time: "16:00",
+      location: "David",
+    },
+  },
+};
 
 // Sechs Ereignisse der Chronologie über zwei Jahre: genug für die
 // Jahresleiste, die Monats-Trenner, je ein Beispiel der drei Herkünfte
@@ -418,6 +442,14 @@ export default function DevGalleryPage() {
   return (
     <article className="mb-[10px] lcars-wide-column">
       <h1>Dev Gallery</h1>
+
+      <section
+        id="new-content-gm-actions"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
+        <h2 className="lcars-text">Neue Inhalte: GM-Aktionen</h2>
+        <NewContentButtons data={DEMO_GM_NEW_CONTENT} show={[]} />
+      </section>
 
       <section id="switch-two" className="flex flex-col gap-[8px] mb-[24px]">
         <h2 className="lcars-text">Switch (2 Optionen)</h2>

@@ -93,15 +93,17 @@ export function MyContentGuide() {
           <strong>Einsatzbericht</strong> und <strong>Gespräch</strong> setzen
           einen eigenen Charakter voraus, <strong>Event</strong> setzt das
           allgemeine Recht zum Anlegen eigener Inhalte voraus und{" "}
-          <strong>Mission</strong> bleibt der Spielleitung vorbehalten. Daneben
-          steht <strong>„Import“</strong> — der einzige Knopf, der auf eine
-          eigene Seite führt statt in ein Fenster: Der Import blättert durch
-          mehrere Dateien und lässt jede einzeln bestätigen.
+          <strong>Mission</strong> bleibt der Spielleitung vorbehalten. Für
+          Spielleitungen kommen außerdem <strong>„Neue Mission“</strong> und{" "}
+          <strong>„Termin anlegen“</strong> dazu. Beide öffnen ein Fenster; beim
+          Termin sind die gespeicherten Session-Vorgaben bereits ausgewählt.
         </p>
         <p>
           Genau dieselbe Knopfleiste steht auf deiner{" "}
           <strong>Startseite</strong> — dort mit den Knöpfen, die du im Profil
-          eingeschaltet hast, einschließlich „Neues Event“.
+          eingeschaltet hast, einschließlich „Neues Event“. Die beiden
+          GM-Aktionen bleiben dort auch verfügbar, wenn du andere Anlege-Knöpfe
+          ausgeblendet hast.
         </p>
       </GuideSection>
 

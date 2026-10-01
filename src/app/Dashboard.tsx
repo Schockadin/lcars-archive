@@ -86,7 +86,6 @@ export default function Dashboard({ user }: { user: User }) {
   const zeigtNeuesEvent = zeigt("neues-event");
   const zeigtNeuenEintrag = zeigt("neuer-eintrag");
   const zeigtNeuenNpc = zeigt("neuer-npc");
-  const zeigtImport = zeigt("import");
   const anlegeKnoepfe = [
     ...(zeigtNeuesLog ? (["missionLog"] as const) : []),
     ...(zeigtNeuesGespraech ? (["dialogue"] as const) : []),
@@ -94,12 +93,6 @@ export default function Dashboard({ user }: { user: User }) {
     ...(zeigtNeuenEintrag ? (["archiveEntry"] as const) : []),
     ...(zeigtNeuenNpc ? (["npc"] as const) : []),
   ];
-  // Der Import-Knopf führt nach /user/import. Dort gilt je Inhaltsart
-  // dieselbe Schranke wie beim normalen Anlegen (src/lib/importAccess.ts) —
-  // eine davon (der Datenbank-Eintrag) trägt für jede eingeloggte Person,
-  // der Knopf führt also nie ins Leere. Ob er dasteht, entscheidet damit
-  // allein die Sektion im Profil.
-
   const firstVisit = user.previous_login_at === null;
 
   return (
@@ -199,7 +192,6 @@ export default function Dashboard({ user }: { user: User }) {
             <NewContentBlock
               user={user}
               show={anlegeKnoepfe}
-              canImport={zeigtImport}
               wanted={{
                 missionLog: zeigtNeuesLog,
                 dialogue: zeigtNeuesGespraech,
@@ -300,47 +292,38 @@ async function OpenDialoguesBlock({ userId }: { userId: number }) {
 }
 
 // Die Auswahllisten der Anlege-Formulare — nur für die Knöpfe, die sie
-// überhaupt benötigen (siehe loadNewContentData). Eintrag und NPC kommen mit
-// dem leeren Gerüst aus: Sie brauchen nur die eigene User-id. Wer nur diese
-// beiden Knöpfe zeigt, löst damit keine einzige Abfrage aus.
+// überhaupt benötigen (siehe loadNewContentData). Die Rechte-Map wird auch
+// geladen, wenn alle persönlichen Knöpfe aus sind: Sie entscheidet, ob die
+// GM-Aktionen "Neue Mission" und "Termin anlegen" erscheinen.
 async function NewContentBlock({
   user,
   show,
-  canImport,
   wanted,
 }: {
   user: User;
   show: ComponentProps<typeof NewContentPanel>["show"];
-  canImport: boolean;
   wanted: { missionLog: boolean; dialogue: boolean; event: boolean };
 }) {
   // Logbuch und Gespräch fragen, mit welcher eigenen Figur geschrieben wird;
   // das Event-Formular kommt ohne die eigene Charakterliste aus.
   const brauchtEigeneCharaktere = wanted.missionLog || wanted.dialogue;
-  const brauchtFormularDaten = brauchtEigeneCharaktere || wanted.event;
-  const data = brauchtFormularDaten
-    ? await loadNewContentData(
-        user,
-        ...(await Promise.all([
-          brauchtEigeneCharaktere
-            ? loadOwnCharacters(user.id)
-            : Promise.resolve([]),
-          getRoleMap(),
-        ])),
-        wanted,
-      )
-    : {
-        userId: user.id,
-        missionLog: null,
-        dialogue: null,
-        mission: null,
-        event: null,
-      };
+  const [characters, roleMap] = await Promise.all([
+    brauchtEigeneCharaktere
+      ? loadOwnCharacters(user.id)
+      : Promise.resolve([]),
+    getRoleMap(),
+  ]);
+  const data = await loadNewContentData(user, characters, roleMap, {
+    ...wanted,
+    // Immer erfragen: Der Loader blendet die Mission nur für Berechtigte ein.
+    // So steht sie GMs auch dann bereit, wenn sie die übrigen Knöpfe im
+    // Dashboard ausgeblendet haben.
+    mission: true,
+  });
   return (
     <NewContentPanel
       data={data}
       show={show}
-      canImport={canImport}
       title="Neues anlegen"
       storageId="dashboard:anlegen"
     />

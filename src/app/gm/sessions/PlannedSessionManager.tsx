@@ -521,7 +521,7 @@ export default function PlannedSessionManager({
   );
 }
 
-function CreatePlannedSessionModal({
+export function CreatePlannedSessionModal({
   characters,
   missions,
   missionCharacters,
@@ -557,4 +557,3 @@ function CreatePlannedSessionModal({
     </ModalOverlay>
   );
 }
-

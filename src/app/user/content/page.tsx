@@ -90,7 +90,6 @@ export default async function UserContentPage() {
               Zweck dieser Seite, nicht eine Möglichkeit am Rande. */}
           <NewContentPanel
             data={newContent}
-            canImport
             storageId="content:anlegen"
           />
 
