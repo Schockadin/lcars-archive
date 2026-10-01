@@ -273,6 +273,8 @@
 .lcars-toc {
   width: 100%;
   max-width: 500px;
+  max-height: 600px;
+  overflow-y: auto;
 }
 .lcars-toc-title {
   margin-bottom: 6px;
