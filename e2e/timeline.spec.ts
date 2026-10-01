@@ -73,6 +73,41 @@ test.describe("Chronologie", () => {
     await expect(timeline).toContainText("7 Ereignisse");
   });
 
+  test("beschriftet Session-Karten als Log-Eintrag", async ({ page }) => {
+    const sessions = page.locator("#timeline-sessions");
+    await expect(
+      sessions
+        .getByLabel("Umfang der Chronologie")
+        .locator('option[value="sessions"]'),
+    ).toHaveText("Log-Einträge");
+    await expect(sessions.locator(".timeline-tag")).toHaveText([
+      "Log-Eintrag",
+      "Log-Eintrag",
+    ]);
+    await expect(
+      sessions.getByText("2 Log-Einträge", { exact: true }),
+    ).toBeVisible();
+  });
+
+  test(
+    "bietet beim manuellen Hinzufügen keine quellgebundenen Event-Typen an",
+    async ({ page }) => {
+      const timeline = page.locator("#timeline");
+      await timeline.getByRole("button", { name: "Event hinzufügen" }).click();
+      const dialog = page.getByRole("dialog", { name: "Ereignis eintragen" });
+      await expect(
+        dialog.getByLabel("Ereignisart").locator("option"),
+      ).toHaveText([
+        "Entdeckung",
+        "Konflikt",
+        "Politik",
+        "Person",
+        "Gespräch",
+        "Sonstiges",
+      ]);
+    },
+  );
+
   test("sortiert absteigend und dreht auf Klick um", async ({ page }) => {
     await alleEreignisse(page);
     const titles = () =>

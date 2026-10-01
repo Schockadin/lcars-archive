@@ -173,8 +173,9 @@ export default function TutorialPage() {
                 ganzen <strong>Zeitraum</strong> (Beginn bis Abschluss), und ein
                 Klick führt auf die Missionsseite mit ihren Einsatzberichten.
                 Daneben stehen <strong>„Events“</strong>,{" "}
-                <strong>„Gespräche“</strong>, <strong>„Logbücher“</strong> und{" "}
-                <strong>„Alles“</strong>. Geordnet wird immer nach{" "}
+                <strong>„Gespräche“</strong>, <strong>„Logbücher“</strong>,{" "}
+                <strong>„Log-Einträge“</strong> und <strong>„Alles“</strong>.
+                Geordnet wird immer nach{" "}
                 <strong>Datum</strong> — der Knopf dreht die Richtung um —,
                 jeder Bereich lässt sich nach Suchbegriff,{" "}
                 <strong>beteiligter Person</strong> und Jahr filtern. Nur bei{" "}
@@ -184,7 +185,7 @@ export default function TutorialPage() {
                 deshalb nicht mehr — die alte Adresse führt hierher.
               </p>
               <p>
-                Die fünf Bereiche richten sich nach der <strong>Quelle</strong>,
+                Die Bereiche richten sich nach der <strong>Quelle</strong>,
                 nicht nach dem Namen der Ereignisart: Die automatisch erzeugte
                 Karte eines Logbuchs steht unter „Logbücher“, eine im Text
                 gesetzte Marke dagegen unter „Events“ — auch dann, wenn sie in
@@ -196,8 +197,11 @@ export default function TutorialPage() {
                 Die <strong>Missionsseite</strong> selbst zeigt oben Status,
                 Zeitraum und die beteiligten Figuren. In der{" "}
                 <strong>Missionschronik</strong> stehen Spieler-Logbücher und
-                Log-Einträge der Spielleitung gemeinsam, neueste
-                zuerst. Das einklappbare Inhaltsverzeichnis springt zu beiden
+                Log-Einträge der Spielleitung gemeinsam, standardmäßig neueste
+                zuerst. Über den Datumsknopf wechselst du zwischen auf- und
+                absteigender Sortierung; das Auswahlfeld zeigt alles, nur
+                Logbücher oder nur Log-Einträge. Das einklappbare
+                Inhaltsverzeichnis springt zu beiden
                 Eintragsarten und zur Synopsis. Die Log-Einträge der
                 Spielleitung sind zunächst aufgeklappt; der +/−-Knopf neben
                 dem Inhaltsverzeichnis öffnet oder schließt alle gemeinsam.
@@ -757,7 +761,8 @@ export default function TutorialPage() {
                 einzelnen Einträgen. Unter „Synopsis“ am Ende steht die gesamte
                 Zusammenfassung. Mit + beziehungsweise − neben dem Inhaltsverzeichnis
                 öffnest oder schließt du alle Session-Blöcke. Die allgemeine
-                Chronologie führt sie zusätzlich in der Kategorie „Sessions“.
+                Chronologie führt sie zusätzlich in der Kategorie
+                „Log-Einträge“.
                 In der vollständigen Synopsis stehen mehrere Einträge desselben
                 Ingame-Datums unter einer gemeinsamen Datumsüberschrift; ihre
                 Karten in der Chronik bleiben einzelne Einträge.

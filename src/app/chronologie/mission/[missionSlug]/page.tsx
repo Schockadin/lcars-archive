@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import {
   getLogsByMissionId,
   getMissionBySlug,
-  getMissionParticipantIds,
 } from "@/lib/missions";
 import { getCharactersForUser } from "@/lib/characters";
 import { stripHtml } from "@/lib/missionFormat";
@@ -83,11 +82,9 @@ export default async function MissionPage({ params, searchParams }: Props) {
   // an FollowButtons durchgereicht, damit Bookmark/Abo sofort mitgerendert
   // werden statt sie nach der Hydration per Client-Fetch nachzuladen.
   //
-  // „Neues Log" zeigt die Übersicht nur Betrachtern, die mit einem eigenen
-  // Charakter an DIESER Mission teilnehmen (mission_participants) — nicht
-  // schon bei irgendeinem eigenen Charakter, da der Knopf auf genau diese
-  // Mission verlinkt. Beide Abfragen hängen nur an viewer und mission.id und
-  // laufen deshalb in derselben Runde mit, statt eine zweite anzuhängen.
+  // „Neues Log" steht allen angemeldeten Betrachtern mit mindestens einem
+  // veröffentlichten eigenen Charakter zur Verfügung. Das entspricht den
+  // Voraussetzungen der Zielseite /user/mission-logs/new.
   const [
     allUsers,
     followInitialState,
@@ -96,7 +93,6 @@ export default async function MissionPage({ params, searchParams }: Props) {
     logs,
     synopsisBlocks,
     characters,
-    participantIds,
   ] = await Promise.all([
     canReassignOwner ? listAllUsers() : Promise.resolve([]),
     resolveFollowState(viewer?.userId ?? null, "mission", missionSlug),
@@ -108,10 +104,9 @@ export default async function MissionPage({ params, searchParams }: Props) {
     getLogsByMissionId(mission.id),
     listMissionSynopsisBlocks(mission.id),
     viewer ? getCharactersForUser(viewer.userId) : Promise.resolve([]),
-    viewer ? getMissionParticipantIds(mission.id) : Promise.resolve([]),
   ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
-  const canCreateLog = characters.some((c) => participantIds.includes(c.id));
+  const canCreateLog = characters.some((character) => !character.is_draft);
 
   return (
     <>

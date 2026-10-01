@@ -50,7 +50,7 @@ export const SOURCE_TYPE_LABELS: Record<TimelineSourceType, string> = {
 export const EVENT_CATEGORIES = [
   { key: "mission", label: "Mission", color: "var(--lcars-primary)" },
   { key: "log", label: "Logbuch", color: "var(--lcars-primary-light)" },
-  { key: "session", label: "Session", color: "var(--lcars-senary)" },
+  { key: "session", label: "Log-Eintrag", color: "var(--lcars-senary)" },
   { key: "discovery", label: "Entdeckung", color: "var(--lcars-tertiary)" },
   { key: "conflict", label: "Konflikt", color: "var(--lcars-quinary)" },
   { key: "political", label: "Politik", color: "var(--lcars-quaternary)" },
@@ -130,7 +130,12 @@ export interface TimelineEvent {
   contentId?: number;
   ownerUserId?: number | null;
   isDraft?: boolean;
-  contentType?: "character" | "mission" | "mission_log" | "archive_entry" | "dialogue";
+  contentType?:
+    | "character"
+    | "mission"
+    | "mission_log"
+    | "archive_entry"
+    | "dialogue";
   // Wohin die Karte führt — null bei einem von Hand eingetragenen Ereignis:
   // es hat keinen Inhalt, auf den zu zeigen wäre (origin "manual").
   href: string | null;
@@ -309,7 +314,7 @@ export const TIMELINE_SCOPES = [
   { key: "events", label: "Events" },
   { key: "dialogues", label: "Gespräche" },
   { key: "logs", label: "Logbücher" },
-  { key: "sessions", label: "Sessions" },
+  { key: "sessions", label: "Log-Einträge" },
   { key: "all", label: "Alles" },
 ] as const;
 
@@ -373,7 +378,9 @@ function eventMatchesScope(
     case "sessions":
       return isSessionEntry;
     case "events":
-      return !isMissionEntry && !isLogEntry && !isDialogueEntry && !isSessionEntry;
+      return (
+        !isMissionEntry && !isLogEntry && !isDialogueEntry && !isSessionEntry
+      );
     case "all":
       return true;
   }
