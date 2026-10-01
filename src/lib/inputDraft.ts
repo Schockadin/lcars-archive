@@ -70,8 +70,8 @@ export function isDraftField(el: Element | null): el is DraftField {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
-// Darf dieses Feld gesichert werden? Prüft Typ, autocomplete und die
-// Abwahl per data-no-draft (am Feld oder an einem Vorfahren).
+// Prüft, ob Feldtyp und autocomplete grundsätzlich sicherbar sind; die
+// Abwahl per data-no-draft wird danach separat berücksichtigt.
 function isOtherwiseDraftableField(el: Element | null): el is DraftField {
   if (!isDraftField(el)) return false;
   if (el.tagName === "INPUT") {

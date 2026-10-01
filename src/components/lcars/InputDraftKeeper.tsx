@@ -113,6 +113,7 @@ export default function InputDraftKeeper() {
     // noch ältere Werte in der Sitzung haben. Entferne sie auch aus dem
     // Arbeitsspeicher, damit pagehide sie nicht erneut zurückschreibt.
     const removeOptedOutDrafts = () => {
+      if (Object.keys(recordRef.current).length === 0) return;
       const excludedKeys = optedOutDraftFieldKeys(document);
       if (excludedKeys.size === 0) return;
       const next = { ...recordRef.current };
