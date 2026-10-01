@@ -572,8 +572,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   stehen dort unter einer Datumsüberschrift; die einzelnen Karten in der
   Chronik bleiben getrennt. Die Missionschronik bietet einen
   wechselnden +/−-Schalter für alle standardmäßig offenen Session-Panels;
-  die allgemeine Chronologie zeigt die Kategorie „Sessions“ ohne ToC oder
-  gemeinsamen Schalter. Das Eintragen eines geplanten Termins verbindet
+  Einträge lassen sich auf- oder absteigend nach Datum sortieren und nach
+  Logbüchern oder Log-Einträgen filtern. Die allgemeine Chronologie zeigt
+  Session-Blöcke unter der Kategorie „Log-Einträge“ ohne ToC oder gemeinsamen
+  Schalter. Das Eintragen eines geplanten Termins verbindet
   Termin, Session, AP-Buchungen und Log-Einträge in einer Transaktion und verhindert
   eine doppelte Buchung desselben Termins.
 
@@ -960,7 +962,8 @@ LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
   zugleich die **Missions-Übersicht**: in der Vorgabe (`TIMELINE_SCOPES`,
   Umfang `missions`) zeigt sie genau die **Missionsstarts**, je einer führt auf
   seine Missionsseite. Die Oberauswahl trennt außerdem **Events**,
-  **Gespräche**, **Logbücher** und **Alles** als eigene Grundmengen. Die frühere
+  **Gespräche**, **Logbücher**, **Log-Einträge** und **Alles** als eigene
+  Grundmengen. Die frühere
   eigene Route `/missions` war dieselbe Liste
   derselben Missionen nach demselben Datum; sie ist entfallen. Auch die
   Missionsseiten liegen jetzt unter der Chronologie
@@ -991,7 +994,7 @@ LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
   Segment ist eine 404 (`isTimelineCategory`), keine leere Liste.
   Der Umfang **„Missionen"** zeigt je Einsatz EINE Karte mit dem ganzen
   **Zeitraum** (Beginn–Abschluss, `missionEndDates`). Der Kategorienfilter
-  steht nur unter **„Events"**; alle fünf Bereiche bieten den Filter nach
+  steht nur unter **„Events"**; alle sechs Bereiche bieten den Filter nach
   Beteiligten, sofern dort Figuren vorkommen. Die Umfänge werden nach der
   tatsächlichen Quelle getrennt, nicht nach dem frei wählbaren Kategorie-Text:
   automatisch erzeugte Missions-, Logbuch- und Gesprächskarten stehen in
