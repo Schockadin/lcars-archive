@@ -68,7 +68,7 @@ test("fasst gleiche Synopsis-Daten zusammen, lässt die Karten aber separat", as
 
 
 test(
-  "Missionschronik-ToC bleibt auf 85dvh begrenzt und ist vertikal scrollbar",
+  "Missionschronik-ToC bleibt auf 70dvh begrenzt und ist vertikal scrollbar",
   async ({ page }) => {
     await page.goto("/dev-gallery");
     const panel = page
@@ -107,7 +107,7 @@ test(
 
     expect(metrics.overflowY).toBe("auto");
     expect(metrics.height).toBeLessThanOrEqual(
-      metrics.viewportHeight * 0.85 + 1,
+      metrics.viewportHeight * 0.7 + 1,
     );
     expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
     await toc.evaluate((node) => {

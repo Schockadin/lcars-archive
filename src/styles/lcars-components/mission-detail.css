@@ -57,7 +57,7 @@
     position: sticky;
     top: 12px;
     align-self: start;
-    max-height: 85dvh;
+    max-height: 70dvh;
     overflow-y: auto;
   }
 }

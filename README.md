@@ -574,7 +574,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   wechselnden +/−-Schalter für alle standardmäßig offenen Session-Panels;
   Einträge lassen sich auf- oder absteigend nach Datum sortieren und nach
   Logbüchern oder Log-Einträgen filtern. Lange Inhaltsverzeichnisse sind auf
-  85 % der dynamischen Fensterhöhe begrenzt und im Verzeichnis selbst vertikal
+  70 % der dynamischen Fensterhöhe begrenzt und im Verzeichnis selbst vertikal
   scrollbar. Die allgemeine Chronologie zeigt
   Session-Blöcke unter der Kategorie „Log-Einträge“ ohne ToC oder gemeinsamen
   Schalter. Das Eintragen eines geplanten Termins verbindet
