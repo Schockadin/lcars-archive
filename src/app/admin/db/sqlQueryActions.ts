@@ -7,6 +7,7 @@ import {
   isSelectStarQuery,
   getTableColumns,
 } from "@/lib/dbInspect";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 // Kontext, mit dem eine Ergebniszeile eindeutig einer Tabelle+Zeile zugeordnet
 // werden kann — Voraussetzung für Edit/Delete im Zeilen-Overlay. Nur gesetzt
@@ -50,6 +51,9 @@ export async function runAdminSqlQueryAction(
       canWrite: perms.has("sql_write"),
       canDelete: perms.has("sql_delete"),
     });
+    if (classifySqlStatement(query) !== "read") {
+      await publishContentChanged();
+    }
 
     // Edit/Delete-Kontext nur für eine Einzel-Tabellen-„SELECT *"-Query mit
     // id-Spalte anbieten. Das SELECT-*-Erfordernis ist entscheidend: nur dann
@@ -84,3 +88,4 @@ export async function runAdminSqlQueryAction(
     };
   }
 }
+

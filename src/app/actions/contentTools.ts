@@ -26,6 +26,7 @@ import {
   revalidateArchiveEntry,
   revalidateCharacter,
 } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 export type ContentToolType =
   | "mission"
@@ -105,6 +106,7 @@ async function getContentAccessor(
         save: async (nextMd, nextHtml) => {
           await updateMissionSynopsisWithHtml(mission.id, nextMd, nextHtml);
           revalidateMission(slug);
+          await publishContentChanged();
         },
       };
     }
@@ -120,6 +122,7 @@ async function getContentAccessor(
         save: async (nextMd, nextHtml) => {
           await updateMissionLogSourceMd(log.id, nextMd, nextHtml);
           revalidateLog(log.missionId, slug);
+          await publishContentChanged();
         },
       };
     }
@@ -135,6 +138,7 @@ async function getContentAccessor(
         save: async (nextMd, nextHtml) => {
           await updateArchiveEntryContent(entry.id, nextMd, nextHtml);
           revalidateArchiveEntry(slug);
+          await publishContentChanged();
         },
       };
     }
@@ -150,6 +154,7 @@ async function getContentAccessor(
         save: async (nextMd, nextHtml) => {
           await updateCharacterBio(character.id, nextMd, nextHtml);
           revalidateCharacter(slug);
+          await publishContentChanged();
         },
       };
     }

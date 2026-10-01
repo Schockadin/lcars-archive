@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requirePermission } from "@/lib/dal";
 import { getClientIp } from "@/lib/http";
 import { logAdminAction } from "@/lib/auditLog";
@@ -75,7 +75,7 @@ export async function createRoleAction(
     `${label} (${key}): [${permissions.join(", ")}]`,
     await getClientIp(),
   );
-  revalidatePath("/admin/permissions");
+  await revalidatePathAndNotify("/admin/permissions");
   return { success: true };
 }
 
@@ -108,7 +108,7 @@ export async function updateRoleMetaAction(
     `${label} (${key}): Name/Beschreibung`,
     await getClientIp(),
   );
-  revalidatePath("/admin/permissions");
+  await revalidatePathAndNotify("/admin/permissions");
   return { success: true };
 }
 
@@ -158,7 +158,7 @@ export async function updateRolePermissionsAction(
     `${existing.label} (${key}): [${permissions.join(", ")}]`,
     await getClientIp(),
   );
-  revalidatePath("/admin/permissions");
+  await revalidatePathAndNotify("/admin/permissions");
   return { success: true };
 }
 
@@ -196,7 +196,7 @@ export async function deleteRoleAction(
     `${existing.label} (${key})`,
     await getClientIp(),
   );
-  revalidatePath("/admin/permissions");
+  await revalidatePathAndNotify("/admin/permissions");
   return { success: true };
 }
 
@@ -255,7 +255,7 @@ export async function updateRoleMembersAction(
     (want ? added : removed).push(user.name);
   }
 
-  revalidatePath("/admin/permissions");
+  await revalidatePathAndNotify("/admin/permissions");
   if (added.length === 0 && removed.length === 0) {
     return { success: true };
   }

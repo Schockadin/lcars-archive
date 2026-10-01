@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requirePermission } from "@/lib/dal";
 import { deleteCharacter, restoreCharacter } from "@/lib/characters";
 import {
@@ -56,8 +56,8 @@ export async function deleteContentAction(
   }
 
   revalidateTimeline();
-  revalidatePath("/admin/content");
-  revalidatePath("/admin/content/trash");
+  await revalidatePathAndNotify("/admin/content");
+  await revalidatePathAndNotify("/admin/content/trash");
   return {};
 }
 
@@ -75,7 +75,7 @@ export async function purgeContentAction(
   const purged = await purgeContentById(contentType, id);
   if (!purged) return { error: "Eintrag nicht gefunden oder nicht gelöscht." };
 
-  revalidatePath("/admin/content/trash");
+  await revalidatePathAndNotify("/admin/content/trash");
   return {};
 }
 
@@ -108,7 +108,7 @@ export async function restoreContentAction(
   }
 
   revalidateTimeline();
-  revalidatePath("/admin/content");
-  revalidatePath("/admin/content/trash");
+  await revalidatePathAndNotify("/admin/content");
+  await revalidatePathAndNotify("/admin/content/trash");
   return {};
 }

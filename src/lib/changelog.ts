@@ -147,6 +147,32 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.60",
+    title: "Live-Aktualisierungen und Sessionplanung",
+    items: [
+      {
+        text: "Neue Nachrichten und geänderte Inhalte erscheinen direkt, ohne Neuladen — auch auf der Startseite und in offenen Gesprächen.",
+        category: "darstellung",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Für neue Sessions lassen sich Wochentag, Kalenderwochen-Rhythmus, Uhrzeit und Ort voreinstellen; der nächste passende Termin wird automatisch ausgewählt.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Die Spielleitung legt Missionen und geplante Termine jetzt direkt auf der Startseite oder unter „Meine Inhalte“ an. Beide Formulare öffnen sich dort in einem Fenster; ein neuer Termin übernimmt die gespeicherten Session-Vorgaben.",
+        category: "spielleitung",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Der Typografie-Check vereinheitlicht typografische Hochkommata und apostrophähnliche Akzentzeichen zu geraden Apostrophen.",
+        category: "darstellung",
+        tutorial: "spielleitung-admins",
+      },
+    ],
+  },
+  {
     version: "1.59",
     title: "Kartenaktionen und Session-Verwaltung",
     items: [

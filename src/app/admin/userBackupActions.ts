@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requirePermission } from "@/lib/dal";
 import {
   getAllUsersBackup,
@@ -61,7 +61,7 @@ async function parseAndImportUsersBackup(json: string): Promise<ImportUsersBacku
   }
 
   const summary = await restoreUsersBackup(records);
-  revalidatePath("/admin");
+  await revalidatePathAndNotify("/admin");
   return { summary };
 }
 

@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { getActiveSession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
@@ -55,8 +55,8 @@ export async function createManualEventAction(
     }
 
     await createManualEvent(input, user.id);
-    revalidatePath("/chronologie");
-    revalidatePath("/user/content");
+    await revalidatePathAndNotify("/chronologie");
+    await revalidatePathAndNotify("/user/content");
     return { success: true };
   } catch (err) {
     // Eingabefehler gehören zurück an die Person; alles andere ist ein
@@ -112,8 +112,8 @@ export async function updateManualEventAction(
           "Das Ereignis gibt es nicht mehr — oder es gehört jemand anderem.",
       };
     }
-    revalidatePath("/chronologie");
-    revalidatePath("/user/content");
+    await revalidatePathAndNotify("/chronologie");
+    await revalidatePathAndNotify("/user/content");
     return { success: true };
   } catch (err) {
     if (err instanceof ManualEventError) return { error: err.message };
@@ -140,8 +140,8 @@ export async function deleteManualEventAction(
     canModerate: userCan(user, "content.moderate", roleMap),
   });
   if (removed) {
-    revalidatePath("/chronologie");
-    revalidatePath("/user/content");
+    await revalidatePathAndNotify("/chronologie");
+    await revalidatePathAndNotify("/user/content");
   }
   return removed
     ? { success: true }

@@ -154,6 +154,46 @@ describe("MissionLogOverview", () => {
     expect([...container.querySelectorAll(".lcars-toc-link")].map((item) => item.textContent)).toContain("Synopsis");
   });
 
+  it("führt gleiche Synopsis-Daten in Missionsreihenfolge zusammen", () => {
+    const { container } = renderOverview({
+      logs: [],
+      synopsisBlocks: [
+        {
+          id: 7,
+          sessionId: 8,
+          missionSessionNumber: 8,
+          missionBlockNumber: 2,
+          ingameDate: "2234-12-20",
+          body: "Zweiter Eintrag",
+          bodyHtml: "<p>Zweiter Eintrag</p>",
+        },
+        {
+          id: 8,
+          sessionId: 8,
+          missionSessionNumber: 8,
+          missionBlockNumber: 1,
+          ingameDate: "2234-12-20",
+          body: "Erster Eintrag",
+          bodyHtml: "<p>Erster Eintrag</p>",
+        },
+      ],
+    });
+
+    expect(container.querySelectorAll(".timeline-card")).toHaveLength(2);
+    const fullSynopsis = container.querySelector<HTMLElement>(
+      "#mission-full-synopsis",
+    )!;
+    expect(fullSynopsis.querySelectorAll("h4")).toHaveLength(1);
+    expect(fullSynopsis.querySelector("h4")).toHaveTextContent("20.12.2234");
+    const groupedEntries = [
+      ...fullSynopsis.querySelectorAll(".mission-body > section > div"),
+    ];
+    expect(groupedEntries.map((entry) => entry.textContent)).toEqual([
+      "Erster Eintrag",
+      "Zweiter Eintrag",
+    ]);
+  });
+
   it("steuert Session-Inhalte mit einem wechselnden Textbutton neben dem ToC", () => {
     const { container } = renderOverview({ synopsisBlocks: [7, 8].map((id) => ({
       id, sessionId: 1, missionSessionNumber: 1, missionBlockNumber: id,

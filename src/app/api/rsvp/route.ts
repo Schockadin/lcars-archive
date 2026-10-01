@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { checkPermission } from "@/lib/dal";
 import { setRsvp } from "@/lib/plannedSessions";
 import type { RsvpResponse } from "@/lib/plannedSessionTypes";
@@ -64,7 +64,7 @@ export async function POST(request: Request): Promise<Response> {
 
   // Beide Seiten neu bauen: die Startseite zeigt den Termin, die Verwaltung
   // unter /gm/sessions die Zu- und Absagen.
-  revalidatePath("/");
-  revalidatePath("/gm/sessions");
+  await revalidatePathAndNotify("/");
+  await revalidatePathAndNotify("/gm/sessions");
   return NextResponse.json({ ok: true, response });
 }

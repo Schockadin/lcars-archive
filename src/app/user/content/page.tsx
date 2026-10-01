@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { userCan } from "@/lib/permissions";
 import { getRoleMap } from "@/lib/roles";
 import PageMeta from "@/components/PageMeta";
@@ -90,9 +91,13 @@ export default async function UserContentPage() {
               Zweck dieser Seite, nicht eine Möglichkeit am Rande. */}
           <NewContentPanel
             data={newContent}
-            canImport
             storageId="content:anlegen"
           />
+          <div className="lcars-toolbar">
+            <Link href="/user/import" className="lcars-pill-btn">
+              Import
+            </Link>
+          </div>
 
           {/* Über der Liste: was noch unfertig ist. Dieselbe Komponente wie
               auf der Startseite. */}

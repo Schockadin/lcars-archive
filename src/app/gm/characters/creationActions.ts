@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requirePermission } from "@/lib/dal";
 import { reopenCharacterCreation } from "@/lib/characterAp";
 import { revalidateCharacter } from "@/lib/revalidate";
@@ -33,8 +33,8 @@ export async function reopenCreationAction(
   if (!result.ok) return { error: result.error };
 
   revalidateCharacter(result.slug);
-  revalidatePath(characterEditHref(characterId));
-  revalidatePath("/gm/characters");
+  await revalidatePathAndNotify(characterEditHref(characterId));
+  await revalidatePathAndNotify("/gm/characters");
 
   const parts = [`„${result.name}" ist wieder in der Erschaffung.`];
   if (result.reverted.length > 0) {

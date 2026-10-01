@@ -13,6 +13,7 @@ import {
   revalidateArchiveEntry,
 } from "@/lib/revalidate";
 import type { OwnerContentTypeKey } from "@/lib/contentTypeFormat";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 // Alias auf die kanonische Aufzählung (src/lib/contentTypeFormat.ts) — dort
 // liegen auch Farben und Beschriftungen dieser Typen.
@@ -67,5 +68,6 @@ export async function setOwnerAction(
     revalidateArchiveEntry(entry.slug);
   }
 
+  await publishContentChanged();
   return {};
 }

@@ -783,12 +783,15 @@ CREATE INDEX IF NOT EXISTS idx_character_ap_entries_character
 -- campaign_settings
 -- ---------------------------------------------------------------------------
 -- Kampagnen-weite Einstellungen der Spielleitung (Einzeilen-Tabelle) — hält
--- das aktuelle Ingame-Jahr, aus dem zusammen mit characters.metadata.dateOfBirth das
--- angezeigte Charakter-Alter abgeleitet wird (src/lib/campaign.ts). Der
--- BOOLEAN-Primärschlüssel mit CHECK (id) erzwingt höchstens eine Zeile.
+-- das Ingame-Jahr und die Vorbelegung neuer Sessions. Der BOOLEAN-Primärschlüssel
+-- mit CHECK (id) erzwingt höchstens eine Zeile.
 CREATE TABLE IF NOT EXISTS campaign_settings (
   id          BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (id),
   ingame_year INT,
+  session_default_weekday SMALLINT NOT NULL DEFAULT 0,
+  session_default_week_parity TEXT NOT NULL DEFAULT 'odd',
+  session_default_time TEXT NOT NULL DEFAULT '16:00',
+  session_default_location TEXT NOT NULL DEFAULT 'David',
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -929,6 +932,14 @@ ALTER TABLE campaign_settings ADD COLUMN IF NOT EXISTS advancement_rules JSONB;
 ALTER TABLE campaign_settings
   ADD COLUMN IF NOT EXISTS changelog_featured_versions JSONB,
   ADD COLUMN IF NOT EXISTS changelog_hidden_categories JSONB;
+
+-- Voreinstellungen für neue Termine (src/lib/sessionDefaults.ts). Die Defaults
+-- bewahren bestehende Datenbanken beim Nachziehen der Spalten beim Standard.
+ALTER TABLE campaign_settings
+  ADD COLUMN IF NOT EXISTS session_default_weekday SMALLINT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS session_default_week_parity TEXT NOT NULL DEFAULT 'odd',
+  ADD COLUMN IF NOT EXISTS session_default_time TEXT NOT NULL DEFAULT '16:00',
+  ADD COLUMN IF NOT EXISTS session_default_location TEXT NOT NULL DEFAULT 'David';
 
 -- ---------------------------------------------------------------------------
 -- Volltextsuche (FTS): tsvector-Spalten + GIN-Indizes
@@ -1450,3 +1461,4 @@ CREATE INDEX IF NOT EXISTS idx_content_embeddings_rbac
 -- Das Recht „GM-Inhalte sehen" ist mit visibility entfallen (siehe oben).
 UPDATE roles SET permissions = array_remove(permissions, 'content.view_gm')
 WHERE 'content.view_gm' = ANY(permissions);
+

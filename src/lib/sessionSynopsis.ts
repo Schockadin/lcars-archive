@@ -70,14 +70,35 @@ export function sessionSynopsisHeading(ingameDate: string): string {
   return `## ${ingameDate}`;
 }
 
+export function groupSynopsisBlocksByDate<
+  T extends Pick<SessionSynopsisBlockInput, "ingameDate">,
+>(blocks: readonly T[]): { ingameDate: string; blocks: T[] }[] {
+  const grouped = new Map<string, T[]>();
+  for (const block of blocks) {
+    const sameDate = grouped.get(block.ingameDate);
+    if (sameDate) {
+      sameDate.push(block);
+    } else {
+      grouped.set(block.ingameDate, [block]);
+    }
+  }
+  return [...grouped].map(([ingameDate, dateBlocks]) => ({
+    ingameDate,
+    blocks: dateBlocks,
+  }));
+}
+
 export function buildMissionSynopsisMarkdown(
   blocks: SessionSynopsisBlockInput[],
 ): string {
-  return blocks
-    .filter((block) => block.body.trim())
+  return groupSynopsisBlocksByDate(
+    blocks.filter((block) => block.body.trim()),
+  )
     .map(
-      (block) =>
-        `${sessionSynopsisHeading(block.ingameDate)}\n\n${block.body.trim()}`,
+      ({ ingameDate, blocks: dateBlocks }) =>
+        `${sessionSynopsisHeading(ingameDate)}\n\n${dateBlocks
+          .map((block) => block.body.trim())
+          .join("\n\n")}`,
     )
     .join("\n\n");
 }

@@ -14,6 +14,7 @@ import {
 } from "@/lib/dbInspect";
 import { TABLE_PAGE_SIZE } from "./tableExplorerConfig";
 import sql from "@/lib/db";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 export interface TableInfo {
   name: string;
@@ -133,6 +134,7 @@ export async function insertDbRowAction(input: {
       await tx.unsafe(`SET LOCAL statement_timeout = ${STATEMENT_TIMEOUT_MS}`);
       return tx.unsafe<Record<string, unknown>[]>(query, params);
     });
+    await publishContentChanged();
     return { id: hasId ? (result[0]?.id as number) : undefined };
   } catch (err) {
     return {
@@ -140,3 +142,4 @@ export async function insertDbRowAction(input: {
     };
   }
 }
+

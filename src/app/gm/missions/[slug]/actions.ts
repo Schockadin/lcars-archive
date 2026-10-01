@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requireGM } from "@/lib/dal";
 import { deleteMission } from "@/lib/missions";
 import { getMissionBySlug } from "@/lib/missions";
@@ -24,7 +24,7 @@ export async function updateMissionSummaryBlockAction(_state: MissionSummaryBloc
   if (!mission) return { error: "Mission nicht gefunden." };
   if (!(await updateMissionSynopsisBlock({ id, missionId: mission.id, ingameDate, body }))) return { error: "Log-Eintrag nicht gefunden." };
   revalidateMission(missionSlug);
-  revalidatePath(`/gm/missions/${encodeURIComponent(missionSlug)}`);
+  await revalidatePathAndNotify(`/gm/missions/${encodeURIComponent(missionSlug)}`);
   return { success: "Log-Eintrag gespeichert." };
 }
 
@@ -37,7 +37,7 @@ export async function deleteMissionSummaryBlockAction(_state: MissionSummaryBloc
   if (!mission) return { error: "Mission nicht gefunden." };
   if (!(await deleteMissionSynopsisBlock(id, mission.id))) return { error: "Log-Eintrag nicht gefunden." };
   revalidateMission(missionSlug);
-  revalidatePath(`/gm/missions/${encodeURIComponent(missionSlug)}`);
+  await revalidatePathAndNotify(`/gm/missions/${encodeURIComponent(missionSlug)}`);
   return { success: "Log-Eintrag gelöscht." };
 }
 

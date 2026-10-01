@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { userCan } from "@/lib/permissions";
 import { getRoleMap } from "@/lib/roles";
 import { getActiveSession } from "@/lib/dal";
@@ -161,17 +161,17 @@ export async function setContentStateAction(
     }
   }
 
-  revalidatePath("/user/content");
+  await revalidatePathAndNotify("/user/content");
   // Charaktere leben seit dem Umzug unter /user/characters — beide Seiten
   // nutzen dieselben Aktionen (ContentStateSelect/DeleteOwnContentButton), also
   // auch beide revalidieren.
-  revalidatePath("/user/characters");
+  await revalidatePathAndNotify("/user/characters");
   // Und die Startseite: Der Abschnitt „Entwürfe" steht dort mit derselben
   // Aktionszeile (DraftsSection). Ohne diese Zeile fiele die optimistische
   // Entfernung dort am Ende der Transition wieder zurück — useOptimistic
   // behält den neuen Wert nur, wenn die Server-Daten danach ebenfalls neu
   // sind.
-  revalidatePath("/");
+  await revalidatePathAndNotify("/");
   return ok ? {} : { error: "Änderung fehlgeschlagen (keine Berechtigung?)." };
 }
 
@@ -233,9 +233,9 @@ export async function deleteOwnContentAction(
     revalidateLog(deleted.missionId, deleted.slug);
   }
 
-  revalidatePath("/user/content");
-  revalidatePath("/user/characters");
+  await revalidatePathAndNotify("/user/content");
+  await revalidatePathAndNotify("/user/characters");
   // Siehe setContentStateAction: die Entwürfe stehen auch auf der Startseite.
-  revalidatePath("/");
+  await revalidatePathAndNotify("/");
   return {};
 }

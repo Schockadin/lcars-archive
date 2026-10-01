@@ -44,14 +44,31 @@ describe("applyGermanTypography", () => {
     expect(out).toBe(`Das 5${C} Rohr und ${O}danach${C} ein Zitat.`);
   });
 
+  it("wandelt Hochkomma- und apostrophähnliche Akzentzeichen in gerade Apostrophe", () => {
+    const variants = "‘’‚‛ʻʼʹ′‵´ˊˋ";
+    expect(applyGermanTypography(`A${variants}B`)).toBe(
+      `A${"'".repeat([...variants].length)}B`,
+    );
+    expect(applyGermanTypography("Café, déjà vu, D’Artagnan.")).toBe(
+      "Café, déjà vu, D'Artagnan.",
+    );
+  });
+
   it("tastet Code (Fence + Inline) nicht an", () => {
     expect(applyGermanTypography('`const s = "x"`')).toBe('`const s = "x"`');
+    expect(applyGermanTypography("`D’Artagnan´`")).toBe("`D’Artagnan´`");
     expect(applyGermanTypography('```\nsay "hi"\n```')).toBe('```\nsay "hi"\n```');
+    expect(applyGermanTypography("~~~\nD’Artagnan ´\n~~~")).toBe(
+      "~~~\nD’Artagnan ´\n~~~",
+    );
   });
 
   it("ist idempotent (bereits typografische Zeichen bleiben)", () => {
     const once = applyGermanTypography('Sie rief "Achtung!" laut.');
     expect(applyGermanTypography(once)).toBe(once);
+    expect(applyGermanTypography(applyGermanTypography("D’Artagnan"))).toBe(
+      "D'Artagnan",
+    );
   });
 
   it("gibt unveränderten Text ohne gerade Anführungszeichen zurück", () => {

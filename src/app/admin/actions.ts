@@ -11,6 +11,7 @@ import {
 } from "@/lib/users";
 import { assignCharacterToUser } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 import { createPasswordSetupToken } from "@/lib/passwordSetupTokens";
 import { sendActivationEmail, sendPasswordResetEmail } from "@/lib/mail";
 import { getBaseUrl, getClientIp } from "@/lib/http";
@@ -80,6 +81,7 @@ export async function createUserAction(
     `${newUser.name} <${newUser.email}>, Rolle: ${role}`,
     await getClientIp(),
   );
+  await publishContentChanged();
 
   const rawToken = await createPasswordSetupToken(newUser.id);
   const activationUrl = `${await getBaseUrl()}/activate?token=${rawToken}`;
@@ -186,6 +188,7 @@ export async function forceLogoutUserAction(
     `${user.name} <${user.email}>`,
     await getClientIp(),
   );
+  await publishContentChanged();
 
   return { loggedOut: true };
 }
@@ -232,6 +235,8 @@ export async function assignCharacterAction(
     return { error: "Charakter nicht gefunden." };
   }
   revalidateCharacter(character.slug);
+  await publishContentChanged();
 
   redirect("/gm/characters");
 }
+

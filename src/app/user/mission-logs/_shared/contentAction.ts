@@ -10,6 +10,7 @@ import {
   updateMissionLogContent,
 } from "@/lib/missions";
 import { revalidateLog } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 import { absoluteContentUrl, missionLogHref } from "@/lib/contentRoutes";
 import { autoLinkMarkdown } from "@/lib/autolink";
 import { getCharacterSubscribers } from "@/lib/dialogues";
@@ -137,6 +138,7 @@ export async function missionLogAction(
       return { error: "Log nicht gefunden oder keine Berechtigung." };
     }
     revalidateLog(result.missionId, result.slug);
+    await publishContentChanged();
 
     if (!isDraft) {
       const contentUrl = `${await getBaseUrl()}${missionLogHref(result.missionSlug, result.slug)}`;
@@ -241,6 +243,7 @@ export async function missionLogAction(
   });
 
   revalidateLog(mission.id, result.slug);
+  await publishContentChanged();
 
   if (!isDraft) {
     // Mission-Logs sind standardmäßig public (siehe scripts/schema.sql) —

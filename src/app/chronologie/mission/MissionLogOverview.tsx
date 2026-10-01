@@ -8,6 +8,7 @@ import { fmtDate, sessionLabel } from "@/lib/missionFormat";
 import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import { missionLogHref } from "@/lib/contentRoutes";
 import type { MissionSynopsisBlock } from "@/lib/gameSessions";
+import { groupSynopsisBlocksByDate } from "@/lib/sessionSynopsis";
 import { LcarsCollapsiblePanel, LcarsToc } from "@/components/lcars";
 import ContentCardMenu from "@/components/timeline/ContentCardMenu";
 import {
@@ -47,6 +48,16 @@ export default function MissionLogOverview({
     synopsisBlocks.map((block) => String(block.id)),
   );
   const hasSynopsis = synopsisBlocks.length > 0 || Boolean(fullSynopsisHtml);
+  // Nur die vollständige Synopsis bündelt gleiche Daten. In der Chronik
+  // bleibt jeder Block ein eigener Eintrag mit eigener Karte.
+  const synopsisGroups = groupSynopsisBlocksByDate(synopsisBlocks)
+    .map((group) => ({
+      ...group,
+      blocks: [...group.blocks].sort(
+        (a, b) => a.missionBlockNumber - b.missionBlockNumber,
+      ),
+    }))
+    .sort((a, b) => b.ingameDate.localeCompare(a.ingameDate));
   const entries = [
     ...logs.map((log) => ({
       kind: "log" as const,
@@ -198,10 +209,15 @@ export default function MissionLogOverview({
           <h3 className="lcars-data-row-heading">Synopsis</h3>
           {synopsisBlocks.length > 0 ? (
             <div className="mission-body">
-              {synopsisBlocks.toReversed().map((block) => (
-                <section key={block.id}>
-                  <h4>{fmtDate(block.ingameDate)}</h4>
-                  <div dangerouslySetInnerHTML={{ __html: block.bodyHtml }} />
+              {synopsisGroups.map((group) => (
+                <section key={group.ingameDate}>
+                  <h4>{fmtDate(group.ingameDate)}</h4>
+                  {group.blocks.map((block) => (
+                    <div
+                      key={block.id}
+                      dangerouslySetInnerHTML={{ __html: block.bodyHtml }}
+                    />
+                  ))}
                 </section>
               ))}
             </div>

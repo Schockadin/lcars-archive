@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
 import ModalOverlay from "@/components/ModalOverlay";
 import NewMissionLogForm from "@/app/user/mission-logs/new/NewMissionLogForm";
 import CreateDialogueForm from "@/app/user/dialogues/new/CreateDialogueForm";
 import NewArchiveEntryForm from "@/app/user/archive/new/NewArchiveEntryForm";
 import NewMissionForm from "@/app/user/missions/new/NewMissionForm";
 import ManualEventForm from "@/components/timeline/ManualEventForm";
+import { CreatePlannedSessionModal } from "@/app/gm/sessions/PlannedSessionManager";
 import type { NewContentData } from "./newContentData";
 import {
   NEW_CONTENT_LABELS,
@@ -15,8 +15,8 @@ import {
   type OpenForm,
 } from "./newContentForms";
 
-// Die Knöpfe „Neue Inhalte" unter /user/content — jeder öffnet sein Formular
-// in einem Fenster über der Liste, statt auf eine eigene Seite zu führen.
+// Die Knöpfe „Neue Inhalte" auf der Startseite und unter /user/content — jeder
+// öffnet sein Formular in einem Fenster über der Liste, statt auf eine eigene Seite zu führen.
 // Dasselbe Muster wie „Eintrag anlegen" in der Datenbank
 // (ArchiveEntryCreateOverlay.tsx) und „Ereignis eintragen" in der Chronologie
 // (ManualEventForm.tsx): Wer etwas anlegt, verliert die Übersicht nicht aus
@@ -38,27 +38,15 @@ import {
 export default function NewContentButtons({
   data,
   show,
-  canImport = false,
 }: {
   data: NewContentData;
-  // Welche Knöpfe erscheinen. Ohne Angabe alle — so zeigt „Meine Inhalte"
-  // weiterhin das volle Angebot. Das Dashboard reicht hier die dort
-  // eingeschalteten durch (siehe dashboardSections.ts); die Formulare selbst
-  // bleiben dieselben.
+  // Welche persönlichen Knöpfe erscheinen. Ohne Angabe zeigt „Meine Inhalte"
+  // das volle Angebot; das Dashboard reicht hier die dort eingeschalteten
+  // durch (siehe dashboardSections.ts). GM-Aktionen bleiben unabhängig davon.
   show?: readonly OpenForm[];
-  // Der Markdown-Import. Anders als die übrigen kein Fenster, sondern ein
-  // Link auf /user/import: Der Ablauf blättert durch mehrere Dateien und
-  // bestätigt jede einzeln — dafür ist ein Fenster zu klein (gleiche
-  // Überlegung wie beim Charakter-Assistenten).
-  //
-  // Kein Rechte-Schalter: Einen Datenbank-Eintrag darf jede eingeloggte
-  // Person hochladen, die Seite zeigt dann eben nur diese eine Art an
-  // (src/lib/importAccess.ts). Der Aufrufer entscheidet damit nur, OB der
-  // Knopf hier Platz bekommt — die Startseite etwa nur, wenn die Sektion im
-  // Profil eingeschaltet ist.
-  canImport?: boolean;
 }) {
   const [open, setOpen] = useState<OpenForm | null>(null);
+  const [plannedSessionOpen, setPlannedSessionOpen] = useState(false);
   const close = () => setOpen(null);
   const sichtbar = visibleNewContentForms(data, show);
 
@@ -96,10 +84,15 @@ export default function NewContentButtons({
             dieselbe Funktion, aus der der Abschnitt drumherum seine Kurzinfo
             bildet (siehe newContentForms.ts). */}
         {sichtbar.map(button)}
-        {canImport && (
-          <Link href="/user/import" className="lcars-pill-btn--outline">
-            Import
-          </Link>
+        {data.mission && !sichtbar.includes("mission") && button("mission")}
+        {data.sessionPlan && (
+          <button
+            type="button"
+            onClick={() => setPlannedSessionOpen(true)}
+            className="lcars-pill-btn"
+          >
+            Termin anlegen
+          </button>
         )}
       </div>
 
@@ -154,6 +147,17 @@ export default function NewContentButtons({
             />
           )}
         </ModalOverlay>
+      )}
+
+      {plannedSessionOpen && data.sessionPlan && (
+        <CreatePlannedSessionModal
+          characters={data.sessionPlan.characters}
+          missions={data.sessionPlan.missions}
+          missionCharacters={data.sessionPlan.missionCharacters}
+          defaultMissionStartedAt={data.sessionPlan.defaultMissionStartedAt}
+          sessionDefaults={data.sessionPlan.sessionDefaults}
+          onClose={() => setPlannedSessionOpen(false)}
+        />
       )}
     </>
   );

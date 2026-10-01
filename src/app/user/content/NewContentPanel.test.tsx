@@ -18,6 +18,9 @@ vi.mock("@/app/user/archive/new/NewArchiveEntryForm", () => ({
 vi.mock("@/app/user/missions/new/NewMissionForm", () => ({
   default: () => null,
 }));
+vi.mock("@/app/gm/sessions/PlannedSessionManager", () => ({
+  CreatePlannedSessionModal: () => null,
+}));
 vi.mock("@/components/timeline/ManualEventForm", () => ({
   default: () => <button type="button">Neues Event</button>,
 }));
@@ -64,17 +67,42 @@ describe("NewContentPanel", () => {
     expect(screen.getByText("6")).toBeInTheDocument();
   });
 
-  it("zählt den Import mit", () => {
-    render(<NewContentPanel data={data()} canImport />);
-
-    expect(screen.getByRole("link", { name: "Import" })).toBeInTheDocument();
-    expect(screen.getByText("7")).toBeInTheDocument();
-  });
-
   it("zählt nur, was die Auswahl der Seite hergibt", () => {
-    render(<NewContentPanel data={data()} show={["npc", "archiveEntry"]} />);
+    render(
+      <NewContentPanel
+        data={data({ mission: null })}
+        show={["npc", "archiveEntry"]}
+      />,
+    );
 
     expect(knopfZahl()).toBe(2);
+    expect(screen.getByText("2")).toBeInTheDocument();
+  });
+
+  it("zählt die GM-Aktionen auch dann, wenn persönliche Knöpfe ausgeblendet sind", () => {
+    render(
+      <NewContentPanel
+        data={data({
+          sessionPlan: {
+            characters: [],
+            missions: [],
+            missionCharacters: [],
+            defaultMissionStartedAt: null,
+            sessionDefaults: {
+              weekday: 0,
+              weekParity: "odd",
+              time: "16:00",
+              location: "David",
+            },
+          },
+        })}
+        show={[]}
+      />,
+    );
+
+    expect(knopfZahl()).toBe(2);
+    expect(screen.getByRole("button", { name: "Neue Mission" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Termin anlegen" })).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument();
   });
 
@@ -82,7 +110,9 @@ describe("NewContentPanel", () => {
   // Zeile — möglich etwa für ein Konto, das auf der Startseite alle
   // Anlege-Knöpfe abgewählt hat.
   it("verschwindet ganz, wenn kein Knopf übrig bleibt", () => {
-    const { container } = render(<NewContentPanel data={data()} show={[]} />);
+    const { container } = render(
+      <NewContentPanel data={data({ mission: null, sessionPlan: null })} show={[]} />,
+    );
 
     expect(container).toBeEmptyDOMElement();
   });

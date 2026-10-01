@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requireGM } from "@/lib/dal";
 import {
   ADVANCEMENT_RULE_FIELDS,
@@ -34,10 +34,10 @@ export async function saveRulesAction(
   await setAdvancementRules(parsed.value);
 
   // Die Regeln bestimmen Kosten und Budgets auf jedem Charakterbogen.
-  revalidatePath("/gm/ap");
-  revalidatePath("/gm/campaign");
-  revalidatePath("/gm/sessions");
-  revalidatePath("/user/characters", "layout");
+  await revalidatePathAndNotify("/gm/ap");
+  await revalidatePathAndNotify("/gm/campaign");
+  await revalidatePathAndNotify("/gm/sessions");
+  await revalidatePathAndNotify("/user/characters", "layout");
 
   return { success: "Regelwerk gespeichert." };
 }
@@ -51,10 +51,10 @@ export async function resetRulesAction(
   await requireGM();
   await resetAdvancementRules();
 
-  revalidatePath("/gm/ap");
-  revalidatePath("/gm/campaign");
-  revalidatePath("/gm/sessions");
-  revalidatePath("/user/characters", "layout");
+  await revalidatePathAndNotify("/gm/ap");
+  await revalidatePathAndNotify("/gm/campaign");
+  await revalidatePathAndNotify("/gm/sessions");
+  await revalidatePathAndNotify("/user/characters", "layout");
 
   return { success: "Regelwerk auf die Standardwerte zurückgesetzt." };
 }

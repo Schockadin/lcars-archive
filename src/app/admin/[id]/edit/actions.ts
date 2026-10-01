@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { publishContentChanged } from "@/lib/realtimeServer";
 import { requirePermission } from "@/lib/dal";
 import {
   EmailTakenError,
@@ -136,6 +137,7 @@ export async function updateUserDetailsAction(
     }
   }
 
+  await publishContentChanged();
   redirect(`/admin/${userId}/edit`);
 }
 
@@ -202,6 +204,7 @@ export async function updateUserPermissionsAction(
     await getClientIp(),
   );
 
+  await publishContentChanged();
   redirect(`/admin/${userId}/edit`);
 }
 
@@ -230,6 +233,7 @@ export async function setUserActiveAction(
     `${target.name} <${target.email}>`,
     await getClientIp(),
   );
+  await publishContentChanged();
   redirect(`/admin/${userId}/edit`);
 }
 
@@ -260,5 +264,7 @@ export async function deleteUserFromEditAction(
     await getClientIp(),
   );
   await deleteUser(userId);
+  await publishContentChanged();
   redirect("/admin/users");
 }
+

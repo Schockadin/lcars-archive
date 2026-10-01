@@ -20,6 +20,7 @@ import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { parseList } from "@/lib/formParsing";
 import { logCaughtError } from "@/lib/errorLog";
+import { publishContentChanged } from "@/lib/realtimeServer";
 import {
   dialogueHref,
 } from "@/lib/contentRoutes";
@@ -183,6 +184,11 @@ export async function createDialogueAction(
     throw err;
   }
 
+  // Das neue Gespräch erscheint auch in Dashboards und offenen Übersichten
+  // anderer Teilnehmender; die Nutzdaten bleiben hinter den normalen
+  // Berechtigungsprüfungen.
+  await publishContentChanged();
+
   // Kein Partner konnte dem Anlegen zustimmen — anders als bei neuen
   // Nachrichten (postDialogueMessageAction) sind sie hier noch keine
   // "Abonnenten" im Sinne einer eigenen Wahl, bekommen die Info-Mail also
@@ -287,3 +293,4 @@ export async function createDialogueAction(
 
   redirect(dialogueHref(slug));
 }
+

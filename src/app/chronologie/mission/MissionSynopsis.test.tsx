@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import MissionSynopsis from "./MissionSynopsis";
 import type { MissionDetail } from "@/types/missions";
-import type { Viewer } from "@/lib/visibility";
 
 // Der Lesemodus-Umschalter im Kopf zieht useNeo() und damit den NeoProvider
 // nach, den es im Test nicht gibt. Die Funktionen sind stabil, damit der
@@ -14,12 +13,6 @@ const neo = vi.hoisted(() => ({
   preserveReadingModeOnce: () => {},
 }));
 vi.mock("@/hooks/useNeo", () => ({ useNeo: () => neo }));
-// Das Aktionen-Panel zieht Router und Bildergalerie nach; geprüft wird hier
-// der Kopf, nicht das Panel. Der Platzhalter zeigt nur, WO es steht.
-vi.mock("@/components/ContentActionsPanel", () => ({
-  default: () => <div data-testid="actions-panel" />,
-}));
-
 function mission(overrides: Partial<MissionDetail> = {}): MissionDetail {
   return {
     id: 7,
@@ -41,13 +34,9 @@ function mission(overrides: Partial<MissionDetail> = {}): MissionDetail {
   };
 }
 
-function viewer(permissions: Viewer["permissions"] = []): Viewer {
-  return { userId: 1, role: "player", permissions };
-}
-
 describe("MissionSynopsis", () => {
   it("zeigt den Titel als h1 im gemeinsamen Kopf", () => {
-    render(<MissionSynopsis mission={mission()} viewer={null} owners={[]} />);
+    render(<MissionSynopsis mission={mission()} />);
 
     const title = screen.getByRole("heading", { level: 1 });
     expect(title).toHaveTextContent("Zwischenfall auf Deneb IV");
@@ -57,7 +46,7 @@ describe("MissionSynopsis", () => {
   it("führt mit dem Rücklink zurück auf die Missionsliste", () => {
     // Der Link saß bis zum Redesign im Kopf der Log-Schiene — ohne ihn führt
     // von der Missionsseite kein Weg zurück.
-    render(<MissionSynopsis mission={mission()} viewer={null} owners={[]} />);
+    render(<MissionSynopsis mission={mission()} />);
 
     const back = screen.getByRole("link", { name: "‹ Missionen" });
     expect(back).toHaveAttribute("href", "/chronologie/mission");
@@ -68,7 +57,7 @@ describe("MissionSynopsis", () => {
     // Der Status war vorher nur eine Farbe — das Label aus STATUS_CONFIG
     // wurde auf keiner Seite gerendert.
     const { container } = render(
-      <MissionSynopsis mission={mission()} viewer={null} owners={[]} />,
+      <MissionSynopsis mission={mission()} />,
     );
 
     expect(screen.getByText("Status")).toHaveClass("archive-dialogue-label");
@@ -77,14 +66,14 @@ describe("MissionSynopsis", () => {
   });
 
   it("zeigt den Zeitraum", () => {
-    render(<MissionSynopsis mission={mission()} viewer={null} owners={[]} />);
+    render(<MissionSynopsis mission={mission()} />);
 
     expect(screen.getByText("Zeitraum")).toBeInTheDocument();
     expect(screen.getByText(/15\.09\.2400/)).toBeInTheDocument();
   });
 
   it("verlinkt jeden Teilnehmer als Chip auf seine Charakterseite", () => {
-    render(<MissionSynopsis mission={mission()} viewer={null} owners={[]} />);
+    render(<MissionSynopsis mission={mission()} />);
 
     const lara = screen.getByRole("link", { name: "T'Lara" });
     expect(lara).toHaveAttribute("href", "/characters/t-lara");
@@ -99,8 +88,6 @@ describe("MissionSynopsis", () => {
     render(
       <MissionSynopsis
         mission={mission({ participants: [] })}
-        viewer={null}
-        owners={[]}
       />,
     );
 
@@ -111,8 +98,6 @@ describe("MissionSynopsis", () => {
     const { container } = render(
       <MissionSynopsis
         mission={mission()}
-        viewer={viewer(["missions.manage"])}
-        owners={[]}
       />,
     );
 
@@ -122,16 +107,11 @@ describe("MissionSynopsis", () => {
     expect(container.querySelector("textarea")).toBeNull();
   });
 
-  it("hält das Aktionen-Panel im Artikel, unterhalb des Textes", () => {
-    // Bewusst nicht im Footer-Stack der Seite: es gehört zum Inhalt dieser
-    // Spalte, nicht zum Seitenfuß.
+  it("hält das Aktionspanel aus dem Synopsis-Kopf heraus", () => {
     const { container } = render(
-      <MissionSynopsis mission={mission()} viewer={viewer()} owners={[]} />,
+      <MissionSynopsis mission={mission()} />,
     );
 
-    const article = container.querySelector("article.mission-detail-article");
-    const panel = screen.getByTestId("actions-panel");
-    expect(article).toContainElement(panel);
-    expect(article?.lastElementChild).toBe(panel);
+    expect(container.querySelector(".content-actions")).toBeNull();
   });
 });

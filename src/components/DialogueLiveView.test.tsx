@@ -4,13 +4,41 @@ import DialogueLiveView from "./DialogueLiveView";
 import type { DialogueMessage } from "@/lib/dialoguesCore";
 import type { ArchiveParticipant } from "@/types/archive";
 import { REPLY_DOCK_STICKY_KEY } from "@/lib/replyDockPreference";
+import { act, waitFor } from "@testing-library/react";
+import { getDialogueSnapshotAction } from "@/app/actions/dialogues";
+
+const realtimeState = vi.hoisted(() => ({
+  connected: false,
+  listener: null as null | (() => void),
+}));
+const routerState = vi.hoisted(() => ({ refresh: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: routerState.refresh }),
+}));
 
 // Alles, was an Server Actions hängt: gemockt. Geprüft wird die Komposition
 // aus Verlauf und klebendem Antwortfeld — und der Sprung ans Verlaufsende.
 vi.mock("@/app/actions/dialogues", () => ({
-  getDialogueSnapshotAction: vi.fn(async () => ({ open: true })),
+  getDialogueSnapshotAction: vi.fn(async () => ({
+    open: true,
+    messages: [],
+    lockStatus: null,
+    canReplyNow: true,
+  })),
   releaseDialogueReservationAction: vi.fn(),
   postDialogueMessageAction: vi.fn(async () => ({})),
+}));
+vi.mock("@/components/RealtimeUpdatesProvider", () => ({
+  useRealtimeUpdates: () => ({
+    connected: realtimeState.connected,
+    subscribe: (listener: () => void) => {
+      realtimeState.listener = listener;
+      return () => {
+        realtimeState.listener = null;
+      };
+    },
+  }),
 }));
 vi.mock("@/app/_shared/MarkdownEditor", () => ({
   default: ({ id }: { id: string }) => <textarea id={id} name="bodyMarkdown" />,
@@ -46,8 +74,28 @@ const MESSAGES: DialogueMessage[] = [
 
 let scrollIntoView: ReturnType<typeof vi.fn<Element["scrollIntoView"]>>;
 
+function resetLocalStorage() {
+  const values = new Map<string, string>();
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: {
+      get length() {
+        return values.size;
+      },
+      clear: () => values.clear(),
+      getItem: (key: string) => values.get(key) ?? null,
+      key: (index: number) => [...values.keys()][index] ?? null,
+      removeItem: (key: string) => values.delete(key),
+      setItem: (key: string, value: string) => values.set(key, String(value)),
+    } satisfies Storage,
+  });
+}
+
 beforeEach(() => {
-  window.localStorage.clear();
+  realtimeState.connected = false;
+  routerState.refresh.mockClear();
+  realtimeState.listener = null;
+  resetLocalStorage();
   scrollIntoView = vi.fn<Element["scrollIntoView"]>();
   // jsdom kennt scrollIntoView nicht und misst nichts — beides hier
   // stellvertretend, damit die Höhe des Docks überhaupt einen Wert hat.
@@ -99,6 +147,29 @@ function threadWrapper(container: HTMLElement): HTMLElement {
 }
 
 describe("DialogueLiveView", () => {
+  it("lädt bei einem Live-Signal einen frischen Gesprächsstand", async () => {
+    realtimeState.connected = true;
+    vi.mocked(getDialogueSnapshotAction).mockResolvedValue({
+      open: true,
+      messages: [{ ...MESSAGES[0], content: "<p>Neue Nachricht</p>" }],
+      lockStatus: null,
+      canReplyNow: true,
+    });
+    const { container } = renderView();
+
+    await act(async () => {
+      realtimeState.listener?.();
+    });
+
+    await waitFor(() => {
+      expect(container.querySelector(".dialogue-message")).toHaveTextContent(
+        "Neue Nachricht",
+      );
+    });
+    expect(getDialogueSnapshotAction).toHaveBeenCalledWith("gespraech");
+    expect(routerState.refresh).toHaveBeenCalledTimes(1);
+  });
+
   it("stellt Verlauf und Antwortfeld in denselben Block", () => {
     const { container } = renderView();
 

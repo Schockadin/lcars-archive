@@ -38,14 +38,14 @@ export function DashboardGuide() {
           sich zuletzt an der Datenbank selbst geändert hat.
         </p>
         <p>
-          <strong>Die Seite hält sich selbst aktuell.</strong> Alle zehn
-          Sekunden holt sie nach, was sich inzwischen getan hat — eine Zusage
-          zum Spielabend, eine neue Nachricht in einem offenen Gespräch, die
-          News der anderen. Du musst also nicht neu laden. Das geschieht
+          <strong>Die Seite hält sich selbst aktuell.</strong> Neue Inhalte
+          erscheinen direkt über eine Live-Verbindung — etwa eine Zusage zum
+          Spielabend, eine neue Nachricht in einem offenen Gespräch oder die
+          News der anderen. Du musst nicht neu laden. Das geschieht
           unauffällig: Die Seite bleibt stehen, wo du bist, aufgeklappte
           Abschnitte bleiben offen, und ein Fenster, in das du gerade tippst,
-          bleibt unangetastet. Liegt der Tab im Hintergrund, pausiert sie und
-          ist beim Zurückkommen sofort wieder auf Stand.
+          bleibt unangetastet. Bei fehlender Verbindung aktualisiert sie sich
+          ersatzweise regelmäßig; liegt der Tab im Hintergrund, pausiert das.
         </p>
       </GuideSection>
 
@@ -93,15 +93,17 @@ export function MyContentGuide() {
           <strong>Einsatzbericht</strong> und <strong>Gespräch</strong> setzen
           einen eigenen Charakter voraus, <strong>Event</strong> setzt das
           allgemeine Recht zum Anlegen eigener Inhalte voraus und{" "}
-          <strong>Mission</strong> bleibt der Spielleitung vorbehalten. Daneben
-          steht <strong>„Import“</strong> — der einzige Knopf, der auf eine
-          eigene Seite führt statt in ein Fenster: Der Import blättert durch
-          mehrere Dateien und lässt jede einzeln bestätigen.
+          <strong>Mission</strong> bleibt der Spielleitung vorbehalten. Für
+          Spielleitungen kommen außerdem <strong>„Neue Mission“</strong> und{" "}
+          <strong>„Termin anlegen“</strong> dazu. Beide öffnen ein Fenster; beim
+          Termin sind die gespeicherten Session-Vorgaben bereits ausgewählt.
         </p>
         <p>
           Genau dieselbe Knopfleiste steht auf deiner{" "}
           <strong>Startseite</strong> — dort mit den Knöpfen, die du im Profil
-          eingeschaltet hast, einschließlich „Neues Event“.
+          eingeschaltet hast, einschließlich „Neues Event“. Die beiden
+          GM-Aktionen bleiben dort auch verfügbar, wenn du andere Anlege-Knöpfe
+          ausgeblendet hast.
         </p>
       </GuideSection>
 
@@ -175,6 +177,11 @@ export function ImportGuide() {
           <strong>Frontmatter</strong> (der Block zwischen den beiden{" "}
           <code>---</code>-Zeilen am Anfang) mit mindestens <code>type</code>,{" "}
           <code>slug</code> und Titel bzw. Name.
+        </p>
+        <p>
+          Du öffnest den Import über den eigenen Link unter den Anlege-Knöpfen
+          auf „Meine Inhalte“; im Anlege-Panel und auf dem Dashboard steht er
+          nicht.
         </p>
       </GuideSection>
 

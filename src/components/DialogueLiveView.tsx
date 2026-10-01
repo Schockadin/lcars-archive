@@ -1,5 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useRealtimeUpdates } from "@/components/RealtimeUpdatesProvider";
 import {
   getDialogueSnapshotAction,
   releaseDialogueReservationAction,
@@ -29,14 +31,15 @@ export interface DialogueReplyCharacter {
   name: string;
 }
 
-const POLL_INTERVAL_MS = 8000;
+const FALLBACK_REFRESH_INTERVAL_MS = 8000;
 
-// Live-Aktualisierung offener Dialoge ohne manuelles Neuladen: pollt
-// getDialogueSnapshotAction alle 8 Sekunden, pausiert bei unsichtbarem Tab
-// (Page Visibility API) und holt beim Zurückkehren sofort frische Daten.
-// Voller Snapshot statt Delta — deckt Bearbeitungen/Soft-Deletes an
-// bestehenden Nachrichten automatisch mit ab, ohne eigene Diff-Logik. Übernimmt
-// die gesamte bisherige Render-Logik von /dialogues/[slug]/page.tsx ab
+// Live-Aktualisierung offener Gespräche: ein WebSocket-Signal löst einen
+// vollständigen, rechtegeprüften Snapshot aus. So deckt es neue, bearbeitete
+// und zurückgezogene Nachrichten sowie Änderungen am Antwortrecht ab, ohne
+// eigene Diff-Logik. Bei unterbrochener Verbindung bleibt der Snapshot-Poll
+// als Rückfallweg aktiv.
+// Übernimmt die gesamte bisherige Render-Logik von
+// /dialogues/[slug]/page.tsx ab
 // DialogueThread abwärts (statt nur Thread/ReplyForm/LockPanel einzeln zu
 // wrappen), damit die bestehende JSX-Struktur/das Spacing unverändert bleibt
 // — FollowButtons/InviteDialogueParticipantForm/Complete-/DeleteDialogueButton
@@ -94,6 +97,8 @@ export default function DialogueLiveView({
   // abgeschlossene/gelöschte Dialoge, bevor diese Komponente je gerendert
   // wird. Kann danach nur noch durch einen Poll auf false wechseln.
   const [open, setOpen] = useState(true);
+  const router = useRouter();
+  const { connected, subscribe } = useRealtimeUpdates();
   const stoppedRef = useRef(false);
   const mountedRef = useRef(true);
 
@@ -110,7 +115,7 @@ export default function DialogueLiveView({
   // statt bis zu 8 Sekunden auf den nächsten Intervall-Tick zu warten — die
   // eigene Nachricht bzw. der neue Sperr-Status erscheint sonst erst mit
   // spürbarer Verzögerung.
-  const poll = useCallback(async () => {
+  const refreshSnapshot = useCallback(async () => {
     const snapshot = await getDialogueSnapshotAction(entrySlug);
     if (!mountedRef.current) return;
     if (!snapshot.open) {
@@ -124,20 +129,31 @@ export default function DialogueLiveView({
   }, [entrySlug]);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (!stoppedRef.current && !document.hidden) poll();
-    }, POLL_INTERVAL_MS);
+    const unsubscribe = subscribe(() => {
+      if (stoppedRef.current || document.hidden) return;
+      refreshSnapshot();
+      // The live snapshot updates the thread and reply state; refresh the RSC
+      // page too so title, participants and permission-derived controls change
+      // immediately when dialogue metadata or access is edited elsewhere.
+      router.refresh();
+    });
+    const intervalId = connected
+      ? null
+      : setInterval(() => {
+          if (!stoppedRef.current && !document.hidden) refreshSnapshot();
+        }, FALLBACK_REFRESH_INTERVAL_MS);
 
     function handleVisibilityChange() {
-      if (!document.hidden && !stoppedRef.current) poll();
+      if (!document.hidden && !stoppedRef.current) refreshSnapshot();
     }
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      clearInterval(intervalId);
+      if (intervalId) clearInterval(intervalId);
+      unsubscribe();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [poll]);
+  }, [connected, refreshSnapshot, router, subscribe]);
 
   const multiParty = participants.length > 2;
 
@@ -212,7 +228,7 @@ export default function DialogueLiveView({
   function handleRelease() {
     startRelease(async () => {
       await releaseDialogueReservationAction(entrySlug);
-      poll();
+      refreshSnapshot();
     });
   }
 
@@ -247,7 +263,7 @@ export default function DialogueLiveView({
             hasOnlyBlockedCharacter={
               myCharacters.length > 0 && eligibleReplyCharacters.length === 0
             }
-            onSent={poll}
+            onSent={refreshSnapshot}
             sticky={stickyReply}
             onStickyChange={handleStickyChange}
           />
@@ -278,7 +294,7 @@ export default function DialogueLiveView({
             currentUserId={currentUserId}
             canReserve={canReserve}
             alreadyRequestedNotify={alreadyRequestedNotify}
-            onReserved={poll}
+            onReserved={refreshSnapshot}
           />
         )}
         {/* Admin-Rettungsanker: eine aktive Reservierung sofort freigeben,
@@ -313,3 +329,4 @@ export default function DialogueLiveView({
     </>
   );
 }
+

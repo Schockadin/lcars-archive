@@ -10,7 +10,7 @@ import {
   type OwnCharacterForEdit,
 } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { autoLinkMarkdown } from "@/lib/autolink";
 import { syncAutolinksAfterRename } from "@/lib/autolinkSync";
 import { notifyContentChange } from "@/lib/follows";
@@ -159,8 +159,8 @@ export async function updateCharacterPortraitAction(
   }
 
   revalidateCharacter(result.slug);
-  revalidatePath(characterEditHref(characterId));
-  revalidatePath("/user/characters");
+  await revalidatePathAndNotify(characterEditHref(characterId));
+  await revalidatePathAndNotify("/user/characters");
 
   await notifyUpdated({
     userId: session.userId,
@@ -223,8 +223,8 @@ export async function updateCharacterHeadAction(
   }
 
   revalidateCharacter(result.slug);
-  revalidatePath(characterEditHref(characterId));
-  revalidatePath("/user/characters");
+  await revalidatePathAndNotify(characterEditHref(characterId));
+  await revalidatePathAndNotify("/user/characters");
 
   // Heißt der Charakter jetzt anders oder hat er neue Aliase, prüfen alle
   // anderen Inhalte im Hintergrund, ob sie ihn nun verlinken können — und
@@ -290,7 +290,7 @@ export async function updateCharacterBioAction(
   }
 
   revalidateCharacter(result.slug);
-  revalidatePath(characterEditHref(characterId));
+  await revalidatePathAndNotify(characterEditHref(characterId));
 
   await notifyUpdated({
     userId: session.userId,
@@ -372,8 +372,8 @@ export async function saveCharacterStatsAction(
   // Die Werte hängen an der Charakter-Akte (metadata) — deren Cache-Tags
   // müssen mit, damit z.B. die Charakterseite frische Daten bekommt.
   revalidateCharacter(result.slug);
-  revalidatePath(characterEditHref(characterId));
-  revalidatePath("/user/characters");
+  await revalidatePathAndNotify(characterEditHref(characterId));
+  await revalidatePathAndNotify("/user/characters");
 
   // Bewusst KEINE Abonnenten-Benachrichtigung: Werte ändern sich im
   // Spielbetrieb ständig (Stress, Entschlossenheit) — jede Änderung zu melden

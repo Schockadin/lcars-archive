@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { publishContentChanged } from "@/lib/realtimeServer";
 import { createSession } from "@/lib/session";
 import { getUserById, recordLogin, setPassword } from "@/lib/users";
 import { hashPassword, validatePassword } from "@/lib/password";
@@ -58,8 +59,10 @@ export async function activateAccount(
   // landete unmittelbar nach dem Setzen ihres Passworts erneut auf /login.
   const sessionVersion = await setPassword(user.id, await hashPassword(password));
   await markPasswordSetupTokenUsed(setupToken.id);
+  await publishContentChanged();
 
   await recordLogin(user.id);
   await createSession({ ...user, session_version: sessionVersion });
   redirect("/");
 }
+

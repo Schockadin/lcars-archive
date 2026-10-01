@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requireGM } from "@/lib/dal";
 import { deleteStoredTimelineEvent } from "@/lib/timelineStoredEvents";
 import {
@@ -94,8 +94,8 @@ export async function importTimelineCsvAction(
     });
 
     await createManualEvents(inputs, user.id);
-    revalidatePath("/gm/chronologie");
-    revalidatePath("/chronologie");
+    await revalidatePathAndNotify("/gm/chronologie");
+    await revalidatePathAndNotify("/chronologie");
     return {
       success:
         inputs.length === 1
@@ -118,7 +118,7 @@ export async function deleteTimelineEventAction(
   if (!Number.isInteger(id)) return { error: "Ungültiges Ereignis." };
 
   await deleteStoredTimelineEvent(id);
-  revalidatePath("/gm/chronologie");
-  revalidatePath("/chronologie");
+  await revalidatePathAndNotify("/gm/chronologie");
+  await revalidatePathAndNotify("/chronologie");
   return { success: "Ereignis entfernt." };
 }

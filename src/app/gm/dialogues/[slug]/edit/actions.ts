@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requirePermission } from "@/lib/dal";
 import { updateDialogueMetadata } from "@/lib/dialogues";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 import { parseList } from "@/lib/formParsing";
 
 export interface DialogueMetaFormState {
@@ -51,5 +52,6 @@ export async function updateDialogueMetadataAction(
   if (!result) return { error: "Gespräch nicht gefunden." };
 
   revalidateArchiveEntry(result.slug);
+  await publishContentChanged();
   redirect("/gm/dialogues");
 }

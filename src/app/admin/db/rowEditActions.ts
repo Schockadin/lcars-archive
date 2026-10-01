@@ -1,5 +1,6 @@
 "use server";
 import sql from "@/lib/db";
+import { publishContentChanged } from "@/lib/realtimeServer";
 import { requireDbAccess, getCurrentUserPermissions } from "@/lib/dal";
 import {
   getTableColumns,
@@ -83,6 +84,7 @@ export async function updateDbRowAction(input: {
       return result.count;
     });
     if (rowCount === 0) return { error: "Keine passende Zeile gefunden." };
+    await publishContentChanged();
     return { rowCount };
   } catch (err) {
     return {
@@ -130,6 +132,7 @@ export async function deleteDbRowAction(input: {
       return result.count;
     });
     if (rowCount === 0) return { error: "Keine passende Zeile gefunden." };
+    await publishContentChanged();
     return { rowCount };
   } catch (err) {
     return {
@@ -137,3 +140,4 @@ export async function deleteDbRowAction(input: {
     };
   }
 }
+

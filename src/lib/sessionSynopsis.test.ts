@@ -84,6 +84,18 @@ describe("Session-Synopsis-Blöcke", () => {
     );
   });
 
+  it("führt Blöcke mit gleichem Datum unter einer Synopsis-Überschrift zusammen", () => {
+    expect(
+      buildMissionSynopsisMarkdown([
+        { ingameDate: "2401-08-04", body: "Erster Eintrag." },
+        { ingameDate: "2401-08-04", body: "Zweiter Eintrag." },
+        { ingameDate: "2401-08-03", body: "Eintrag vom Vortag." },
+      ]),
+    ).toBe(
+      "## 2401-08-04\n\nErster Eintrag.\n\nZweiter Eintrag.\n\n## 2401-08-03\n\nEintrag vom Vortag.",
+    );
+  });
+
   it("überspringt leere optionale Zusammenfassungen", () => {
     expect(
       buildMissionSynopsisMarkdown([

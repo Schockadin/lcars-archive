@@ -12,6 +12,7 @@ import {
   revalidateArchiveEntry,
 } from "@/lib/revalidate";
 import { isContentState } from "@/lib/visibility";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 // Missionen fehlen bewusst: Ihr Entwurfs-Zustand hängt am Missions-Editor
 // (nur Spielleitung/Administration), nicht an einem Umschalter im
@@ -59,5 +60,6 @@ export async function setContentStateAdminAction(
     revalidateArchiveEntry(entry.slug);
   }
 
+  await publishContentChanged();
   return {};
 }

@@ -20,6 +20,13 @@ vi.mock("@/app/user/archive/new/NewArchiveEntryForm", () => ({
 vi.mock("@/app/user/missions/new/NewMissionForm", () => ({
   default: () => <div data-testid="form-mission" />,
 }));
+vi.mock("@/app/gm/sessions/PlannedSessionManager", () => ({
+  CreatePlannedSessionModal: ({ onClose }: { onClose: () => void }) => (
+    <div role="dialog" aria-label="Session planen">
+      <button type="button" onClick={onClose}>Schließen</button>
+    </div>
+  ),
+}));
 vi.mock("@/components/timeline/ManualEventForm", () => ({
   default: ({
     defaultDate,
@@ -135,6 +142,7 @@ describe("NewContentButtons", () => {
           dialogue: null,
           mission: null,
           event: null,
+          sessionPlan: null,
         })}
       />,
     );
@@ -155,7 +163,12 @@ describe("NewContentButtons", () => {
   // (siehe src/lib/dashboardSections.ts) — „Meine Inhalte" reicht nichts
   // durch und zeigt weiterhin alle.
   it("zeigt mit `show` nur die verlangten Knöpfe", () => {
-    render(<NewContentButtons data={data()} show={["archiveEntry", "npc"]} />);
+    render(
+      <NewContentButtons
+        data={data({ mission: null })}
+        show={["archiveEntry", "npc"]}
+      />,
+    );
 
     expect(
       screen.getByRole("button", { name: "Neuer Datenbank-Eintrag" }),
@@ -189,43 +202,50 @@ describe("NewContentButtons", () => {
     ).toBeInTheDocument();
   });
 
-  // Der Import führt nach /user/import — was dort angeboten wird, hängt an
-  // der jeweiligen Berechtigung (importAccess.ts), der Knopf selbst aber
-  // nicht: Ob er Platz bekommt, entscheidet allein der Aufrufer (auf der
-  // Startseite die Sektion im Profil).
-  it("zeigt den Import nur, wenn der Aufrufer ihn erlaubt", () => {
-    const { unmount } = render(<NewContentButtons data={data()} />);
-    expect(screen.queryByRole("link", { name: "Import" })).toBeNull();
-    unmount();
-
-    render(<NewContentButtons data={data()} canImport />);
-    expect(screen.getByRole("link", { name: "Import" })).toHaveAttribute(
-      "href",
-      "/user/import",
+  it("bietet Mission und Termin für GMs unabhängig von der Dashboard-Auswahl an", () => {
+    render(
+      <NewContentButtons
+        data={data({
+          sessionPlan: {
+            characters: [],
+            missions: [],
+            missionCharacters: [],
+            defaultMissionStartedAt: null,
+            sessionDefaults: {
+              weekday: 0,
+              weekParity: "odd",
+              time: "16:00",
+              location: "David",
+            },
+          },
+        })}
+        show={[]}
+      />,
     );
-    expect(screen.getByRole("link", { name: "Import" })).toHaveClass(
-      "lcars-pill-btn--outline",
-    );
-  });
 
-  // Anders als die übrigen kein Fenster: Der Ablauf blättert durch mehrere
-  // Dateien und bestätigt jede einzeln — dafür ist ein Fenster zu klein.
-  it("führt beim Import auf die Seite statt in ein Fenster", () => {
-    render(<NewContentButtons data={data()} canImport />);
+    fireEvent.click(screen.getByRole("button", { name: "Neue Mission" }));
+    expect(
+      screen.getByRole("dialog", { name: "Neue Mission anlegen" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("form-mission")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Schließen" }));
 
-    expect(screen.getByRole("link", { name: "Import" })).toHaveAttribute(
-      "href",
-      "/user/import",
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Termin anlegen" }));
+    expect(
+      screen.getByRole("dialog", { name: "Session planen" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Schließen" }));
+    expect(screen.queryByRole("dialog", { name: "Session planen" })).toBeNull();
   });
 
   // Die beschrifteten Knöpfe liegen in der gemeinsamen Button-Leiste.
   it("ordnet die beschrifteten Aktionen in der gemeinsamen Leiste an", () => {
-    const { container } = render(<NewContentButtons data={data()} canImport />);
+    const { container } = render(<NewContentButtons data={data()} />);
 
     expect(
       container.querySelector(".lcars-btn-row"),
     ).not.toBeNull();
+    expect(screen.queryByRole("link", { name: "Import" })).toBeNull();
   });
 
   it("bietet keinen Knopf für einen neuen Charakter", () => {

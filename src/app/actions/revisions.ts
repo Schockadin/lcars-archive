@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { getViewer } from "@/lib/visibility";
 import {
   canManageRevisions,
@@ -54,7 +54,7 @@ export async function restoreRevisionAction(
   if (!restored) return { error: "Wiederherstellen fehlgeschlagen." };
 
   const path = String(formData.get("path") ?? "");
-  if (path) revalidatePath(path);
+  if (path) await revalidatePathAndNotify(path);
   return { success: true };
 }
 

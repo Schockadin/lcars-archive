@@ -7,8 +7,9 @@ import type { NewContentData } from "./newContentData";
 // Anlege-Knöpfen darin.
 //
 // Steht auf zwei Seiten: unter „Meine Inhalte" (alle Knöpfe, aufgeklappt —
-// das ist dort der Zweck der Seite) und auf der Startseite (nur die im Profil
-// eingeschalteten). Vorher trug jede Seite ihre eigene Fassung: die eine eine
+// das ist dort der Zweck der Seite) und auf der Startseite (die persönlichen
+// Knöpfe richten sich nach dem Profil). GM-Aktionen bleiben zusätzlich immer
+// sichtbar. Vorher trug jede Seite ihre eigene Fassung: die eine eine
 // nackte Überschrift, die andere eine Klappe samt eigener Zählung, ob
 // überhaupt ein Knopf übrig bleibt. Zwei Fassungen desselben Abschnitts
 // laufen auseinander, und die Zählung war der Teil, der es zuerst getan
@@ -19,7 +20,6 @@ import type { NewContentData } from "./newContentData";
 export default function NewContentPanel({
   data,
   show,
-  canImport = false,
   title = "Neue Inhalte",
   storageId,
   defaultOpen = true,
@@ -27,9 +27,6 @@ export default function NewContentPanel({
   data: NewContentData;
   // Welche Knöpfe diese Seite anbietet. Ohne Angabe alle.
   show?: readonly OpenForm[];
-  // Markdown-Import (/user/import). Kein Rechte-Schalter — siehe
-  // NewContentButtons.
-  canImport?: boolean;
   title?: string;
   storageId?: string;
   defaultOpen?: boolean;
@@ -37,8 +34,11 @@ export default function NewContentPanel({
   // Dieselbe Funktion, aus der auch die Knopfleiste ihre Knöpfe bildet: Die
   // Zahl in der Kopfzeile kann so nicht von dem abweichen, was darunter
   // steht.
+  const visibleForms = visibleNewContentForms(data, show);
   const anzahl =
-    visibleNewContentForms(data, show).length + (canImport ? 1 : 0);
+    visibleForms.length +
+    (data.mission && !visibleForms.includes("mission") ? 1 : 0) +
+    (data.sessionPlan ? 1 : 0);
 
   // Kein Knopf, kein Abschnitt — sonst stünde eine Überschrift über einer
   // leeren Zeile. Möglich etwa für ein Gast-Konto, das auf der Startseite
@@ -52,7 +52,7 @@ export default function NewContentPanel({
       storageId={storageId}
       defaultOpen={defaultOpen}
     >
-      <NewContentButtons data={data} show={show} canImport={canImport} />
+      <NewContentButtons data={data} show={show} />
     </LcarsCollapsiblePanel>
   );
 }

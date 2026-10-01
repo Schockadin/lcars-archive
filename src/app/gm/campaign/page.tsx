@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
 import { getIngameYearInfo } from "@/lib/campaign";
+import { getSessionDefaults } from "@/lib/sessionDefaults";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import IngameYearForm from "./IngameYearForm";
+import SessionDefaultsForm from "./SessionDefaultsForm";
 import AdvancementRulesForm from "../ap/AdvancementRulesForm";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmCampaignGuide } from "@/components/help/guides/GmGuides";
@@ -22,8 +24,9 @@ export const metadata: Metadata = {
 export default async function AdminCampaignPage() {
   await requireGM();
 
-  const [ingameYearInfo, rules] = await Promise.all([
+  const [ingameYearInfo, sessionDefaults, rules] = await Promise.all([
     getIngameYearInfo(),
+    getSessionDefaults(),
     getAdvancementRules(),
   ]);
 
@@ -41,6 +44,17 @@ export default async function AdminCampaignPage() {
         </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[32px]">
+          <details className="lcars-details">
+            <summary className="lcars-details-summary">
+              <span className="lcars-data-row-chevron" aria-hidden="true" />
+              <h2 className="inline text-lcars-primary-ink">
+                Voreinstellungen für neue Sessions
+              </h2>
+            </summary>
+            <div className="mt-[12px]">
+              <SessionDefaultsForm defaults={sessionDefaults} />
+            </div>
+          </details>
           <details className="lcars-details">
             <summary className="lcars-details-summary">
               <span className="lcars-data-row-chevron" aria-hidden="true" />
@@ -72,3 +86,4 @@ export default async function AdminCampaignPage() {
     </>
   );
 }
+

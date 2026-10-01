@@ -112,9 +112,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   gewöhnliche Einträge und bleiben für alle auffindbar. Dieselbe Regel gilt im
   RAG-Index (`embeddingSync.ts` nimmt nur `dialogue_open = FALSE`) und in der
   Chronologie (`timeline.ts`).
-  Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
-  8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
-  Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite. Jede
+  Offene Gespräche aktualisieren sich über WebSockets: neue Nachrichten und
+  Sperr-Status-Änderungen erscheinen direkt, ohne manuelles Neuladen. Bei
+  fehlender Verbindung bleibt ein Polling-Rückfallweg aktiv. Jede
   Nachrichtenkarte eines **laufenden** Gesprächs trägt neben dem Sprechernamen
   ihren Zeitstempel (`formatDateTimeShort`, fest auf `Europe/Berlin` — Server-
   Render und Hydration liefern denselben String); abgeschlossene Gespräche
@@ -539,13 +539,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     keine Einträge unter bereits gepflegten Charakterbögen verschwinden.
   - `/gm/focuses` — dasselbe für den Schwerpunkt-Katalog (Suche,
     Disziplin-Filter, bearbeiten, ergänzen; löschbar nur selbst ergänzte).
-  - `/gm/campaign` — eingeklappte Panels für das Ingame-Jahr und die
-    Steigerungsregeln.
+  - `/gm/campaign` — eingeklappte Panels für das Ingame-Jahr, die
+    Steigerungsregeln und Standardwerte für neue Session-Termine.
     Spieler lesen die Steigerungsregeln unter `/user/rules`.
 - **Session-Planer** — die Spielleitung kündigt Termine an (`/gm/sessions`,
   Knopf „Session planen" über der Terminliste, Formular im Fenster) und
   ordnet sie einer Mission zu; eine neue Mission lässt sich dort ebenfalls
-  anlegen. Der Titel entsteht aus Missionsname und laufender Nummer. Alle
+  anlegen. Unter `/gm/campaign` legt sie dafür Wochentag, gerade oder ungerade
+  ISO-Kalenderwoche, Uhrzeit und Ort als Standard fest. Das Formular wählt den
+  nächsten passenden Termin voraus; Uhrzeit und Ort werden ebenfalls
+  übernommen. Der Titel entsteht aus Missionsname und laufender Nummer. Alle
   Angemeldeten sehen Termine auf der Startseite und sagen zu oder ab. Der
   Zeitpunkt
   ist **ein** `datetime-local`-Feld (Datum und Uhrzeit gehören zusammen), und
@@ -565,7 +568,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   chronologisch mit den Spieler-Logbüchern angezeigt. Das Inhaltsverzeichnis
   der Missionschronik bietet datierte Sprungmarken zu den Log-Einträgen.
   Deren IDs bleiben bei Korrekturen erhalten. Die vollständige „Synopsis“
-  steht am Ende außerhalb der Chronik. Die Missionschronik bietet einen
+  steht am Ende außerhalb der Chronik. Einträge mit gleichem Ingame-Datum
+  stehen dort unter einer Datumsüberschrift; die einzelnen Karten in der
+  Chronik bleiben getrennt. Die Missionschronik bietet einen
   wechselnden +/−-Schalter für alle standardmäßig offenen Session-Panels;
   die allgemeine Chronologie zeigt die Kategorie „Sessions“ ohne ToC oder
   gemeinsamen Schalter. Das Eintragen eines geplanten Termins verbindet
@@ -631,7 +636,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Konfigurierbares Dashboard** — jede Person stellt unter `/user` (Klappe
   „Startseite", Anker `#dashboard`) selbst ein, welche Abschnitte auf `"/"`
   erscheinen: Erste Schritte, Spielabende, To Dos, offene Gespräche, die
-  Anlege-Knöpfe samt Import, die eigenen Entwürfe, die eigenen Charaktere,
+  Anlege-Knöpfe, die eigenen Entwürfe, die eigenen Charaktere,
   Versionen, News und Lesezeichen. Das
   Zahnrad neben der Dashboard-Überschrift springt direkt dorthin — es trägt
   `ProfileNavIcon`, dasselbe Symbol, mit dem das minimalistische Interface auf
@@ -703,11 +708,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Chronologie und die Bearbeiten-Aktion unter „Meine Inhalte“. Auf dem
   Dashboard lässt sich der Knopf im Profil einzeln ein- oder ausblenden; unter
   `/user/content` gehört er zum vollständigen Angebot.
-  Dazu kommt **„Import"** (`/user/import`) — als Link statt Fenster: Der
-  Import blättert durch mehrere Dateien und bestätigt jede einzeln, dafür ist
-  ein Fenster zu klein (dieselbe Überlegung wie beim Charakter-Assistenten).
-  Der Knopf hängt an keinem Recht mehr, weil die Seite dahinter je Inhaltsart
-  gatet (siehe **Markdown-Import für alle** unten).
+  Unter `/user/content` steht **„Import"** (`/user/import`) als separater Link
+  unterhalb der Anlege-Knöpfe; auf dem Dashboard erscheint er nicht. Der Import
+  blättert durch mehrere Dateien und bestätigt jede einzeln, dafür ist ein
+  Fenster zu klein (dieselbe Überlegung wie beim Charakter-Assistenten). Der
+  Link hängt an keinem Recht mehr, weil die Seite dahinter je Inhaltsart gatet
+  (siehe **Markdown-Import für alle** unten).
   Die Leiste selbst bricht in drei Stufen um (`.lcars-btn-row` in
   `controls.css`): schmal einer pro Zeile, ab 640px zwei, ab 1024px alle
   nebeneinander. Als Klasse statt Utility-Kette, weil der Outline-Knopf ein
@@ -760,19 +766,19 @@ auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
   gedeckelt (`OwnCharacterList`): Darüber zerreißt das Paar aus Akte und
   Aktionen optisch — die Akte wächst weiter, die Knöpfe bleiben rechts
   stehen. Ohne Aktionszeile war das hier kein Thema.
-- **Die Startseite aktualisiert sich selbst** — alle 10 Sekunden ein
-  `router.refresh()`
-  ([`DashboardAutoRefresh.tsx`](src/app/DashboardAutoRefresh.tsx)). Sie zeigt
+- **Die Startseite aktualisiert sich live** — ein WebSocket-Signal löst
+  `router.refresh()` aus; bei fehlender Verbindung bleibt ein 10-Sekunden-
+  Rückfallweg aktiv ([`DashboardAutoRefresh.tsx`](src/app/DashboardAutoRefresh.tsx)). Sie zeigt
   lauter Dinge, die sich woanders ändern (Zu-/Absagen zum Spielabend, neue
   Nachrichten in offenen Gesprächen, News, eigene Entwürfe), und bis v1.49 sah
-  man das erst beim nächsten Aufruf. `router.refresh()` statt eines eigenen
-  Poll-Endpunkts wie in `DialogueLiveView`: Für ein Dutzend unabhängiger
+  man das erst beim nächsten Aufruf. Der Refresh nutzt weiterhin
+  `router.refresh()` für ein Dutzend unabhängiger
   Abschnitte gibt es keinen gemeinsamen Snapshot, und der Refresh ist
   **weich** — die bestehende Oberfläche bleibt stehen, bis die neuen Daten da
   sind, kein Flackern und kein verlorener Client-Zustand (aufgeklappte
   Abschnitte, ein offenes Anlege-Fenster samt getippter Felder).
   **Pausiert bei unsichtbarem Tab** und holt beim Zurückkehren sofort frische
-  Daten — dasselbe Muster wie der Dialog-Poll, hier aber nicht nur Kosmetik:
+  Daten — hier aber nicht nur Kosmetik:
   Ein Refresh rendert die meistbesuchte Seite der Anwendung vollständig neu,
   und ein vergessener Hintergrund-Tab liefe sonst tagelang im
   Zehn-Sekunden-Takt gegen die Datenbank. Wer wenig anzeigt, zahlt auch wenig:
@@ -821,7 +827,7 @@ auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
   News auf einmal als gelesen. Im Profil lässt sich einstellen, welche News-Arten
   (neu/bearbeitet/gelöscht) überhaupt angezeigt werden (Standard: nur neue).
   Persistenz über die Tabelle `news_seen`.
-- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign` (im Leitungsmenü unter „Regelwerk") das aktuelle Ingame-Jahr und die Steigerungsregeln. Charakter-Zuweisungen liegen unter `/gm/characters`, die Missionsübersicht unter `/gm/missions`. Charaktere haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
+- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign` (im Leitungsmenü unter „Regelwerk") das aktuelle Ingame-Jahr, die Steigerungsregeln und Vorgaben für neue Session-Termine. Charakter-Zuweisungen liegen unter `/gm/characters`, die Missionsübersicht unter `/gm/missions`. Charaktere haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
 - **Eingaben überleben den Reload** — jede Eingabe in jedem Formular der App
   wird für die Browser-Sitzung gesichert (`sessionStorage`) und beim nächsten
   Aufbau derselben Seite wieder eingesetzt: Neuladen, versehentliches Zurück
@@ -1354,14 +1360,17 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   freie Feld wie über den zeilenweisen Editor. Ein
   Audit-Log protokolliert sicherheitsrelevante Useraccount- sowie Rollen-/
   Rechteänderungen (inkl. IP-Adresse) sowie, separat, eine 3-Tage-Übersicht aller
-  neu angelegten, bearbeiteten und gelöschten Inhalte. Zwei Wartungs-Skripte
+  neu angelegten, bearbeiteten und gelöschten Inhalte. Drei Wartungs-Skripte
   laufen blockweise mit Fortschrittsanzeige (jeweils ausblendbar): „Alle Inhalte
   verlinken" (Bulk-Autolinking; Autolinking ist bei neuen Inhalten außerdem
   standardmäßig vorausgewählt — und ändern sich Name/Titel oder Aliase eines
   Inhalts, zieht `src/lib/autolinkSync.ts` die Verlinkungen aller anderen
   Inhalte per `after()` im Hintergrund nach: neue Schreibweisen werden
-  verlinkt, bestehende `[[Wikilinks]]` auf den alten Namen umgeschrieben) und „Gespräche-Fließtext erzeugen" (Backfill für
-  vor Einführung des Features abgeschlossene Dialoge). Wer `dialogues.moderate`
+  verlinkt, bestehende `[[Wikilinks]]` auf den alten Namen umgeschrieben),
+  „Typografie korrigieren" (deutsche Anführungszeichen setzen und
+  apostrophähnliche Hochkommata sowie Akzentzeichen zu geraden Apostrophen
+  vereinheitlichen) und „Gespräche-Fließtext erzeugen" (Backfill für vor
+  Einführung des Features abgeschlossene Dialoge). Wer `dialogues.moderate`
   hat (per Default Admins), darf als Moderation jede Nachricht in jedem Gespräch
   bearbeiten oder löschen, auch fremde und auch in bereits abgeschlossenen
   Gesprächen, dessen Metadaten (Titel/Datum/Schauplatz/Ort/Tags — nicht den
@@ -2261,6 +2270,15 @@ mitgelesen — fehlt sie, scheitern Dashboard und Profil mit
 
 ```bash
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr87.sql
+```
+
+Ebenso `scripts/migrate-pr101.sql`: Sie ergänzt `campaign_settings` um die
+Vorgaben für neue Session-Termine. Die App liest diese Spalten bereits beim
+Laden der Kampagneneinstellungen; die Migration muss deshalb vor dem
+Ausliefern des neuen Stands angewendet werden:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr101.sql
 ```
 
 Ebenso `scripts/migrate-pr78.sql`: Es ergänzt `error_logs` um die drei

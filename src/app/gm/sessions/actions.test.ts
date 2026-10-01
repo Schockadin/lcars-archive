@@ -26,7 +26,7 @@ describe("Session-Detailaktionen", () => {
     form.set("returnToSessions", "true");
     await expect(deleteSessionAction({}, form)).rejects.toThrow("REDIRECT");
     expect(redirect).toHaveBeenCalledWith("/gm/sessions");
-    expect(revalidatePath).toHaveBeenCalledWith("/gm/sessions/7");
+    expect(revalidatePath).toHaveBeenCalledWith("/gm/sessions/7", undefined);
   });
 
   it("bleibt nach einem fehlgeschlagenen Löschen auf der Detailseite", async () => {
@@ -47,8 +47,8 @@ describe("Session-Detailaktionen", () => {
     expect(await updateSessionAction({}, form)).toHaveProperty("success");
     expect(listCharactersForSessionEdit).toHaveBeenCalledWith(7);
     expect(updateGameSession).toHaveBeenCalledWith(expect.objectContaining({ id: 7, characterIds: [2] }));
-    expect(revalidatePath).toHaveBeenCalledWith("/gm/sessions/7");
-    expect(revalidatePath).toHaveBeenCalledWith("/gm/missions/deneb");
-    expect(revalidatePath).toHaveBeenCalledWith("/gm/missions/kestrel");
+    expect(revalidatePath).toHaveBeenCalledWith("/gm/sessions/7", undefined);
+    expect(revalidatePath).toHaveBeenCalledWith("/gm/missions/deneb", undefined);
+    expect(revalidatePath).toHaveBeenCalledWith("/gm/missions/kestrel", undefined);
   });
 });

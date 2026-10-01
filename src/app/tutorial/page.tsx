@@ -396,7 +396,9 @@ export default function TutorialPage() {
                 </li>
               </ul>
               <p>
-                Neben den Anlegen-Knöpfen steht <strong>„Import“</strong>. Hast
+                Unterhalb der Anlegen-Knöpfe führt auf „Meine Inhalte“ ein
+                eigener Link zum <strong>„Import“</strong>; auf der Startseite
+                steht er nicht. Hast
                 du einen Eintrag schon fertig als{" "}
                 <strong>Markdown-Datei</strong> — aus deinen Notizen, einem
                 Vault, einem anderen Werkzeug —, musst du ihn nicht abtippen:
@@ -577,7 +579,8 @@ export default function TutorialPage() {
                 Person selbst, endet sie vorzeitig). Ein offenes Gespräch
                 aktualisiert sich dabei automatisch — neue Nachrichten und
                 Änderungen am Antwortrecht erscheinen von selbst, ohne dass du
-                die Seite neu laden musst. An jeder Nachrichtenkarte eines
+                die Seite neu laden musst. Bei aktiver Verbindung kommen diese
+                Aktualisierungen direkt über WebSockets. An jeder Nachrichtenkarte eines
                 laufenden Gesprächs steht neben dem Namen der sprechenden
                 Person, <strong>wann sie verschickt wurde</strong> (Datum und
                 Uhrzeit) — so siehst du, ob zwischen zwei Beiträgen Minuten oder
@@ -755,6 +758,17 @@ export default function TutorialPage() {
                 Zusammenfassung. Mit + beziehungsweise − neben dem Inhaltsverzeichnis
                 öffnest oder schließt du alle Session-Blöcke. Die allgemeine
                 Chronologie führt sie zusätzlich in der Kategorie „Sessions“.
+                In der vollständigen Synopsis stehen mehrere Einträge desselben
+                Ingame-Datums unter einer gemeinsamen Datumsüberschrift; ihre
+                Karten in der Chronik bleiben einzelne Einträge.
+              </p>
+              <p>
+                Unter <strong>„Leitung → Regelwerk → Kampagne“</strong> kann die
+                Spielleitung den Standard-Wochentag, die Parität der ISO-
+                Kalenderwoche, Uhrzeit und Ort für neue Termine festlegen
+                (anfangs Sonntag, ungerade Woche, 16:00 Uhr und „David“). Das
+                Formular wählt automatisch den nächsten passenden Termin aus
+                und übernimmt Uhrzeit und Ort.
               </p>
               <p>
                 Ist einer deiner Charaktere für den Termin{" "}
@@ -1172,6 +1186,8 @@ export default function TutorialPage() {
                   einen Rutsch über alle bestehenden Inhalte laufen lassen sowie
                   mit <strong>„Typografie korrigieren“</strong> gerade
                   Anführungszeichen in allen Inhalten in deutsche („…“)
+                  umwandeln und typografische Hochkommata sowie
+                  apostrophähnliche Akzentzeichen in gerade Apostrophe
                   umwandeln (alles blockweise mit Fortschrittsbalken).
                 </li>
                 <li>

@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { getViewer } from "@/lib/visibility";
 import {
   addNote,
@@ -45,7 +45,7 @@ export async function addNoteAction(
   const visibility = isNoteVisibility(rawVisibility) ? rawVisibility : "private";
 
   await addNote(target.type, target.slug, viewer, body, visibility);
-  if (target.path) revalidatePath(target.path);
+  if (target.path) await revalidatePathAndNotify(target.path);
   return { success: true };
 }
 
@@ -61,6 +61,6 @@ export async function deleteNoteAction(
 
   await deleteNote(id, viewer);
   const path = String(formData.get("path") ?? "");
-  if (path) revalidatePath(path);
+  if (path) await revalidatePathAndNotify(path);
   return { success: true };
 }

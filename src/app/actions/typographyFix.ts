@@ -17,6 +17,7 @@ import {
   revalidateLog,
   revalidateArchiveEntry,
 } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 export interface TypographyFixBatchResult {
   error?: string;
@@ -85,6 +86,7 @@ export async function typographyFixBatchAction(
       }
       changedInBatch += 1;
     }
+    if (changedInBatch > 0) await publishContentChanged();
 
     const processed = Math.min(safeOffset + safeBatch, total);
     return {

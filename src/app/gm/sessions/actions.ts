@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { redirect } from "next/navigation";
 import { requireGM } from "@/lib/dal";
 import {
@@ -69,9 +69,9 @@ export async function createSessionAction(
   });
   revalidateMission(sessionContext.missionSlug);
 
-  revalidatePath("/gm/sessions");
-  revalidatePath("/gm/ap");
-  revalidatePath("/gm/campaign");
+  await revalidatePathAndNotify("/gm/sessions");
+  await revalidatePathAndNotify("/gm/ap");
+  await revalidatePathAndNotify("/gm/campaign");
 
   const perCharacter = parsed.value.sessionAp + parsed.value.bonusAp;
   return {
@@ -98,14 +98,14 @@ export async function deleteSessionAction(
   if (deleted === null) return { error: "Session nicht gefunden." };
   if (deleted) {
     revalidateMission(deleted);
-    revalidatePath(`/gm/missions/${encodeURIComponent(deleted)}`);
+    await revalidatePathAndNotify(`/gm/missions/${encodeURIComponent(deleted)}`);
   }
 
-  revalidatePath("/gm/sessions");
-  revalidatePath(`/gm/sessions/${id}`);
-  revalidatePath("/gm/ap");
-  revalidatePath("/gm/campaign");
-  revalidatePath("/");
+  await revalidatePathAndNotify("/gm/sessions");
+  await revalidatePathAndNotify(`/gm/sessions/${id}`);
+  await revalidatePathAndNotify("/gm/ap");
+  await revalidatePathAndNotify("/gm/campaign");
+  await revalidatePathAndNotify("/");
   if (formData.get("returnToSessions") === "true") redirect("/gm/sessions");
   return {
     success: "Session zurückgenommen, die Gutschriften wurden storniert.",
@@ -160,13 +160,13 @@ export async function updateSessionAction(
   if (!updated) return { error: "Session nicht gefunden." };
   revalidateMission(updated.missionSlug);
   if (updated.oldMissionSlug) revalidateMission(updated.oldMissionSlug);
-  revalidatePath(`/gm/missions/${encodeURIComponent(updated.missionSlug)}`);
-  if (updated.oldMissionSlug) revalidatePath(`/gm/missions/${encodeURIComponent(updated.oldMissionSlug)}`);
+  await revalidatePathAndNotify(`/gm/missions/${encodeURIComponent(updated.missionSlug)}`);
+  if (updated.oldMissionSlug) await revalidatePathAndNotify(`/gm/missions/${encodeURIComponent(updated.oldMissionSlug)}`);
 
-  revalidatePath("/gm/sessions");
-  revalidatePath(`/gm/sessions/${id}`);
-  revalidatePath("/gm/ap");
-  revalidatePath("/gm/campaign");
+  await revalidatePathAndNotify("/gm/sessions");
+  await revalidatePathAndNotify(`/gm/sessions/${id}`);
+  await revalidatePathAndNotify("/gm/ap");
+  await revalidatePathAndNotify("/gm/campaign");
   return {
     success: "Session gespeichert — die Gutschriften wurden neu gebucht.",
   };
@@ -234,10 +234,10 @@ export async function recordPlannedSessionAction(
   });
   revalidateMission(sessionContext.missionSlug);
 
-  revalidatePath("/gm/sessions");
-  revalidatePath("/gm/ap");
-  revalidatePath("/gm/campaign");
-  revalidatePath("/");
+  await revalidatePathAndNotify("/gm/sessions");
+  await revalidatePathAndNotify("/gm/ap");
+  await revalidatePathAndNotify("/gm/campaign");
+  await revalidatePathAndNotify("/");
 
   const perCharacter = parsed.value.sessionAp + parsed.value.bonusAp;
   return {

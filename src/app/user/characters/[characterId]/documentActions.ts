@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { verifySession } from "@/lib/dal";
 import { getOwnCharacterForEdit } from "@/lib/characters";
 import {
@@ -22,9 +22,9 @@ async function requireOwnedCharacter(characterId: number) {
   return { session, character };
 }
 
-function refreshCharacterDocuments(characterId: number, characterSlug: string) {
-  revalidatePath(characterEditHref(characterId));
-  revalidatePath(characterHref(characterSlug));
+async function refreshCharacterDocuments(characterId: number, characterSlug: string) {
+  await revalidatePathAndNotify(characterEditHref(characterId));
+  await revalidatePathAndNotify(characterHref(characterSlug));
 }
 
 export async function uploadCharacterDocumentAction(
@@ -52,7 +52,7 @@ export async function uploadCharacterDocumentAction(
       file.name,
       Buffer.from(await file.arrayBuffer()),
     );
-    refreshCharacterDocuments(characterId, character.slug);
+    await refreshCharacterDocuments(characterId, character.slug);
     return { success: `„${file.name}“ wurde hinterlegt.` };
   } catch (error) {
     if (error instanceof InvalidCharacterDocumentError) {
@@ -77,7 +77,7 @@ export async function deleteCharacterDocumentAction(
 
   const deleted = await deleteCharacterDocument(characterId, documentId);
   if (!deleted) return { error: "Dokument nicht gefunden." };
-  refreshCharacterDocuments(characterId, character.slug);
+  await refreshCharacterDocuments(characterId, character.slug);
   return { success: "Dokument entfernt." };
 }
 
@@ -101,7 +101,7 @@ export async function renameCharacterDocumentAction(
       String(formData.get("fileName") ?? ""),
     );
     if (!renamed) return { error: "Dokument nicht gefunden." };
-    refreshCharacterDocuments(characterId, character.slug);
+    await refreshCharacterDocuments(characterId, character.slug);
     return { success: `Dokument wurde in „${renamed}“ umbenannt.` };
   } catch (error) {
     if (error instanceof InvalidCharacterDocumentError) {

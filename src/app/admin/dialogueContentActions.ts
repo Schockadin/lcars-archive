@@ -6,6 +6,7 @@ import {
 } from "@/lib/dialoguesCore";
 import sql from "@/lib/db";
 import { revalidateAllContent } from "@/lib/revalidate";
+import { publishContentChanged } from "@/lib/realtimeServer";
 
 export interface RegenerateDialogueContentBatchResult {
   error?: string;
@@ -57,7 +58,10 @@ export async function regenerateDialogueContentBatchAction(
     }
     // Nur wenn in diesem Batch wirklich Fließtext erzeugt wurde, die
     // Inhalts-Caches invalidieren.
-    if (changed > 0) revalidateAllContent();
+    if (changed > 0) {
+      revalidateAllContent();
+      await publishContentChanged();
+    }
 
     const processed = Math.min(safeOffset + safeBatch, total);
     return {
