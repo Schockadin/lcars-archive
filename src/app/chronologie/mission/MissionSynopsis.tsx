@@ -2,9 +2,6 @@
 import Link from "next/link";
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
-import type { Viewer } from "@/lib/visibility";
-import type { FollowState } from "@/app/actions/follows";
-import ContentActionsPanel from "@/components/ContentActionsPanel";
 import ContentDetailHeader, {
   ContentChip,
   ContentChipList,
@@ -17,14 +14,8 @@ import { MISSION_PATH, characterHref } from "@/lib/contentRoutes";
 // Rechte Spalte der Mission-Detailseite: Synopsis + Metadaten.
 export default function MissionSynopsis({
   mission,
-  viewer,
-  owners,
-  followInitialState,
 }: {
   mission: MissionDetail;
-  viewer: Viewer | null;
-  owners: { id: number; name: string }[];
-  followInitialState?: FollowState;
 }) {
   const cfg = STATUS_CONFIG[mission.status];
 
@@ -75,17 +66,6 @@ export default function MissionSynopsis({
         ]}
       />
 
-      <ContentActionsPanel
-        viewer={viewer}
-        owners={owners}
-        contentType="mission"
-        followType="mission"
-        followInitialState={followInitialState}
-        content={mission}
-        playerId={mission.ownerUserId}
-        imageContentType="mission"
-        imageContentId={mission.id}
-      />
     </article>
   );
 }

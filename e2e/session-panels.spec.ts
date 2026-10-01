@@ -51,3 +51,17 @@ test("Komplettsynopsis zeigt Datum ohne Synopsis-Präfix", async ({ page }) => {
   await expect(synopsis).toContainText("Bericht vom 8. März.");
   await expect(synopsis).not.toContainText("Veraltete Fassung");
 });
+
+test("fasst gleiche Synopsis-Daten zusammen, lässt die Karten aber separat", async ({
+  page,
+}) => {
+  await page.goto("/dev-gallery");
+  const overview = page.locator("#mission-synopsis-same-date");
+
+  await expect(overview.locator(".timeline-card")).toHaveCount(2);
+  const synopsis = overview.locator("#mission-full-synopsis");
+  await expect(synopsis.locator("h4")).toHaveCount(1);
+  await expect(synopsis.locator("h4")).toHaveText("10.03.2401");
+  await expect(synopsis).toContainText("Eintrag 1 vom selben Tag.");
+  await expect(synopsis).toContainText("Eintrag 2 vom selben Tag.");
+});

@@ -47,6 +47,15 @@ const DEMO_SESSION_BLOCKS: MissionSynopsisBlock[] = [8, 7].map((day, index) => (
   ingameDate: `2401-03-0${day}`, body: `Bericht vom ${day}. März.`,
   bodyHtml: `<p>Bericht vom ${day}. März.</p>`,
 }));
+const DEMO_DUPLICATE_DATE_BLOCKS: MissionSynopsisBlock[] = [1, 2].map((number) => ({
+  id: 7100 + number,
+  sessionId: 43,
+  missionSessionNumber: 2,
+  missionBlockNumber: number,
+  ingameDate: "2401-03-10",
+  body: `Eintrag ${number} vom selben Tag.`,
+  bodyHtml: `<p>Eintrag ${number} vom selben Tag.</p>`,
+}));
 const DEMO_SESSION_EVENTS: TimelineEvent[] = DEMO_SESSION_BLOCKS.map((block) => ({
   id: `session:${block.id}`, sessionBlockId: block.id, date: block.ingameDate,
   title: `${block.ingameDate.slice(-2)}.03.2401`, category: "session", origin: "metadata",
@@ -772,6 +781,16 @@ export default function DevGalleryPage() {
         <MissionLogOverview missionSlug="session-panels-demo" missionTitle="Demo-Mission"
           logs={DEMO_MISSION_LOGS} synopsisBlocks={DEMO_SESSION_BLOCKS} canCreateLog={false}
           fullSynopsisHtml="<h2>Synopsis 2401-03-08</h2><p>Veraltete Fassung</p>" />
+      </section>
+      <section id="mission-synopsis-same-date" className="mb-[24px]">
+        <MissionLogOverview
+          missionSlug="same-date-demo"
+          missionTitle="Demo-Mission"
+          fullSynopsisHtml={null}
+          logs={[]}
+          synopsisBlocks={DEMO_DUPLICATE_DATE_BLOCKS}
+          canCreateLog={false}
+        />
       </section>
 
       {/* Die Datenbank (/archive) mit Attrappen-Einträgen: sie trägt seit der

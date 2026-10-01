@@ -154,6 +154,30 @@ describe("MissionLogOverview", () => {
     expect([...container.querySelectorAll(".lcars-toc-link")].map((item) => item.textContent)).toContain("Synopsis");
   });
 
+  it("führt gleiche Synopsis-Daten zusammen und lässt die Karten einzeln", () => {
+    const { container } = renderOverview({
+      logs: [],
+      synopsisBlocks: [7, 8].map((id) => ({
+        id,
+        sessionId: 8,
+        missionSessionNumber: 8,
+        missionBlockNumber: id,
+        ingameDate: "2234-12-20",
+        body: `Eintrag ${id}`,
+        bodyHtml: `<p>Eintrag ${id}</p>`,
+      })),
+    });
+
+    expect(container.querySelectorAll(".timeline-card")).toHaveLength(2);
+    const fullSynopsis = container.querySelector<HTMLElement>(
+      "#mission-full-synopsis",
+    )!;
+    expect(fullSynopsis.querySelectorAll("h4")).toHaveLength(1);
+    expect(fullSynopsis.querySelector("h4")).toHaveTextContent("20.12.2234");
+    expect(fullSynopsis).toHaveTextContent("Eintrag 7");
+    expect(fullSynopsis).toHaveTextContent("Eintrag 8");
+  });
+
   it("steuert Session-Inhalte mit einem wechselnden Textbutton neben dem ToC", () => {
     const { container } = renderOverview({ synopsisBlocks: [7, 8].map((id) => ({
       id, sessionId: 1, missionSessionNumber: 1, missionBlockNumber: id,

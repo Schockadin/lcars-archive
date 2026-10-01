@@ -26,6 +26,7 @@ import { missionHref } from "@/lib/contentRoutes";
 import { listMissionSynopsisBlocks } from "@/lib/gameSessions";
 import HelpButton from "@/components/help/HelpButton";
 import { PublicChronologyGuide } from "@/components/help/guides/PublicGuides";
+import ContentActionsPanel from "@/components/ContentActionsPanel";
 interface Props {
   params: Promise<{ missionSlug: string }>;
   searchParams: Promise<{ activateFollow?: string }>;
@@ -118,9 +119,6 @@ export default async function MissionPage({ params, searchParams }: Props) {
       <MarkNewsSeen type="mission" slug={mission.slug} />
       <MissionSynopsis
         mission={mission}
-        owners={owners}
-        viewer={viewer}
-        followInitialState={followInitialState}
       />
       <MissionLogOverview
         missionSlug={mission.slug}
@@ -156,6 +154,19 @@ export default async function MissionPage({ params, searchParams }: Props) {
           />
         )}
         <MentionsSection mentions={mentions} />
+      </div>
+      <div className="mission-detail-article">
+        <ContentActionsPanel
+          viewer={viewer}
+          owners={owners}
+          contentType="mission"
+          followType="mission"
+          followInitialState={followInitialState}
+          content={mission}
+          playerId={mission.ownerUserId}
+          imageContentType="mission"
+          imageContentId={mission.id}
+        />
       </div>
     </>
   );
