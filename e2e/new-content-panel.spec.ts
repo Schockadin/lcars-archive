@@ -32,4 +32,3 @@ test("GM-Aktionen öffnen die Missions- und Terminformulare in Fenstern", async 
   );
   await expect(sessionDialog.locator("#ps-loc-neu")).toHaveValue("David");
 });
-

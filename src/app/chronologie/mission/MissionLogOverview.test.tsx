@@ -154,7 +154,7 @@ describe("MissionLogOverview", () => {
     expect([...container.querySelectorAll(".lcars-toc-link")].map((item) => item.textContent)).toContain("Synopsis");
   });
 
-  it("führt gleiche Synopsis-Daten zusammen und lässt die Karten einzeln", () => {
+  it("führt gleiche Synopsis-Daten in Missionsreihenfolge zusammen", () => {
     const { container } = renderOverview({
       logs: [],
       synopsisBlocks: [
@@ -253,4 +253,3 @@ describe("MissionLogOverview", () => {
     expect(container.querySelector(".mission-sort")).toBeNull();
   });
 });
-

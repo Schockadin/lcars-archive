@@ -507,4 +507,3 @@ export default function DSGVOContent({ year }: { year: number }) {
     </>
   );
 }
-

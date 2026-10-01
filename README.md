@@ -567,7 +567,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Log-Einträge werden automatisch in die Missions-Synopsis übernommen und
   chronologisch mit den Spieler-Logbüchern angezeigt. Das Inhaltsverzeichnis
   der Missionschronik bietet datierte Sprungmarken zu den Log-Einträgen.
-  Deren IDs bleiben bei Korrekturen erhalten. Die vollständige „Synopsis"
+  Deren IDs bleiben bei Korrekturen erhalten. Die vollständige „Synopsis“
   steht am Ende außerhalb der Chronik. Einträge mit gleichem Ingame-Datum
   stehen dort unter einer Datumsüberschrift; die einzelnen Karten in der
   Chronik bleiben getrennt. Die Missionschronik bietet einen
@@ -827,7 +827,7 @@ auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
   News auf einmal als gelesen. Im Profil lässt sich einstellen, welche News-Arten
   (neu/bearbeitet/gelöscht) überhaupt angezeigt werden (Standard: nur neue).
   Persistenz über die Tabelle `news_seen`.
-- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign` (im Leitungsmenü unter „Regelwerk") das aktuelle Ingame-Jahr und die Steigerungsregeln. Charakter-Zuweisungen liegen unter `/gm/characters`, die Missionsübersicht unter `/gm/missions`. Charaktere haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
+- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign` (im Leitungsmenü unter „Regelwerk") das aktuelle Ingame-Jahr, die Steigerungsregeln und Vorgaben für neue Session-Termine. Charakter-Zuweisungen liegen unter `/gm/characters`, die Missionsübersicht unter `/gm/missions`. Charaktere haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
 - **Eingaben überleben den Reload** — jede Eingabe in jedem Formular der App
   wird für die Browser-Sitzung gesichert (`sessionStorage`) und beim nächsten
   Aufbau derselben Seite wieder eingesetzt: Neuladen, versehentliches Zurück
@@ -2278,15 +2278,6 @@ Ausliefern des neuen Stands angewendet werden:
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr101.sql
 ```
 
-Ebenso `scripts/migrate-pr101.sql`: Sie ergänzt `campaign_settings` um die
-Vorgaben für neue Session-Termine. Die App liest diese Spalten bereits beim
-Laden der Kampagneneinstellungen; die Migration muss deshalb vor dem
-Ausliefern des neuen Stands angewendet werden:
-
-```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr101.sql
-```
-
 Ebenso `scripts/migrate-pr78.sql`: Es ergänzt `error_logs` um die drei
 Herkunfts-Spalten (`app_version`, `deploy_context`, `commit_ref`, siehe
 [`src/lib/deployInfo.ts`](src/lib/deployInfo.ts)). Fehlt die Migration, gibt es
@@ -2327,4 +2318,3 @@ Dieses Fan-Projekt steht in keiner Verbindung zu den Rechteinhabern.
 ---
 
 <p align="center"><em>„Live long and prosper.“ 🖖</em></p>
-
