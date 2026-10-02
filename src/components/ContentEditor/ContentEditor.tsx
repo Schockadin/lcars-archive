@@ -11,7 +11,8 @@ import HeadFieldRenderer from "./HeadFieldRenderer";
 import MetadataSection from "./MetadataSection";
 import type { HeadField } from "./headFields";
 import type { ContentImageType } from "@/lib/contentImages";
-import SessionDraftForm from "@/components/SessionDraftForm";
+import EditorDraftForm, { type EditorDraftTarget } from "./EditorDraftForm";
+import type { EditorDraftType } from "@/lib/editorDraftTypes";
 
 interface ContentEditorState {
   error?: string;
@@ -30,10 +31,13 @@ interface ContentEditorProps<FieldName extends string> {
   // Quelle für die defaultValue jedes Head-Felds, per field.name aufgelöst.
   defaults?: Partial<Record<FieldName, unknown>>;
   idPrefix: string;
-  // Stabiler Namensraum für die Session-Entwürfe. Im Edit-Modus gehört
-  // die Inhalts-ID hinein, damit zwei gleich gebaute Editoren nie dieselben
-  // Feldschlüssel verwenden.
+  // Stabiler Editor-Namensraum, z.B. mit Inhalts-ID im Edit-Modus.
   draftScope: string;
+  // Bestehende Inhalte erhalten einen separaten DB-Entwurf.
+  editorDraft?: EditorDraftTarget;
+  // Modal-Anlegeformulare erhalten bis zum normalen Speichern ebenfalls einen
+  // persönlichen DB-Zwischenstand.
+  draftOnCreate?: EditorDraftType;
   bodyName?: string;
   bodyLabel: string;
   bodyHint?: ReactNode;
@@ -72,6 +76,8 @@ export default function ContentEditor<FieldName extends string>({
   defaults = {},
   idPrefix,
   draftScope,
+  editorDraft,
+  draftOnCreate,
   bodyName = "bodyMarkdown",
   bodyLabel,
   bodyHint,
@@ -102,10 +108,12 @@ export default function ContentEditor<FieldName extends string>({
   );
 
   return (
-    <SessionDraftForm
+    <EditorDraftForm
       action={formAction}
       className="flex flex-col gap-[16px]"
       draftScope={draftScope}
+      editorDraft={mode === "edit" ? editorDraft : undefined}
+      newDraftType={mode === "create" ? draftOnCreate : undefined}
     >
       {Object.entries(hiddenFields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
@@ -181,6 +189,6 @@ export default function ContentEditor<FieldName extends string>({
       </SubmitButton>
 
       <FormError message={state?.error} />
-    </SessionDraftForm>
+    </EditorDraftForm>
   );
 }

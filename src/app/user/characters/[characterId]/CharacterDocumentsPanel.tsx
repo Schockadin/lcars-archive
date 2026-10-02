@@ -1,7 +1,8 @@
 "use client";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { LcarsCollapsiblePanel } from "@/components/lcars";
 import ModalOverlay from "@/components/ModalOverlay";
+import EditorDraftForm from "@/components/ContentEditor/EditorDraftForm";
 import {
   DownloadIcon,
   EyeIcon,
@@ -121,14 +122,34 @@ function RenameDocumentForm({
   characterId: number;
   document: CharacterDocument;
 }) {
+  const [draftGeneration, setDraftGeneration] = useState(0);
+  const renameAction = useCallback(
+    async (
+      previousState: CharacterDocumentActionState,
+      formData: FormData,
+    ) => {
+      const result = await renameCharacterDocumentAction(previousState, formData);
+      if (result.success) {
+        setDraftGeneration((generation) => generation + 1);
+      }
+      return result;
+    },
+    [],
+  );
   const [state, formAction, pending] = useActionState(
-    renameCharacterDocumentAction,
+    renameAction,
     initialState,
   );
   const inputId = `character-document-${document.id}-name`;
 
   return (
-    <form action={formAction} className="flex flex-col" data-no-draft>
+    <EditorDraftForm
+      key={draftGeneration}
+      action={formAction}
+      className="flex flex-col"
+      draftScope={`character-document:${characterId}:${document.id}`}
+      editorDraft={{ type: "character_document", contentId: document.id }}
+    >
       <input type="hidden" name="characterId" value={characterId} />
       <input type="hidden" name="documentId" value={document.id} />
       <FormField
@@ -156,7 +177,7 @@ function RenameDocumentForm({
       >
         Dateiname speichern
       </SubmitButton>
-    </form>
+    </EditorDraftForm>
   );
 }
 

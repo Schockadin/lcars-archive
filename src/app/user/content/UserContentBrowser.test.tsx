@@ -64,6 +64,7 @@ const dialogue: DialogueSummary = {
   slug: "kantine",
   title: "Abend in der Kantine",
   partnerName: "Kira",
+  lastMessageCharacterName: "Spock",
   updatedAt: "2400-05-02",
   logDate: null,
   open: true,
@@ -127,6 +128,28 @@ describe("UserContentBrowser", () => {
     expect(container.querySelectorAll(".timeline-event").length).toBe(5);
     expect(container.querySelector(".timeline-rail")).toBeTruthy();
     expect(container.querySelector(".lcars-data-row")).toBeNull();
+  });
+
+  it("zeigt den Autor der letzten Nachricht nur auf offenen Gesprächskarten", () => {
+    const firstRender = renderBrowser({
+      logs: [],
+      archiveEntries: [],
+      missions: [],
+    });
+
+    expect(screen.getByText("Zuletzt geschrieben von")).toBeInTheDocument();
+    expect(screen.getByText("Spock")).toBeInTheDocument();
+    firstRender.unmount();
+
+    renderBrowser({
+      logs: [],
+      archiveEntries: [],
+      missions: [],
+      dialogues: [{ ...dialogue, open: false }],
+    });
+
+    expect(screen.queryByText("Zuletzt geschrieben von")).toBeNull();
+    expect(screen.queryByText("Spock")).toBeNull();
   });
 
   it("führt eigene Events mit Bearbeiten-Aktion als Inhaltsart", () => {

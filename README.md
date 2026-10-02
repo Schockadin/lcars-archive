@@ -136,7 +136,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (`src/lib/replyDockPreference.ts`), nicht am Konto — sie gilt dem Layout
   des jeweiligen Geräts, und eine Spalte in `users` verlangte eine Migration
   gegen dieselbe Datenbank, an der auch die Deploy-Preview hängt. Der Haken
-  trägt `data-no-draft`, sonst schriebe ihn die Entwurfs-Sicherung mit.
+  trägt `data-no-draft` als verbliebenes Attribut der früheren globalen
+  Sitzungssicherung; die neue Sicherung ist auf bestehende Inhaltseditoren
+  begrenzt.
 - **Gespräche mit NPCs** — Gesprächspartner kann auch ein **NPC** sein. Ein NPC
   ist **kein Charakter**, sondern ein **Datenbank-Eintrag der Kategorie `npc`**
   (`archive_entries.category = 'npc'`, siehe `getNpcOptions`). Wer im Gespräch
@@ -836,90 +838,18 @@ auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
   (neu/bearbeitet/gelöscht) überhaupt angezeigt werden (Standard: nur neue).
   Persistenz über die Tabelle `news_seen`.
 - **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign` (im Leitungsmenü unter „Regelwerk") das aktuelle Ingame-Jahr, die Steigerungsregeln und Vorgaben für neue Session-Termine. Charakter-Zuweisungen liegen unter `/gm/characters`, die Missionsübersicht unter `/gm/missions`. Charaktere haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
-- **Eingaben überleben den Reload** — jede Eingabe in jedem Formular der App
-  wird für die Browser-Sitzung gesichert (`sessionStorage`) und beim nächsten
-  Aufbau derselben Seite wieder eingesetzt: Neuladen, versehentliches Zurück
-  oder ein Fehlerbildschirm kosten keinen getippten Text mehr. Die Regeln
-  (welches Feld, welcher Schlüssel, welcher Wert) liegen React-frei und
-  unit-testbar in `src/lib/inputDraft.ts`, die Verdrahtung mit dem Dokument in
-  `src/components/lcars/InputDraftKeeper.tsx` — eine einzige Stelle im
-  Root-Layout statt einer Änderung an ~80 Formularen: die Sicherung hängt per
-  Event-Delegation an `document` und findet neue Felder (Fenster, Akkordeons,
-  nachgeladene Bereiche) über einen `MutationObserver`. Der Schlüssel eines
-  Feldes besteht aus Seitenpfad, Formular (`id`/`name`/Position) und Feld
-  (`name`/`id`/Position), Kästchen zusätzlich mit ihrem `value`. Die gemeinsam
-  gebauten Content-Editoren kapseln das in `SessionDraftForm`: Dessen
-  verpflichtender `draftScope` setzt einen stabilen `data-draft-scope` aus
-  Inhaltsart und ID (z. B. `archive-entry:42`). Zwei Einträge mit denselben
-  Feldnamen teilen dadurch nie einen Schlüssel. Beim
-  clientseitigen Next-Routenwechsel sperrt eine im Layout-Effect aktualisierte
-  Pfad-Ref außerdem Observer und Timer der alten Seite, bevor sie das neue DOM
-  sehen können. Die Position
-  ist dabei nur INNERHALB eines Formulars der Ausweg — dort steht die
-  Felderliste fest; ein Feld ganz ohne Formular und ohne `name`/`id` bleibt
-  außen vor (`hasStableKey`). Sonst zeigt derselbe Schlüssel nach dem
-  nächsten Filtern oder Sortieren auf ein anderes Feld, und das Einsetzen
-  löst ein echtes `change`-Ereignis aus: Genau so veröffentlichte der
-  Entwurf/Veröffentlicht-Schalter unter „Meine Inhalte" (ein namenloses
-  Auswahlfeld je Zeile) fremde Entwürfe, bis v1.43 ihn zu Knöpfen machte.
-  Lieber kein gesicherter Entwurf als ein Wert im falschen Feld. Nicht
-  gesichert werden Passwörter, Einmalcodes und Zahlungsdaten
-  (`autocomplete`-Kennung bzw. `type`) sowie alles unterhalb von
-  `data-no-draft` — das trägt u.a. `PasswordInput` (ihr Feld wechselt beim
-  Anzeigen auf `type="text"`), die globale Kopfzeilen-Suche und
-  `AdminSelectField` (ein Befehlsfeld, das bei jeder Änderung schreibt, ist
-  kein Entwurf). Auch die Texte und Ingame-Daten der GM-Session-Synopsisblöcke
-  tragen `data-no-draft` und werden nicht zwischengespeichert; bereits
-  vorhandene ältere Entwürfe werden entfernt, sobald der Editor angezeigt wird.
-  Ein zurückgesetztes Formular (`reset`) verliert seinen Stand — sofort, nicht im
-  nächsten Tick, damit ein Formular, das sich per neuem `key` neu aufbaut
-  (Notiz-Editor), nicht doch wieder mit dem eben abgeschickten Text gefüllt
-  wird; `NotesPanel` löst dafür nach dem Speichern ein echtes `reset()` aus,
-  wie `DialogueReplyForm` es tut. Vor dem
-  Verlassen der Seite (`pagehide`) wird der DOM-Stand der **bereits
-  gesicherten** Felder nachgeführt (`withKnownDraftValue`) — damit ein von
-  React nach erfolgreicher Server-Action geleertes Formular nicht mit altem
-  Text wieder aufersteht, ein nur geöffnetes Bearbeiten-Formular aber auch
-  nicht seine serverseitigen Vorgabewerte sichert und sie später über
-  inzwischen geänderte Inhalte legt. Beim An- UND
-  Abmelden wird der gesamte Entwurfs-Speicher verworfen
-  (`clearAllInputDrafts()` in `HeaderUserNav`/`LoginForm`, an derselben Stelle
-  wie das Leeren des Offline-Seiten-Caches): Auf einem geteilten Gerät soll
-  die nächste Person weder fremde Zwischenstände vorfinden noch eigene
-  hinterlassen. **Ersetzt der Server den Text absichtlich**, ist der
-  gesicherte Stand überholt und wird verworfen
-  (`dropInputDraftsForPage()`, seit v1.45): Genau das passiert beim
-  **Wiederherstellen einer früheren Fassung** (`RevisionsPanel`) — ohne das
-  legte die Sicherung den ersetzten Text beim nächsten Aufbau wieder über den
-  wiederhergestellten, und ein anschließendes Speichern schrieb ihn sogar
-  zurück in die Datenbank. Bewusst als **Ereignis** an `document` und nicht
-  als Aufruf von `clearDraftRecord()`: Die Sicherung hält denselben Stand
-  zusätzlich im Arbeitsspeicher (`recordRef`) und schreibt ihn beim
-  `pagehide` zurück — ein Löschen an ihr vorbei wäre beim nächsten
-  Seitenwechsel wieder erledigt. Das Panel lädt danach die Seite neu, denn
-  das Textfeld des Editors ist unkontrolliert (`defaultValue`): Hat jemand
-  darin getippt, gilt es dem Browser als „dirty" und übernimmt einen neuen
-  Vorgabewert nicht mehr — das `revalidatePath` der Action erneuert die
-  Seite, nicht aber den Text im Feld. Der `MutationObserver` läuft nur an, wenn eine Änderung
-  wirklich ein Element hinzugefügt hat, und der Wiederherstellungs-Durchgang
-  bricht sofort ab, solange es für die Seite nichts Gesichertes gibt — auf
-  Seiten mit Live-Aktualisierung (Gesprächs-Poll, Toasts) kostet er damit
-  praktisch nichts.
-
-  **Einmal einsetzen genügt nicht**, sobald ein Feld einen vom Server
-  gerenderten Vorgabewert trägt — also bei jedem Bearbeiten-Formular und jedem
-  `MarkdownEditor`. React hydriert die Seite nach dem Einsetzen und schreibt
-  dabei den Vorgabewert zurück; der Entwurf war gesichert, aber sofort wieder
-  überschrieben (genau der Fehler, den die erste Fassung in allen Editoren
-  hatte). Deshalb wird der Stand nach dem Aufbau **angeheftet**: Durchgänge
-  alle 150 ms für 1,5 s (`PIN_WINDOW_MS`), die ein Feld nachziehen, solange
-  niemand es anfasst — die erste Eingabe von Hand beendet das Anheften für
-  dieses Feld, danach gilt wieder „einmal einsetzen, dann in Ruhe lassen".
-  Dieselbe Phase läuft für nachgeladene Bereiche, die erst beim Eintreffen
-  hydrieren. Und was **vor** dem ersten Durchgang schon im Feld stand (wer
-  schneller tippt, als die Seite fertig wird), erkennt die Sicherung am
-  Abweichen vom Vorgabewert (`isFieldAtDefault`) und übernimmt es, statt es
-  zu überschreiben.
+- **Autosicherung von Inhalten** — Bearbeitungen an bestehenden Missionen,
+  Logbüchern, Datenbank-Einträgen, freien Chronologie-Ereignissen und das
+  Umbenennen von Charakterdokumenten sowie modale Formulare zum Anlegen von
+  Inhalten und Sessions erhalten eine private Arbeitskopie
+  in `editor_drafts`. Der Editor schreibt nach fünf Sekunden ohne Eingabe und
+  spätestens alle fünf Sekunden bei fortlaufendem Tippen. Erst nach der ersten
+  Änderung entsteht ein DB-Eintrag. Beim Neuladen wird der letzte bestätigte
+  Stand wiederhergestellt; die normale Speichern-Aktion übernimmt ihn in den
+  Inhalt und löscht den Zwischenstand. Versionierte Schreibvorgänge schützen
+  vor dem Überschreiben eines neueren Stands aus einem anderen Tab.
+  Ungenutzte Zwischenstände laufen nach 30 Tagen ab. Eigenständige
+  Anlege-Seiten und andere Formulare werden nicht zwischengespeichert.
 
 - **Öffentliches Changelog** — die Seite `/changelog` listet je Version die
   end-nutzerrelevanten Neuerungen (gepflegt in `src/lib/changelog.ts`). Jeder
@@ -1843,7 +1773,7 @@ Listen in Datenbank, Missionen, Suche, Profil, „Meine Inhalte“, Follows und
 GM-/Admin-Übersichten), `FormPrimitives` (`FormField`, `SaveFooter`,
 `SubmitButton`, Fehler-/Erfolgs-Toast), `ChoiceCardGroup` für die
 Darstellungsoptionen, `ContentStateSwitch` für Owner- und Moderationsansichten,
-`SessionDraftForm` als sichere Formulargrenze, `ConfirmSubmitIconButton` und
+`EditorDraftForm` als DB-gestützte Formularsicherung, `ConfirmSubmitIconButton` und
 `DangerZoneButton` für bestätigungspflichtige Aktionen, `BackupPanel`
 (Export/Import für DB- und User-Backup) sowie `BatchScriptPanel` (die
 blockweise laufenden Admin-Skripte mit Fortschrittsbalken). Inhaltslabels,

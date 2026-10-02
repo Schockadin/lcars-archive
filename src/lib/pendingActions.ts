@@ -31,6 +31,8 @@ export interface PendingAction {
   // Woran (Titel der Mission, des Gesprächs, des Entwurfs).
   subject: string;
   href: string;
+  // Nur bei Antworten auf offene Gespräche gesetzt.
+  lastMessageCharacterName?: string | null;
   // Wonach sortiert wird: das Datum, seit dem es aussteht. Je älter, desto
   // weiter oben.
   since: string;
@@ -67,18 +69,28 @@ export async function getPendingActions(
     // 2. Gespräche, in denen ich am Zug bin: ich bin beteiligt (eigene Figur
     // als Sprecher oder selbst Autor einer Nachricht) und die letzte
     // Nachricht ist nicht von mir.
-    sql<{ slug: string; title: string; open: boolean; since: string }[]>`
+    sql<{
+      slug: string;
+      title: string;
+      open: boolean;
+      since: string;
+      last_message_character_name: string | null;
+    }[]>`
       WITH letzte AS (
         SELECT DISTINCT ON (dm.archive_entry_id)
-               dm.archive_entry_id, dm.author_user_id, dm.created_at
+               dm.archive_entry_id, dm.author_user_id, dm.character_id,
+               dm.npc_entry_id, dm.created_at
         FROM dialogue_messages dm
         WHERE dm.deleted_at IS NULL
-        ORDER BY dm.archive_entry_id, dm.created_at DESC
+        ORDER BY dm.archive_entry_id, dm.created_at DESC, dm.id DESC
       )
       SELECT ae.slug, ae.title, ae.dialogue_open AS open,
-             letzte.created_at::text AS since
+             letzte.created_at::text AS since,
+             COALESCE(last_character.name, last_npc.title) AS last_message_character_name
       FROM letzte
       JOIN archive_entries ae ON ae.id = letzte.archive_entry_id
+      LEFT JOIN characters last_character ON last_character.id = letzte.character_id
+      LEFT JOIN archive_entries last_npc ON last_npc.id = letzte.npc_entry_id
       WHERE ae.deleted_at IS NULL AND ae.dialogue_open = true
         AND letzte.author_user_id IS DISTINCT FROM ${userId}
         AND EXISTS (
@@ -129,6 +141,7 @@ export async function getPendingActions(
       subject: d.title,
       href: dialogueContentHref(d.slug, d.open),
       since: d.since,
+      lastMessageCharacterName: d.last_message_character_name,
     })),
     ...drafts.map((d) => ({
       kind: "draft" as const,

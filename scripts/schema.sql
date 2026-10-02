@@ -1392,6 +1392,34 @@ CREATE INDEX IF NOT EXISTS idx_content_revisions_target
   ON content_revisions(content_type, content_id, created_at DESC);
 
 -- ---------------------------------------------------------------------------
+-- editor_drafts
+-- ---------------------------------------------------------------------------
+-- Flüchtige Arbeitskopien der gemeinsamen Inhaltseditoren. Autosaves ändern
+-- weder den eigentlichen Inhalt noch dessen updated_at, Revisionen, Embeddings,
+-- Cache-Tags oder Benachrichtigungen. Die normale Speichern-Aktion übernimmt
+-- den Inhalt und entfernt danach den Entwurf. Inaktive Entwürfe laufen nach
+-- 30 Tagen ab; die Versionsnummer verhindert Überschreiben aus einem zweiten
+-- Tab, der auf einem älteren Entwurfsstand arbeitet.
+CREATE TABLE IF NOT EXISTS editor_drafts (
+  user_id      INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content_type TEXT NOT NULL
+                 CHECK (content_type IN (
+                   'archive', 'mission', 'mission_log', 'manual_event',
+                   'character_document', 'dialogue', 'game_session',
+                   'planned_session'
+                 )),
+  content_id   INT NOT NULL,
+  fields       JSONB NOT NULL,
+  revision     INT NOT NULL DEFAULT 1 CHECK (revision > 0),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at   TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (user_id, content_type, content_id)
+);
+CREATE INDEX IF NOT EXISTS idx_editor_drafts_expiry
+  ON editor_drafts(expires_at);
+
+-- ---------------------------------------------------------------------------
 -- focuses
 -- ---------------------------------------------------------------------------
 -- Schwerpunkt-Katalog (Focuses), gepflegt unter /gm/focuses. Aufgebaut wie

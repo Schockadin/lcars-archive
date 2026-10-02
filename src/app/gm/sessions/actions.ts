@@ -18,6 +18,7 @@ import { revalidateMission } from "@/lib/revalidate";
 import {
   getPlannedSession,
 } from "@/lib/plannedSessions";
+import { removeNewEditorDraftFromForm } from "@/lib/editorDrafts";
 
 export interface SessionFormState {
   error?: string;
@@ -67,6 +68,7 @@ export async function createSessionAction(
     characterIds,
     createdByUserId: user.id,
   });
+  await removeNewEditorDraftFromForm(user.id, "game_session", formData);
   revalidateMission(sessionContext.missionSlug);
 
   await revalidatePathAndNotify("/gm/sessions");
@@ -232,6 +234,7 @@ export async function recordPlannedSessionAction(
     characterIds,
     createdByUserId: user.id,
   });
+  await removeNewEditorDraftFromForm(user.id, "game_session", formData);
   revalidateMission(sessionContext.missionSlug);
 
   await revalidatePathAndNotify("/gm/sessions");

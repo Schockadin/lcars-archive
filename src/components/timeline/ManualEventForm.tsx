@@ -8,6 +8,7 @@ import {
   SubmitButton,
 } from "@/app/_shared/FormPrimitives";
 import ModalOverlay from "@/components/ModalOverlay";
+import EditorDraftForm from "@/components/ContentEditor/EditorDraftForm";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import {
   createManualEventAction,
@@ -95,7 +96,7 @@ export default function ManualEventForm({
           title={editing ? "Ereignis bearbeiten" : "Ereignis eintragen"}
           onClose={() => setOpen(false)}
         >
-          <form
+          <EditorDraftForm
             action={(data) => {
               formAction(data);
               // Nach dem Absenden zu: die Rückmeldung steht darunter auf der
@@ -103,6 +104,9 @@ export default function ManualEventForm({
               setOpen(false);
             }}
             className="flex flex-col"
+            draftScope={editing ? `manual-event:${event.id}` : "manual-event:new"}
+            editorDraft={event ? { type: "manual_event", contentId: event.id } : undefined}
+            newDraftType={event ? undefined : "manual_event"}
           >
             {event && <input type="hidden" name="id" value={event.id} />}
             <p className="text-lcars-ink-dim text-[12px] mb-[10px]">
@@ -202,7 +206,7 @@ export default function ManualEventForm({
             >
               {editing ? "Speichern" : "Eintragen"}
             </SubmitButton>
-          </form>
+          </EditorDraftForm>
         </ModalOverlay>
       )}
 

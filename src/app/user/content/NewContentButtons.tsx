@@ -115,6 +115,7 @@ export default function NewContentButtons({
             ) : (
               <NewMissionLogForm
                 userId={data.userId}
+                draftOnCreate
                 ownCharacters={data.missionLog.ownCharacters}
                 missions={data.missionLog.missions}
                 defaultSessionNr={data.missionLog.defaultSessionNr}
@@ -124,6 +125,7 @@ export default function NewContentButtons({
           {open === "dialogue" && data.dialogue && (
             <CreateDialogueForm
               userId={data.userId}
+              draftOnCreate
               ownCharacters={data.dialogue.ownCharacters}
               partnerCharacters={data.dialogue.partnerCharacters}
               npcs={data.dialogue.npcs}
@@ -136,12 +138,14 @@ export default function NewContentButtons({
           {(open === "archiveEntry" || open === "npc") && (
             <NewArchiveEntryForm
               userId={data.userId}
+              draftOnCreate
               initialCategory={open === "npc" ? "npc" : "other"}
             />
           )}
           {open === "mission" && data.mission && (
             <NewMissionForm
               userId={data.userId}
+              draftOnCreate
               defaultStartedAt={data.mission.defaultStartedAt}
               characters={data.mission.characters}
             />

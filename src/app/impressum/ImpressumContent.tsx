@@ -55,16 +55,15 @@ export default function ImpressumContent() {
           Überwachung fremder Informationen besteht nicht (§§ 8–10 TMG).
         </p>
         <p>
-          Noch nicht abgesendete Formulareingaben sind lediglich eine lokale
-          Zwischensicherung im Sitzungsspeicher des jeweiligen Browsers. Sie
-          werden nach Seite, Formular und bearbeitetem Eintrag getrennt, damit
-          etwa der Text eines Entwurfs nicht in einem anderen Editor erscheint.
-          Die Zwischenstände verlassen das Gerät nicht und werden erst durch das
-          ausdrückliche Speichern zu einem Beitrag im Archiv. Die Texte und
-          Ingame-Daten der GM-Session-Synopsisblöcke werden nicht
-          zwischengespeichert; ältere Zwischenstände solcher Felder werden beim
-          Anzeigen des Editors entfernt. Die Einzelheiten stehen in der
-          Datenschutzerklärung.
+          Beim Bearbeiten einer bestehenden Mission, eines Logbuchs, eines
+          Datenbank-Eintrags oder eines Chronologie-Ereignisses, beim
+          Umbenennen eines Charakterdokuments sowie in modalen Formularen für
+          neue Inhalte und Sessions sichert der Editor Änderungen automatisch
+          als privaten Zwischenstand in der Datenbank. Erst das ausdrückliche
+          Speichern übernimmt sie in den Inhalt. Zwischenstände werden nach
+          erfolgreicher Anlage oder Bearbeitung entfernt und laufen nach 30
+          Tagen ab. Die Einzelheiten
+          stehen in der Datenschutzerklärung.
         </p>
         <p>
           Live-Aktualisierungen verwenden den externen Dienst Ably Realtime.

@@ -12,6 +12,10 @@ import {
   parseManualEvent,
   updateManualEvent,
 } from "@/lib/timelineManualEvents";
+import {
+  removeEditorDraft,
+  removeNewEditorDraftFromForm,
+} from "@/lib/editorDrafts";
 
 export interface ManualEventState {
   error?: string;
@@ -55,6 +59,7 @@ export async function createManualEventAction(
     }
 
     await createManualEvent(input, user.id);
+    await removeNewEditorDraftFromForm(user.id, "manual_event", formData);
     await revalidatePathAndNotify("/chronologie");
     await revalidatePathAndNotify("/user/content");
     return { success: true };
@@ -112,6 +117,7 @@ export async function updateManualEventAction(
           "Das Ereignis gibt es nicht mehr — oder es gehört jemand anderem.",
       };
     }
+    await removeEditorDraft(user.id, "manual_event", id);
     await revalidatePathAndNotify("/chronologie");
     await revalidatePathAndNotify("/user/content");
     return { success: true };

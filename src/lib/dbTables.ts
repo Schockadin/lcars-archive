@@ -187,6 +187,16 @@ export const DB_TABLE_COLUMNS = {
     "editor_id",
     "created_at",
   ],
+  editor_drafts: [
+    "user_id",
+    "content_type",
+    "content_id",
+    "fields",
+    "revision",
+    "created_at",
+    "updated_at",
+    "expires_at",
+  ],
   content_deletions: [
     "id",
     "target_type",
@@ -505,6 +515,7 @@ export const BACKUP_TABLES = [
   "content_images",
   "content_notes",
   "content_revisions",
+  "editor_drafts",
   "content_deletions",
   "content_follows",
 

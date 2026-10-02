@@ -21,6 +21,10 @@ import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { parseList } from "@/lib/formParsing";
+import {
+  removeEditorDraft,
+  removeNewEditorDraftFromForm,
+} from "@/lib/editorDrafts";
 
 export interface MissionLogFormState {
   error?: string;
@@ -137,6 +141,7 @@ export async function missionLogAction(
     if (!result) {
       return { error: "Log nicht gefunden oder keine Berechtigung." };
     }
+    await removeEditorDraft(session.userId, "mission_log", logId!);
     revalidateLog(result.missionId, result.slug);
     await publishContentChanged();
 
@@ -241,6 +246,7 @@ export async function missionLogAction(
     isDraft,
     ownerUserId: user.id,
   });
+  await removeNewEditorDraftFromForm(session.userId, "mission_log", formData);
 
   revalidateLog(mission.id, result.slug);
   await publishContentChanged();

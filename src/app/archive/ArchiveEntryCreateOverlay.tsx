@@ -38,6 +38,7 @@ export default function ArchiveEntryCreateOverlay({
         >
           <NewArchiveEntryForm
             userId={userId}
+            draftOnCreate
             initialCategory={initialCategory}
           />
         </ModalOverlay>

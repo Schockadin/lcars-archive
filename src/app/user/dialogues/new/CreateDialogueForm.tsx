@@ -12,6 +12,7 @@ import {
 } from "@/app/_shared/FormPrimitives";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
+import EditorDraftForm from "@/components/ContentEditor/EditorDraftForm";
 
 const initialState: CreateDialogueState = {};
 
@@ -28,6 +29,7 @@ const characterListClass = "lcars-input rounded-lcars-pill";
 
 export default function CreateDialogueForm({
   userId,
+  draftOnCreate = false,
   ownCharacters,
   partnerCharacters,
   npcs,
@@ -37,6 +39,7 @@ export default function CreateDialogueForm({
   defaultLogDate,
 }: {
   userId: number;
+  draftOnCreate?: boolean;
   ownCharacters: { id: number; slug: string; name: string }[];
   partnerCharacters: CharacterWithOwner[];
   // NPCs sind Datenbank-Einträge der Kategorie "npc" — als Gegenüber für
@@ -67,9 +70,11 @@ export default function CreateDialogueForm({
   const needsGmChoice = npcInvolved && !canPlayNpcs && gms.length > 1;
 
   return (
-    <form
+    <EditorDraftForm
       action={formAction}
       className="lcars-wide-column flex flex-col gap-[16px]"
+      draftScope="dialogue:new"
+      newDraftType={draftOnCreate ? "dialogue" : undefined}
     >
       <input type="hidden" name="userId" value={userId} />
 
@@ -279,6 +284,6 @@ export default function CreateDialogueForm({
       </SubmitButton>
 
       <FormError message={state?.error} />
-    </form>
+    </EditorDraftForm>
   );
 }

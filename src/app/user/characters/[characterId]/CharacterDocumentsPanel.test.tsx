@@ -8,6 +8,11 @@ vi.mock("./documentActions", () => ({
   renameCharacterDocumentAction: vi.fn(async () => ({})),
 }));
 
+vi.mock("@/app/actions/editorDrafts", () => ({
+  loadEditorDraft: vi.fn(async () => null),
+  saveEditorDraft: vi.fn(async () => ({ ok: true, revision: 1 })),
+}));
+
 const longName =
   "Ausführlicher Bericht über die gesamte Forschungsmission der U.S.S. Beispiel.pdf";
 

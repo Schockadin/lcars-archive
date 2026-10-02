@@ -33,6 +33,10 @@ import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { missionHref } from "@/lib/contentRoutes";
+import {
+  removeEditorDraft,
+  removeNewEditorDraftFromForm,
+} from "@/lib/editorDrafts";
 import { parseList } from "@/lib/formParsing";
 
 export interface MissionFormState {
@@ -266,6 +270,7 @@ export async function missionAction(
     if (!result) {
       return { error: "Mission nicht gefunden." };
     }
+    await removeEditorDraft(session.userId, "mission", missionId!);
     // Teilnehmerliste beim Bearbeiten aktualisieren, aber OHNE erneute
     // Teilnehmer-Benachrichtigung bei einer normalen Bearbeitung — die gibt
     // es laut Anforderung nur beim erstmaligen Anlegen bzw. beim
@@ -361,6 +366,7 @@ export async function missionAction(
     bodyHtml: "",
     ownerUserId: user.id,
   });
+  await removeNewEditorDraftFromForm(session.userId, "mission", formData);
   revalidateMission(result.slug);
   await publishContentChanged();
 

@@ -19,6 +19,7 @@ const initialState: MissionLogFormState = {};
 
 export default function NewMissionLogForm({
   userId,
+  draftOnCreate = false,
   ownCharacters,
   missions,
   defaultSessionNr,
@@ -26,6 +27,7 @@ export default function NewMissionLogForm({
   defaultMissionSlug,
 }: {
   userId: number;
+  draftOnCreate?: boolean;
   ownCharacters: { id: number; slug: string; name: string }[];
   missions: { slug: string; title: string }[];
   defaultSessionNr: number;
@@ -43,6 +45,7 @@ export default function NewMissionLogForm({
       defaults={{ sessionNr: defaultSessionNr, logDate: defaultLogDate ?? undefined }}
       idPrefix="log"
       draftScope="mission-log:new"
+      draftOnCreate={draftOnCreate ? "mission_log" : undefined}
       bodyLabel="Log-Text"
       bodyHint={<MarkdownFormatHint />}
       bodyRequired

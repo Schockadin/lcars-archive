@@ -1850,6 +1850,7 @@ export interface DialogueSummary {
   slug: string;
   title: string;
   partnerName: string;
+  lastMessageCharacterName: string | null;
   updatedAt: string;
   // Ingame-Datum (metadata.logDate, ISO) — Sortierschlüssel der Dialog-Listen.
   logDate: string | null;
@@ -1891,6 +1892,7 @@ export async function getDialoguesForUser(
       title: string;
       metadata: unknown;
       updated_at: string;
+      last_message_character_name: string | null;
       dialogue_open: boolean;
       is_draft: boolean;
       owner_user_id: number | null;
@@ -1902,10 +1904,23 @@ export async function getDialoguesForUser(
     const rows =
       scope === "open"
         ? await sql<DialogueRow[]>`
-            SELECT id, slug, title, metadata, updated_at::text AS updated_at,
-                   dialogue_open, is_draft, owner_user_id
-            FROM archive_entries
-            WHERE category = 'dialogue'
+            SELECT ae.id, ae.slug, ae.title, ae.metadata,
+                   ae.updated_at::text AS updated_at,
+                   latest_message.character_name AS last_message_character_name,
+                   ae.dialogue_open, ae.is_draft, ae.owner_user_id
+            FROM archive_entries ae
+            LEFT JOIN LATERAL (
+              SELECT COALESCE(c.name, npc.title) AS character_name
+              FROM dialogue_messages dm
+              LEFT JOIN characters c ON c.id = dm.character_id
+              LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
+              WHERE dm.archive_entry_id = ae.id
+                AND dm.deleted_at IS NULL
+                AND ae.dialogue_open
+              ORDER BY dm.created_at DESC, dm.id DESC
+              LIMIT 1
+            ) latest_message ON TRUE
+            WHERE ae.category = 'dialogue'
               AND EXISTS (
                 -- CASE-Guard: jsonb_array_elements wirft, wenn participants
                 -- kein Array ist (Objekt/Skalar/JSON-null) — dann als leeres
@@ -1913,21 +1928,34 @@ export async function getDialoguesForUser(
                 -- @>-Containment-Operator still tat.
                 SELECT 1 FROM jsonb_array_elements(
                   CASE
-                    WHEN jsonb_typeof(metadata->'participants') = 'array'
-                      THEN metadata->'participants'
+                    WHEN jsonb_typeof(ae.metadata->'participants') = 'array'
+                      THEN ae.metadata->'participants'
                     ELSE '[]'::jsonb
                   END
                 ) AS p
                 WHERE p->>'slug' = ANY(${ownSlugList})
               )
-              AND dialogue_open
-              AND deleted_at IS NULL
+              AND ae.dialogue_open
+              AND ae.deleted_at IS NULL
           `
         : await sql<DialogueRow[]>`
-            SELECT id, slug, title, metadata, updated_at::text AS updated_at,
-                   dialogue_open, is_draft, owner_user_id
-            FROM archive_entries
-            WHERE category = 'dialogue'
+            SELECT ae.id, ae.slug, ae.title, ae.metadata,
+                   ae.updated_at::text AS updated_at,
+                   latest_message.character_name AS last_message_character_name,
+                   ae.dialogue_open, ae.is_draft, ae.owner_user_id
+            FROM archive_entries ae
+            LEFT JOIN LATERAL (
+              SELECT COALESCE(c.name, npc.title) AS character_name
+              FROM dialogue_messages dm
+              LEFT JOIN characters c ON c.id = dm.character_id
+              LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
+              WHERE dm.archive_entry_id = ae.id
+                AND dm.deleted_at IS NULL
+                AND ae.dialogue_open
+              ORDER BY dm.created_at DESC, dm.id DESC
+              LIMIT 1
+            ) latest_message ON TRUE
+            WHERE ae.category = 'dialogue'
               AND EXISTS (
                 -- CASE-Guard: jsonb_array_elements wirft, wenn participants
                 -- kein Array ist (Objekt/Skalar/JSON-null) — dann als leeres
@@ -1935,14 +1963,14 @@ export async function getDialoguesForUser(
                 -- @>-Containment-Operator still tat.
                 SELECT 1 FROM jsonb_array_elements(
                   CASE
-                    WHEN jsonb_typeof(metadata->'participants') = 'array'
-                      THEN metadata->'participants'
+                    WHEN jsonb_typeof(ae.metadata->'participants') = 'array'
+                      THEN ae.metadata->'participants'
                     ELSE '[]'::jsonb
                   END
                 ) AS p
                 WHERE p->>'slug' = ANY(${ownSlugList})
               )
-              AND deleted_at IS NULL
+              AND ae.deleted_at IS NULL
           `;
 
     for (const row of rows) {
@@ -1959,6 +1987,7 @@ export async function getDialoguesForUser(
         slug: row.slug,
         title: row.title,
         partnerName: partner?.name ?? "Unbekannt",
+        lastMessageCharacterName: row.last_message_character_name,
         updatedAt: row.updated_at,
         logDate: parseDialogueLogDate(row.metadata),
         open: row.dialogue_open,
@@ -1980,6 +2009,7 @@ export async function getDialoguesForUser(
     title: string;
     metadata: unknown;
     updated_at: string;
+    last_message_character_name: string | null;
     dialogue_open: boolean;
     is_draft: boolean;
     owner_user_id: number | null;
@@ -1988,12 +2018,24 @@ export async function getDialoguesForUser(
   };
   const npcRows = await sql<NpcDialogueRow[]>`
     SELECT ae.id, ae.slug, ae.title, ae.metadata,
-           ae.updated_at::text AS updated_at, ae.dialogue_open,
-           ae.is_draft, ae.owner_user_id,
+           ae.updated_at::text AS updated_at,
+           latest_message.character_name AS last_message_character_name,
+           ae.dialogue_open, ae.is_draft, ae.owner_user_id,
            c.slug AS character_slug, c.title AS character_name
     FROM dialogue_npc_speakers s
     JOIN archive_entries ae ON ae.id = s.archive_entry_id
     JOIN archive_entries c ON c.id = s.npc_entry_id
+    LEFT JOIN LATERAL (
+      SELECT COALESCE(c.name, npc.title) AS character_name
+      FROM dialogue_messages dm
+      LEFT JOIN characters c ON c.id = dm.character_id
+      LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
+      WHERE dm.archive_entry_id = ae.id
+        AND dm.deleted_at IS NULL
+        AND ae.dialogue_open
+      ORDER BY dm.created_at DESC, dm.id DESC
+      LIMIT 1
+    ) latest_message ON TRUE
     WHERE s.user_id = ${userId}
       AND ae.deleted_at IS NULL
       AND (${scope === "all"} OR ae.dialogue_open)
@@ -2008,6 +2050,7 @@ export async function getDialoguesForUser(
       slug: row.slug,
       title: row.title,
       partnerName: partner?.name ?? "Unbekannt",
+      lastMessageCharacterName: row.last_message_character_name,
       updatedAt: row.updated_at,
       logDate: parseDialogueLogDate(row.metadata),
       open: row.dialogue_open,
@@ -2026,6 +2069,7 @@ export interface GmDialogueOverviewItem {
   slug: string;
   title: string;
   participantNames: string[];
+  lastMessageCharacterName: string | null;
   updatedAt: string;
   ownerName: string | null;
 }
@@ -2046,13 +2090,24 @@ export async function getAllOpenDialoguesForGM(): Promise<
       title: string;
       metadata: unknown;
       updated_at: string;
+      last_message_character_name: string | null;
       owner_name: string | null;
     }[]
   >`
     SELECT ae.id, ae.slug, ae.title, ae.metadata, ae.updated_at::text AS updated_at,
+           latest_message.character_name AS last_message_character_name,
            u.name AS owner_name
     FROM archive_entries ae
     LEFT JOIN users u ON u.id = ae.owner_user_id
+    LEFT JOIN LATERAL (
+      SELECT COALESCE(c.name, npc.title) AS character_name
+      FROM dialogue_messages dm
+      LEFT JOIN characters c ON c.id = dm.character_id
+      LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
+      WHERE dm.archive_entry_id = ae.id AND dm.deleted_at IS NULL
+      ORDER BY dm.created_at DESC, dm.id DESC
+      LIMIT 1
+    ) latest_message ON TRUE
     WHERE ae.category = 'dialogue' AND ae.dialogue_open AND ae.deleted_at IS NULL
     ORDER BY ae.metadata->>'logDate' DESC NULLS LAST, ae.updated_at DESC
   `;
@@ -2061,6 +2116,7 @@ export async function getAllOpenDialoguesForGM(): Promise<
     slug: row.slug,
     title: row.title,
     participantNames: parseParticipants(row.metadata).map((p) => p.name),
+    lastMessageCharacterName: row.last_message_character_name,
     updatedAt: row.updated_at,
     ownerName: row.owner_name,
   }));

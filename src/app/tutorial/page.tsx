@@ -475,21 +475,18 @@ export default function TutorialPage() {
                 „Meine Inhalte“ bzw. „Charaktere“, dort deutlich markiert.
               </p>
               <p>
-                <strong>Getipptes geht nicht verloren.</strong> Jede Eingabe in
-                jedem Formular des Archivs — Titel, Fließtext, Auswahlfelder,
-                Kästchen — wird automatisch für die laufende Browser-Sitzung
-                gesichert. Lädst du die Seite neu, drückst versehentlich
-                „Zurück“ oder läuft etwas schief, steht beim nächsten Aufruf
-                derselben Seite wieder da, was du geschrieben hattest. Das
-                passiert ohne Knopf und ohne Hinweis: Du tippst einfach weiter.
-                Bearbeitest du nacheinander mehrere Einträge, bleibt jeder
-                Zwischenstand bei genau diesem Eintrag — gleiche Felder wie
-                „Titel“ oder „Text“ werden nicht zwischen Editoren vermischt.
-                Gesichert wird ausschließlich auf deinem Gerät und nur bis zum
-                Schließen des Tabs; Passwortfelder bleiben grundsätzlich außen
-                vor. Sobald ein Formular erfolgreich abgeschickt und geleert
-                wurde, ist auch die Sicherung dazu weg — und beim An- oder
-                Abmelden wird ohnehin alles davon verworfen.
+                <strong>Änderungen im Editor werden automatisch gesichert.</strong>{" "}
+                Beim Bearbeiten einer bestehenden Mission, eines Logbuchs,
+                Datenbank-Eintrags oder Chronologie-Ereignisses, beim
+                Umbenennen eines Charakterdokuments sowie in den modalen
+                Formularen für neue Inhalte und Sessions speichert der Editor
+                nach fünf Sekunden ohne Eingabe und bei längerem Tippen spätestens alle fünf
+                Sekunden einen privaten Zwischenstand. Der Status unter dem
+                Formular zeigt, ob der Stand gespeichert ist. Nach einem
+                Neuladen wird der letzte bestätigte Zwischenstand wieder
+                eingesetzt. Das normale Speichern übernimmt ihn in den Inhalt;
+                danach wird der Zwischenstand entfernt. Neue Inhalte auf den
+                eigenständigen Anlege-Seiten werden nicht zwischengespeichert.
               </p>
               <p>
                 Auch auf der Leseseite eines Inhalts führt der{" "}
@@ -591,7 +588,9 @@ export default function TutorialPage() {
                 laufenden Gesprächs steht neben dem Namen der sprechenden
                 Person, <strong>wann sie verschickt wurde</strong> (Datum und
                 Uhrzeit) — so siehst du, ob zwischen zwei Beiträgen Minuten oder
-                Tage lagen.
+                Tage lagen. Auf den Karten offener Gespräche auf der Startseite,
+                unter „Meine Inhalte“ und in der Leitungsübersicht steht auch,
+                wer die letzte Nachricht geschrieben hat.
               </p>
               <p>
                 Beim Öffnen springt die Seite ans <strong>Ende</strong> des

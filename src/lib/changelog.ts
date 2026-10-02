@@ -147,6 +147,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.65",
+    title: "Automatische Sicherung im Editor",
+    items: [
+      {
+        text: "Bei bestehenden Missionen, Logs, Datenbank-Einträgen und Chronologie-Ereignissen, beim Umbenennen von Charakterdokumenten sowie in den modalen Formularen für neue Inhalte und Sessions sichert der Editor Änderungen automatisch. Nach dem Neuladen steht der letzte bestätigte Stand wieder bereit; mit dem normalen Speichern wird er übernommen.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Karten zu offenen Gesprächen zeigen jetzt, welche Figur die letzte Nachricht geschrieben hat.",
+        category: "inhalte",
+        tutorial: "gespraeche",
+      },
+    ],
+  },
+  {
     version: "1.64",
     title: "Verknüpfungen für eigene Inhalte",
     items: [

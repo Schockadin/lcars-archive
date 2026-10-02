@@ -22,6 +22,7 @@ export default function EditMissionLogForm({
 }) {
   return (
     <ContentEditor
+      key={`mission-log:${log.id}`}
       mode="edit"
       action={missionLogAction}
       initialState={initialState}
@@ -35,6 +36,7 @@ export default function EditMissionLogForm({
       }}
       idPrefix="edit-log"
       draftScope={`mission-log:${log.id}`}
+      editorDraft={{ type: "mission_log", contentId: log.id }}
       bodyLabel="Log-Text"
       bodyHint={<MarkdownFormatHint />}
       bodyDefaultValue={log.sourceMarkdown}

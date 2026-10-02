@@ -153,6 +153,18 @@ test.describe("ContentDetailHeader", () => {
   });
 });
 
+test.describe("Offene Gesprächskarten", () => {
+  test("zeigt den Charakter, der die letzte Nachricht geschrieben hat", async ({
+    page,
+  }) => {
+    await page.goto("/dev-gallery");
+    const card = page.locator("#open-dialogue-card .mission-akte");
+
+    await expect(card).toContainText("Zuletzt geschrieben von");
+    await expect(card).toContainText("Tuvok");
+  });
+});
+
 // Die Zusammenfassung der Missionsseite steckt im selben ChronoPanel wie die
 // Teaser der Missions-Karten — auf der Seite muss aber zu sehen sein, DASS es
 // sich zuklappen lässt.

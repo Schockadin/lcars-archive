@@ -11,6 +11,7 @@ import { updateOwnCharacterBio } from "@/lib/characters";
 import { updateMissionSynopsis, updateMissionLogSourceMd } from "@/lib/missions";
 import { updateOwnArchiveEntryBody } from "@/lib/archive";
 import { renderContentHtml } from "@/lib/autolink";
+import { removeEditorDraft } from "@/lib/editorDrafts";
 
 export interface RevisionActionState {
   error?: string;
@@ -52,6 +53,10 @@ export async function restoreRevisionAction(
 
   const restored = await restoreBody(contentType, contentId, viewer.userId, source);
   if (!restored) return { error: "Wiederherstellen fehlgeschlagen." };
+
+  if (contentType !== "character") {
+    await removeEditorDraft(viewer.userId, contentType, contentId);
+  }
 
   const path = String(formData.get("path") ?? "");
   if (path) await revalidatePathAndNotify(path);

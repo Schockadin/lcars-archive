@@ -5,8 +5,14 @@ import {
   importDatabaseBackup,
   InvalidBackupError,
 } from "@/lib/dbBackup";
+import { readEditorDraft, saveEditorDraft } from "@/lib/editorDrafts";
 import { BACKUP_EXCLUDED_TABLES, BACKUP_TABLES } from "@/lib/dbTables";
-import { insertCharacter, insertMission, insertUser } from "./helpers";
+import {
+  insertCharacter,
+  insertMission,
+  insertNpcEntry,
+  insertUser,
+} from "./helpers";
 
 // users steht bewusst NICHT im DB-Backup (dafür gibt es src/lib/userBackup.ts)
 // — die Tests laufen deshalb über characters, das zugleich JSONB-Spalten
@@ -88,6 +94,22 @@ describe("exportDatabaseBackup / importDatabaseBackup", () => {
     // eingespielten id kollidieren.
     const neu = await insertCharacter({ slug: "nach-restore" });
     expect(neu.id).toBeGreaterThan(figur.id);
+  });
+
+  it("spielt Entwürfe ohne eigene id-Spalte wieder ein", async () => {
+    const user = await insertUser();
+    const entry = await insertNpcEntry();
+    await saveEditorDraft(user.id, "archive", entry.id, null, {
+      title: "Zwischenstand",
+    });
+
+    const backup = await exportDatabaseBackup();
+    await importDatabaseBackup(backup);
+
+    expect(await readEditorDraft(user.id, "archive", entry.id)).toEqual({
+      revision: 1,
+      fields: { title: "Zwischenstand" },
+    });
   });
 
   it("lehnt eine Datei mit falschem Format ab", async () => {

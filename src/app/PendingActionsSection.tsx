@@ -1,6 +1,7 @@
 import { LcarsAkteCard, LcarsCollapsiblePanel } from "@/components/lcars";
 import type { PendingAction, PendingActionKind } from "@/lib/pendingActions";
 import { fmtDate } from "@/lib/missionFormat";
+import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
 
 // „Offen für dich" auf dem Dashboard: was diese Person noch zu tun hat.
 //
@@ -42,6 +43,11 @@ export default function PendingActionsSection({
                 <span>
                   <b>Seit</b> {fmtDate(a.since.slice(0, 10))}
                 </span>
+                {a.kind === "dialogue_reply" && (
+                  <DialogueLastAuthorMeta
+                    characterName={a.lastMessageCharacterName ?? null}
+                  />
+                )}
               </>
             }
           />

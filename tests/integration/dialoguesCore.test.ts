@@ -879,6 +879,26 @@ describe("getAllOpenDialoguesForGM", () => {
     expect(item?.participantNames.sort()).toEqual(["Own", "Partner"].sort());
   });
 
+  it("uses the latest non-deleted message character", async () => {
+    const { partnerChar, partnerUser, dialogue, entryId } = await setupDialogue();
+    const latest = await postDialogueMessage({
+      archiveEntryId: entryId,
+      speaker: { kind: "character", id: partnerChar.id },
+      authorUserId: partnerUser.id,
+      bodyMarkdown: "Wird gelöscht",
+    });
+    await deleteDialogueMessage({
+      messageId: latest.id,
+      authorUserId: partnerUser.id,
+    });
+
+    const item = (await getAllOpenDialoguesForGM()).find(
+      (candidate) => candidate.slug === dialogue.slug,
+    );
+
+    expect(item?.lastMessageCharacterName).toBe("Own");
+  });
+
   it("excludes closed dialogues", async () => {
     const { dialogue, entryId } = await setupDialogue();
     await completeDialogue(entryId);

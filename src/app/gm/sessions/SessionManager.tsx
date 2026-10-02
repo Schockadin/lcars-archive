@@ -2,6 +2,7 @@
 import { useActionState, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import ModalOverlay from "@/components/ModalOverlay";
+import EditorDraftForm from "@/components/ContentEditor/EditorDraftForm";
 import SessionsBrowser from "./SessionsBrowser";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
@@ -227,11 +228,12 @@ function NewSessionForm({
   return (
     // key auf dem Erfolgstext: nach dem Anlegen soll das Formular wieder
     // leer/vorbelegt dastehen — ein neuer key wirft es samt defaultValues neu.
-    <form
+    <EditorDraftForm
       key={state.success ?? "new"}
       action={formAction}
       className="flex flex-col gap-[12px]"
-      data-no-draft
+      draftScope="game-session:new"
+      newDraftType="game_session"
     >
       <div className="flex flex-wrap items-end gap-[8px]">
         <label className="flex flex-col gap-[4px]">
@@ -313,7 +315,7 @@ function NewSessionForm({
 
       <FormError message={state.error} />
       {state.success && <FormSuccess>{state.success}</FormSuccess>}
-    </form>
+    </EditorDraftForm>
   );
 }
 

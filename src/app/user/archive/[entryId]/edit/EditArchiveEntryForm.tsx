@@ -21,6 +21,7 @@ export default function EditArchiveEntryForm({
 }) {
   return (
     <ContentEditor
+      key={`archive:${entry.id}`}
       mode="edit"
       action={archiveEntryAction}
       initialState={initialState}
@@ -44,6 +45,7 @@ export default function EditArchiveEntryForm({
       }
       idPrefix="edit-archive-entry"
       draftScope={`archive-entry:${entry.id}`}
+      editorDraft={{ type: "archive", contentId: entry.id }}
       bodyLabel="Inhalt"
       bodyHint={<MarkdownFormatHint />}
       bodyDefaultValue={entry.sourceMarkdown}
