@@ -20,7 +20,7 @@ for (const { className, was } of FULL_WIDTH_CONTAINERS) {
   test(`.${className} ist auf Desktop nicht mehr auf ${was} gedeckelt`, async ({
     page,
   }) => {
-    await page.goto("/tutorial");
+    await page.goto("/tutorial", { waitUntil: "domcontentloaded" });
 
     const maxWidth = await page.evaluate((cls) => {
       const el = document.createElement("article");
@@ -41,7 +41,7 @@ test("der mobile Lesemodus behält seine schmale Lesebreite", async ({
   // Gegenprobe: Der Cap soll NICHT überall weg sein. Im Lesemodus (nur unter
   // 768px) bleibt die komfortable, zentrierte Lesebreite bewusst bestehen.
   await page.setViewportSize({ width: 375, height: 800 });
-  await page.goto("/tutorial");
+  await page.goto("/tutorial", { waitUntil: "domcontentloaded" });
 
   const maxWidth = await page.evaluate(() => {
     const wrapper = document.createElement("div");
@@ -69,7 +69,7 @@ for (const className of FLUSH_CONTAINERS) {
   test(`.${className} hat keinen eigenen seitlichen Abstand`, async ({
     page,
   }) => {
-    await page.goto("/tutorial");
+    await page.goto("/tutorial", { waitUntil: "domcontentloaded" });
 
     const padding = await page.evaluate((cls) => {
       const el = document.createElement("article");

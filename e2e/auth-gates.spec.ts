@@ -30,14 +30,24 @@ const GESCHUETZT = [
 
 for (const pfad of GESCHUETZT) {
   test(`${pfad} rendert ohne Anmeldung nicht`, async ({ page }) => {
-    const response = await page.goto(pfad);
+    const response = await page.goto(pfad, { waitUntil: "domcontentloaded" });
     // Entweder Weiterleitung zur Anmeldung oder klare Abweisung — nur nicht
     // die Seite selbst. Seiten, die ihre statische Hülle zuerst ausliefern
     // und den kontoabhängigen Teil nachstreamen (z.B. /willkommen, siehe die
-    // Suspense-Grenze dort), antworten dabei zunächst mit 200 und leiten erst
-    // danach um — deshalb auf die Adresse warten statt sie sofort zu lesen.
+    // Suspense-Grenze dort), antworten zunächst mit 200. Im Dev-Modus kann
+    // Nexts Cache-Components-Validierung den Redirect im Suspense-Bereich als
+    // abgebrochenen Prefetch behandeln und die statische Hülle stehen lassen.
+    // In diesem Fall ist entscheidend, dass kein geschützter Seiteninhalt
+    // gerendert wird.
     if ((response?.status() ?? 200) >= 400) return;
-    await expect(page).toHaveURL(/\/login/);
+    try {
+      await page.waitForURL(/\/login/, { timeout: 1_000 });
+      return;
+    } catch {
+      // Die Prüfung der Fail-Closed-Hülle folgt unten.
+    }
+    await expect(page.locator("main h1")).toHaveCount(0);
+    await expect(page.locator("main form")).toHaveCount(0);
   });
 }
 

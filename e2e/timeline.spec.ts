@@ -84,9 +84,10 @@ test.describe("Chronologie", () => {
       "Log-Eintrag",
       "Log-Eintrag",
     ]);
+    await expect(sessions.locator(".timeline-tag").first()).toBeVisible();
     await expect(
       sessions.getByText("2 Log-Einträge", { exact: true }),
-    ).toBeVisible();
+    ).toHaveText("2 Log-Einträge");
   });
 
   test(

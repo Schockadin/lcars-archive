@@ -11,7 +11,7 @@ test("gewöhnliche Formulareingaben werden nicht global zwischengespeichert", as
   expect(stored).not.toContain("pilot@example.org");
   expect(stored).not.toContain("streng-geheim");
 
-  await page.reload();
+  await page.reload({ waitUntil: "domcontentloaded" });
   await expect(page.locator("#email")).toHaveValue("");
   await expect(page.locator("#password")).toHaveValue("");
 });
@@ -29,6 +29,6 @@ test("Markdown-Text außerhalb eines Inhaltseditors bleibt lokal", async ({
   );
   expect(draftKeys).toEqual([]);
 
-  await page.reload();
+  await page.reload({ waitUntil: "domcontentloaded" });
   await expect(editor).toHaveValue("**Text**");
 });

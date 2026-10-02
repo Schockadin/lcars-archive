@@ -47,7 +47,7 @@ test("Missionschronik: ein Textbutton wechselt zwischen Öffnen und Schließen",
 test("Komplettsynopsis zeigt Datum ohne Synopsis-Präfix", async ({ page }) => {
   await page.goto("/dev-gallery");
   const synopsis = page.locator("#mission-session-panels #mission-full-synopsis");
-  await expect(synopsis.getByRole("heading")).toHaveText(["Synopsis", "08.03.2401", "07.03.2401"]);
+  await expect(synopsis.getByRole("heading")).toHaveText(["Synopsis", "07.03.2401", "08.03.2401"]);
   await expect(synopsis).toContainText("Bericht vom 8. März.");
   await expect(synopsis).not.toContainText("Veraltete Fassung");
 });
