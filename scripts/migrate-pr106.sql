@@ -1,11 +1,11 @@
--- Migration für PR #105: isolierte, temporäre Arbeitskopien für Inhaltseditoren.
+-- Migration für PR #106: isolierte, temporäre Arbeitskopien für Inhaltseditoren.
 --
 -- Autosaves berühren nicht die eigentlichen Inhaltszeilen. Entwürfe gehören
 -- einem Benutzer und einem Inhalt, laufen nach 30 Tagen ab und werden nach dem
 -- normalen Speichern entfernt.
 --
 -- Vor dem Deploy ausführen:
---   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr105.sql
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr106.sql
 --
 -- Idempotent: ein erneuter Lauf lässt ein aktuelles Schema unverändert.
 
