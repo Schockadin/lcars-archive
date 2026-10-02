@@ -47,6 +47,18 @@ async function purgeRevisionsFor(
   `;
 }
 
+async function purgeEditorDraftsFor(
+  contentType: "mission" | "mission_log" | "archive",
+  id: number,
+): Promise<number> {
+  const rows = await sql`
+    DELETE FROM editor_drafts
+    WHERE content_type = ${contentType} AND content_id = ${id}
+    RETURNING user_id
+  `;
+  return rows.length;
+}
+
 async function purgeArchiveLinksAndFollows(slug: string): Promise<void> {
   await sql`
     DELETE FROM timeline_events
@@ -66,8 +78,13 @@ export async function purgeExpiredSoftDeletedContent(
   missions: number;
   missionLogs: number;
   archiveEntries: number;
+  editorDrafts: number;
 }> {
   const cutoff = sql`NOW() - (${retentionDays} * INTERVAL '1 day')`;
+  const expiredDraftRows = await sql`
+    DELETE FROM editor_drafts WHERE expires_at <= NOW() RETURNING user_id
+  `;
+  let editorDrafts = expiredDraftRows.length;
 
   const characterTargets = await sql<{ id: number; slug: string }[]>`
     SELECT id, slug FROM characters
@@ -95,11 +112,19 @@ export async function purgeExpiredSoftDeletedContent(
     await deleteEmbeddings(sql, "character", c.id);
   }
 
+  const missionsToPurge = await sql<{ id: number; slug: string }[]>`
+    SELECT id, slug FROM missions
+    WHERE deleted_at IS NOT NULL AND deleted_at < ${cutoff}
+  `;
+  const logsForPurgedMissions = await sql<{ id: number }[]>`
+    SELECT id FROM mission_logs WHERE mission_id = ANY(${missionsToPurge.map((m) => m.id)})
+  `;
   const missionRows = await sql<{ id: number; slug: string }[]>`
     DELETE FROM missions WHERE deleted_at IS NOT NULL AND deleted_at < ${cutoff}
     RETURNING id, slug
   `;
   for (const m of missionRows) {
+    editorDrafts += await purgeEditorDraftsFor("mission", m.id);
     await sql`
       DELETE FROM timeline_events WHERE source_type = 'mission' AND source_slug = ${m.slug}
     `;
@@ -114,12 +139,16 @@ export async function purgeExpiredSoftDeletedContent(
     // Mission-Löschen ebenfalls deleted_at gesetzt (siehe deleteMission in
     // lib/missions.ts) — werden gleich unten mit demselben Cutoff mitgepurgt.
   }
+  for (const log of logsForPurgedMissions) {
+    editorDrafts += await purgeEditorDraftsFor("mission_log", log.id);
+  }
 
   const logRows = await sql<{ id: number; slug: string }[]>`
     DELETE FROM mission_logs WHERE deleted_at IS NOT NULL AND deleted_at < ${cutoff}
     RETURNING id, slug
   `;
   for (const log of logRows) {
+    editorDrafts += await purgeEditorDraftsFor("mission_log", log.id);
     await sql`
       DELETE FROM timeline_events WHERE source_type = 'mission_log' AND source_slug = ${log.slug}
     `;
@@ -135,6 +164,7 @@ export async function purgeExpiredSoftDeletedContent(
     RETURNING id, slug
   `;
   for (const entry of archiveRows) {
+    editorDrafts += await purgeEditorDraftsFor("archive", entry.id);
     await purgeArchiveLinksAndFollows(entry.slug);
     await purgeRevisionsFor("archive", entry.id);
     await purgeContentImagesFor("archive_entry", entry.id);
@@ -149,6 +179,7 @@ export async function purgeExpiredSoftDeletedContent(
     missions: missionRows.length,
     missionLogs: logRows.length,
     archiveEntries: archiveRows.length,
+    editorDrafts,
   };
 }
 
@@ -192,11 +223,13 @@ export async function purgeContentById(
     await sql`DELETE FROM mission_logs WHERE mission_id = ${id} AND deleted_at IS NOT NULL`;
     await purgeNotesFor("mission", row.slug);
     await purgeRevisionsFor("mission", id);
+    await purgeEditorDraftsFor("mission", id);
     await purgeContentImagesFor("mission", id);
     await deleteEmbeddings(sql, "mission", id);
     for (const log of logIds) {
       await purgeNotesFor("mission_log", log.slug);
       await purgeRevisionsFor("mission_log", log.id);
+      await purgeEditorDraftsFor("mission_log", log.id);
       await deleteEmbeddings(sql, "mission_log", log.id);
     }
     return true;
@@ -210,6 +243,7 @@ export async function purgeContentById(
     await sql`DELETE FROM timeline_events WHERE source_type = 'mission_log' AND source_slug = ${row.slug}`;
     await purgeNotesFor("mission_log", row.slug);
     await purgeRevisionsFor("mission_log", id);
+    await purgeEditorDraftsFor("mission_log", id);
     await purgeContentImagesFor("mission_log", id);
     await deleteEmbeddings(sql, "mission_log", id);
     return true;
@@ -225,6 +259,7 @@ export async function purgeContentById(
   if (!row) return false;
   await purgeArchiveLinksAndFollows(row.slug);
   await purgeRevisionsFor("archive", id);
+  await purgeEditorDraftsFor("archive", id);
   await purgeContentImagesFor("archive_entry", id);
   // archive_entry ODER dialogue (gleiche Tabelle) — beide möglichen
   // content_type-Zeilen entfernen (nur eine existierte je Id).

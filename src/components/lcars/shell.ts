@@ -5,4 +5,3 @@
 export { default as LcarsAppShell } from "./AppShell";
 export { default as LcarsCookieNotice } from "./CookieNotice";
 export { default as LcarsServiceWorkerRegister } from "./ServiceWorkerRegister";
-export { default as LcarsInputDraftKeeper } from "./InputDraftKeeper";

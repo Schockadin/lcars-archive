@@ -15,7 +15,6 @@ import {
   LcarsAppShell,
   LcarsCookieNotice,
   LcarsServiceWorkerRegister,
-  LcarsInputDraftKeeper,
 } from "@/components/lcars/shell";
 import ThemeApplier from "@/components/lcars/ThemeApplier";
 import { NeoProvider } from "@/context/NeoProvider";
@@ -202,14 +201,6 @@ export default function RootLayout({
             </RealtimeUpdatesProvider>
             <LcarsCookieNotice />
             <LcarsServiceWorkerRegister />
-            {/* Sichert jede Eingabe für die Sitzung (sessionStorage) und
-                setzt sie beim nächsten Aufbau derselben Seite wieder ein —
-                siehe src/lib/inputDraft.ts. Nutzt usePathname, gehört unter
-                cacheComponents also in eine Suspense-Grenze (wie
-                ThemeApplier oben). */}
-            <Suspense fallback={null}>
-              <LcarsInputDraftKeeper />
-            </Suspense>
           </ToastProvider>
         </NeoProvider>
       </body>

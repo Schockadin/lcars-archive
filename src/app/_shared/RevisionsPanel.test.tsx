@@ -10,13 +10,6 @@ vi.mock("@/app/actions/revisions", () => ({
   restoreRevisionAction: restore,
 }));
 
-// Das Verwerfen des gesicherten Entwurfs ist der Kern der Sache: Ohne es
-// legte die Sicherung ihren Stand wieder über den wiederhergestellten Text.
-const dropDrafts = vi.hoisted(() => vi.fn());
-vi.mock("@/components/lcars/InputDraftKeeper", () => ({
-  dropInputDraftsForPage: dropDrafts,
-}));
-
 // FormError meldet über den Toast-Provider — den gibt es hier nicht.
 vi.mock("@/app/_shared/FormPrimitives", () => ({
   FormError: () => null,
@@ -35,7 +28,6 @@ const reload = vi.fn();
 
 beforeEach(() => {
   restore.mockReset();
-  dropDrafts.mockReset();
   reload.mockReset();
   Object.defineProperty(window, "location", {
     configurable: true,
@@ -71,19 +63,13 @@ describe("RevisionsPanel", () => {
     expect(document.querySelector("details")).toHaveAttribute("open");
   });
 
-  it("verwirft den gesicherten Entwurf und lädt die Seite neu", async () => {
+  it("lädt nach erfolgreicher Wiederherstellung die Seite neu", async () => {
     restore.mockResolvedValue({ success: true });
     renderPanel();
 
     await wiederherstellen();
 
-    // Erst verwerfen, dann neu laden — andersherum käme der Entwurf beim
-    // Verlassen der Seite noch einmal in den Speicher zurück.
-    expect(dropDrafts).toHaveBeenCalledTimes(1);
     expect(reload).toHaveBeenCalledTimes(1);
-    expect(dropDrafts.mock.invocationCallOrder[0]).toBeLessThan(
-      reload.mock.invocationCallOrder[0],
-    );
   });
 
   it("lässt bei einem Fehler alles stehen", async () => {
@@ -92,7 +78,6 @@ describe("RevisionsPanel", () => {
 
     await wiederherstellen();
 
-    expect(dropDrafts).not.toHaveBeenCalled();
     expect(reload).not.toHaveBeenCalled();
   });
 

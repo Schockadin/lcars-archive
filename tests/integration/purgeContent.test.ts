@@ -5,7 +5,8 @@ import {
   purgeContentById,
 } from "@/lib/purgeContent";
 import { deleteCharacter } from "@/lib/characters";
-import { insertCharacter, insertUser } from "./helpers";
+import { saveEditorDraft } from "@/lib/editorDrafts";
+import { insertCharacter, insertNpcEntry, insertUser } from "./helpers";
 
 // Setzt deleted_at direkt auf einen Zeitpunkt in der Vergangenheit — die
 // deleteCharacter/deleteMission/... Funktionen setzen immer NOW(), ein Test
@@ -39,6 +40,27 @@ describe("purgeExpiredSoftDeletedContent", () => {
     expect(remainingIds).not.toContain(stale.id);
     expect(remainingIds).toContain(recent.id);
     expect(remainingIds).toContain(live.id);
+  });
+
+  it("deletes expired editor drafts in the daily cleanup", async () => {
+    const user = await insertUser();
+    const entry = await insertNpcEntry();
+    await saveEditorDraft(user.id, "archive", entry.id, null, { title: "Alt" });
+    await sql`
+      UPDATE editor_drafts SET expires_at = NOW() - INTERVAL '1 minute'
+      WHERE user_id = ${user.id} AND content_type = 'archive'
+        AND content_id = ${entry.id}
+    `;
+
+    const result = await purgeExpiredSoftDeletedContent(7);
+
+    expect(result.editorDrafts).toBe(1);
+    const rows = await sql`
+      SELECT 1 FROM editor_drafts
+      WHERE user_id = ${user.id} AND content_type = 'archive'
+        AND content_id = ${entry.id}
+    `;
+    expect(rows).toHaveLength(0);
   });
 });
 

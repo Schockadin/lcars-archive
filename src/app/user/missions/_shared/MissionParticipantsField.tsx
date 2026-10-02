@@ -73,6 +73,7 @@ export default function MissionParticipantsField({
           <label className="flex items-center gap-[6px] px-[12px] text-[13px] text-lcars-ink-dim">
             <input
               type="checkbox"
+              name="showAllParticipantCharacters"
               checked={showAll}
               onChange={(e) => setShowAll(e.target.checked)}
             />

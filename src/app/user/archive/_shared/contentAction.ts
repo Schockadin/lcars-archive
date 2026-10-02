@@ -24,6 +24,7 @@ import {
 } from "@/lib/archiveMetadataFields";
 import type { ArchiveCategory } from "@/types/archive";
 import { archiveHref } from "@/lib/contentRoutes";
+import { removeEditorDraft } from "@/lib/editorDrafts";
 
 // Liest alle Metadaten-Felder (Attribute + Verweise) für die gewählte
 // Kategorie aus dem FormData — welche Felder das sind, hängt von der
@@ -145,6 +146,7 @@ export async function archiveEntryAction(
     if (!result) {
       return { error: "Eintrag nicht gefunden oder keine Berechtigung." };
     }
+    await removeEditorDraft(session.userId, "archive", entryId!);
     revalidateArchiveEntry(result.slug);
     await publishContentChanged();
 

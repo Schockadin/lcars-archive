@@ -207,31 +207,17 @@ export default function DSGVOContent({ year }: { year: number }) {
           Browser für ungültig erklärt wird.
         </p>
         <p>
-          Damit bei einem Neuladen der Seite, einem Verbindungsabbruch oder
-          einem Fehler keine bereits getippten Texte verloren gehen, sichert die
-          Anwendung Eingaben aus Formularfeldern im{" "}
-          <strong>Sitzungsspeicher</strong> (sessionStorage) des Browsers und
-          setzt sie beim erneuten Aufruf derselben Seite wieder ein
-          (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
-          an einer verlustfreien Bedienung). Die Zwischenspeicherung ist nach
-          Seite und bei Bearbeitungsformularen zusätzlich nach dem jeweiligen
-          Inhalt getrennt, damit Eingaben nicht in ein anderes Formular
-          übernommen werden. Gemeinsame Inhaltseditoren verwenden dafür einen
-          stabilen lokalen Geltungsbereich aus Inhaltsart und interner Kennung;
-          die Kennung dient nur als Teil des Schlüssels im Sitzungsspeicher.
-          Ausdrücklich ausgenommene Felder werden nicht gesichert; dazu zählen
-          die Texte und Ingame-Daten der GM-Session-Synopsisblöcke. Ältere
-          gespeicherte Werte solcher Felder werden entfernt, sobald sie im
-          Formular erkannt werden.
-          Diese Zwischenstände verbleiben ausschließlich auf dem jeweiligen
-          Gerät, werden nicht an den Server oder Dritte übertragen und vom
-          Browser spätestens beim Schließen des Tabs bzw. Fensters gelöscht —
-          beim An- und Abmelden zusätzlich sofort, damit auf einem geteilten
-          Gerät keine Zwischenstände einer anderen Person zurückbleiben, und
-          ebenso, sobald eine frühere Fassung eines Inhalts wiederhergestellt
-          wird (der gesicherte Zwischenstand beschriebe dann einen überholten
-          Text). Passwortfelder, Einmalcodes und Zahlungsdaten werden dabei
-          grundsätzlich nicht gesichert.
+          Beim Bearbeiten einer bestehenden Mission, eines Logbuchs oder
+          Datenbank-Eintrags speichert der Editor geänderte Formularwerte nach
+          fünf Sekunden ohne Eingabe und spätestens alle fünf Sekunden bei
+          fortlaufender Eingabe als privaten Zwischenstand in der Datenbank
+          (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO — Bereitstellung der
+          Bearbeitungsfunktion). Gespeichert wird erst nach der ersten
+          Änderung. Der Zwischenstand ist nur für das Konto abrufbar, das ihn
+          angelegt hat, und wird beim ausdrücklichen Speichern oder beim
+          Wiederherstellen einer früheren Fassung entfernt. Nicht verwendete
+          Zwischenstände laufen nach 30 Tagen ab. Sie werden nicht an externe
+          Dienste übertragen.
         </p>
         <p>
           Ebenfalls nur auf deinem Gerät, dafür dauerhaft, liegen einzelne{" "}

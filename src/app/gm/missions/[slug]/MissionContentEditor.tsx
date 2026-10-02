@@ -21,11 +21,12 @@ export default function MissionContentEditor({ mission, userId, characters, part
 }) {
   const [deleteState, deleteAction, deletePending] = useActionState(deleteGmMissionAction, initialState);
   return <>
-    <ContentEditor mode="edit" action={missionAction} initialState={initialState}
+    <ContentEditor key={`mission:${mission.id}`} mode="edit" action={missionAction} initialState={initialState}
       hiddenFields={{ userId, missionId: mission.id }} headFields={missionHeadFields}
       metadataFields={missionMetadataFields}
       defaults={{ title: mission.title, status: mission.status, startedAt: mission.started_at ?? undefined, endedAt: mission.ended_at ?? undefined, tags: mission.metadata.tags.join(", "), teaser: mission.metadata.teaser ?? undefined }}
       idPrefix="edit-mission" draftScope={`mission:${mission.id}`} bodyLabel="Zusammenfassung" bodyHidden
+      editorDraft={{ type: "mission", contentId: mission.id }}
       bodyHiddenMessage={<p className="lcars-empty-state">Die Missionszusammenfassung entsteht automatisch aus den Log-Einträgen eingetragener Sessions.</p>}
       draftDefaultValue={mission.isDraft}
       extraHeadSlot={<MissionParticipantsField idPrefix="edit-mission" characters={characters} defaultSelectedIds={participantIds} />}

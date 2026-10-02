@@ -19,7 +19,8 @@ async function main() {
   );
   const result = await purgeExpiredSoftDeletedContent(RETENTION_DAYS);
   const total =
-    result.characters + result.missions + result.missionLogs + result.archiveEntries;
+    result.characters + result.missions + result.missionLogs + result.archiveEntries +
+    result.editorDrafts;
 
   if (total === 0) {
     console.log("✓ Nichts zu purgen.");
@@ -28,7 +29,8 @@ async function main() {
 
   console.log(
     `🗑️  Endgültig gelöscht: ${result.characters} Charakter(e), ${result.missions} Mission(en), ` +
-      `${result.missionLogs} Missionslog(s), ${result.archiveEntries} Archiv-Eintrag/Dialog(e).`,
+      `${result.missionLogs} Missionslog(s), ${result.archiveEntries} Archiv-Eintrag/Dialog(e); ` +
+      `${result.editorDrafts} Editor-Zwischenstand/-stände bereinigt.`,
   );
 }
 

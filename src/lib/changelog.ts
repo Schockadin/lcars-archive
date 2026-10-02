@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.65",
+    title: "Automatische Sicherung im Editor",
+    items: [
+      {
+        text: "Beim Bearbeiten bestehender Missions-, Logbuch- und Datenbank-Einträge sichert der Editor Änderungen automatisch. Nach einem Neuladen steht der zuletzt gesicherte Stand wieder bereit; mit dem normalen Speichern wird er übernommen.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+    ],
+  },
+  {
     version: "1.64",
     title: "Verknüpfungen für eigene Inhalte",
     items: [
