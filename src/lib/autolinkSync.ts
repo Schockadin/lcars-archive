@@ -67,7 +67,9 @@ function isSelf(
     case "character":
       return contentType === "character";
     case "mission":
-      return contentType === "mission";
+      return (
+        contentType === "mission" || contentType === "missionSynopsisBlock"
+      );
     case "archive":
       return contentType === "archiveEntry";
   }

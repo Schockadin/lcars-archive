@@ -59,6 +59,10 @@ test.describe("Datenbank", () => {
   test("führt ein Klick irgendwo auf der Karte zum Eintrag", async ({ page }) => {
     const karte = page.locator("#archive-list .timeline-card").first();
     await karte.scrollIntoViewIfNeeded();
+    await expect(karte.locator(".timeline-card-title")).toHaveAttribute(
+      "href",
+      "/archive/andor",
+    );
     // Weit neben dem Titel geklickt — per Maus-Koordinate, weil Playwright
     // sonst meldet, dass der Titel-Link die Klicks abfängt. Genau das ist ja
     // der Zweck: die unsichtbare Fläche liegt über der ganzen Karte (siehe

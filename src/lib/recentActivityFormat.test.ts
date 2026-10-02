@@ -45,7 +45,7 @@ describe("toHref", () => {
     ).toBe("/chronologie/mission/m1/log1");
   });
 
-  it("verlinkt Gespräche direkt auf ihre kanonische Leseseite", () => {
+  it("verlinkt offene Gespräche zur Sitzung und abgeschlossene ins Archiv", () => {
     expect(
       toHref(
         contentRow({
@@ -63,7 +63,16 @@ describe("toHref", () => {
           dialogue_open: false,
         }),
       ),
-    ).toBe("/characters/dialogues/e1");
+    ).toBe("/archive/e1");
+    expect(
+      toHref(
+        contentRow({
+          target_type: "archive_entry",
+          slug: "a1",
+          dialogue_open: null,
+        }),
+      ),
+    ).toBe("/archive/a1");
   });
 
   it("verwendet für bearbeitete Missionslogs den aktuellen Missionspfad", () => {
@@ -91,6 +100,25 @@ describe("toHref", () => {
 });
 
 describe("computeNewsItems", () => {
+  it("zeigt die News abgeschlossener Gespräche im Archiv", () => {
+    const items = computeNewsItems({
+      contentRows: [
+        contentRow({
+          target_type: "archive_entry",
+          slug: "beendetes-gespraech",
+          title: "Beendetes Gespräch",
+          dialogue_open: false,
+        }),
+      ],
+      deletionRows: [],
+      seenEntries: [],
+      newsKinds: ["created"],
+      since: SINCE,
+    });
+
+    expect(items[0].href).toBe("/archive/beendetes-gespraech");
+  });
+
   it("gibt für einen neuen, ungesehenen Inhalt eine created-News zurück", () => {
     const items = computeNewsItems({
       contentRows: [contentRow()],

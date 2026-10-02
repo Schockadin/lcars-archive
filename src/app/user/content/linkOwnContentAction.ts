@@ -1,30 +1,25 @@
 "use server";
-import { checkPermission } from "@/lib/dal";
+
+import { getActiveUser } from "@/lib/dal";
 import {
   applyAutolinks,
   getAutolinkTargets,
-  getAllAutolinkableContent,
+  getOwnAutolinkableContent,
   renderAutolinkedHtml,
   type AutolinkContentType,
   type AutolinkTarget,
 } from "@/lib/autolink";
 import { saveAutolinkedContent } from "@/lib/autolinkWrite";
 
-export interface LinkAllBatchResult {
+export interface LinkOwnContentBatchResult {
   error?: string;
-  // Gesamtzahl der zu prüfenden Inhalte (stabil über alle Batches).
   total?: number;
-  // Wie viele Inhalte nach diesem Batch insgesamt geprüft wurden.
   processed?: number;
-  // In DIESEM Batch geänderte Inhalte bzw. gesetzte Verknüpfungen.
   changedInBatch?: number;
   linksInBatch?: number;
-  // true, sobald alle Inhalte abgearbeitet sind.
   done?: boolean;
 }
 
-// Self-Ausschluss: ein Inhalt darf nicht auf sich selbst verlinken.
-// Mission-Logs sind selbst kein Autolink-Ziel (siehe getAutolinkTargets).
 function selfKey(
   contentType: AutolinkContentType,
   slug: string,
@@ -43,20 +38,15 @@ function selfKey(
   }
 }
 
-// Admin-only Bulk-Autolinking (/admin/scripts) — arbeitet BATCH-weise: der
-// Client ruft diese Action seriell mit wachsendem offset auf und zeigt einen
-// Fortschrittsbalken (siehe LinkAllContentPanel.tsx). So bleibt jeder einzelne
-// Server-Request klein (batchSize Inhalte), was Timeouts bei vielen Inhalten
-// verhindert. Die Inhaltsliste hat eine stabile Reihenfolge (ORDER BY id je
-// Typ, siehe getAllAutolinkableContent), damit die offset-Slices über die
-// Aufrufe hinweg konsistent sind. Nur Inhalte mit tatsächlich neuen
-// [[Wikilinks]] werden gespeichert.
-export async function linkAllContentBatchAction(
+// Verlinkt ausschließlich die Inhalte des aktuell angemeldeten Kontos. Der
+// aktuelle User und die zu bearbeitenden Inhalte werden bei JEDEM Batch frisch
+// serverseitig geladen; Offset und Blockgröße sind die einzigen Clientwerte.
+export async function linkOwnContentBatchAction(
   offset: number,
   batchSize: number,
-): Promise<LinkAllBatchResult> {
-  const check = await checkPermission("content.autolink_tools");
-  if ("error" in check) return { error: check.error };
+): Promise<LinkOwnContentBatchResult> {
+  const user = await getActiveUser();
+  if (!user) return { error: "Bitte melde dich an." };
 
   const safeOffset = Number.isInteger(offset) && offset >= 0 ? offset : 0;
   const safeBatch =
@@ -66,12 +56,11 @@ export async function linkAllContentBatchAction(
 
   const [allTargets, contents] = await Promise.all([
     getAutolinkTargets(),
-    getAllAutolinkableContent(),
+    getOwnAutolinkableContent(user.id),
   ]);
 
   const total = contents.length;
   const slice = contents.slice(safeOffset, safeOffset + safeBatch);
-
   let changedInBatch = 0;
   let linksInBatch = 0;
 
@@ -79,20 +68,16 @@ export async function linkAllContentBatchAction(
     const self = selfKey(content.contentType, content.slug);
     const targets = self
       ? allTargets.filter(
-          (t) => !(t.type === self.type && t.slug === self.slug),
+          (target) =>
+            !(target.type === self.type && target.slug === self.slug),
         )
       : allTargets;
 
     const { sourceMd, matches } = applyAutolinks(content.sourceMd, targets);
     if (matches.length === 0) continue;
 
-    // renderAutolinkedHtml statt nur resolveAutolinkedWikilinks: sonst
-    // würden von Hand getippte [[Wikilinks]] in bereits bestehenden Inhalten
-    // bei einem Durchlauf hier zu toten Links (siehe dort).
     const html = await renderAutolinkedHtml(sourceMd, matches);
-
     await saveAutolinkedContent(content, sourceMd, html);
-
     changedInBatch += 1;
     linksInBatch += matches.length;
   }

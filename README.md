@@ -101,6 +101,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Teilnehmende, muss man sich das Antwortrecht
   erst per Button für zwei Stunden reservieren, mit Sperr-Anzeige und
   optionaler Mail/Push-Benachrichtigung, sobald die Sperre wieder endet.
+  Unter `/user/content` lassen sich eigene Charaktere, Missionen,
+  Session-Zusammenfassungen, Logbücher und Datenbank-Einträge mit „Alles
+  verlinken“ gesammelt automatisch verknüpfen; Gespräche bleiben dabei
+  unberührt.
   **Die Suche kennt dieselbe Schranke:** Nachrichten eines LAUFENDEN Gesprächs
   liefert `searchFull` nur an Beteiligte und an `gm.access`
   (`openDialogueVisibleSql` in `src/lib/search.ts`, Teilnehmer-Regel wie

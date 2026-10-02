@@ -6,6 +6,7 @@ import {
   updateMissionLogSourceMd,
 } from "@/lib/missions";
 import { updateArchiveEntryContent } from "@/lib/archive";
+import { updateMissionSynopsisBlockMarkdown } from "@/lib/gameSessions";
 import {
   revalidateCharacter,
   revalidateMission,
@@ -16,12 +17,12 @@ import {
 // Speichert einen automatisch verlinkten Inhalt — der gemeinsame Nenner von
 // „Alle Inhalte verlinken" (src/app/actions/autolinkAll.ts) und dem
 // Nachziehen nach einer Umbenennung (src/lib/autolinkSync.ts). Beide hatten
-// dieselbe vierfache Fallunterscheidung; sie steht deshalb nur noch hier.
+// dieselbe Fallunterscheidung; sie steht deshalb nur noch hier.
 //
 // Bewusst ein eigenes Modul und nicht in autolink.ts: dort liegt die reine
-// Verlinkungslogik, hier der Schreibzugriff auf die vier Content-Tabellen.
-// Die Datenschicht (characters.ts/missions.ts/archive.ts) darf dieses Modul
-// NICHT importieren, sonst entstünde ein Import-Kreis.
+// Verlinkungslogik, hier der Schreibzugriff auf die Content-Tabellen.
+// Die Datenschicht (characters.ts/missions.ts/archive.ts/gameSessions.ts) darf
+// dieses Modul NICHT importieren, sonst entstünde ein Import-Kreis.
 
 // Next wirft in revalidateTag eine Invariante ("static generation store
 // missing", Fehlercode E263), wenn es außerhalb eines Requests gerufen wird.
@@ -69,6 +70,13 @@ export async function saveAutolinkedContent(
       if (missionId != null) {
         revalidateIfInRequest(() => revalidateLog(missionId, content.slug));
       }
+      break;
+    }
+    case "missionSynopsisBlock": {
+      const missionId = content.missionId;
+      if (missionId == null) break;
+      await updateMissionSynopsisBlockMarkdown(content.id, missionId, sourceMd);
+      revalidateIfInRequest(() => revalidateMission(content.slug));
       break;
     }
     case "archiveEntry":

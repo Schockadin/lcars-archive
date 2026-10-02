@@ -86,16 +86,14 @@ export function archiveListHref(category?: string | null): string {
   return category ? `/archive?cat=${encodeURIComponent(category)}` : "/archive";
 }
 
-// Offene und abgeschlossene Gespräche haben unterschiedliche kanonische
-// Leseseiten. Der frühere Umweg abgeschlossener Gespräche über /archive löste
-// erst serverseitig einen Redirect aus und wurde an mehreren Stellen anders
-// zusammengesetzt.
+// Offene Gespräche haben eine eigene Spielansicht. Abgeschlossene Gespräche
+// sind normale Archiv-Einträge und werden direkt unter /archive gelesen.
 export function dialogueHref(slug: string): string {
   return `/dialogues/${slug}`;
 }
 
 export function closedDialogueHref(slug: string): string {
-  return `/characters/dialogues/${slug}`;
+  return archiveHref(slug);
 }
 
 export function dialogueContentHref(slug: string, open: boolean): string {

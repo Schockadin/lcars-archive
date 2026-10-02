@@ -419,6 +419,25 @@ export async function updateMissionSynopsisBlock(input: {
   return true;
 }
 
+// Bearbeitet nur den Markdown-Body eines Blocks (Typografie/Autolink-Batches).
+// Der zusammengeführte Missionstext und sein HTML werden danach wie bei einer
+// normalen Blockänderung neu aufgebaut.
+export async function updateMissionSynopsisBlockMarkdown(
+  id: number,
+  missionId: number,
+  bodyMarkdown: string,
+): Promise<boolean> {
+  const [updated] = await sql<{ id: number }[]>`
+    UPDATE mission_synopsis_blocks
+    SET body_md = ${bodyMarkdown}
+    WHERE id = ${id} AND mission_id = ${missionId}
+    RETURNING id
+  `;
+  if (!updated) return false;
+  await syncMissionSynopsis(missionId);
+  return true;
+}
+
 export async function deleteMissionSynopsisBlock(
   id: number,
   missionId: number,

@@ -3,8 +3,8 @@ import { typographyFixBatchAction } from "@/app/actions/typographyFix";
 import BatchScriptPanel from "./BatchScriptPanel";
 
 // Admin-only (siehe page.tsx) — korrigiert die Typografie (deutsche
-// Anführungszeichen „…“) in ALLEN bestehenden Inhalten. Läuft blockweise über
-// BatchScriptPanel, das sich dieses Panel mit den übrigen Admin-Skripten
+// Anführungszeichen „…“) in ALLEN bestehenden Inhalten, auch Synopsis-Blöcken.
+// Läuft blockweise über BatchScriptPanel, das sich dieses Panel mit den übrigen Admin-Skripten
 // teilt: der Client ruft die Action wiederholt mit wachsendem Offset auf, bis
 // alle Inhalte abgearbeitet sind — so bleibt jeder Server-Request klein und
 // läuft nicht in ein Timeout.
@@ -14,12 +14,12 @@ export default function TypographyFixPanel() {
       description={
         <>
           Wandelt gerade Anführungszeichen ({'"'}) in allen bestehenden Inhalten
-          in deutsche typografische Anführungszeichen („…“) um und rendert die
-          Inhalte neu. Typografische Hochkommata und apostrophähnliche
-          Akzentzeichen (etwa „’“ und „´“) werden außerdem zu geraden
-          Apostrophen (&apos;) vereinheitlicht. Läuft in Blöcken mit
-          Fortschrittsanzeige. Nur Inhalte mit tatsächlichen Änderungen werden
-          gespeichert (ein zweiter Lauf meldet 0).
+          einschließlich Synopsis-Blöcken in deutsche typografische
+          Anführungszeichen („…“) um und rendert die Inhalte neu. Typografische
+          Hochkommata und apostrophähnliche Akzentzeichen (etwa „’“ und „´“)
+          werden außerdem zu geraden Apostrophen (&apos;) vereinheitlicht. Läuft
+          in Blöcken mit Fortschrittsanzeige. Nur Inhalte mit tatsächlichen
+          Änderungen werden gespeichert (ein zweiter Lauf meldet 0).
         </>
       }
       idleLabel="Typografie korrigieren"

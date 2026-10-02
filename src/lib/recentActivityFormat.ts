@@ -9,7 +9,7 @@ import {
   CHRONOLOGY_PATH,
   archiveHref,
   characterHref,
-  dialogueContentHref,
+  dialogueHref,
   missionHref,
   missionLogHref,
 } from "@/lib/contentRoutes";
@@ -95,9 +95,9 @@ export function toHref(row: NewsContentRow): string {
         ? missionLogHref(row.mission_slug, row.slug)
         : CHRONOLOGY_PATH;
     case "archive_entry":
-      return row.dialogue_open == null
-        ? archiveHref(row.slug)
-        : dialogueContentHref(row.slug, row.dialogue_open);
+      return row.dialogue_open
+        ? dialogueHref(row.slug)
+        : archiveHref(row.slug);
   }
 }
 

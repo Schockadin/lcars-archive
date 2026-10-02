@@ -90,7 +90,9 @@ export default function ImpressumContent() {
           Missions-Synopsis: Einträge mit gleichem Ingame-Datum stehen dort
           unter einer gemeinsamen Datumsüberschrift. In der Missionschronik
           lassen sich die Session-Zusammenfassungen als „Log-Einträge“ anzeigen
-          und nach Datum sortieren.
+          und nach Datum sortieren. Die optionale Sammelverlinkung ergänzt auf
+          Wunsch der angemeldeten Person Verweise auf bekannte Einträge; sie
+          ändert nichts an der Autorenschaft oder den Rechten am Text.
           Der Seitenbetreiber stellt lediglich die Plattform zur gemeinsamen
           Dokumentation der Kampagne bereit und beansprucht keine darüber
           hinausgehenden Rechte an diesen nutzergenerierten Beiträgen. Die Owner
