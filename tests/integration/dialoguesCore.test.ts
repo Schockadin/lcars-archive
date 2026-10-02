@@ -880,8 +880,7 @@ describe("getAllOpenDialoguesForGM", () => {
   });
 
   it("uses the latest non-deleted message character", async () => {
-    const { ownChar, partnerChar, partnerUser, dialogue, entryId } =
-      await setupDialogue();
+    const { partnerChar, partnerUser, dialogue, entryId } = await setupDialogue();
     const latest = await postDialogueMessage({
       archiveEntryId: entryId,
       speaker: { kind: "character", id: partnerChar.id },
@@ -897,7 +896,7 @@ describe("getAllOpenDialoguesForGM", () => {
       (candidate) => candidate.slug === dialogue.slug,
     );
 
-    expect(item?.lastMessageCharacterName).toBe(ownChar.name);
+    expect(item?.lastMessageCharacterName).toBe("Own");
   });
 
   it("excludes closed dialogues", async () => {
