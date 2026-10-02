@@ -58,6 +58,47 @@ describe("EditorDraftForm", () => {
     expect(saveDraft).not.toHaveBeenCalled();
   });
 
+  it("ignoriert Felder in data-no-draft-Bereichen beim Wiederherstellen und Speichern", async () => {
+    loadDraft.mockResolvedValue({
+      fields: { command: "publish", title: "Gesicherter Titel" },
+      revision: 3,
+    });
+    saveDraft.mockResolvedValue({ ok: true, revision: 4 });
+    render(
+      <EditorDraftForm
+        aria-label="Editor"
+        draftScope="archive-entry:42"
+        editorDraft={{ type: "archive", contentId: 42 }}
+      >
+        <div data-no-draft>
+          <select name="command" defaultValue="draft">
+            <option value="draft">Entwurf</option>
+            <option value="publish">Veröffentlicht</option>
+          </select>
+        </div>
+        <input name="title" defaultValue="Original" />
+      </EditorDraftForm>,
+    );
+
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+
+    expect(screen.getByRole("combobox")).toHaveValue("draft");
+    expect(screen.getByRole("textbox")).toHaveValue("Gesicherter Titel");
+
+    fireEvent.input(screen.getByRole("textbox"), {
+      target: { value: "Noch eine Änderung" },
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000);
+    });
+
+    expect(saveDraft).toHaveBeenCalledWith("archive", 42, 3, {
+      title: "Noch eine Änderung",
+    });
+  });
+
   it("speichert nach fünf Sekunden Ruhe und zeigt den bestätigten Stand an", async () => {
     loadDraft.mockResolvedValue(null);
     saveDraft.mockResolvedValue({ ok: true, revision: 1 });

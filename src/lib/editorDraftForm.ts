@@ -13,7 +13,8 @@ function namedControls(form: HTMLFormElement): Map<string, FormFieldControl[]> {
         control instanceof HTMLTextAreaElement ||
         control instanceof HTMLSelectElement) ||
       !control.name ||
-      control.disabled
+      control.disabled ||
+      control.closest("[data-no-draft]")
     ) {
       continue;
     }

@@ -91,6 +91,7 @@ describe("conversation summary last-message authors", () => {
     for (const { query } of queries) {
       expect(query).toContain("LEFT JOIN LATERAL");
       expect(query).toContain("ORDER BY dm.created_at DESC, dm.id DESC");
+      expect(query).toContain("dm.deleted_at IS NULL");
       expect(query).toContain("COALESCE(c.name, npc.title) AS character_name");
       expect(query).toContain("dm.character_id");
       expect(query).toContain("dm.npc_entry_id");
@@ -123,6 +124,7 @@ describe("conversation summary last-message authors", () => {
     expect(queries[0].query).toContain("LEFT JOIN LATERAL");
     expect(queries[0].query).toContain("dm.character_id");
     expect(queries[0].query).toContain("dm.npc_entry_id");
+    expect(queries[0].query).toContain("dm.deleted_at IS NULL");
     expect(queries[0].query).not.toContain("dm.content");
   });
 });

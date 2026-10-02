@@ -64,7 +64,7 @@ const dialogue: DialogueSummary = {
   slug: "kantine",
   title: "Abend in der Kantine",
   partnerName: "Kira",
-  lastMessageCharacterName: "Kira",
+  lastMessageCharacterName: "Spock",
   updatedAt: "2400-05-02",
   logDate: null,
   open: true,
@@ -138,7 +138,7 @@ describe("UserContentBrowser", () => {
     });
 
     expect(screen.getByText("Zuletzt geschrieben von")).toBeInTheDocument();
-    expect(screen.getByText("Kira")).toBeInTheDocument();
+    expect(screen.getByText("Spock")).toBeInTheDocument();
     firstRender.unmount();
 
     renderBrowser({
@@ -149,7 +149,7 @@ describe("UserContentBrowser", () => {
     });
 
     expect(screen.queryByText("Zuletzt geschrieben von")).toBeNull();
-    expect(screen.queryByText("Kira")).toBeNull();
+    expect(screen.queryByText("Spock")).toBeNull();
   });
 
   it("führt eigene Events mit Bearbeiten-Aktion als Inhaltsart", () => {

@@ -1915,6 +1915,7 @@ export async function getDialoguesForUser(
               LEFT JOIN characters c ON c.id = dm.character_id
               LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
               WHERE dm.archive_entry_id = ae.id
+                AND dm.deleted_at IS NULL
                 AND ae.dialogue_open
               ORDER BY dm.created_at DESC, dm.id DESC
               LIMIT 1
@@ -1949,6 +1950,7 @@ export async function getDialoguesForUser(
               LEFT JOIN characters c ON c.id = dm.character_id
               LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
               WHERE dm.archive_entry_id = ae.id
+                AND dm.deleted_at IS NULL
                 AND ae.dialogue_open
               ORDER BY dm.created_at DESC, dm.id DESC
               LIMIT 1
@@ -2029,6 +2031,7 @@ export async function getDialoguesForUser(
       LEFT JOIN characters c ON c.id = dm.character_id
       LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
       WHERE dm.archive_entry_id = ae.id
+        AND dm.deleted_at IS NULL
         AND ae.dialogue_open
       ORDER BY dm.created_at DESC, dm.id DESC
       LIMIT 1
@@ -2101,7 +2104,7 @@ export async function getAllOpenDialoguesForGM(): Promise<
       FROM dialogue_messages dm
       LEFT JOIN characters c ON c.id = dm.character_id
       LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
-      WHERE dm.archive_entry_id = ae.id
+      WHERE dm.archive_entry_id = ae.id AND dm.deleted_at IS NULL
       ORDER BY dm.created_at DESC, dm.id DESC
       LIMIT 1
     ) latest_message ON TRUE

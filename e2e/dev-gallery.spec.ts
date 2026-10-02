@@ -154,7 +154,7 @@ test.describe("ContentDetailHeader", () => {
 });
 
 test.describe("Offene Gesprächskarten", () => {
-  test("zeigt das Konto, das die letzte Nachricht geschrieben hat", async ({
+  test("zeigt den Charakter, der die letzte Nachricht geschrieben hat", async ({
     page,
   }) => {
     await page.goto("/dev-gallery");
