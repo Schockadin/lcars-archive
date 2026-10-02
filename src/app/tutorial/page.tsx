@@ -588,7 +588,9 @@ export default function TutorialPage() {
                 laufenden Gesprächs steht neben dem Namen der sprechenden
                 Person, <strong>wann sie verschickt wurde</strong> (Datum und
                 Uhrzeit) — so siehst du, ob zwischen zwei Beiträgen Minuten oder
-                Tage lagen.
+                Tage lagen. Auf den Karten offener Gespräche auf der Startseite,
+                unter „Meine Inhalte“ und in der Leitungsübersicht steht auch,
+                wer die letzte Nachricht geschrieben hat.
               </p>
               <p>
                 Beim Öffnen springt die Seite ans <strong>Ende</strong> des

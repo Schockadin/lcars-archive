@@ -5,8 +5,10 @@ import {
   LcarsSwitch,
   LcarsSortSwitch,
   LcarsDataRow,
+  LcarsAkteCard,
   type SortDir,
 } from "@/components/lcars";
+import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
 import CharacterWizard from "@/app/user/characters/new/CharacterWizard";
 import CharacterSheetPreviewOverlay from "@/components/character/CharacterSheetPreviewOverlay";
 import ManualEventForm from "@/components/timeline/ManualEventForm";
@@ -682,6 +684,22 @@ export default function DevGalleryPage() {
               ),
             },
           ]}
+        />
+      </section>
+
+      <section id="open-dialogue-card" className="mb-[24px]">
+        <LcarsAkteCard
+          href="/dialogues/demo-offenes-gespraech"
+          color="var(--lcars-senary)"
+          title="Gespräch in der Krankenstation"
+          meta={
+            <>
+              <span>
+                <b>Gesprächspartner</b> Kira
+              </span>
+              <DialogueLastAuthorMeta authorName="Mira Beispiel" />
+            </>
+          }
         />
       </section>
 

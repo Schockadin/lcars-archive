@@ -9,6 +9,7 @@ import ChronoRow from "@/components/timeline/ChronoRow";
 import ChronoCard from "@/components/timeline/ChronoCard";
 import type { UserContentLog } from "@/lib/characters";
 import type { DialogueSummary } from "@/lib/dialoguesCore";
+import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
 import type { UserContentArchiveEntry } from "@/lib/archive";
 import { fmtDate, sessionLabel, periodLabel } from "@/lib/missionFormat";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
@@ -271,6 +272,9 @@ export default function UserContentBrowser({
           <span>
             <b>Status</b> {d.open ? "Offen" : "Abgeschlossen"}
           </span>
+          {d.open && (
+            <DialogueLastAuthorMeta authorName={d.lastMessageAuthorName} />
+          )}
           <span>
             <b>Figur</b> {d.characterName}
           </span>

@@ -12,6 +12,7 @@ import {
 } from "@/lib/contentRoutes";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmDialoguesGuide } from "@/components/help/guides/GmGuides";
+import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
 
 export const metadata: Metadata = {
   title: "Gespräche",
@@ -67,6 +68,9 @@ export default async function AdminDialoguesPage() {
                         <span>
                           <b>Teilnehmer</b> {d.participantNames.join(", ")}
                         </span>
+                        <DialogueLastAuthorMeta
+                          authorName={d.lastMessageAuthorName}
+                        />
                         <span>
                           <b>Owner</b> {d.ownerName ?? "— kein Owner —"}
                         </span>

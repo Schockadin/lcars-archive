@@ -3,6 +3,7 @@ import type { DialogueSummary } from "@/lib/dialogues";
 import {
   dialogueHref,
 } from "@/lib/contentRoutes";
+import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
 
 // Eigene Akkordeon-Sektion für offene Gespräche — standardmäßig
 // aufgeklappt (defaultOpen), da laufende Gespräche im Gegensatz zu den
@@ -30,9 +31,12 @@ export default function OpenDialoguesSection({
             color="var(--lcars-senary)"
             title={d.title}
             meta={
-              <span>
-                <b>Gesprächspartner</b> {d.partnerName}
-              </span>
+              <>
+                <span>
+                  <b>Gesprächspartner</b> {d.partnerName}
+                </span>
+                <DialogueLastAuthorMeta authorName={d.lastMessageAuthorName} />
+              </>
             }
           />
         ))}
