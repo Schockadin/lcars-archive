@@ -105,6 +105,38 @@ describe("EditorDraftForm", () => {
     expect(saveDraft).toHaveBeenCalledTimes(1);
   });
 
+  it("speichert weitere Änderungen mit der Revision des vorherigen Autosaves", async () => {
+    loadDraft.mockResolvedValue(null);
+    saveDraft
+      .mockResolvedValueOnce({ ok: true, revision: 1 })
+      .mockResolvedValueOnce({ ok: true, revision: 2 });
+    renderDraftForm();
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const title = screen.getAllByRole("textbox")[0];
+    fireEvent.input(title, { target: { value: "Erste Fassung" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000);
+    });
+
+    fireEvent.input(title, { target: { value: "Zweite Fassung" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000);
+    });
+
+    expect(saveDraft).toHaveBeenNthCalledWith(1, "archive", 42, null, {
+      title: "Erste Fassung",
+      bodyMarkdown: "Original body",
+    });
+    expect(saveDraft).toHaveBeenNthCalledWith(2, "archive", 42, 1, {
+      title: "Zweite Fassung",
+      bodyMarkdown: "Original body",
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("Entwurf gespeichert.");
+  });
+
   it("sichert neue Modal-Inhalte unter einer temporären ID und erkennt sie nach erneutem Öffnen wieder", async () => {
     loadDraft.mockResolvedValue(null);
     saveDraft.mockResolvedValue({ ok: true, revision: 1 });

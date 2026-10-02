@@ -146,29 +146,38 @@ export async function saveEditorDraft(
   expectedRevision: number | null,
   fields: EditorDraftFields,
 ): Promise<{ revision: number } | null> {
-  const rows = await sql<{ revision: number }[]>`
-    INSERT INTO editor_drafts (
-      user_id, content_type, content_id, fields, revision, expires_at
-    ) SELECT
-      ${userId}, ${contentType}, ${contentId},
-      ${sql.json(fields as ReturnType<typeof JSON.parse>)}, 1,
-      NOW() + (${EDITOR_DRAFT_TTL_DAYS} * INTERVAL '1 day')
-    WHERE ${expectedRevision}::INT IS NULL
-    ON CONFLICT (user_id, content_type, content_id)
-    DO UPDATE SET
-      fields = EXCLUDED.fields,
-      revision = editor_drafts.revision + 1,
-      updated_at = NOW(),
-      expires_at = EXCLUDED.expires_at
-    WHERE (
-      editor_drafts.expires_at <= NOW()
-      AND ${expectedRevision}::INT IS NULL
-    ) OR (
-      editor_drafts.expires_at > NOW()
-      AND editor_drafts.revision = ${expectedRevision}
-    )
-    RETURNING revision
-  `;
+  const rows =
+    expectedRevision === null
+      ? await sql<{ revision: number }[]>`
+          INSERT INTO editor_drafts (
+            user_id, content_type, content_id, fields, revision, expires_at
+          ) VALUES (
+            ${userId}, ${contentType}, ${contentId},
+            ${sql.json(fields as ReturnType<typeof JSON.parse>)}, 1,
+            NOW() + (${EDITOR_DRAFT_TTL_DAYS} * INTERVAL '1 day')
+          )
+          ON CONFLICT (user_id, content_type, content_id)
+          DO UPDATE SET
+            fields = EXCLUDED.fields,
+            revision = editor_drafts.revision + 1,
+            updated_at = NOW(),
+            expires_at = EXCLUDED.expires_at
+          WHERE editor_drafts.expires_at <= NOW()
+          RETURNING revision
+        `
+      : await sql<{ revision: number }[]>`
+          UPDATE editor_drafts
+          SET fields = ${sql.json(fields as ReturnType<typeof JSON.parse>)},
+              revision = revision + 1,
+              updated_at = NOW(),
+              expires_at = NOW() + (${EDITOR_DRAFT_TTL_DAYS} * INTERVAL '1 day')
+          WHERE user_id = ${userId}
+            AND content_type = ${contentType}
+            AND content_id = ${contentId}
+            AND expires_at > NOW()
+            AND revision = ${expectedRevision}
+          RETURNING revision
+        `;
   return rows[0] ?? null;
 }
 
