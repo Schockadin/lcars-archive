@@ -7,11 +7,9 @@ import type { Viewer } from "@/lib/visibility";
 import type { DialogueMessage } from "@/lib/dialoguesCore";
 
 // Der Gesprächsverlauf eines ABGESCHLOSSENEN Gesprächs als eigenständiger
-// Inhalt (Single-Content-Ansicht unter /characters/dialogues/[slug]) — ohne
-// die Archiv-Maschinerie (Owner-Auswahl, Attribut-Raster, Editor) der
-// generischen Datenbank-Detailseite. Entspricht dem Dialog-Zweig, der früher
-// in ArchiveEntryBody steckte: Fließtext (wörtliche Rede je Sprecher in
-// dessen Farbe) oder Nachrichten-Thread, per Umschalter.
+// Inhalt unter /archive/[slug] — ohne die generische Archiv-Verwaltung.
+// Fließtext (wörtliche Rede je Sprecher in dessen Farbe) oder Nachrichten-
+// Thread, per Umschalter.
 export default function DialogueContentView({
   entry,
   viewer,

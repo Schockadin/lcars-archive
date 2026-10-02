@@ -1127,6 +1127,15 @@ export default function TutorialPage() {
                 in den einzelnen Nachrichten.
               </p>
               <p>
+                Wenn du viele deiner Inhalte auf einmal ergänzen willst,
+                startest du unter <strong>„Meine Inhalte“</strong> den Knopf{" "}
+                <strong>„Alles verlinken“</strong>. Er prüft deine Charaktere,
+                Missionen, Session-Zusammenfassungen, Logbücher und
+                Datenbank-Einträge in kleinen Blöcken und zeigt den Fortschritt
+                sowie die gesetzten Verknüpfungen an. Gespräche werden
+                ausgelassen.
+              </p>
+              <p>
                 Die <strong>Spielleitung</strong> darf das zusätzlich auf{" "}
                 <strong>fremden</strong> Inhalten (Recht
                 „Verlinkungs-Werkzeuge“), und für alle Inhalte auf einmal gibt

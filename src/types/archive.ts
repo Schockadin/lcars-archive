@@ -101,9 +101,8 @@ export interface ArchiveEntryDetail {
   content: string;
   tags: string[];
   metadata: ArchiveMetadata;
-  // Nur bei category "dialogue" relevant (In-App-Dialoge); Vault-Einträge
-  // immer false. Steuert den Redirect auf /dialogues/<slug> in
-  // archive/[slug]/page.tsx.
+  // Nur bei category "dialogue" relevant (In-App-Gespräche); Vault-Einträge
+  // immer false. Offene Gespräche werden auf /dialogues/<slug> weitergeleitet.
   dialogue_open: boolean;
   ownerUserId: number | null;
   isDraft: boolean;

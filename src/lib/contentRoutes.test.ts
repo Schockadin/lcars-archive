@@ -53,12 +53,12 @@ describe("contentRoutes", () => {
     );
     expect(characterSheetHref("tuvok")).toBe("/characters/tuvok/sheet");
     expect(archiveHref("erster-kontakt")).toBe("/archive/erster-kontakt");
-    // Gesprächslinks zeigen ohne Redirect direkt auf ihre kanonische Seite.
+    // Offene Gespräche haben eine Spielansicht, abgeschlossene liegen im Archiv.
     expect(dialogueHref("plausch")).toBe("/dialogues/plausch");
-    expect(closedDialogueHref("plausch")).toBe("/characters/dialogues/plausch");
+    expect(closedDialogueHref("plausch")).toBe("/archive/plausch");
     expect(dialogueContentHref("plausch", true)).toBe("/dialogues/plausch");
     expect(dialogueContentHref("plausch", false)).toBe(
-      "/characters/dialogues/plausch",
+      "/archive/plausch",
     );
   });
 

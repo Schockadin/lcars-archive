@@ -176,6 +176,17 @@ export default function DSGVOContent({ year }: { year: number }) {
           dürfen.
         </p>
         <p>
+          Wer unter <code>/user/content</code> „Alles verlinken“ startet, kann
+          die eigenen Charaktere, Missionen, Session-Zusammenfassungen,
+          Logbücher und Datenbank-Einträge automatisch auf Namen bekannter,
+          veröffentlichter Inhalte prüfen lassen. Neue Verweise werden in den
+          gespeicherten Texten ergänzt; Gespräche bleiben unberührt. Die
+          Verarbeitung erfolgt innerhalb der Anwendung und Datenbank. Es werden
+          dafür keine Inhalte an einen zusätzlichen Dienst übermittelt
+          (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO — Bereitstellung der
+          gewünschten Verknüpfungsfunktion).
+        </p>
+        <p>
           Für die persönliche „News“-Übersicht auf dem Dashboard wird pro
           Login-Account gespeichert, welche Neuigkeiten bereits gesehen bzw.
           ausgeblendet wurden (Inhaltstyp, Kennung und Zeitpunkt), damit

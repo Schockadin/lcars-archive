@@ -8,7 +8,7 @@ import { ArchiveEntryDetail, ArchiveLink } from "@/types/archive";
 import PageMeta from "@/components/PageMeta";
 import { LcarsReadingModeToggle } from "@/components/lcars";
 import { getViewer, canView, viewerHasPermission } from "@/lib/visibility";
-import { listAllUsers } from "@/lib/users";
+import { getDialogueViewPreference, listAllUsers } from "@/lib/users";
 import { resolveFollowState } from "@/lib/follows";
 import ArchiveEntryBody from "./ArchiveEntryBody";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
@@ -16,11 +16,18 @@ import { listNotes } from "@/lib/contentNotes";
 import { ARCHIVE_REFERENCES_ID } from "@/lib/archiveToc";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import { addStoredContentLinkPreviews } from "@/lib/autolink";
+import { getDialogueMessages } from "@/lib/dialogues";
+import DialogueHeader from "@/components/DialogueHeader";
+import DialogueContentView from "@/app/characters/dialogues/[slug]/DialogueContentView";
+import DeleteDialogueButton from "@/components/DeleteDialogueButton";
+import ShareMenu from "@/components/ShareMenu";
+import { PencilIcon } from "@/lib/icons";
 import {
   archiveHref,
   archiveListHref,
   characterHref,
-  closedDialogueHref,
+  dialogueHref,
+  dialoguesHref,
   missionHref,
 } from "@/lib/contentRoutes";
 
@@ -33,9 +40,9 @@ export async function generateMetadata({ params }: Props) {
   const entry = await getArchiveEntryBySlug(slug);
   if (!entry) return { title: "Nicht gefunden · Neo Archive" };
 
-  // Offene Dialoge: Zugriff wird auf /dialogues/<slug> per Teilnehmer-Check
-  // entschieden (siehe unten in der Page-Komponente), nicht hier über
-  // owner_user_id — Metadaten dafür also nicht zusätzlich blocken.
+  // Offene Gespräche: Zugriff wird auf /dialogues/<slug> per Teilnehmer-Check
+  // entschieden, nicht hier über owner_user_id — Metadaten dafür also nicht
+  // zusätzlich blocken.
   const viewerForMeta = await getViewer();
   const visible =
     (entry.category === "dialogue" && entry.dialogue_open) ||
@@ -43,8 +50,9 @@ export async function generateMetadata({ params }: Props) {
   if (!visible) return { title: "Nicht gefunden · Neo Archive" };
 
   const desc = entry.metadata.summary ?? stripHtml(entry.content);
+  const section = entry.category === "dialogue" ? "Gespräche" : "Datenbank";
   return {
-    title: `${archiveTitle(entry)} · Datenbank · Neo Archive`,
+    title: `${archiveTitle(entry)} · ${section} · Neo Archive`,
     description: desc.slice(0, 160) || undefined,
   };
 }
@@ -60,17 +68,11 @@ export default async function ArchiveEntryPage({ params }: Props) {
   ]);
   if (!entry) notFound();
 
-  // Gespräche leben im Charaktere-Bereich, nicht in der generischen Datenbank-
-  // Detailseite: abgeschlossene unter /characters/dialogues/<slug>
-  // (Single-Content-Ansicht), offene unter /dialogues/<slug> (Formular,
-  // Abschluss-Button, Teilnehmer-Gate). Muss VOR dem Sichtbarkeits-Guard
-  // unten passieren — der Teilnehmer-Check auf /dialogues/<slug> ist die
-  // richtige Zugriffsprüfung für ein offenes Gespräch (jeder Teilnehmer, nicht
-  // nur der Ersteller); ein alter /archive/<slug>-Link bleibt so gültig und
-  // leitet auf das neue Ziel weiter (das offene Gespräche selbst nach
-  // /dialogues weiterreicht).
-  if (entry.category === "dialogue") {
-    redirect(closedDialogueHref(entry.slug));
+  // Offene Gespräche benötigen den Teilnehmer-Check ihrer Spielansicht.
+  // Abgeschlossene Gespräche bleiben direkt unter /archive/<slug>, ihrer
+  // kanonischen Leseseite.
+  if (entry.category === "dialogue" && entry.dialogue_open) {
+    redirect(dialogueHref(entry.slug));
   }
 
   if (!canView(entry.isDraft, entry.ownerUserId, viewer)) notFound();
@@ -79,27 +81,39 @@ export default async function ArchiveEntryPage({ params }: Props) {
     content: await addStoredContentLinkPreviews(entry.content ?? ""),
   };
 
-  // Owner-Auswahl und Bookmark/Abo-Stand sind voneinander unabhängig —
-  // parallel laden. Gespräche werden hier nicht mehr gerendert (sie leiten
-  // oben nach /characters/dialogues um), daher keine Dialog-Nachrichten/
-  // -Präferenz mehr.
-  // - owners: nur laden, wenn der Betrachter den Eintrag umtragen darf — exakt
-  //   das Server-Gate von setOwnerAction (content.moderate).
-  const [allUsers, followInitialState, notes] = await Promise.all([
+  // Verwaltungsdaten nur für normale Archiv-Einträge laden. Abgeschlossene
+  // Gespräche verwenden ihre eigenen Moderationsrechte und Aktionen.
+  const [
+    allUsers,
+    followInitialState,
+    notes,
+    messages,
+    flowingTextPreferred,
+  ] = await Promise.all([
+    entry.category !== "dialogue" &&
     viewerHasPermission(viewer, "content.moderate")
       ? listAllUsers()
       : Promise.resolve([]),
     // Bookmark/Abo-Stand serverseitig vorlösen — an ArchiveEntryBody →
     // ActionsMenu → FollowButtons als initialState durchgereicht, damit die
     // Buttons sofort mitgerendert werden statt per Client-Fetch nachzuladen.
-    resolveFollowState(viewer?.userId ?? null, "archive_entry", slug),
+    entry.category === "dialogue"
+      ? Promise.resolve(undefined)
+      : resolveFollowState(viewer?.userId ?? null, "archive_entry", slug),
     // Notizen/Kommentare am Eintrag — nur für eingeloggte Personen.
     listNotes("archive", entry.slug, viewer),
+    entry.category === "dialogue"
+      ? getDialogueMessages(entry.id)
+      : Promise.resolve([]),
+    entry.category === "dialogue" && viewer
+      ? getDialogueViewPreference(viewer.userId)
+      : Promise.resolve(true),
   ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   const cfg = CATEGORY_CONFIG[entry.category];
   const title = archiveTitle(entry);
+  const canModerateDialogue = viewerHasPermission(viewer, "dialogues.moderate");
 
   return (
     <article
@@ -115,26 +129,72 @@ export default async function ArchiveEntryPage({ params }: Props) {
           mobil sichtbar), beide linksbündig gestapelt. */}
       <div className="flex flex-col items-start gap-[8px]">
         <Link
-          href={archiveListHref(entry.category)}
+          href={
+            entry.category === "dialogue"
+              ? dialoguesHref()
+              : archiveListHref(entry.category)
+          }
           className="lcars-back-link"
         >
-          ‹ {cfg.plural}
+          ‹ {entry.category === "dialogue" ? "Gespräche" : cfg.plural}
         </Link>
         <LcarsReadingModeToggle />
       </div>
 
       <div className="flex items-start">
-        <StandardHeader entry={entry} title={title} label={cfg.label} />
+        {entry.category === "dialogue" ? (
+          <DialogueHeader
+            title={title}
+            participants={entry.metadata.participants}
+            location={entry.metadata.location}
+            logDate={entry.metadata.logDate}
+          />
+        ) : (
+          <StandardHeader entry={entry} title={title} label={cfg.label} />
+        )}
       </div>
 
-      <ArchiveEntryBody
-        entry={entryWithLinkPreviews}
-        viewer={viewer}
-        owners={owners}
-        messages={[]}
-        flowingTextPreferred={true}
-        followInitialState={followInitialState}
-      />
+      {entry.category === "dialogue" ? (
+        <DialogueContentView
+          entry={entryWithLinkPreviews}
+          viewer={viewer}
+          messages={messages}
+          flowingTextPreferred={flowingTextPreferred}
+          canModerate={canModerateDialogue}
+        />
+      ) : (
+        <ArchiveEntryBody
+          entry={entryWithLinkPreviews}
+          viewer={viewer}
+          owners={owners}
+          messages={[]}
+          flowingTextPreferred={true}
+          followInitialState={followInitialState}
+        />
+      )}
+
+      {entry.category === "dialogue" && (
+        <div className="mt-[16px] flex flex-wrap items-center gap-[8px]">
+          <ShareMenu
+            title={title}
+            exportType="archive_entry"
+            exportSlug={entry.slug}
+          />
+          {canModerateDialogue && (
+            <>
+              <Link
+                href={`/gm/dialogues/${entry.slug}/edit`}
+                className="lcars-icon-btn"
+                aria-label="Metadaten bearbeiten"
+                title="Metadaten bearbeiten"
+              >
+                <PencilIcon />
+              </Link>
+              <DeleteDialogueButton entrySlug={entry.slug} />
+            </>
+          )}
+        </div>
+      )}
 
       {viewer && (
         <NotesPanel
