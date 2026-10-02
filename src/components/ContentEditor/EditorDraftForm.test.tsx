@@ -12,12 +12,13 @@ vi.mock("@/app/actions/editorDrafts", () => ({
   saveEditorDraft: saveDraft,
 }));
 
-function renderDraftForm() {
+function renderDraftForm(newDraft = false) {
   return render(
     <EditorDraftForm
       aria-label="Editor"
       draftScope="archive-entry:42"
-      editorDraft={{ type: "archive", contentId: 42 }}
+      editorDraft={newDraft ? undefined : { type: "archive", contentId: 42 }}
+      newDraftType={newDraft ? "archive" : undefined}
     >
       <input name="title" defaultValue="Original" />
       <textarea name="bodyMarkdown" defaultValue="Original body" />
@@ -28,6 +29,7 @@ function renderDraftForm() {
 
 beforeEach(() => {
   vi.useFakeTimers();
+  window.sessionStorage.clear();
   loadDraft.mockReset();
   saveDraft.mockReset();
 });
@@ -101,6 +103,42 @@ describe("EditorDraftForm", () => {
     });
 
     expect(saveDraft).toHaveBeenCalledTimes(1);
+  });
+
+  it("sichert neue Modal-Inhalte unter einer temporären ID und erkennt sie nach erneutem Öffnen wieder", async () => {
+    loadDraft.mockResolvedValue(null);
+    saveDraft.mockResolvedValue({ ok: true, revision: 1 });
+    const firstRender = renderDraftForm(true);
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const firstId = loadDraft.mock.calls[0][1] as number;
+    expect(firstId).toBeLessThan(0);
+    expect(
+      screen.getByRole("form", { name: "Editor" }).querySelector(
+        'input[name="editorDraftId"]',
+      ),
+    ).toHaveValue(String(firstId));
+
+    fireEvent.input(screen.getAllByRole("textbox")[0], {
+      target: { value: "Neuer Modal-Inhalt" },
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5_000);
+    });
+    expect(saveDraft).toHaveBeenCalledWith("archive", firstId, null, {
+      title: "Neuer Modal-Inhalt",
+      bodyMarkdown: "Original body",
+    });
+
+    firstRender.unmount();
+    loadDraft.mockClear();
+    renderDraftForm(true);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(loadDraft).toHaveBeenCalledWith("archive", firstId);
   });
 
   it("blockiert das normale Speichern nicht, wenn der Zwischenstand nicht gespeichert werden kann", async () => {

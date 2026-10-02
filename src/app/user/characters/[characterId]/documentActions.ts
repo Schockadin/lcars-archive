@@ -10,6 +10,7 @@ import {
 } from "@/lib/characterDocuments";
 import { MAX_CHARACTER_DOCUMENT_BYTES } from "@/lib/characterDocumentTypes";
 import { characterEditHref, characterHref } from "@/lib/contentRoutes";
+import { removeEditorDraft } from "@/lib/editorDrafts";
 
 export interface CharacterDocumentActionState {
   error?: string;
@@ -91,7 +92,7 @@ export async function renameCharacterDocumentAction(
     return { error: "Ungültiges Dokument." };
   }
 
-  const { character } = await requireOwnedCharacter(characterId);
+  const { session, character } = await requireOwnedCharacter(characterId);
   if (!character) return { error: "Charakter nicht gefunden." };
 
   try {
@@ -101,6 +102,7 @@ export async function renameCharacterDocumentAction(
       String(formData.get("fileName") ?? ""),
     );
     if (!renamed) return { error: "Dokument nicht gefunden." };
+    await removeEditorDraft(session.userId, "character_document", documentId);
     await refreshCharacterDocuments(characterId, character.slug);
     return { success: `Dokument wurde in „${renamed}“ umbenannt.` };
   } catch (error) {

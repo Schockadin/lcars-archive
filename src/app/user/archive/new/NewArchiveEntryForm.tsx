@@ -13,10 +13,12 @@ const initialState: ArchiveEntryFormState = {};
 
 export default function NewArchiveEntryForm({
   userId,
+  draftOnCreate = false,
   // Vorgewählte Kategorie (siehe page.tsx) — änderbar wie jede andere.
   initialCategory = "other",
 }: {
   userId: number;
+  draftOnCreate?: boolean;
   initialCategory?: Exclude<ArchiveCategory, "dialogue">;
 }) {
   return (
@@ -36,6 +38,7 @@ export default function NewArchiveEntryForm({
       }
       idPrefix="archive-entry"
       draftScope="archive-entry:new"
+      draftOnCreate={draftOnCreate ? "archive" : undefined}
       bodyLabel="Inhalt"
       bodyHint={<MarkdownFormatHint />}
       bodyRequired

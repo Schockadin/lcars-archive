@@ -838,18 +838,18 @@ auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
   (neu/bearbeitet/gelöscht) überhaupt angezeigt werden (Standard: nur neue).
   Persistenz über die Tabelle `news_seen`.
 - **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign` (im Leitungsmenü unter „Regelwerk") das aktuelle Ingame-Jahr, die Steigerungsregeln und Vorgaben für neue Session-Termine. Charakter-Zuweisungen liegen unter `/gm/characters`, die Missionsübersicht unter `/gm/missions`. Charaktere haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
-- **Autosicherung bestehender Inhalte** — Bearbeitungen an bestehenden
-  Missionen, Logbüchern und Datenbank-Einträgen erhalten eine private
-  Arbeitskopie in `editor_drafts`. Der Editor schreibt nach fünf Sekunden
-  ohne Eingabe und spätestens alle fünf Sekunden bei fortlaufendem Tippen.
-  Erst nach der ersten Änderung entsteht ein DB-Eintrag. Beim Neuladen wird
-  der letzte bestätigte Stand wiederhergestellt; die normale Speichern-Aktion
-  übernimmt ihn in den Inhalt und löscht den Zwischenstand. Versionierte
-  Schreibvorgänge schützen vor dem Überschreiben eines neueren Stands aus
-  einem anderen Tab. Ungenutzte Zwischenstände laufen nach 30 Tagen ab.
-  Die frühere globale Sicherung beliebiger Formularfelder in `sessionStorage`
-  ist deaktiviert; neue Inhalte und andere Formulare werden nicht automatisch
-  in der Datenbank zwischengespeichert.
+- **Autosicherung von Inhalten** — Bearbeitungen an bestehenden Missionen,
+  Logbüchern, Datenbank-Einträgen, freien Chronologie-Ereignissen und das
+  Umbenennen von Charakterdokumenten sowie modale Formulare zum Anlegen von
+  Inhalten und Sessions erhalten eine private Arbeitskopie
+  in `editor_drafts`. Der Editor schreibt nach fünf Sekunden ohne Eingabe und
+  spätestens alle fünf Sekunden bei fortlaufendem Tippen. Erst nach der ersten
+  Änderung entsteht ein DB-Eintrag. Beim Neuladen wird der letzte bestätigte
+  Stand wiederhergestellt; die normale Speichern-Aktion übernimmt ihn in den
+  Inhalt und löscht den Zwischenstand. Versionierte Schreibvorgänge schützen
+  vor dem Überschreiben eines neueren Stands aus einem anderen Tab.
+  Ungenutzte Zwischenstände laufen nach 30 Tagen ab. Eigenständige
+  Anlege-Seiten und andere Formulare werden nicht zwischengespeichert.
 
 - **Öffentliches Changelog** — die Seite `/changelog` listet je Version die
   end-nutzerrelevanten Neuerungen (gepflegt in `src/lib/changelog.ts`). Jeder

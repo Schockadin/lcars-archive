@@ -29,6 +29,10 @@ export async function saveEditorDraft(
 ): Promise<{ ok: true; revision: number } | { ok: false }> {
   if (
     !isEditorDraftType(type) ||
+    !Number.isSafeInteger(contentId) ||
+    contentId === 0 ||
+    contentId < -2_147_483_647 ||
+    contentId > 2_147_483_647 ||
     (expectedRevision !== null &&
       (!Number.isSafeInteger(expectedRevision) || expectedRevision < 1))
   ) {

@@ -476,15 +476,17 @@ export default function TutorialPage() {
               </p>
               <p>
                 <strong>Änderungen im Editor werden automatisch gesichert.</strong>{" "}
-                Beim Bearbeiten einer bestehenden Mission, eines Logbuchs oder
-                Datenbank-Eintrags speichert der Editor nach fünf Sekunden ohne
-                Eingabe und bei längerem Tippen spätestens alle fünf Sekunden
-                einen privaten Zwischenstand. Der Status unter dem Formular
-                zeigt, ob der Stand gespeichert ist. Nach einem Neuladen wird
-                der letzte bestätigte Zwischenstand wieder eingesetzt. Das
-                normale Speichern übernimmt ihn in den Inhalt; danach wird der
-                Zwischenstand entfernt. Nicht abgeschickte neue Inhalte werden
-                hier nicht in der Datenbank angelegt.
+                Beim Bearbeiten einer bestehenden Mission, eines Logbuchs,
+                Datenbank-Eintrags oder Chronologie-Ereignisses, beim
+                Umbenennen eines Charakterdokuments sowie in den modalen
+                Formularen für neue Inhalte und Sessions speichert der Editor
+                nach fünf Sekunden ohne Eingabe und bei längerem Tippen spätestens alle fünf
+                Sekunden einen privaten Zwischenstand. Der Status unter dem
+                Formular zeigt, ob der Stand gespeichert ist. Nach einem
+                Neuladen wird der letzte bestätigte Zwischenstand wieder
+                eingesetzt. Das normale Speichern übernimmt ihn in den Inhalt;
+                danach wird der Zwischenstand entfernt. Neue Inhalte auf den
+                eigenständigen Anlege-Seiten werden nicht zwischengespeichert.
               </p>
               <p>
                 Auch auf der Leseseite eines Inhalts führt der{" "}

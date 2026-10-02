@@ -151,7 +151,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Automatische Sicherung im Editor",
     items: [
       {
-        text: "Beim Bearbeiten bestehender Missions-, Logbuch- und Datenbank-Einträge sichert der Editor Änderungen automatisch. Nach einem Neuladen steht der zuletzt gesicherte Stand wieder bereit; mit dem normalen Speichern wird er übernommen.",
+        text: "Bei bestehenden Missionen, Logs, Datenbank-Einträgen und Chronologie-Ereignissen, beim Umbenennen von Charakterdokumenten sowie in den modalen Formularen für neue Inhalte und Sessions sichert der Editor Änderungen automatisch. Nach dem Neuladen steht der letzte bestätigte Stand wieder bereit; mit dem normalen Speichern wird er übernommen.",
         category: "inhalte",
         tutorial: "eigene-inhalte",
       },

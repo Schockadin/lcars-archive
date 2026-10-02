@@ -1,4 +1,13 @@
-export const EDITOR_DRAFT_TYPES = ["archive", "mission", "mission_log"] as const;
+export const EDITOR_DRAFT_TYPES = [
+  "archive",
+  "mission",
+  "mission_log",
+  "manual_event",
+  "character_document",
+  "dialogue",
+  "game_session",
+  "planned_session",
+] as const;
 export type EditorDraftType = (typeof EDITOR_DRAFT_TYPES)[number];
 export type EditorDraftValue = string | boolean | string[];
 export type EditorDraftFields = Record<string, EditorDraftValue>;

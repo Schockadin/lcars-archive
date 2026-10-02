@@ -250,6 +250,10 @@ export async function deleteManualEvent(
     RETURNING id
   `;
   if (rows.length > 0) {
+    await sql`
+      DELETE FROM editor_drafts
+      WHERE content_type = 'manual_event' AND content_id = ${id}
+    `;
     await purgeContentImagesFor("timeline_event", id);
     revalidateTag(cacheTags.timeline, { expire: 0 });
   }

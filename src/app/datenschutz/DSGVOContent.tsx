@@ -207,15 +207,19 @@ export default function DSGVOContent({ year }: { year: number }) {
           Browser für ungültig erklärt wird.
         </p>
         <p>
-          Beim Bearbeiten einer bestehenden Mission, eines Logbuchs oder
-          Datenbank-Eintrags speichert der Editor geänderte Formularwerte nach
-          fünf Sekunden ohne Eingabe und spätestens alle fünf Sekunden bei
+          Beim Bearbeiten einer bestehenden Mission, eines Logbuchs, eines
+          Datenbank-Eintrags oder eines Chronologie-Ereignisses, beim
+          Umbenennen eines Charakterdokuments sowie in den modalen Formularen
+          für neue Inhalte und Sessions speichert der Editor geänderte
+          Formularwerte nach fünf
+          Sekunden ohne Eingabe und spätestens alle fünf Sekunden bei
           fortlaufender Eingabe als privaten Zwischenstand in der Datenbank
           (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO — Bereitstellung der
           Bearbeitungsfunktion). Gespeichert wird erst nach der ersten
           Änderung. Der Zwischenstand ist nur für das Konto abrufbar, das ihn
-          angelegt hat, und wird beim ausdrücklichen Speichern oder beim
-          Wiederherstellen einer früheren Fassung entfernt. Nicht verwendete
+          angelegt hat, und wird nach erfolgreicher Anlage oder beim
+          ausdrücklichen Speichern beziehungsweise Wiederherstellen einer
+          früheren Fassung entfernt. Nicht verwendete
           Zwischenstände laufen nach 30 Tagen ab. Sie werden nicht an externe
           Dienste übertragen.
         </p>

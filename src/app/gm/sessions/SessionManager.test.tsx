@@ -3,6 +3,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import type { GameSession } from "@/lib/gameSessions";
 import { isDraftableField } from "@/lib/inputDraft";
 
+vi.mock("@/app/actions/editorDrafts", () => ({
+  loadEditorDraft: vi.fn(async () => null),
+  saveEditorDraft: vi.fn(async () => ({ ok: true, revision: 1 })),
+}));
 vi.mock("./actions", () => ({ createSessionAction: vi.fn(), updateSessionAction: vi.fn(), deleteSessionAction: vi.fn() }));
 vi.mock("@/app/_shared/FormPrimitives", () => ({ FormError: () => null, FormSuccess: () => null }));
 vi.mock("@/app/_shared/MarkdownEditor", () => ({ default: ({ id, name, defaultValue }: { id: string; name: string; defaultValue?: string }) => <textarea id={id} name={name} defaultValue={defaultValue} /> }));

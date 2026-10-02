@@ -55,11 +55,14 @@ export default function ImpressumContent() {
           Überwachung fremder Informationen besteht nicht (§§ 8–10 TMG).
         </p>
         <p>
-          Beim Bearbeiten einer bestehenden Mission, eines Logbuchs oder
-          Datenbank-Eintrags sichert der Editor Änderungen automatisch als
-          privaten Zwischenstand in der Datenbank. Erst das ausdrückliche
-          Speichern übernimmt sie in den Inhalt. Zwischenstände werden nach dem
-          Speichern entfernt und laufen nach 30 Tagen ab. Die Einzelheiten
+          Beim Bearbeiten einer bestehenden Mission, eines Logbuchs, eines
+          Datenbank-Eintrags oder eines Chronologie-Ereignisses, beim
+          Umbenennen eines Charakterdokuments sowie in modalen Formularen für
+          neue Inhalte und Sessions sichert der Editor Änderungen automatisch
+          als privaten Zwischenstand in der Datenbank. Erst das ausdrückliche
+          Speichern übernimmt sie in den Inhalt. Zwischenstände werden nach
+          erfolgreicher Anlage oder Bearbeitung entfernt und laufen nach 30
+          Tagen ab. Die Einzelheiten
           stehen in der Datenschutzerklärung.
         </p>
         <p>

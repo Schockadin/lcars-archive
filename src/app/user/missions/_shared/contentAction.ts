@@ -33,7 +33,10 @@ import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { missionHref } from "@/lib/contentRoutes";
-import { removeEditorDraft } from "@/lib/editorDrafts";
+import {
+  removeEditorDraft,
+  removeNewEditorDraftFromForm,
+} from "@/lib/editorDrafts";
 import { parseList } from "@/lib/formParsing";
 
 export interface MissionFormState {
@@ -363,6 +366,7 @@ export async function missionAction(
     bodyHtml: "",
     ownerUserId: user.id,
   });
+  await removeNewEditorDraftFromForm(session.userId, "mission", formData);
   revalidateMission(result.slug);
   await publishContentChanged();
 

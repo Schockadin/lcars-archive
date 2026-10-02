@@ -12,6 +12,7 @@ import MetadataSection from "./MetadataSection";
 import type { HeadField } from "./headFields";
 import type { ContentImageType } from "@/lib/contentImages";
 import EditorDraftForm, { type EditorDraftTarget } from "./EditorDraftForm";
+import type { EditorDraftType } from "@/lib/editorDraftTypes";
 
 interface ContentEditorState {
   error?: string;
@@ -32,9 +33,11 @@ interface ContentEditorProps<FieldName extends string> {
   idPrefix: string;
   // Stabiler Editor-Namensraum, z.B. mit Inhalts-ID im Edit-Modus.
   draftScope: string;
-  // Bestehende Inhalte erhalten einen separaten DB-Entwurf. Neue Inhalte
-  // werden erst mit der normalen Speichern-Aktion angelegt.
+  // Bestehende Inhalte erhalten einen separaten DB-Entwurf.
   editorDraft?: EditorDraftTarget;
+  // Modal-Anlegeformulare erhalten bis zum normalen Speichern ebenfalls einen
+  // persönlichen DB-Zwischenstand.
+  draftOnCreate?: EditorDraftType;
   bodyName?: string;
   bodyLabel: string;
   bodyHint?: ReactNode;
@@ -74,6 +77,7 @@ export default function ContentEditor<FieldName extends string>({
   idPrefix,
   draftScope,
   editorDraft,
+  draftOnCreate,
   bodyName = "bodyMarkdown",
   bodyLabel,
   bodyHint,
@@ -109,6 +113,7 @@ export default function ContentEditor<FieldName extends string>({
       className="flex flex-col gap-[16px]"
       draftScope={draftScope}
       editorDraft={mode === "edit" ? editorDraft : undefined}
+      newDraftType={mode === "create" ? draftOnCreate : undefined}
     >
       {Object.entries(hiddenFields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />

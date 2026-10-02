@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type ComponentPropsWithoutRef,
   type ReactNode,
 } from "react";
@@ -18,6 +20,49 @@ import {
 import type { EditorDraftType } from "@/lib/editorDraftTypes";
 
 const SAVE_AFTER_IDLE_MS = 5_000;
+const subscribeToTemporaryDraftId = () => () => {};
+const getServerTemporaryDraftId = () => null;
+const temporaryDraftIds = new Map<string, number>();
+
+function getOrCreateTemporaryDraftId(
+  draftScope: string,
+  type: EditorDraftType,
+): number {
+  const storageKey = `editor-draft-id:${type}:${draftScope}`;
+  const cachedId = temporaryDraftIds.get(storageKey);
+  if (cachedId !== undefined) return cachedId;
+
+  try {
+    const storedId = Number(window.sessionStorage.getItem(storageKey));
+    if (
+      Number.isSafeInteger(storedId) &&
+      storedId < 0 &&
+      storedId >= -2_147_483_647
+    ) {
+      temporaryDraftIds.set(storageKey, storedId);
+      return storedId;
+    }
+  } catch {
+    // Ohne sessionStorage bleibt die Sicherung bis zum Schließen des Modals
+    // aktiv; lediglich der Bezeichner lässt sich dann nicht wiederverwenden.
+  }
+
+  let id = -(Math.floor(Math.random() * 2_147_483_647) + 1);
+  try {
+    const random = new Uint32Array(1);
+    window.crypto.getRandomValues(random);
+    id = -((random[0] % 2_147_483_647) + 1);
+  } catch {
+    // Die ID dient nur als persönlicher Entwurfsschlüssel, nicht als Geheimnis.
+  }
+  temporaryDraftIds.set(storageKey, id);
+  try {
+    window.sessionStorage.setItem(storageKey, String(id));
+  } catch {
+    // Die zufällige ID ist weiterhin für die laufende Modal-Sitzung gültig.
+  }
+  return id;
+}
 
 export interface EditorDraftTarget {
   type: EditorDraftType;
@@ -27,6 +72,7 @@ export interface EditorDraftTarget {
 interface EditorDraftFormProps extends ComponentPropsWithoutRef<"form"> {
   draftScope: string;
   editorDraft?: EditorDraftTarget;
+  newDraftType?: EditorDraftType;
   children: ReactNode;
 }
 
@@ -35,21 +81,36 @@ type SaveResult = Awaited<ReturnType<typeof saveEditorDraft>>;
 export default function EditorDraftForm({
   draftScope,
   editorDraft,
+  newDraftType,
   children,
   className,
   ...formProps
 }: EditorDraftFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
-  const editorDraftType = editorDraft?.type;
-  const editorDraftId = editorDraft?.contentId;
+  const getTemporaryDraftId = useCallback(
+    () =>
+      newDraftType
+        ? getOrCreateTemporaryDraftId(draftScope, newDraftType)
+        : null,
+    [draftScope, newDraftType],
+  );
+  const generatedDraftId = useSyncExternalStore(
+    subscribeToTemporaryDraftId,
+    getTemporaryDraftId,
+    getServerTemporaryDraftId,
+  );
+  const editorDraftType = editorDraft?.type ?? newDraftType;
+  const editorDraftId = editorDraft?.contentId ?? generatedDraftId;
   const draftKey =
-    editorDraftType !== undefined && editorDraftId !== undefined
+    editorDraftType !== undefined && editorDraftId != null
       ? `${editorDraftType}:${editorDraftId}`
       : null;
   const [readyDraftKey, setReadyDraftKey] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState("");
-  const ready = !editorDraft || readyDraftKey === draftKey;
-  const visibleSaveMessage = editorDraft
+  const draftEnabled = editorDraft !== undefined || newDraftType !== undefined;
+  const ready =
+    !draftEnabled || (draftKey !== null && readyDraftKey === draftKey);
+  const visibleSaveMessage = draftEnabled
     ? ready
       ? saveMessage
       : "Entwurf wird geladen …"
@@ -248,7 +309,7 @@ export default function EditorDraftForm({
       form.removeEventListener("change", onEdit);
       form.removeEventListener("submit", onSubmit);
     };
-  }, [editorDraftId, editorDraftType]);
+  }, [draftScope, editorDraftId, editorDraftType]);
 
   return (
     <form
@@ -258,12 +319,15 @@ export default function EditorDraftForm({
       data-editor-draft-scope={draftScope}
       aria-busy={!ready}
     >
+      {newDraftType && editorDraftId != null && (
+        <input type="hidden" name="editorDraftId" value={editorDraftId} />
+      )}
       <fieldset
         disabled={!ready}
         className="m-0 flex min-w-0 flex-col gap-[16px] border-0 p-0"
       >
         {children}
-        {editorDraft && (
+        {draftEnabled && (
           <p role="status" aria-live="polite" className="lcars-text text-[13px] opacity-80">
             {visibleSaveMessage}
           </p>

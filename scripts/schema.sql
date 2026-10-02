@@ -1403,7 +1403,11 @@ CREATE INDEX IF NOT EXISTS idx_content_revisions_target
 CREATE TABLE IF NOT EXISTS editor_drafts (
   user_id      INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   content_type TEXT NOT NULL
-                 CHECK (content_type IN ('archive', 'mission', 'mission_log')),
+                 CHECK (content_type IN (
+                   'archive', 'mission', 'mission_log', 'manual_event',
+                   'character_document', 'dialogue', 'game_session',
+                   'planned_session'
+                 )),
   content_id   INT NOT NULL,
   fields       JSONB NOT NULL,
   revision     INT NOT NULL DEFAULT 1 CHECK (revision > 0),

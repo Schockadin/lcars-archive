@@ -13,6 +13,40 @@ async function canEditContent(
   contentType: EditorDraftType,
   contentId: number,
 ): Promise<boolean> {
+  // Neue Inhalte haben noch keine Datenbank-ID. Ihr negativer, zufälliger
+  // Entwurfsbezeichner ist nur im persönlichen editor_drafts-Namespace
+  // sichtbar; die normale Speichern-Action prüft später die konkrete Anlage.
+  if (contentId < 0) {
+    if (contentType === "dialogue") return true;
+    if (
+      contentType === "game_session" ||
+      contentType === "planned_session"
+    ) {
+      return userCan(user, "gm.access", await getRoleMap());
+    }
+    if (contentType === "mission") {
+      return userCan(user, "missions.manage", await getRoleMap());
+    }
+    if (
+      contentType === "archive" ||
+      contentType === "mission_log" ||
+      contentType === "manual_event"
+    ) {
+      return userCan(user, "content.create", await getRoleMap());
+    }
+    return false;
+  }
+
+  // Gespräche werden über eigene Aktionen angelegt und haben keinen
+  // gemeinsamen Inhaltseditor für bestehende Datensätze.
+  if (
+    contentType === "dialogue" ||
+    contentType === "game_session" ||
+    contentType === "planned_session"
+  ) {
+    return false;
+  }
+
   if (contentType === "archive") {
     const asModerator = viewerHasPermission(
       await getViewer(),
@@ -35,6 +69,32 @@ async function canEditContent(
     const rows = await sql<{ id: number }[]>`
       SELECT id FROM missions
       WHERE id = ${contentId} AND deleted_at IS NULL
+      LIMIT 1
+    `;
+    return rows.length > 0;
+  }
+
+  if (contentType === "manual_event") {
+    const canModerate = viewerHasPermission(
+      await getViewer(),
+      "content.moderate",
+    );
+    const rows = await sql<{ id: number }[]>`
+      SELECT id FROM timeline_events
+      WHERE id = ${contentId} AND origin = 'manual'
+        AND (created_by = ${user.id} OR ${canModerate})
+      LIMIT 1
+    `;
+    return rows.length > 0;
+  }
+
+  if (contentType === "character_document") {
+    const rows = await sql<{ id: number }[]>`
+      SELECT d.id
+      FROM character_documents d
+      JOIN characters c ON c.id = d.character_id
+      WHERE d.id = ${contentId} AND c.player_id = ${user.id}
+        AND c.deleted_at IS NULL
       LIMIT 1
     `;
     return rows.length > 0;
@@ -129,7 +189,33 @@ export async function requireEditorDraftAccess(
   contentId: number,
 ): Promise<number | null> {
   const user = await getCurrentUser();
-  if (!Number.isSafeInteger(contentId) || contentId <= 0) return null;
+  if (
+    !Number.isSafeInteger(contentId) ||
+    contentId === 0 ||
+    contentId < -2_147_483_647 ||
+    contentId > 2_147_483_647
+  ) {
+    return null;
+  }
   if (!(await canEditContent(user, contentType, contentId))) return null;
   return user.id;
+}
+
+// Form-Actions rufen das nur nach erfolgreichem Anlegen auf. Es entfernt
+// ausschließlich den negativen, temporären Entwurf der aktuellen Person;
+// reguläre Entwürfe bestehender Inhalte haben positive IDs.
+export async function removeNewEditorDraftFromForm(
+  userId: number,
+  contentType: EditorDraftType,
+  formData: FormData,
+): Promise<void> {
+  const id = Number(formData.get("editorDraftId"));
+  if (
+    !Number.isSafeInteger(id) ||
+    id >= 0 ||
+    id < -2_147_483_647
+  ) {
+    return;
+  }
+  await removeEditorDraft(userId, contentType, id);
 }

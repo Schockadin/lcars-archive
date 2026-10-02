@@ -12,10 +12,12 @@ const initialState: MissionFormState = {};
 
 export default function NewMissionForm({
   userId,
+  draftOnCreate = false,
   defaultStartedAt,
   characters,
 }: {
   userId: number;
+  draftOnCreate?: boolean;
   defaultStartedAt: string | null;
   characters: CharacterParticipantOption[];
 }) {
@@ -30,6 +32,7 @@ export default function NewMissionForm({
       defaults={{ status: "active", startedAt: defaultStartedAt ?? undefined }}
       idPrefix="mission"
       draftScope="mission:new"
+      draftOnCreate={draftOnCreate ? "mission" : undefined}
       bodyLabel="Zusammenfassung"
       bodyHidden
       bodyHiddenMessage={<p className="lcars-empty-state">Die Missionszusammenfassung entsteht automatisch aus den Zusammenfassungsblöcken eingetragener Sessions.</p>}

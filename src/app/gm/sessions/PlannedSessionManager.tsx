@@ -9,6 +9,7 @@ import {
   SubmitButton,
 } from "@/app/_shared/FormPrimitives";
 import ModalOverlay from "@/components/ModalOverlay";
+import EditorDraftForm from "@/components/ContentEditor/EditorDraftForm";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import {
   createPlannedSessionAction,
@@ -239,7 +240,13 @@ function RecordSessionModal({
         {formatSessionMoment(session.scheduledAt)}
         {session.title && ` · ${session.title}`}
       </p>
-      <form action={formAction} className="flex flex-col gap-[12px]" data-no-draft>
+      <EditorDraftForm
+        key={state.success ?? "record-session"}
+        action={formAction}
+        className="flex flex-col gap-[12px]"
+        draftScope={`record-session:${session.id}`}
+        newDraftType="game_session"
+      >
         <input type="hidden" name="plannedId" value={session.id} />
         <input
           type="hidden"
@@ -293,7 +300,7 @@ function RecordSessionModal({
         </SubmitButton>
         <FormError message={state.error} />
         {state.success && <FormSuccess>{state.success}</FormSuccess>}
-      </form>
+      </EditorDraftForm>
     </ModalOverlay>
   );
 }
@@ -548,11 +555,16 @@ export function CreatePlannedSessionModal({
           <button type="button" className="lcars-pill-btn--outline self-start" onClick={onClose}>Schließen</button>
         </div>
       ) : (
-        <form action={formAction} className="flex flex-col gap-[12px]" data-no-draft>
+        <EditorDraftForm
+          action={formAction}
+          className="flex flex-col gap-[12px]"
+          draftScope="planned-session:new"
+          newDraftType="planned_session"
+        >
           <SessionFields characters={characters} missions={missions} missionCharacters={missionCharacters} defaultMissionStartedAt={defaultMissionStartedAt} sessionDefaults={sessionDefaults} />
           <SubmitButton pending={pending} pendingLabel="Wird geplant…" className="lcars-pill-btn--outline">Session planen</SubmitButton>
           <FormError message={state.error} />
-        </form>
+        </EditorDraftForm>
       )}
     </ModalOverlay>
   );

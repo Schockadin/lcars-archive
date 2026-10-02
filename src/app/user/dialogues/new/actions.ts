@@ -20,6 +20,7 @@ import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { parseList } from "@/lib/formParsing";
 import { logCaughtError } from "@/lib/errorLog";
+import { removeNewEditorDraftFromForm } from "@/lib/editorDrafts";
 import { publishContentChanged } from "@/lib/realtimeServer";
 import {
   dialogueHref,
@@ -170,6 +171,7 @@ export async function createDialogueAction(
       npcSpeakerUserId,
       subscribeSelf,
     });
+    await removeNewEditorDraftFromForm(session.userId, "dialogue", formData);
     slug = result.slug;
     partners = result.partners;
     fromCharacterName = result.fromCharacterName;

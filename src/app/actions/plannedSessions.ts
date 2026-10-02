@@ -26,6 +26,7 @@ import { sendPlannedSessionAnnouncedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { logCaughtError } from "@/lib/errorLog";
+import { removeNewEditorDraftFromForm } from "@/lib/editorDrafts";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 
 export interface PlannedSessionState {
@@ -153,6 +154,7 @@ export async function createPlannedSessionAction(
   }
 
   const sessionId = await createPlannedSession({ ...parsed, missionId, notes: "", characterIds }, user.id);
+  await removeNewEditorDraftFromForm(user.id, "planned_session", formData);
   await revalidateBoth();
 
   const created = await getPlannedSession(sessionId);

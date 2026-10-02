@@ -133,7 +133,12 @@ export async function deleteCharacterDocument(
     WHERE id = ${documentId} AND character_id = ${characterId}
     RETURNING id
   `;
-  return deleted.length > 0;
+  if (deleted.length === 0) return false;
+  await sql`
+    DELETE FROM editor_drafts
+    WHERE content_type = 'character_document' AND content_id = ${documentId}
+  `;
+  return true;
 }
 
 export interface CharacterDocumentAccess {
@@ -238,6 +243,10 @@ export async function purgeCharacterDocumentsFor(
     await sql`
       DELETE FROM character_documents
       WHERE id = ${row.id} AND character_id = ${characterId}
+    `;
+    await sql`
+      DELETE FROM editor_drafts
+      WHERE content_type = 'character_document' AND content_id = ${row.id}
     `;
   }
 }

@@ -3,6 +3,11 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import TimelineView from "./TimelineView";
 import type { TimelineEvent } from "@/lib/timelineTypes";
 
+vi.mock("@/app/actions/editorDrafts", () => ({
+  loadEditorDraft: vi.fn(async () => null),
+  saveEditorDraft: vi.fn(async () => ({ ok: true, revision: 1 })),
+}));
+
 // Die Galerie selbst hat eigene Tests und benötigt den Next-Router sowie
 // Server-Actions. Hier interessiert nur, dass die Ereignis-Detailansicht sie
 // mit anbietet; die Attrappe hält diesen Komponenten-Test bewusst isoliert.
