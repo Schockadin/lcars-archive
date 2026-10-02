@@ -52,6 +52,9 @@ const NO_SERIAL_ID: readonly TableName[] = [
   // Schlüssel ist character_id (ein Datensatz je umgewandeltem Charakter,
   // siehe schema.sql) — keine eigene id-Spalte, also auch keine Sequence.
   "character_npc_conversions",
+  // Schlüssel ist (user_id, content_type, content_id); private Entwürfe
+  // haben ebenfalls keine eigene id-Spalte und keine Sequence.
+  "editor_drafts",
 ];
 const SERIAL_TABLES = TABLES.filter(
   (t) => !(NO_SERIAL_ID as string[]).includes(t),
