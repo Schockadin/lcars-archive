@@ -45,7 +45,7 @@ export default function PendingActionsSection({
                 </span>
                 {a.kind === "dialogue_reply" && (
                   <DialogueLastAuthorMeta
-                    authorName={a.lastMessageAuthorName ?? null}
+                    characterName={a.lastMessageCharacterName ?? null}
                   />
                 )}
               </>

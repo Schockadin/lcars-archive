@@ -1850,7 +1850,7 @@ export interface DialogueSummary {
   slug: string;
   title: string;
   partnerName: string;
-  lastMessageAuthorName: string | null;
+  lastMessageCharacterName: string | null;
   updatedAt: string;
   // Ingame-Datum (metadata.logDate, ISO) — Sortierschlüssel der Dialog-Listen.
   logDate: string | null;
@@ -1892,7 +1892,7 @@ export async function getDialoguesForUser(
       title: string;
       metadata: unknown;
       updated_at: string;
-      last_message_author_name: string | null;
+      last_message_character_name: string | null;
       dialogue_open: boolean;
       is_draft: boolean;
       owner_user_id: number | null;
@@ -1906,13 +1906,14 @@ export async function getDialoguesForUser(
         ? await sql<DialogueRow[]>`
             SELECT ae.id, ae.slug, ae.title, ae.metadata,
                    ae.updated_at::text AS updated_at,
-                   latest_message.author_name AS last_message_author_name,
+                   latest_message.character_name AS last_message_character_name,
                    ae.dialogue_open, ae.is_draft, ae.owner_user_id
             FROM archive_entries ae
             LEFT JOIN LATERAL (
-              SELECT u.name AS author_name
+              SELECT COALESCE(c.name, npc.title) AS character_name
               FROM dialogue_messages dm
-              LEFT JOIN users u ON u.id = dm.author_user_id
+              LEFT JOIN characters c ON c.id = dm.character_id
+              LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
               WHERE dm.archive_entry_id = ae.id
                 AND ae.dialogue_open
               ORDER BY dm.created_at DESC, dm.id DESC
@@ -1939,13 +1940,14 @@ export async function getDialoguesForUser(
         : await sql<DialogueRow[]>`
             SELECT ae.id, ae.slug, ae.title, ae.metadata,
                    ae.updated_at::text AS updated_at,
-                   latest_message.author_name AS last_message_author_name,
+                   latest_message.character_name AS last_message_character_name,
                    ae.dialogue_open, ae.is_draft, ae.owner_user_id
             FROM archive_entries ae
             LEFT JOIN LATERAL (
-              SELECT u.name AS author_name
+              SELECT COALESCE(c.name, npc.title) AS character_name
               FROM dialogue_messages dm
-              LEFT JOIN users u ON u.id = dm.author_user_id
+              LEFT JOIN characters c ON c.id = dm.character_id
+              LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
               WHERE dm.archive_entry_id = ae.id
                 AND ae.dialogue_open
               ORDER BY dm.created_at DESC, dm.id DESC
@@ -1983,7 +1985,7 @@ export async function getDialoguesForUser(
         slug: row.slug,
         title: row.title,
         partnerName: partner?.name ?? "Unbekannt",
-        lastMessageAuthorName: row.last_message_author_name,
+        lastMessageCharacterName: row.last_message_character_name,
         updatedAt: row.updated_at,
         logDate: parseDialogueLogDate(row.metadata),
         open: row.dialogue_open,
@@ -2005,7 +2007,7 @@ export async function getDialoguesForUser(
     title: string;
     metadata: unknown;
     updated_at: string;
-    last_message_author_name: string | null;
+    last_message_character_name: string | null;
     dialogue_open: boolean;
     is_draft: boolean;
     owner_user_id: number | null;
@@ -2015,16 +2017,17 @@ export async function getDialoguesForUser(
   const npcRows = await sql<NpcDialogueRow[]>`
     SELECT ae.id, ae.slug, ae.title, ae.metadata,
            ae.updated_at::text AS updated_at,
-           latest_message.author_name AS last_message_author_name,
+           latest_message.character_name AS last_message_character_name,
            ae.dialogue_open, ae.is_draft, ae.owner_user_id,
            c.slug AS character_slug, c.title AS character_name
     FROM dialogue_npc_speakers s
     JOIN archive_entries ae ON ae.id = s.archive_entry_id
     JOIN archive_entries c ON c.id = s.npc_entry_id
     LEFT JOIN LATERAL (
-      SELECT u.name AS author_name
+      SELECT COALESCE(c.name, npc.title) AS character_name
       FROM dialogue_messages dm
-      LEFT JOIN users u ON u.id = dm.author_user_id
+      LEFT JOIN characters c ON c.id = dm.character_id
+      LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
       WHERE dm.archive_entry_id = ae.id
         AND ae.dialogue_open
       ORDER BY dm.created_at DESC, dm.id DESC
@@ -2044,7 +2047,7 @@ export async function getDialoguesForUser(
       slug: row.slug,
       title: row.title,
       partnerName: partner?.name ?? "Unbekannt",
-      lastMessageAuthorName: row.last_message_author_name,
+      lastMessageCharacterName: row.last_message_character_name,
       updatedAt: row.updated_at,
       logDate: parseDialogueLogDate(row.metadata),
       open: row.dialogue_open,
@@ -2063,7 +2066,7 @@ export interface GmDialogueOverviewItem {
   slug: string;
   title: string;
   participantNames: string[];
-  lastMessageAuthorName: string | null;
+  lastMessageCharacterName: string | null;
   updatedAt: string;
   ownerName: string | null;
 }
@@ -2084,19 +2087,20 @@ export async function getAllOpenDialoguesForGM(): Promise<
       title: string;
       metadata: unknown;
       updated_at: string;
-      last_message_author_name: string | null;
+      last_message_character_name: string | null;
       owner_name: string | null;
     }[]
   >`
     SELECT ae.id, ae.slug, ae.title, ae.metadata, ae.updated_at::text AS updated_at,
-           latest_message.author_name AS last_message_author_name,
+           latest_message.character_name AS last_message_character_name,
            u.name AS owner_name
     FROM archive_entries ae
     LEFT JOIN users u ON u.id = ae.owner_user_id
     LEFT JOIN LATERAL (
-      SELECT author.name AS author_name
+      SELECT COALESCE(c.name, npc.title) AS character_name
       FROM dialogue_messages dm
-      LEFT JOIN users author ON author.id = dm.author_user_id
+      LEFT JOIN characters c ON c.id = dm.character_id
+      LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
       WHERE dm.archive_entry_id = ae.id
       ORDER BY dm.created_at DESC, dm.id DESC
       LIMIT 1
@@ -2109,7 +2113,7 @@ export async function getAllOpenDialoguesForGM(): Promise<
     slug: row.slug,
     title: row.title,
     participantNames: parseParticipants(row.metadata).map((p) => p.name),
-    lastMessageAuthorName: row.last_message_author_name,
+    lastMessageCharacterName: row.last_message_character_name,
     updatedAt: row.updated_at,
     ownerName: row.owner_name,
   }));

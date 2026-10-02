@@ -273,7 +273,9 @@ export default function UserContentBrowser({
             <b>Status</b> {d.open ? "Offen" : "Abgeschlossen"}
           </span>
           {d.open && (
-            <DialogueLastAuthorMeta authorName={d.lastMessageAuthorName} />
+            <DialogueLastAuthorMeta
+              characterName={d.lastMessageCharacterName}
+            />
           )}
           <span>
             <b>Figur</b> {d.characterName}

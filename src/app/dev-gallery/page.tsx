@@ -697,7 +697,7 @@ export default function DevGalleryPage() {
               <span>
                 <b>Gesprächspartner</b> Kira
               </span>
-              <DialogueLastAuthorMeta authorName="Mira Beispiel" />
+              <DialogueLastAuthorMeta characterName="Tuvok" />
             </>
           }
         />

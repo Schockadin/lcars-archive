@@ -1,13 +1,13 @@
 export default function DialogueLastAuthorMeta({
-  authorName,
+  characterName,
 }: {
-  authorName: string | null;
+  characterName: string | null;
 }) {
-  if (!authorName) return null;
+  if (!characterName) return null;
 
   return (
     <span>
-      <b>Zuletzt geschrieben von</b> {authorName}
+      <b>Zuletzt geschrieben von</b> {characterName}
     </span>
   );
 }

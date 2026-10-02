@@ -9,7 +9,7 @@ const reply: PendingAction = {
   subject: "Auf der Station",
   href: "/dialogues/auf-der-station",
   since: "2400-05-02T12:00:00Z",
-  lastMessageAuthorName: "Mira Beispiel",
+  lastMessageCharacterName: "Kira",
 };
 
 describe("PendingActionsSection", () => {
@@ -17,6 +17,6 @@ describe("PendingActionsSection", () => {
     render(<PendingActionsSection items={[reply]} />);
 
     expect(screen.getByText("Zuletzt geschrieben von")).toBeInTheDocument();
-    expect(screen.getByText("Mira Beispiel")).toBeInTheDocument();
+    expect(screen.getByText("Kira")).toBeInTheDocument();
   });
 });

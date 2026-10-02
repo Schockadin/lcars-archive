@@ -161,7 +161,7 @@ test.describe("Offene Gesprächskarten", () => {
     const card = page.locator("#open-dialogue-card .mission-akte");
 
     await expect(card).toContainText("Zuletzt geschrieben von");
-    await expect(card).toContainText("Mira Beispiel");
+    await expect(card).toContainText("Tuvok");
   });
 });
 

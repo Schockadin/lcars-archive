@@ -8,7 +8,7 @@ const dialogue: DialogueSummary = {
   slug: "raumstation",
   title: "Auf der Station",
   partnerName: "Kira",
-  lastMessageAuthorName: "Mira Beispiel",
+  lastMessageCharacterName: "Kira",
   updatedAt: "2400-05-02",
   logDate: null,
   open: true,
@@ -23,6 +23,6 @@ describe("OpenDialoguesSection", () => {
     render(<OpenDialoguesSection items={[dialogue]} />);
 
     expect(screen.getByText("Zuletzt geschrieben von")).toBeInTheDocument();
-    expect(screen.getByText("Mira Beispiel")).toBeInTheDocument();
+    expect(screen.getByText("Kira")).toBeInTheDocument();
   });
 });

@@ -156,7 +156,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "eigene-inhalte",
       },
       {
-        text: "Karten zu offenen Gesprächen zeigen jetzt, wer die letzte Nachricht geschrieben hat.",
+        text: "Karten zu offenen Gesprächen zeigen jetzt, welche Figur die letzte Nachricht geschrieben hat.",
         category: "inhalte",
         tutorial: "gespraeche",
       },

@@ -35,7 +35,9 @@ export default function OpenDialoguesSection({
                 <span>
                   <b>Gesprächspartner</b> {d.partnerName}
                 </span>
-                <DialogueLastAuthorMeta authorName={d.lastMessageAuthorName} />
+                <DialogueLastAuthorMeta
+                  characterName={d.lastMessageCharacterName}
+                />
               </>
             }
           />

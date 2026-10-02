@@ -69,7 +69,7 @@ export default async function AdminDialoguesPage() {
                           <b>Teilnehmer</b> {d.participantNames.join(", ")}
                         </span>
                         <DialogueLastAuthorMeta
-                          authorName={d.lastMessageAuthorName}
+                          characterName={d.lastMessageCharacterName}
                         />
                         <span>
                           <b>Owner</b> {d.ownerName ?? "— kein Owner —"}
