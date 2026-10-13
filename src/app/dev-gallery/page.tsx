@@ -511,6 +511,7 @@ export default function DevGalleryPage() {
       <section id="sort-switch-long" className="flex flex-col gap-[8px] mb-[24px]">
         <h2 className="lcars-text">SortSwitch (lange Beschriftungen)</h2>
         <LcarsSortSwitch
+          className="mission-sort"
           options={[
             { key: "category" as const, label: "Kategorie" },
             { key: "title" as const, label: "Alphabetisch" },

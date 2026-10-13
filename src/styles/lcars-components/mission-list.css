@@ -9,13 +9,14 @@
 /* Das Toolbar-Layout selbst kommt aus .lcars-toolbar (shared.css); hier
    stehen nur die Teile, die an den Listen datierter Einträge hängen. */
 /* Ohne gap: Die Optionen stoßen an der 1px-Trennlinie aneinander
-   (.lcars-switch-item hat border-right), sodass die Füllung der aktiven
-   Option ihre ganze Hälfte der Pille einnimmt. Mit gap blieb daneben ein
-   dunkler Streifen stehen und die Füllung wirkte zu schmal. */
+   (.lcars-switch-item hat border-right). Die Spalten teilen den freien Platz
+   gleichmäßig, werden aber mindestens so breit wie ihr Inhalt samt Pfeil. */
 .mission-sort {
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(max-content, 1fr);
   flex: 1;
-  min-width: 220px;
+  min-width: max-content;
 }
 .mission-author-filter {
   /* 40px wie das Filter-Feld (.lcars-input) daneben — der Sortier-Switch ist
