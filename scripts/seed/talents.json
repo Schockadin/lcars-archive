@@ -6,7 +6,7 @@
     "description": "Whenever you or an ally fail a task (so long as you are present in the scene), you may add 1 point to the group's Momentum pool."
   },
   {
-    "name": "Bold X",
+    "name": "Bold",
     "category": "general",
     "requirement": null,
     "description": "Choose a department when you select this talent. Whenever you attempt a task from that department, and you buy one or more d20s by adding Threat, you may re-roll a single d20. You may select this talent multiple times, once for each department. You may not select this talent for any department for which you have the Cautious talent."
@@ -18,7 +18,7 @@
     "description": "When you gain a trait which represents a mood or emotional state, you may suppress that trait (ignoring its effect) for the duration of a single task or a single turn in combat by suffering 1 Stress."
   },
   {
-    "name": "Cautious X",
+    "name": "Cautious",
     "category": "general",
     "requirement": null,
     "description": "Choose a department when you select this talent. Whenever you attempt a task with that department, and you buy one or more d20s by spending Momentum, you may re-roll a single d20. You may select this talent multiple times, once for each department. You may not select this talent for any department for which you have the Bold talent."
@@ -30,7 +30,7 @@
     "description": "When a scene begins, if there are fewer points of Momentum in the group pool than there are characters in the scene who have this talent, immediately add 1 Momentum to the group pool."
   },
   {
-    "name": "Collaboration X",
+    "name": "Collaboration",
     "category": "general",
     "requirement": null,
     "description": "Choose a single department when you select this talent. Whenever an ally attempts a task using that department, you may spend 1 Momentum (Immediate) to allow them to use your rating for that department and one of your relevant focuses."
@@ -746,7 +746,7 @@
   {
     "name": "Dedicated Focus X",
     "category": "science",
-    "requirement": "Science 4+",
+    "requirement": "Department 4+",
     "description": "When this talent is taken, choose one of your focuses. When attempting a task where that focus applies, you score a critical success for any die which rolls equal to or under twice the relevant department."
   },
   {

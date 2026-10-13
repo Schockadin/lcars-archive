@@ -408,3 +408,62 @@ describe("Talent-Dubletten mit eigenem Namen", () => {
     if (result.ok) expect(result.plan.label).toBe("Draufgänger (Bold Command)");
   });
 });
+
+describe("variable Talent-Steigerungen", () => {
+  it("verlangt eine Auswahl und erlaubt mehrere Abteilungen, aber jede nur einmal", () => {
+    const empty = parseCharacterStats({ creationLocked: true });
+    expect(
+      checkAdvancement(empty, { kind: "talent", entry: "Bold" }, 999).ok,
+    ).toBe(false);
+    expect(
+      checkAdvancement(empty, { kind: "talent", entry: "Bold (Command)" }, 999).ok,
+    ).toBe(true);
+
+    const hasCommand = parseCharacterStats({
+      creationLocked: true,
+      talents: ["Cautious (Command)"],
+    });
+    expect(
+      checkAdvancement(
+        hasCommand,
+        { kind: "talent", entry: "Collaboration (Command)" },
+        999,
+      ).ok,
+    ).toBe(false);
+    expect(
+      checkAdvancement(hasCommand, { kind: "talent", entry: "Bold (Conn)" }, 999).ok,
+    ).toBe(true);
+  });
+
+  it("lässt Augmented Ability und Dedicated Focus X je eine andere Auswahl nehmen", () => {
+    const stats = parseCharacterStats({
+      creationLocked: true,
+      talents: [
+        "Augmented Ability (Control)",
+        "Dedicated Focus X (Tactical Analysis)",
+      ],
+      focuses: ["Tactical Analysis", "Warp Theory"],
+    });
+    expect(
+      checkAdvancement(
+        stats,
+        { kind: "talent", entry: "Augmented Ability (Reason)" },
+        999,
+      ).ok,
+    ).toBe(true);
+    expect(
+      checkAdvancement(
+        stats,
+        { kind: "talent", entry: "Dedicated Focus X (Warp Theory)" },
+        999,
+      ).ok,
+    ).toBe(true);
+    expect(
+      checkAdvancement(
+        stats,
+        { kind: "talent", entry: "Dedicated Focus X (Tactical Analysis)" },
+        999,
+      ).ok,
+    ).toBe(false);
+  });
+});

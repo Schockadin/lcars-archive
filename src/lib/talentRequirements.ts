@@ -104,6 +104,18 @@ function checkClause(clause: string, context: RequirementContext): ClauseResult 
   const text = clause.trim();
   if (!text) return "unknown";
 
+  // „Department 4+“ bedeutet: mindestens eine der sechs Disziplinen steht
+  // auf 4 oder höher. Bei ungepflegten Werten bleibt das Ergebnis offen,
+  // solange kein bereits eingetragener Wert die Schwelle erreicht.
+  const anyDepartment = /^department\s+(\d+)\+?$/i.exec(text);
+  if (anyDepartment) {
+    const values = Object.values(context.stats.departments);
+    const target = Number(anyDepartment[1]);
+    if (values.some((value) => value !== null && value >= target)) return "met";
+    if (values.some((value) => value === null)) return "unknown";
+    return "unmet";
+  }
+
   // "Control 9+" / "Engineering 5"
   const numeric = /^([A-Za-zÄÖÜäöüß' ]+?)\s+(\d+)\+?$/.exec(text);
   if (numeric) {

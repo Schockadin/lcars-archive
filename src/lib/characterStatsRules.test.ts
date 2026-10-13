@@ -105,9 +105,32 @@ describe("checkOpenCreationStats", () => {
         presence: 8,
         reason: 8,
       },
-      talents: ["Bold"],
+      talents: ["Studious"],
     });
     expect(checkOpenCreationStats(fine, RULES, CATALOG)).toBeNull();
+  });
+
+  it("verlangt bei variablen Katalog-Talenten eine gültige, noch freie Auswahl", () => {
+    expect(
+      checkOpenCreationStats(stats({ talents: ["Bold"] }), RULES, CATALOG),
+    ).toMatch(/benötigt eine Auswahl/);
+    expect(
+      checkOpenCreationStats(
+        stats({ talents: ["Bold (Command)", "Collaboration (Command)"] }),
+        RULES,
+        CATALOG,
+      ),
+    ).toMatch(/bereits vergeben/);
+    expect(
+      checkOpenCreationStats(stats({ talents: ["Bold (Command)"] }), RULES, CATALOG),
+    ).toBeNull();
+    expect(
+      checkOpenCreationStats(
+        stats({ talents: ["Bold (Command)", "Bold (Command)"] }),
+        RULES,
+        CATALOG,
+      ),
+    ).toMatch(/bereits vergeben/);
   });
 });
 

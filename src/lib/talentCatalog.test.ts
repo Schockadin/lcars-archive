@@ -10,7 +10,11 @@ import {
   byTalentOrder,
   TALENT_NAME_MAX,
   formatTalentEntry,
+  formatTalentSelection,
   parseTalentEntry,
+  availableTalentSelections,
+  checkTalentSelection,
+  talentDisplayName,
   type Talent,
 } from "@/lib/talentCatalog";
 
@@ -145,6 +149,18 @@ describe("scripts/seed/talents.json", () => {
       expect(entry.requirement ?? "", entry.name).not.toContain("*");
     }
   });
+
+  it("führt die variablen Talente ohne X und mit der neuen Voraussetzung", () => {
+    const byName = new Map(seed.map((entry) => [entry.name, entry]));
+    expect(byName.has("Bold")).toBe(true);
+    expect(byName.has("Cautious")).toBe(true);
+    expect(byName.has("Collaboration")).toBe(true);
+    expect(byName.has("Bold X")).toBe(false);
+    expect(byName.has("Cautious X")).toBe(false);
+    expect(byName.has("Collaboration X")).toBe(false);
+    expect(byName.get("Dedicated Focus X")?.requirement).toBe("Department 4+");
+    expect(byName.get("Augmented Ability")?.requirement).toBe("Augment trait");
+  });
 });
 
 // Eigene Namen: gespeichert wird „Neuer Name (Originalname)" — dieselbe Form,
@@ -182,5 +198,53 @@ describe("Eigene Talent-Namen", () => {
       original: "Nur ein ( Text",
     });
     expect(parseTalentEntry("()")).toEqual({ name: "()", original: "()" });
+  });
+
+  it("speichert und liest eine ausgewählte Variante als Talent (Auswahl)", () => {
+    const entry = formatTalentSelection("Bold", "Command");
+    expect(entry).toBe("Bold (Command)");
+    expect(parseTalentEntry(entry)).toEqual({
+      name: "Bold (Command)",
+      original: "Bold",
+      selection: "Command",
+    });
+  });
+
+  it("erkennt ausgewählte Varianten auch nach einer Umbenennung", () => {
+    expect(parseTalentEntry("Kühn (Bold (Command))")).toEqual({
+      name: "Kühn (Bold (Command))",
+      original: "Bold",
+      selection: "Command",
+    });
+  });
+
+  it("zeigt alte Talentnamen ohne das entfernte X an", () => {
+    expect(parseTalentEntry("Bold X")).toEqual({ name: "Bold", original: "Bold" });
+    expect(talentDisplayName("Collaboration X")).toBe("Collaboration");
+    expect(talentDisplayName("Dedicated Focus X")).toBe("Dedicated Focus X");
+  });
+
+  it("schließt bereits für ein anderes Abteilungs-Talent gewählte Abteilungen aus", () => {
+    expect(availableTalentSelections("Collaboration", ["Bold (Command)"])).not.toContain(
+      "Command",
+    );
+    expect(checkTalentSelection("Cautious (Command)", ["Bold (Command)"])).toMatch(
+      /bereits vergeben/,
+    );
+    expect(checkTalentSelection("Cautious (Conn)", ["Bold (Command)"])).toBeNull();
+  });
+
+  it("verlangt ein Attribut oder einen eingetragenen Schwerpunkt als Auswahl", () => {
+    expect(checkTalentSelection("Augmented Ability", [], [])).toMatch(/benötigt eine Auswahl/);
+    expect(checkTalentSelection("Augmented Ability (Control)", [], [])).toBeNull();
+    expect(
+      checkTalentSelection("Augmented Ability (Control)", ["Augmented Ability (Control)"]),
+    ).toMatch(/bereits vergeben/);
+    expect(checkTalentSelection("Dedicated Focus X (Tactical Analysis)", [], [])).toMatch(
+      /mindestens ein Schwerpunkt/,
+    );
+    expect(
+      checkTalentSelection("Dedicated Focus X (Tactical Analysis)", [], ["Tactical Analysis"]),
+    ).toBeNull();
   });
 });

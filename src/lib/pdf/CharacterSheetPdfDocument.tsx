@@ -586,7 +586,10 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
       <ListBox box={LIST_BOXES.pastimes} entries={stats.pastimes} />
       <ListBox box={LIST_BOXES.attacks} entries={stats.attacks} />
       <ListBox box={LIST_BOXES.speciesAbilities} entries={stats.speciesAbilities} />
-      <ListBox box={LIST_BOXES.talents} entries={stats.talents} />
+      <ListBox
+        box={LIST_BOXES.talents}
+        entries={stats.talents.map((entry) => parseTalentEntry(entry).name)}
+      />
       <ListBox box={LIST_BOXES.specialRules} entries={stats.specialRules} />
       <ListBox box={LIST_BOXES.equipment} entries={stats.equipment} />
     </Page>
