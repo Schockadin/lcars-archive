@@ -102,7 +102,9 @@ export default function ImpressumContent() {
           Der Charakterbogen bildet den Personnel-File-Bogen aus{" "}
           <em>Star Trek Adventures</em> (2. Edition) nach; die Vorlagengrafik
           sowie die Namen, Kategorien, Voraussetzungen und Regeltexte der
-          Talente stammen aus diesem Regelwerk. Die Rechte daran liegen bei
+          Talente stammen aus diesem Regelwerk. Bei einigen Talenten werden
+          zusätzlich Departement, Attribut oder Schwerpunkt gewählt und auf dem
+          Charakterbogen angezeigt. Die Rechte daran liegen bei
           Modiphius Entertainment Ltd. bzw. den jeweiligen Rechteinhabern. Sie
           werden hier ausschließlich für den privaten Spielbetrieb dieser
           Kampagne verwendet, nicht öffentlich zugänglich gemacht und nicht
