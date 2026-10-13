@@ -1,4 +1,4 @@
-import { parseTalentEntry } from "@/lib/talentCatalog";
+import { checkTalentSelections, parseTalentEntry } from "@/lib/talentCatalog";
 import { validateCharacterStats } from "@/lib/characterStats";
 import type { AdvancementRules } from "@/lib/advancement";
 import type { CharacterStats } from "@/types/characterStats";
@@ -91,6 +91,13 @@ export function checkOpenCreationStats(
     alreadyStored,
   );
   if (talentError) return talentError;
+
+  const selectionError = checkTalentSelections(
+    stats.talents,
+    stats.focuses,
+    alreadyStored,
+  );
+  if (selectionError) return selectionError;
 
   const focusError = checkFocusesFromCatalog(
     stats.focuses,

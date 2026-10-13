@@ -174,6 +174,16 @@ export default function CharacterCreationGuide() {
           Plus-Knopf direkt an der Talent-Liste.
         </p>
         <p>
+          Bei <strong>Bold</strong>, <strong>Cautious</strong> und{" "}
+          <strong>Collaboration</strong> wählst du zusätzlich ein Departement;
+          dasselbe Departement kann nur bei einem dieser drei Talente gewählt
+          werden. <strong>Augmented Ability</strong> braucht ein Attribut. Für{" "}
+          <strong>Dedicated Focus X</strong> wählst du einen vorhandenen
+          Schwerpunkt; dafür muss mindestens ein Departement auf 4 oder höher
+          stehen. Die gewählte Variante erscheint in Klammern am Talent, zum
+          Beispiel „Bold (Command)“ oder „Augmented Ability (Control)“.
+        </p>
+        <p>
           Beim Übernehmen kannst du einem Talent einen{" "}
           <strong>eigenen Namen</strong> geben — auf dem Bogen steht dann
           „Eigener Name (Originalname)“. Der Originalname bleibt so erhalten:

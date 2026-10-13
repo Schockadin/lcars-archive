@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.66",
+    title: "Auswählbare Talentvarianten",
+    items: [
+      {
+        text: "Bei Bold, Cautious und Collaboration wählst du je ein noch freies Departement; Augmented Ability erhält ein Attribut und Dedicated Focus X einen vorhandenen Schwerpunkt. Für Dedicated Focus X muss ein Departement mindestens auf 4 stehen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+    ],
+  },
+  {
     version: "1.65",
     title: "Automatische Sicherung im Editor",
     items: [

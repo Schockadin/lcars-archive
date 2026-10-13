@@ -66,6 +66,19 @@ describe("checkTalentRequirement: Zahlenwerte", () => {
     // das Talent nicht verstecken.
     expect(checkTalentRequirement("Control 9+", context()).status).toBe("unknown");
   });
+
+  it("prüft Department 4+ gegen alle sechs Disziplinen", () => {
+    expect(checkTalentRequirement("Department 4+", ctx).status).toBe("met");
+    expect(
+      checkTalentRequirement("Department 4+", context({ departments: { command: 3 } })).status,
+    ).toBe("unknown");
+    expect(
+      checkTalentRequirement(
+        "Department 4+",
+        context({ departments: { command: 3, conn: 2, engineering: 1, security: 2, medicine: 3, science: 3 } }),
+      ).status,
+    ).toBe("unmet");
+  });
 });
 
 describe("checkTalentRequirement: Spezies", () => {

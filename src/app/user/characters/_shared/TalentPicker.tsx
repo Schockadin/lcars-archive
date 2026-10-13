@@ -9,8 +9,13 @@ import {
   TALENT_CATEGORY_LABELS,
   talentCategoryLabel,
   formatTalentEntry,
+  formatTalentSelection,
   parseTalentEntry,
+  availableTalentSelections,
+  talentSelectionKind,
+  talentDisplayName,
   type Talent,
+  type TalentSelectionKind,
 } from "@/lib/talentCatalog";
 import {
   checkTalentRequirement,
@@ -22,10 +27,10 @@ import type { CharacterStats } from "@/types/characterStats";
 // Steigern-Panel und vom Werte-Formular des Charakterbogens — deshalb eine
 // gemeinsame Komponente.
 //
-// Der ausgewählte Wert ist der Eintrag, wie er auf dem Bogen steht: entweder
-// der Katalogname oder — nach einer Umbenennung — „Neuer Name (Originalname)".
-// Der Originalname bleibt damit erhalten und Voraussetzungen anderer Talente
-// erkennen ihn weiterhin (siehe talentCatalog.ts).
+// Der ausgewählte Wert ist der Eintrag, wie er auf dem Bogen steht: ein
+// Katalogname, eine gewählte Variante wie „Bold (Command)“ oder — nach einer
+// Umbenennung — „Neuer Name (Originalname)“. Der Originalname bleibt damit
+// erhalten und Voraussetzungen anderer Talente erkennen ihn weiterhin.
 //
 // Die Liste liegt in einem Modal-Overlay statt in einem <select>: 155 Talente
 // mit Voraussetzung und Regeltext lassen sich in einem Auswahlfeld nicht
@@ -35,6 +40,8 @@ import type { CharacterStats } from "@/types/characterStats";
 interface RatedTalent {
   talent: Talent;
   check: RequirementCheck;
+  selectionKind: TalentSelectionKind | null;
+  selectionOptions: string[];
 }
 
 function statusLabel(check: RequirementCheck): string | null {
@@ -50,6 +57,7 @@ export function TalentModal({
   stats,
   species,
   taken,
+  focuses,
   cost,
   affordable,
   onPick,
@@ -59,6 +67,7 @@ export function TalentModal({
   stats: CharacterStats;
   species: string | null;
   taken: string[];
+  focuses: string[];
   // Was das Talent kostet (Steigern) — null während der Ersterschaffung, wo
   // Talente aus dem Freikontingent kommen.
   cost: number | null;
@@ -75,6 +84,7 @@ export function TalentModal({
   const [onlyEligible, setOnlyEligible] = useState(true);
   const [openId, setOpenId] = useState<number | null>(null);
   const [customName, setCustomName] = useState("");
+  const [selectedOption, setSelectedOption] = useState("");
 
   useReturnFocus(true);
 
@@ -93,14 +103,22 @@ export function TalentModal({
       talents.map((talent) => ({
         talent,
         check: checkTalentRequirement(talent.requirement, { stats, species }),
+        selectionKind: talentSelectionKind(talent.name),
+        selectionOptions: availableTalentSelections(talent.name, taken, focuses),
       })),
-    [talents, stats, species],
+    [talents, stats, species, taken, focuses],
   );
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return rated.filter(({ talent, check }) => {
-      if (takenOriginals.has(talent.name.toLowerCase())) return false;
+    return rated.filter(({ talent, check, selectionKind, selectionOptions }) => {
+      if (
+        selectionKind
+          ? selectionOptions.length === 0
+          : takenOriginals.has(talent.name.toLowerCase())
+      ) {
+        return false;
+      }
       if (onlyEligible && check.status === "unmet") return false;
       if (category && talent.category !== category) return false;
       if (!needle) return true;
@@ -113,8 +131,11 @@ export function TalentModal({
   }, [rated, takenOriginals, onlyEligible, category, query]);
 
   const hiddenCount = rated.filter(
-    ({ talent, check }) =>
-      check.status === "unmet" && !takenOriginals.has(talent.name.toLowerCase()),
+    ({ talent, check, selectionKind, selectionOptions }) =>
+      check.status === "unmet" &&
+      (selectionKind
+        ? selectionOptions.length > 0
+        : !takenOriginals.has(talent.name.toLowerCase())),
   ).length;
 
   return createPortal(
@@ -189,9 +210,21 @@ export function TalentModal({
           {visible.length === 0 ? (
             <p className="lcars-empty-state">Kein Talent passt zur Suche.</p>
           ) : (
-            visible.map(({ talent, check }) => {
+            visible.map(
+              ({ talent, check, selectionKind, selectionOptions }) => {
               const isOpen = talent.id === openId;
               const note = statusLabel(check);
+              const selectionLabel =
+                selectionKind === "department"
+                  ? "Departement wählen"
+                  : selectionKind === "attribute"
+                    ? "Attribut wählen"
+                    : "Schwerpunkt wählen";
+              const selectedEntry =
+                selectionKind && selectedOption
+                  ? formatTalentSelection(talent.name, selectedOption)
+                  : talent.name;
+              const finalEntry = formatTalentEntry(selectedEntry, customName);
               return (
                 <div
                   key={talent.id}
@@ -206,9 +239,12 @@ export function TalentModal({
                     onClick={() => {
                       setOpenId(isOpen ? null : talent.id);
                       setCustomName("");
+                      setSelectedOption("");
                     }}
                   >
-                    <span className="flex-1 min-w-[160px]">{talent.name}</span>
+                    <span className="flex-1 min-w-[160px]">
+                      {talentDisplayName(talent.name)}
+                    </span>
                     <span className="lcars-eyebrow">
                       {talentCategoryLabel(talent.category)}
                     </span>
@@ -238,6 +274,23 @@ export function TalentModal({
                         </p>
                       )}
                       <div className="flex flex-wrap items-end gap-[8px]">
+                        {selectionKind && (
+                          <label className="flex flex-col gap-[4px] flex-1 min-w-[200px]">
+                            <span className="lcars-eyebrow">{selectionLabel}</span>
+                            <select
+                              value={selectedOption}
+                              onChange={(e) => setSelectedOption(e.target.value)}
+                              className="lcars-input rounded-full w-full"
+                            >
+                              <option value="">Bitte auswählen</option>
+                              {selectionOptions.map((option) => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        )}
                         <label className="flex flex-col gap-[4px] flex-1 min-w-[200px]">
                           <span className="lcars-eyebrow">
                             Eigener Name (optional)
@@ -246,7 +299,7 @@ export function TalentModal({
                             type="text"
                             value={customName}
                             onChange={(e) => setCustomName(e.target.value)}
-                            placeholder={talent.name}
+                            placeholder={talentDisplayName(talent.name)}
                             className="lcars-input rounded-full w-full"
                           />
                         </label>
@@ -256,10 +309,10 @@ export function TalentModal({
                             des Fensters. */}
                         <button
                           type="button"
-                          disabled={!affordable}
-                          onClick={() =>
-                            onPick(formatTalentEntry(talent.name, customName))
+                          disabled={
+                            !affordable || (selectionKind !== null && !selectedOption)
                           }
+                          onClick={() => onPick(finalEntry)}
                           className="lcars-pill-btn--outline disabled:opacity-50"
                         >
                           {cost === null
@@ -267,17 +320,18 @@ export function TalentModal({
                             : `Übernehmen · ${cost} AP`}
                         </button>
                       </div>
-                      {customName.trim() && customName.trim() !== talent.name && (
+                      {(customName.trim() || (selectionKind && selectedOption)) && (
                         <p className="text-lcars-ink-dim text-[12px]">
                           Auf dem Bogen steht dann:{" "}
-                          {formatTalentEntry(talent.name, customName)}
+                          {finalEntry}
                         </p>
                       )}
                     </div>
                   )}
                 </div>
               );
-            })
+              },
+            )
           )}
         </div>
       </div>
@@ -291,6 +345,7 @@ export default function TalentPicker({
   stats,
   species = null,
   taken = [],
+  focuses = [],
   cost = null,
   availableAp = null,
   disabled = false,
@@ -305,6 +360,8 @@ export default function TalentPicker({
   species?: string | null;
   // Einträge, die schon auf dem Bogen stehen — sie fehlen in der Auswahl.
   taken?: string[];
+  // Vorhandene Schwerpunkte, aus denen „Dedicated Focus X“ wählen kann.
+  focuses?: string[];
   // Kosten eines Talents (Steigern) bzw. null in der Ersterschaffung.
   cost?: number | null;
   // Verfügbare AP; zusammen mit cost sperrt das die Übernahme, wenn sie nicht
@@ -338,6 +395,7 @@ export default function TalentPicker({
           stats={stats}
           species={species}
           taken={taken}
+          focuses={focuses}
           cost={cost}
           affordable={affordable}
           onPick={(entry) => {

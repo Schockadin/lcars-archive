@@ -19,6 +19,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   blinkende Statuspunkte) im klassischen Star-Trek-Stil, inkl. Live-Stardate.
 - **Charakter-Datenbank** — Profile mit Rang, Spezies, Heimatwelt, Zugehörigkeiten,
   Aliassen und Status (`active` / `retired` / `deceased`).
+- **Charaktererschaffung mit Talentvarianten** — Bold, Cautious und Collaboration
+  wählen je ein noch freies Departement; Augmented Ability wählt ein Attribut,
+  Dedicated Focus X einen vorhandenen Schwerpunkt und setzt ein Departement
+  auf mindestens 4 voraus.
 - **Missionen & Mission-Logs** — Logbucheinträge sind Charakteren und Missionen zugeordnet
   und chronologisch nach Session-Nummer sortiert.
 - **Nutzerkonten & granulares Rechtesystem (RBAC)** — die Autorisierung läuft über
@@ -2068,7 +2072,9 @@ Asset-Bucket, deren `r2_key` die anschließend gelöschte Tabelle hält.
 
 Der Datenbank-Assistent (`/rag` sowie eingebettet unter der Volltextsuche auf
 `/search`) beantwortet Fragen zum Kampagneninhalt auf Basis des vorhandenen
-Datenbestands — ein klassisches **RAG** (Retrieval-Augmented Generation):
+Datenbestands — ein klassisches **RAG** (Retrieval-Augmented Generation). Die
+vorgefertigten Einstiegsfragen erscheinen auf `/rag`; in der Suchseite bleibt
+das eingebettete Chatfeld frei für eigene Fragen:
 
 1. **Embeddings & Index.** Jeder Inhalt (Charaktere, Missionen, Mission-Logs,
    Datenbank-Einträge und abgeschlossene Gespräche) wird typabhängig in Chunks
@@ -2244,6 +2250,11 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr70.sql
 Nach `scripts/migrate-pr62.sql` einmalig `npm run db:seed-talents` ausführen —
 das füllt den neuen Talent-Katalog; ein zweiter Lauf ändert nichts und
 überschreibt keine Anpassungen der Spielleitung.
+
+Nach dem Merge von PR #107 einmal `npm run db:seed-talents` erneut ausführen:
+Der Seed benennt die importierten Talente „Bold X“, „Cautious X“ und
+„Collaboration X“ um und setzt die Voraussetzung von „Dedicated Focus X“ auf
+„Department 4+“. Eigene Talente bleiben unberührt.
 
 `scripts/migrate-pr62.sql` ist selbst wiederholbar. Die eine Ausnahme ist
 `dialogue_npc_speakers`: die Tabelle wird verworfen und neu angelegt, aber nur

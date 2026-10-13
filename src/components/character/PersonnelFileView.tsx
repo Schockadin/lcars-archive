@@ -9,6 +9,7 @@ import {
   computeStress,
 } from "@/lib/characterStats";
 import type { CharacterStats } from "@/types/characterStats";
+import { parseTalentEntry } from "@/lib/talentCatalog";
 import {
   DEFAULT_CROP,
   previewStyle,
@@ -292,7 +293,10 @@ export default function PersonnelFileView({
           <StaticList box={LIST_BOXES.focuses} entries={stats.focuses} />
           <StaticList box={LIST_BOXES.pastimes} entries={stats.pastimes} />
           <StaticList box={LIST_BOXES.attacks} entries={stats.attacks} />
-          <StaticList box={LIST_BOXES.talents} entries={stats.talents} />
+          <StaticList
+            box={LIST_BOXES.talents}
+            entries={stats.talents.map((entry) => parseTalentEntry(entry).name)}
+          />
           <StaticList box={LIST_BOXES.equipment} entries={stats.equipment} />
           <StaticList
             box={LIST_BOXES.speciesAbilities}

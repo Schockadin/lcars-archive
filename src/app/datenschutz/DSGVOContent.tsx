@@ -43,9 +43,10 @@ export default function DSGVOContent({ year }: { year: number }) {
           nicht im Klartext gespeichert, sondern nur als Hash. Zusätzlich werden
           pro Konto persönliche Anzeige-Einstellungen gespeichert (u. a. das
           gewählte Farbschema der Oberfläche samt individuell überschriebener
-          Akzentfarben), damit sie geräteübergreifend erhalten bleiben — reine
-          Komfort-Einstellungen ohne Rückschluss auf weitere personenbezogene
-          Daten (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO).
+          Akzentfarben sowie die gewählten Schriftarten), damit sie
+          geräteübergreifend erhalten bleiben — reine Komfort-Einstellungen
+          ohne Rückschluss auf weitere personenbezogene Daten (Rechtsgrundlage:
+          Art. 6 Abs. 1 lit. b DSGVO).
         </p>
         <p>
           Zum Festlegen eines ersten Passworts (Einladung durch die
@@ -95,7 +96,9 @@ export default function DSGVOContent({ year }: { year: number }) {
         <p>
           Zum Charakter einer Person gehören neben der Akte auch ihre{" "}
           <strong>Charakterwerte</strong> (Attribute, Disziplinen, Talente,
-          Schwerpunkte und die weiteren Angaben des Bogens) sowie ein{" "}
+          Schwerpunkte und die weiteren Angaben des Bogens; dazu zählen auch
+          gewählte Departements, Attribute oder Schwerpunkte einzelner Talente)
+          sowie ein{" "}
           <strong>Erfahrungspunkte-Konto</strong>. Dieses Konto ist ein
           Buchungsjournal: Jede Gutschrift und jede Steigerung wird dauerhaft
           mit Betrag, Grund, Zeitpunkt und dem Account festgehalten, der sie

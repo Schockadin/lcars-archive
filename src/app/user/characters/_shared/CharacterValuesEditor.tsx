@@ -24,7 +24,7 @@ import {
   type AdvancementRules,
 } from "@/lib/advancement";
 import type { CharacterStats } from "@/types/characterStats";
-import type { Talent } from "@/lib/talentCatalog";
+import { parseTalentEntry, type Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
 import { TalentModal } from "./TalentPicker";
 import { FocusModal } from "./FocusPicker";
@@ -656,7 +656,7 @@ export default function CharacterValuesEditor({
                       key={`${entry}-${index}`}
                       className="stat-editor-list-line"
                     >
-                      <span>{entry}</span>
+                      <span>{isCatalog ? parseTalentEntry(entry).name : entry}</span>
                       {!listLocked && (
                         <button
                           type="button"
@@ -718,6 +718,7 @@ export default function CharacterValuesEditor({
           stats={stats}
           species={species}
           taken={stats.talents}
+          focuses={stats.focuses}
           // Während der Erschaffung kommen Talente aus dem Freikontingent —
           // kosten also nichts. Nach dem Festschreiben wird direkt hier mit
           // AP gesteigert.

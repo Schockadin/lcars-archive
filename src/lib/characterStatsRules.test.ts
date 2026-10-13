@@ -10,7 +10,7 @@ import { DEFAULT_ADVANCEMENT_RULES } from "./advancement";
 import type { CharacterStats } from "@/types/characterStats";
 
 const RULES = DEFAULT_ADVANCEMENT_RULES;
-const CATALOG = ["Bold", "Studious", "Resolute"];
+const CATALOG = ["Bold", "Collaboration", "Studious", "Resolute"];
 
 function stats(overrides: Partial<CharacterStats> = {}): CharacterStats {
   return { ...EMPTY_CHARACTER_STATS, ...overrides };
@@ -105,9 +105,32 @@ describe("checkOpenCreationStats", () => {
         presence: 8,
         reason: 8,
       },
-      talents: ["Bold"],
+      talents: ["Studious"],
     });
     expect(checkOpenCreationStats(fine, RULES, CATALOG)).toBeNull();
+  });
+
+  it("verlangt bei variablen Katalog-Talenten eine gültige, noch freie Auswahl", () => {
+    expect(
+      checkOpenCreationStats(stats({ talents: ["Bold"] }), RULES, CATALOG),
+    ).toMatch(/benötigt eine Auswahl/);
+    expect(
+      checkOpenCreationStats(
+        stats({ talents: ["Bold (Command)", "Collaboration (Command)"] }),
+        RULES,
+        CATALOG,
+      ),
+    ).toMatch(/bereits vergeben/);
+    expect(
+      checkOpenCreationStats(stats({ talents: ["Bold (Command)"] }), RULES, CATALOG),
+    ).toBeNull();
+    expect(
+      checkOpenCreationStats(
+        stats({ talents: ["Bold (Command)", "Bold (Command)"] }),
+        RULES,
+        CATALOG,
+      ),
+    ).toMatch(/bereits vergeben/);
   });
 });
 

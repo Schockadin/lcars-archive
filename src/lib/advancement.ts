@@ -13,7 +13,7 @@ import {
   ATTRIBUTE_RULE,
   DEPARTMENT_RULE,
 } from "@/lib/characterStats";
-import { parseTalentEntry } from "@/lib/talentCatalog";
+import { checkTalentSelection, parseTalentEntry } from "@/lib/talentCatalog";
 
 // ── Regelwerk (konfigurierbar) ─────────────────────────────────────────
 // Die Zahlen der Runde stehen nicht fest im Code, sondern kommen aus
@@ -353,10 +353,18 @@ export function checkAdvancement(
     // Talent („Neuer Name (Originalname)", siehe talentCatalog.ts) darf sich
     // nicht ein zweites Mal kaufen lassen, nur weil es anders heißt.
     const isTalent = request.kind === "talent";
-    const key = (value: string) =>
-      (isTalent ? parseTalentEntry(value).original : value)
-        .trim()
-        .toLowerCase();
+    if (isTalent) {
+      const selectionError = checkTalentSelection(entry, stats.talents, stats.focuses);
+      if (selectionError) return { ok: false, error: selectionError };
+    }
+    const key = (value: string) => {
+      if (!isTalent) return value.trim().toLowerCase();
+      const parsed = parseTalentEntry(value);
+      const base = parsed.original.trim().toLowerCase();
+      return parsed.selection
+        ? `${base}\u0000${parsed.selection.trim().toLowerCase()}`
+        : base;
+    };
     const existing = isTalent ? stats.talents : stats.focuses;
     if (existing.some((e) => key(e) === key(entry))) {
       return { ok: false, error: `„${entry}" ist bereits eingetragen.` };
