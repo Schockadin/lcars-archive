@@ -119,6 +119,43 @@ test.describe("Switch ohne Wortumbruch", () => {
       }
     });
   }
+
+  test("Switch-Beschriftungen passen sich an die gewählte Schrift an", async ({
+    page,
+    baseURL,
+  }) => {
+    await page.context().addCookies([
+      { name: "neo_font_sans", value: "inter", url: baseURL! },
+    ]);
+    await page.goto("/dev-gallery");
+    await expect(page.locator("html")).toHaveAttribute("data-font-sans", "inter");
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
+
+    const buttons = page.locator(
+      "#switch-long button, #sort-switch-long button, #switch-type-filter button",
+    );
+    for (let i = 0; i < (await buttons.count()); i++) {
+      const button = buttons.nth(i);
+      const style = await button.evaluate((el: Element) => {
+        const computed = getComputedStyle(el);
+        return {
+          fontFamily: computed.fontFamily,
+          textTransform: computed.textTransform,
+          letterSpacing: computed.letterSpacing,
+          fits: el.scrollWidth <= el.clientWidth + 1,
+        };
+      });
+      expect(style.fontFamily).toContain("Inter");
+      expect(style.textTransform).toBe("none");
+      expect(style.letterSpacing).toBe("normal");
+      expect(await lineCount(button)).toBe(1);
+      expect(style.fits, `${await button.innerText()} wird abgeschnitten`).toBe(
+        true,
+      );
+    }
+  });
 });
 
 // Der gemeinsame Kopf der Content-Detailseiten. Die echten Seiten

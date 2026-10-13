@@ -108,7 +108,7 @@ export default async function SearchPage({
                 Fragen an den Kampagnen-Datenbestand stellen
               </p>
             </div>
-            <RagChat configured={hasRagConfig()} />
+            <RagChat configured={hasRagConfig()} showPrompts={false} />
           </section>
         ) : null}
       </div>

@@ -81,7 +81,14 @@ async function readSse(
   }
 }
 
-export default function RagChat({ configured }: { configured: boolean }) {
+export default function RagChat({
+  configured,
+  showPrompts = true,
+}: {
+  configured: boolean;
+  // /search bettet den Assistenten ohne die Einstiegs-Vorlagen ein.
+  showPrompts?: boolean;
+}) {
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
@@ -252,23 +259,22 @@ export default function RagChat({ configured }: { configured: boolean }) {
         </ol>
       )}
 
-      {/* Einstiegs-Vorlagen. Ein leeres Eingabefeld verrät nicht, dass der
-          Assistent auch Rückschauen über mehrere Berichte oder Kurzprofile
-          liefern kann. */}
-      <div className="flex flex-wrap gap-[8px]">
-        {RAG_PROMPTS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            title={t.hint}
-            disabled={busy}
-            onClick={() => applyPrompt(t)}
-            className="lcars-pill-btn--outline text-[12px] px-[12px] py-[4px] disabled:opacity-40"
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {showPrompts ? (
+        <div className="flex flex-wrap gap-[8px]">
+          {RAG_PROMPTS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              title={t.hint}
+              disabled={busy}
+              onClick={() => applyPrompt(t)}
+              className="lcars-pill-btn--outline text-[12px] px-[12px] py-[4px] disabled:opacity-40"
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <form
         onSubmit={onSubmit}
