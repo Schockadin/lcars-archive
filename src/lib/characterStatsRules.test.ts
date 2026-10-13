@@ -10,7 +10,7 @@ import { DEFAULT_ADVANCEMENT_RULES } from "./advancement";
 import type { CharacterStats } from "@/types/characterStats";
 
 const RULES = DEFAULT_ADVANCEMENT_RULES;
-const CATALOG = ["Bold", "Studious", "Resolute"];
+const CATALOG = ["Bold", "Collaboration", "Studious", "Resolute"];
 
 function stats(overrides: Partial<CharacterStats> = {}): CharacterStats {
   return { ...EMPTY_CHARACTER_STATS, ...overrides };
