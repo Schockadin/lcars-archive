@@ -3,6 +3,7 @@ import {
   getLogsByMissionId,
   getMissionBySlug,
 } from "@/lib/missions";
+import { getMissionTimeline } from "@/lib/missionTimelineData";
 import { getCharactersForUser } from "@/lib/characters";
 import { stripHtml } from "@/lib/missionFormat";
 import {
@@ -13,7 +14,7 @@ import {
 import { setSubscription, resolveFollowState } from "@/lib/follows";
 import { listAllUsers } from "@/lib/users";
 import MissionSynopsis from "../MissionSynopsis";
-import MissionLogOverview from "../MissionLogOverview";
+import MissionTimeline from "../MissionTimeline";
 import PageMeta from "@/components/PageMeta";
 import { getMentionsOf } from "@/lib/mentions";
 import MentionsSection from "@/app/_shared/MentionsSection";
@@ -91,6 +92,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
     mentions,
     notes,
     logs,
+    missionTimeline,
     synopsisBlocks,
     characters,
   ] = await Promise.all([
@@ -102,6 +104,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
     // Die Logbücher dieser Mission — bis zum Redesign lagen sie im Layout,
     // das die schmale Navigationsschiene daneben gerendert hat.
     getLogsByMissionId(mission.id),
+    getMissionTimeline(mission),
     listMissionSynopsisBlocks(mission.id),
     viewer ? getCharactersForUser(viewer.userId) : Promise.resolve([]),
   ]);
@@ -115,11 +118,12 @@ export default async function MissionPage({ params, searchParams }: Props) {
       <MissionSynopsis
         mission={mission}
       />
-      <MissionLogOverview
+      <MissionTimeline
         missionSlug={mission.slug}
-        missionTitle={mission.title}
-        fullSynopsisHtml={mission.metadata.body}
+        events={missionTimeline.events}
         logs={logs}
+        dialogues={missionTimeline.dialogues}
+        fullSynopsisHtml={mission.metadata.body}
         synopsisBlocks={synopsisBlocks}
         canCreateLog={canCreateLog}
         currentUserId={viewer?.userId ?? null}

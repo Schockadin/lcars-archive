@@ -1,7 +1,7 @@
 /* ─── Missions-Detailseite ────────────────────────────────────────────
-   Synopsis der Mission, darunter die Übersicht ihrer Logbücher, sowie die
-   Logbuch-Seite selbst samt Vor/Zurück-Navigation zwischen Logs desselben
-   Autors.
+   Synopsis der Mission, darunter ihre Missionstext-Ereignisse mit nach
+   Ingame-Datum aufgeklappten Logs/Gesprächen, sowie die Logbuch-Seite selbst
+   samt Vor/Zurück-Navigation zwischen Logs desselben Autors.
 
    Bis zum Redesign war das eine Master-Detail-Ansicht: links eine 320px
    schmale, mitscrollende Log-Schiene (.mission-detail-logs/.mission-loglist),
@@ -11,10 +11,11 @@
    entfallen.
 ──────────────────────────────────────────────────────────────────── */
 
-/* Übersicht der Logbücher unter der Synopsis — bündig mit dem Artikel
+/* Chronologie-/Logübersicht unter der Synopsis — bündig mit dem Artikel
    darüber (beide ohne eigenen seitlichen Abstand), damit Überschrift und
-   Liste mit dem Text fluchten. */
-.mission-log-overview {
+   Karten mit dem Text fluchten. */
+.mission-log-overview,
+.mission-timeline-overview {
   margin-top: 32px;
   container: mission-log-overview / inline-size;
 }
@@ -58,6 +59,52 @@
     top: 12px;
     align-self: start;
   }
+}
+
+/* Ereignisse aus dem Missionstext lassen sich aufklappen; der Knopf trägt
+   dieselbe Fläche wie eine ChronoCard und gibt die passenden Logs/Gespräche
+   erst nach Auswahl frei. */
+.mission-event-trigger {
+  appearance: none;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mission-event-trigger:hover {
+  filter: brightness(1.08);
+}
+.mission-event-trigger:focus-visible {
+  outline: 2px solid var(--lcars-ink-dark);
+  outline-offset: 2px;
+}
+.mission-event-trigger .timeline-card-body {
+  display: block;
+}
+.mission-event-trigger .timeline-card-head,
+.mission-event-trigger .timeline-card-meta {
+  display: flex;
+}
+.mission-event-trigger .timeline-card-summary {
+  display: block;
+}
+.mission-event-disclosure {
+  margin-left: auto;
+  font-weight: 700;
+}
+.mission-event-related {
+  margin: 0 0 20px 10px;
+  padding-left: 16px;
+  border-left: 1px solid var(--lcars-border);
+}
+.mission-related-section + .mission-related-section {
+  margin-top: 20px;
+}
+.mission-related-section > .timeline-period {
+  margin-top: 0;
 }
 
 /* ── Zusammenfassung im aufklappbaren Feld ────────────────────────────

@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.68",
+    title: "Ereignisse der Missionschronik",
+    items: [
+      {
+        text: "Auf der Missionsseite siehst du zuerst datierte Ereignisse aus dem Missionstext. Ein Klick klappt die Missions-Logs und abgeschlossenen Gespräche mit demselben Ingame-Datum auf.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+    ],
+  },
+  {
     version: "1.67",
     title: "Personen in Gesprächen finden",
     items: [

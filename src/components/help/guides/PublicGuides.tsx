@@ -128,22 +128,12 @@ export function PublicChronologyGuide() {
           auf ihren Titel öffnet die Detailansicht mit Volltext und Bildern.
         </p>
         <p>
-          Unter <strong>Sessions</strong> findest du die datierten Log-Einträge
-          der Spielleitung. Auf der Missionsseite stehen sie zusammen mit den
-          Spieler-<strong>Logbüchern</strong> in der Missionschronik, nach
-          Ingame-Datum sortiert — neueste zuerst. Ein Klick auf ein Logbuch
-          öffnet den Spielerbericht; ein Log-Eintrag der Spielleitung lässt
-          sich direkt in der Karte auf- und zuklappen.
-        </p>
-        <p>
-          Das einklappbare <strong>Inhaltsverzeichnis</strong> enthält
-          Sprungmarken zu beiden Arten von Einträgen und zur vollständigen
-          <strong> Synopsis</strong> am Ende. Die Session-Panels sind zunächst
-          geöffnet. Mit <strong>+</strong> neben dem Inhaltsverzeichnis öffnest
-          du alle, mit <strong>−</strong> schließt du sie wieder; einzelne
-          Panels lassen sich unabhängig davon umschalten. In der vollständigen
-          Synopsis teilen sich Einträge mit gleichem Ingame-Datum eine
-          Überschrift; die Karten in der Chronik bleiben einzeln.
+          Auf der Missionsseite zeigt die Missionschronik zuerst datierte
+          Ereignisse aus dem Missionstext. Ein Klick auf eine Karte klappt die
+          Spieler-<strong>Logbücher</strong> und abgeschlossenen{" "}
+          <strong>Gespräche</strong> auf, deren Ingame-Datum mit dem des
+          Ereignisses übereinstimmt. Die vollständige Synopsis steht darunter;
+          ein Klick auf ein Logbuch öffnet den Spielerbericht.
         </p>
         <p>
           Über <strong>„Missionsakte (PDF)“</strong> lädst du Beschreibung,

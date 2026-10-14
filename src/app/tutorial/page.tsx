@@ -197,17 +197,13 @@ export default function TutorialPage() {
               <p>
                 Die <strong>Missionsseite</strong> selbst zeigt oben Status,
                 Zeitraum und die beteiligten Figuren. In der{" "}
-                <strong>Missionschronik</strong> stehen Spieler-Logbücher und
-                Log-Einträge der Spielleitung gemeinsam, standardmäßig neueste
-                zuerst. Über den Datumsknopf wechselst du zwischen auf- und
-                absteigender Sortierung; das Auswahlfeld zeigt alles, nur
-                Logbücher oder nur Log-Einträge. Das einklappbare
-                Inhaltsverzeichnis springt zu beiden
-                Eintragsarten und zur Synopsis. Die Log-Einträge der
-                Spielleitung sind zunächst aufgeklappt; der +/−-Knopf neben
-                dem Inhaltsverzeichnis öffnet oder schließt alle gemeinsam.
-                Ein Klick auf ein Logbuch öffnet den Spielerbericht; von dort
-                führt der Link oben links zurück zur Mission. Über
+                <strong>Missionschronik</strong> stehen zunächst datierte
+                Ereignisse aus dem Missionstext. Ein Klick auf eine Karte
+                klappt Spieler-Logbücher und abgeschlossene Gespräche auf,
+                deren Ingame-Datum mit dem Ereignisdatum übereinstimmt. Die
+                vollständige Synopsis steht darunter. Ein Klick auf ein
+                Logbuch öffnet den Spielerbericht; von dort führt der Link
+                oben links zurück zur Mission. Über
                 „Missionsakte (PDF)“ lassen sich Beschreibung und Chronik als
                 Datei herunterladen. Sie enthält Spieler-Logbücher und
                 GM-Log-Einträge in chronologischer Reihenfolge; ihr
