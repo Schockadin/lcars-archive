@@ -549,10 +549,11 @@ export default function TutorialPage() {
                 Charakter am Zug gewesen sein.
               </p>
               <p>
-                Beim nachträglichen Einladen sind Charaktere und NPCs nach
-                Aktivitätsstatus gruppiert und innerhalb der Gruppen
-                alphabetisch sortiert. Über das Suchfeld findest du Figuren
-                nach ihrem Namen oder Spielernamen.
+                Beim nachträglichen Einladen stehen zuerst aktive Charaktere,
+                dann aktive NPCs, danach inaktive, verstorbene oder fehlende
+                Charaktere und zuletzt inaktive, verstorbene oder fehlende NPCs
+                — jede Gruppe alphabetisch sortiert. Über das Suchfeld findest
+                du Figuren nach ihrem Namen oder Spielernamen.
               </p>
               <p>
                 Als Gegenüber kannst du auch einen <strong>NPC</strong> wählen —

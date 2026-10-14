@@ -94,6 +94,17 @@ export default function DSGVOContent({ year }: { year: number }) {
           fehlgeschlagenen Mail-Versands.
         </p>
         <p>
+          Beim nachträglichen Einladen in ein offenes Gespräch sieht dessen
+          Owner die für ihn zugänglichen Charaktere und NPCs mit Figuren- und
+          Spielernamen. Die Liste ist nach Typ und Aktivitätsstatus gruppiert;
+          ein Suchfeld vergleicht die Eingabe direkt im Browser mit diesen
+          bereits angezeigten Namen. Der Suchbegriff wird nicht gespeichert und
+          nicht an externe Dienste übermittelt. Erst die ausgewählten Personen
+          werden als Teilnehmende im Gespräch hinterlegt (Rechtsgrundlage: Art.
+          6 Abs. 1 lit. b DSGVO — Erfüllung des Nutzungsverhältnisses der
+          Kampagne).
+        </p>
+        <p>
           Zum Charakter einer Person gehören neben der Akte auch ihre{" "}
           <strong>Charakterwerte</strong> (Attribute, Disziplinen, Talente,
           Schwerpunkte und die weiteren Angaben des Bogens; dazu zählen auch
