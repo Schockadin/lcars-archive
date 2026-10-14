@@ -111,6 +111,8 @@ export default async function DialoguePlayPage({ params }: Props) {
           slug: c.slug,
           name: c.name,
           playerName: c.playerName,
+          kind: "character" as const,
+          isActive: c.status === "active",
         })),
         ...npcCandidatesRaw
           .filter((npc) => canView(npc.isDraft, npc.ownerUserId, viewerForNpcs))
@@ -121,10 +123,13 @@ export default async function DialoguePlayPage({ params }: Props) {
             // Statt eines Spielernamens der Hinweis, dass hier die
             // Spielleitung schreibt — die Auswahl zeigt beides in einer Liste.
             playerName: "NPC",
+            kind: "npc" as const,
+            isActive: ["active", "aktiv"].includes(
+              (npc.status ?? "").trim().toLocaleLowerCase("de"),
+            ),
           })),
       ]
         .filter((c) => !entry.participants.some((p) => p.slug === c.slug))
-        .sort((a, b) => a.name.localeCompare(b.name, "de"))
     : [];
 
   const canReplyNow = canReplyToDialogue(

@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.67",
+    title: "Personen in Gesprächen finden",
+    items: [
+      {
+        text: "Beim Einladen in offene Gespräche werden Charaktere und NPCs nach Aktivitätsstatus in alphabetisch sortierten Gruppen angezeigt. Mit der Suche findest du sie nach Namen oder Spielernamen.",
+        category: "inhalte",
+        tutorial: "gespraeche",
+      },
+    ],
+  },
+  {
     version: "1.66",
     title: "Auswählbare Talentvarianten",
     items: [
