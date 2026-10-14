@@ -24,6 +24,7 @@ const NPCS = [
     name: "Barkeeper",
     isDraft: false,
     ownerUserId: null,
+    status: null,
   },
 ];
 const GMS = [
