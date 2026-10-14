@@ -11,6 +11,15 @@ export interface InviteCandidate {
   key: string;
   name: string;
   playerName: string;
+  kind: "character" | "npc";
+  isActive: boolean;
+}
+
+function normalizeSearchText(value: string): string {
+  return value
+    .toLocaleLowerCase("de")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "");
 }
 
 // Nur für den Owner sichtbar (siehe /dialogues/[slug]/page.tsx — Owner ist,
@@ -47,8 +56,71 @@ export default function InviteDialogueParticipantForm({
   const [chosenGmId, setChosenGmId] = useState<number | null>(null);
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState(false);
+  const [search, setSearch] = useState("");
 
   if (candidates.length === 0) return null;
+
+  const normalizedSearch = normalizeSearchText(search.trim());
+  const matchesSearch = (candidate: InviteCandidate) =>
+    normalizedSearch.length === 0 ||
+    normalizeSearchText(
+      candidate.name +
+        " " +
+        candidate.playerName +
+        " " +
+        (candidate.kind === "npc" ? "NPC" : "Charakter"),
+    ).includes(normalizedSearch);
+  const groups = [
+    {
+      label: "Charaktere (aktiv)",
+      candidates: candidates.filter(
+        (candidate) =>
+          candidate.kind === "character" &&
+          candidate.isActive &&
+          matchesSearch(candidate),
+      ),
+    },
+    {
+      label: "NPCs (aktiv)",
+      candidates: candidates.filter(
+        (candidate) =>
+          candidate.kind === "npc" &&
+          candidate.isActive &&
+          matchesSearch(candidate),
+      ),
+    },
+    {
+      label: "Charaktere (inaktiv/tot/missing)",
+      candidates: candidates.filter(
+        (candidate) =>
+          candidate.kind === "character" &&
+          !candidate.isActive &&
+          matchesSearch(candidate),
+      ),
+    },
+    {
+      label: "NPCs (inaktiv/tot/missing)",
+      candidates: candidates.filter(
+        (candidate) =>
+          candidate.kind === "npc" &&
+          !candidate.isActive &&
+          matchesSearch(candidate),
+      ),
+    },
+  ].map((group) => ({
+    ...group,
+    candidates: group.candidates.sort(
+      (a, b) =>
+        a.name.localeCompare(b.name, "de", { sensitivity: "base" }) ||
+        a.playerName.localeCompare(b.playerName, "de", {
+          sensitivity: "base",
+        }),
+    ),
+  }));
+  const visibleCandidates = groups.flatMap((group) => group.candidates);
+  const selectedCandidates = selectedKeys
+    .map((key) => candidates.find((candidate) => candidate.key === key))
+    .filter((candidate): candidate is InviteCandidate => candidate !== undefined);
 
   // Ist ein NPC ausgewählt? Entscheidet, ob nach der Spielleitung gefragt
   // wird — wie im Anlege-Formular am Präfix des Sprecher-Schlüssels erkannt.
@@ -84,26 +156,65 @@ export default function InviteDialogueParticipantForm({
       <FormField
         label="Weitere Personen einladen"
         htmlFor="dlg-invite-participants"
-        hint="Mehrfachauswahl per Strg/Cmd- oder Shift-Klick. Direkt hinzugefügt, kein Annehmen/Ablehnen nötig — die eingeladene Person bekommt eine Info-Mail. NPCs schreibt die Spielleitung."
+        hint="Suche nach Namen oder Spielernamen. Mehrfachauswahl per Strg/Cmd- oder Shift-Klick. Direkt hinzugefügt, kein Annehmen/Ablehnen nötig — die eingeladene Person bekommt eine Info-Mail. NPCs schreibt die Spielleitung."
       >
+        <input
+          id="dlg-invite-participant-search"
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.currentTarget.value)}
+          placeholder="Personen suchen…"
+          aria-label="Personen suchen"
+          className="lcars-input rounded-lcars-pill w-full mb-[8px]"
+        />
         <select
           id="dlg-invite-participants"
           multiple
-          size={Math.min(6, candidates.length)}
+          size={Math.min(8, Math.max(4, visibleCandidates.length))}
           value={selectedKeys}
-          onChange={(e) =>
-            setSelectedKeys(
-              Array.from(e.currentTarget.selectedOptions).map((o) => o.value),
-            )
-          }
+          onChange={(event) => {
+            const visibleKeys = new Set(
+              visibleCandidates.map((candidate) => candidate.key),
+            );
+            const selectedHiddenKeys = selectedKeys.filter(
+              (key) => !visibleKeys.has(key),
+            );
+            const selectedVisibleKeys = Array.from(
+              event.currentTarget.selectedOptions,
+            ).map((option) => option.value);
+            setSelectedKeys([...selectedHiddenKeys, ...selectedVisibleKeys]);
+          }}
           className="lcars-input rounded-lcars-pill w-full h-auto py-[8px]"
         >
-          {candidates.map((c) => (
-            <option key={c.key} value={c.key}>
-              {c.name} ({c.playerName})
-            </option>
-          ))}
+          {groups.map(
+            (group) =>
+              group.candidates.length > 0 && (
+                <optgroup key={group.label} label={group.label}>
+                  {group.candidates.map((candidate) => (
+                    <option key={candidate.key} value={candidate.key}>
+                      {candidate.name} ({candidate.playerName})
+                    </option>
+                  ))}
+                </optgroup>
+              ),
+          )}
         </select>
+        {visibleCandidates.length === 0 && (
+          <p className="lcars-text text-[13px] mt-[6px]">
+            Keine passenden Personen.
+          </p>
+        )}
+        {selectedCandidates.length > 0 && (
+          <p className="lcars-text text-[13px] mt-[6px]" aria-live="polite">
+            Ausgewählt:{" "}
+            {selectedCandidates
+              .map(
+                (candidate) =>
+                  candidate.name + " (" + candidate.playerName + ")",
+              )
+              .join(", ")}
+          </p>
+        )}
       </FormField>
 
       {/* Wer schreibt für die NPCs? Nur wenn welche ausgewählt sind, die

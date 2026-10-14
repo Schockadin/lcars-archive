@@ -10,8 +10,20 @@ vi.mock("@/app/actions/dialogues", () => ({
 }));
 
 const CANDIDATES = [
-  { key: "c2", name: "Partnerin", playerName: "Ada" },
-  { key: "n3", name: "Barkeeper", playerName: "NPC" },
+  {
+    key: "c2",
+    name: "Partnerin",
+    playerName: "Ada",
+    kind: "character" as const,
+    isActive: true,
+  },
+  {
+    key: "n3",
+    name: "Barkeeper",
+    playerName: "NPC",
+    kind: "npc" as const,
+    isActive: true,
+  },
 ];
 const GMS = [
   { id: 10, name: "Erste Leitung" },
@@ -119,5 +131,96 @@ describe("InviteDialogueParticipantForm", () => {
     ) as HTMLInputElement;
     expect(field.readOnly).toBe(true);
     expect(field.value).toBe("Erste Leitung");
+  });
+
+  it("ordnet die vier Statusgruppen und sortiert jede alphabetisch", () => {
+    renderForm({
+      candidates: [
+        {
+          key: "n-inactive",
+          name: "Orion",
+          playerName: "NPC",
+          kind: "npc",
+          isActive: false,
+        },
+        {
+          key: "c-active-z",
+          name: "Zara",
+          playerName: "Zoë",
+          kind: "character",
+          isActive: true,
+        },
+        {
+          key: "n-active",
+          name: "Mira",
+          playerName: "NPC",
+          kind: "npc",
+          isActive: true,
+        },
+        {
+          key: "c-inactive",
+          name: "Deceased",
+          playerName: "Ada",
+          kind: "character",
+          isActive: false,
+        },
+        {
+          key: "c-active-a",
+          name: "Ada",
+          playerName: "Lea",
+          kind: "character",
+          isActive: true,
+        },
+      ],
+    });
+
+    const list = screen.getByLabelText(
+      /Weitere Personen einladen/,
+    ) as HTMLSelectElement;
+    expect(
+      [...list.querySelectorAll("optgroup")].map((group) => group.label),
+    ).toEqual([
+      "Charaktere (aktiv)",
+      "NPCs (aktiv)",
+      "Charaktere (inaktiv/tot/missing)",
+      "NPCs (inaktiv/tot/missing)",
+    ]);
+    expect([...list.options].map((option) => option.textContent)).toEqual([
+      "Ada (Lea)",
+      "Zara (Zoë)",
+      "Mira (NPC)",
+      "Deceased (Ada)",
+      "Orion (NPC)",
+    ]);
+  });
+
+  it("filtert nach dem Spielernamen", () => {
+    renderForm();
+    fireEvent.change(screen.getByLabelText("Personen suchen"), {
+      target: { value: "ada" },
+    });
+
+    const list = screen.getByLabelText(
+      /Weitere Personen einladen/,
+    ) as HTMLSelectElement;
+    expect([...list.options].map((option) => option.textContent)).toEqual([
+      "Partnerin (Ada)",
+    ]);
+  });
+
+  it("behält ausgewählte Personen beim Filtern und beim Einladen bei", () => {
+    renderForm();
+    select("c2");
+    fireEvent.change(screen.getByLabelText("Personen suchen"), {
+      target: { value: "barkeeper" },
+    });
+    select("n3");
+    fireEvent.click(screen.getByRole("button", { name: "Einladen" }));
+
+    expect(inviteDialogueParticipantAction).toHaveBeenCalledWith(
+      "gespraech",
+      ["c2", "n3"],
+      null,
+    );
   });
 });

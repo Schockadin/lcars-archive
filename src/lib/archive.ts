@@ -186,6 +186,7 @@ export interface NpcOption {
   id: number;
   slug: string;
   name: string;
+  status: string | null;
   // Für die Sichtbarkeitsprüfung beim Aufrufer (canView): ein NPC kann ein
   // unveröffentlichter Entwurf sein.
   isDraft: boolean;
@@ -203,11 +204,23 @@ export interface NpcOption {
 // statt dass hier eine zweite, abweichende Regel entsteht.
 export async function getNpcOptions(): Promise<NpcOption[]> {
   return sql<NpcOption[]>`
-    SELECT id, slug, title AS name, is_draft AS "isDraft",
-           owner_user_id AS "ownerUserId"
-    FROM archive_entries
-    WHERE category = 'npc' AND deleted_at IS NULL
-    ORDER BY title ASC
+    SELECT a.id, a.slug, a.title AS name, a.is_draft AS "isDraft",
+           a.owner_user_id AS "ownerUserId",
+           (
+             SELECT attr.value->>'value'
+             FROM jsonb_array_elements(
+               CASE
+                 WHEN jsonb_typeof(a.metadata->'attributes') = 'array'
+                   THEN a.metadata->'attributes'
+                 ELSE '[]'::jsonb
+               END
+             ) AS attr(value)
+             WHERE lower(COALESCE(attr.value->>'label', '')) = 'status'
+             LIMIT 1
+           ) AS status
+    FROM archive_entries a
+    WHERE a.category = 'npc' AND a.deleted_at IS NULL
+    ORDER BY a.title ASC
   `;
 }
 

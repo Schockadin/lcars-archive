@@ -105,6 +105,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Teilnehmende, muss man sich das Antwortrecht
   erst per Button für zwei Stunden reservieren, mit Sperr-Anzeige und
   optionaler Mail/Push-Benachrichtigung, sobald die Sperre wieder endet.
+  Beim nachträglichen Einladen gruppiert die Auswahlliste aktive Charaktere,
+  aktive NPCs, inaktive Charaktere und inaktive NPCs, jeweils alphabetisch;
+  das Suchfeld findet Figuren über Figuren- oder Spielernamen.
   Unter `/user/content` lassen sich eigene Charaktere, Missionen,
   Session-Zusammenfassungen, Logbücher und Datenbank-Einträge mit „Alles
   verlinken“ gesammelt automatisch verknüpfen; Gespräche bleiben dabei

@@ -99,6 +99,12 @@ export default function ImpressumContent() {
           kann Dateien veröffentlichter Charaktere ansehen und herunterladen.
         </p>
         <p>
+          In offenen Gesprächen kann der Owner weitere Charaktere und NPCs über
+          eine nach Aktivitätsstatus gruppierte, alphabetisch sortierte und
+          durchsuchbare Auswahlliste hinzufügen. Die Einladungsfunktion ändert
+          nichts an der Autorenschaft der Gesprächsbeiträge.
+        </p>
+        <p>
           Der Charakterbogen bildet den Personnel-File-Bogen aus{" "}
           <em>Star Trek Adventures</em> (2. Edition) nach; die Vorlagengrafik
           sowie die Namen, Kategorien, Voraussetzungen und Regeltexte der
