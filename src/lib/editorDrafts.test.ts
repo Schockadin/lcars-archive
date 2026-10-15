@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { sqlMock, queries } = vi.hoisted(() => {
   const sqlMock = Object.assign(vi.fn(), {
     json: vi.fn((value: unknown) => value),
+    options: { parsers: {}, serializers: {} },
   });
   return {
     sqlMock,

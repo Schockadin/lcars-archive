@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db", () => ({ default: () => Promise.resolve([]) }));
+vi.mock("@/lib/db", () => ({
+  default: Object.assign(() => Promise.resolve([]), {
+    options: { parsers: {}, serializers: {} },
+  }),
+}));
 
 const {
   isNoteContentType,
