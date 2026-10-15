@@ -10,7 +10,8 @@ export async function resetDb(): Promise<void> {
     TRUNCATE TABLE
       timeline_events, archive_links, dialogue_messages, archive_entries,
       editor_drafts, mission_logs, missions, mission_participants, content_follows,
-      content_deletions, content_images, push_subscriptions, password_setup_tokens,
+      content_deletions, content_images, user_images, character_documents,
+      campaign_settings, push_subscriptions, password_setup_tokens,
       admin_audit_log, error_logs, login_attempts, password_reset_requests,
       rag_requests, characters, users
     RESTART IDENTITY CASCADE

@@ -106,6 +106,29 @@ function renderBrowser(
 }
 
 describe("UserContentBrowser", () => {
+  it("setzt Filter bei einem Kontowechsel zurück", () => {
+    const view = renderBrowser();
+    fireEvent.change(screen.getByLabelText("Einträge filtern"), {
+      target: { value: "Deneb" },
+    });
+    expect(screen.queryByText("Erster Tag")).toBeNull();
+
+    view.rerender(
+      <UserContentBrowser
+        characters={[{ slug: "tuvok", name: "Tuvok" }]}
+        logs={[log, draftLog]}
+        dialogues={[dialogue]}
+        archiveEntries={[entry]}
+        missions={[mission]}
+        canManageMissions
+        canLinkAnyContent
+        ownUserId={2}
+      />,
+    );
+    expect(screen.getByLabelText("Einträge filtern")).toHaveValue("");
+    expect(screen.getByText("Erster Tag")).toBeInTheDocument();
+  });
+
   it("gruppiert in der Vorgabe nach Kategorie — mit h2 je Abschnitt", () => {
     renderBrowser();
 

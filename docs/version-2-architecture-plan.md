@@ -1,6 +1,19 @@
-# Version 2.0: Plan für State Management und ORM
+# Version 2.0: State Management und ORM
 
-Dieser Plan ist der erste Schritt für die beiden Architekturpunkte. Die Einführung selbst erfolgt nach gesonderter Freigabe. Ausgangspunkt ist Version 1.67.3: Die Anwendung nutzt Next.js Server Components und Server Actions, `postgres.js` mit PgBouncer im Transaction Mode, etwa 80 Module mit direktem SQL-Zugriff und lokale React-Zustände in vielen Client-Komponenten. Datenbankschema und Änderungen liegen derzeit in `scripts/schema.sql` und `scripts/setup-db.ts`.
+Ausgangspunkt war Version 1.67.3: Die Anwendung nutzt Next.js Server Components und Server Actions, `postgres.js` mit PgBouncer im Transaction Mode, etwa 80 Module mit direktem SQL-Zugriff und lokale React-Zustände in vielen Client-Komponenten. Nach Freigabe der Umsetzung sind Zustand und Drizzle in Version 2.0 eingeführt. Die Migration bleibt bewusst domänenweise: bestehendes SQL für Suche, Rechte, Backup und große Datenimporte behält seine geprüfte Semantik, bis jede Domäne einzeln umgestellt und geprüft wurde.
+
+## Stand der Umsetzung
+
+| Bereich                                                   | Verantwortlicher Zustand / Datenzugriff                                                            | Stand                                                                              |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Inhaltsbrowser `/user/content`                            | Filter, Suche und Sortierung im eigenen Zustand-Store; `useOptimistic` weiterhin für Löschaktionen | Migriert, Store wird je Browser-Instanz erzeugt und bei Kontowechsel zurückgesetzt |
+| Formulare und Dialoge                                     | `useState` / `useActionState`, da lokal und kurzlebig                                              | Bleiben lokal                                                                      |
+| Daten und Rechte                                          | Server Components, DAL und Server Actions                                                          | Bleiben serverseitig                                                               |
+| Persönliche Bilder und Charakterdateien                   | Drizzle-Abfragen für Lesen, Anlegen und Löschen                                                    | Migriert                                                                           |
+| Kampagnenweite Termin- und AP-Einstellungen               | Drizzle-Abfragen und Upserts                                                                       | Migriert                                                                           |
+| Suche, Backup/Restore, Rechte, Ingest und weitere Domänen | Bestehendes parametrisiertes SQL                                                                   | Migration jeweils mit domänenspezifischen Tests fortsetzen                         |
+
+`src/lib/orm.ts` verwendet den vorhandenen `postgres.js`-Client aus `src/lib/db.ts`; dessen `prepare: false` bleibt für PgBouncer erhalten. `src/lib/ormSchema.ts` bildet nur die bisher migrierten Tabellen und Spalten ab und ist **keine vollständige DDL-Quelle**. `scripts/schema.sql` bleibt die Baseline für neue Datenbanken; geprüfte, versionierte `scripts/migrate-*.sql` aktualisieren bestehende Datenbanken. Drizzle Kit `push`/`migrate` darf mit der unvollständigen Abbildung nicht gegen Produktion laufen. Vor einer späteren Übernahme der DDL-Verwaltung müssen alle Tabellen und Erweiterungen einschließlich `pgvector`, Checks, Indizes und bestehender Migrationen vollständig abgeglichen und eine Baseline für die reale Produktionsstruktur erstellt werden. Die Integrationstests vergleichen die modellierten Spalten mit einer frisch aus `scripts/schema.sql` aufgebauten Datenbank und prüfen Drizzle-Transaktionen. Ein direkter Abgleich mit der Produktionsdatenbank steht aus, da in dieser Arbeitsumgebung keine DB-Verbindung hinterlegt ist.
 
 ## 1. State Management
 
@@ -25,6 +38,6 @@ Dieser Plan ist der erste Schritt für die beiden Architekturpunkte. Die Einfüh
 
 ## Reihenfolge und Schnittstellen
 
-Die Dateiverwaltung und Exportverschlüsselung können vor der ORM-Migration auf dem bestehenden DAL aufbauen. Nach ihrer Fertigstellung werden die neuen Tabellen und Abfragen in die ORM-Baseline aufgenommen. Das State Management wird nicht als Datenbankcache eingesetzt; nach Server Actions liefern Revalidation beziehungsweise erneutes Laden die maßgeblichen Daten.
+Die Dateiverwaltung und Exportverschlüsselung wurden zuerst auf dem bestehenden DAL gebaut. Die Dateitabellen sind jetzt in der typisierten ORM-Abbildung enthalten. Das State Management wird nicht als Datenbankcache eingesetzt; nach Server Actions liefern Revalidation beziehungsweise erneutes Laden die maßgeblichen Daten. Für weitere ORM-Domänen gilt: zuerst Schemaabgleich und Integrationstest, dann Query-Migration, anschließend CI und Prüfung der Query-Ergebnisse. Eine produktive Migration bleibt ein eigenständig geprüfter Betriebsschritt.
 
 Quellen: [Zustand mit Next.js](https://zustand.docs.pmnd.rs/learn/guides/nextjs), [Drizzle mit bestehendem PostgreSQL](https://orm.drizzle.team/docs/get-started/postgresql-existing), [Drizzle mit postgres.js](https://orm.drizzle.team/docs/get-started-postgresql).

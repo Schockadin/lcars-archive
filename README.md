@@ -1505,6 +1505,18 @@ sie laufen gegen eine eigene, leere Datenbank mit demselben Schema. In CI
 nicht über `npm run db:setup` — das Skript fragt interaktiv nach der
 Schema-Datei und würde in einem Runner hängen.
 
+**State Management und ORM (Version 2.0):** Der Inhaltsbrowser nutzt einen
+eigenen Zustand-Store pro Ansicht für Filter und Sortierung; Formulare und
+serverseitige Daten bleiben bei ihren bisherigen Zuständigkeiten. Drizzle ORM
+verwendet denselben `postgres.js`-Client wie der bisherige Datenzugriff und ist
+für Bildbibliothek, Charakterdateien sowie ausgewählte Kampagnen-Einstellungen
+eingeführt. Die vollständige Zuordnung und der weitere Migrationspfad stehen
+in [`docs/version-2-architecture-plan.md`](docs/version-2-architecture-plan.md).
+`scripts/schema.sql` und geprüfte SQL-Migrationen bleiben die DDL-Quelle;
+`src/lib/ormSchema.ts` bildet derzeit nur die migrierten Abfragen ab. Deshalb
+keine automatische Drizzle-Schemaänderung gegen eine bestehende Datenbank
+ausführen.
+
 ### 4. Ersten Admin-User anlegen
 
 ```bash

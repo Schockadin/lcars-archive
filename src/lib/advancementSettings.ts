@@ -1,6 +1,8 @@
 import "server-only";
 import { cacheTag, cacheLife, revalidateTag } from "next/cache";
-import sql from "@/lib/db";
+import { eq, sql } from "drizzle-orm";
+import orm from "@/lib/orm";
+import { campaignSettings } from "@/lib/ormSchema";
 import { cacheTags } from "@/lib/cacheTags";
 import {
   parseAdvancementRules,
@@ -22,19 +24,23 @@ export async function getAdvancementRules(): Promise<AdvancementRules> {
   "use cache";
   cacheTag(cacheTags.campaign);
   cacheLife("max");
-  const [row] = await sql<{ advancement_rules: unknown }[]>`
-    SELECT advancement_rules FROM campaign_settings WHERE id = TRUE
-  `;
-  return parseAdvancementRules(row?.advancement_rules ?? null);
+  const [row] = await orm
+    .select({ advancementRules: campaignSettings.advancementRules })
+    .from(campaignSettings)
+    .where(eq(campaignSettings.id, true));
+  return parseAdvancementRules(row?.advancementRules ?? null);
 }
 
-export async function setAdvancementRules(rules: AdvancementRules): Promise<void> {
-  await sql`
-    INSERT INTO campaign_settings (id, advancement_rules, updated_at)
-    VALUES (TRUE, ${sql.json(rules as unknown as ReturnType<typeof JSON.parse>)}, NOW())
-    ON CONFLICT (id) DO UPDATE
-      SET advancement_rules = ${sql.json(rules as unknown as ReturnType<typeof JSON.parse>)}, updated_at = NOW()
-  `;
+export async function setAdvancementRules(
+  rules: AdvancementRules,
+): Promise<void> {
+  await orm
+    .insert(campaignSettings)
+    .values({ id: true, advancementRules: rules })
+    .onConflictDoUpdate({
+      target: campaignSettings.id,
+      set: { advancementRules: rules, updatedAt: sql`NOW()` },
+    });
   revalidateTag(cacheTags.campaign, { expire: 0 });
 }
 
@@ -42,10 +48,10 @@ export async function setAdvancementRules(rules: AdvancementRules): Promise<void
 // Standardwerte hineinschreiben, damit eine spätere Anpassung der Defaults im
 // Code auch bei zurückgesetzten Kampagnen greift.
 export async function resetAdvancementRules(): Promise<void> {
-  await sql`
-    UPDATE campaign_settings SET advancement_rules = NULL, updated_at = NOW()
-    WHERE id = TRUE
-  `;
+  await orm
+    .update(campaignSettings)
+    .set({ advancementRules: null, updatedAt: sql`NOW()` })
+    .where(eq(campaignSettings.id, true));
   revalidateTag(cacheTags.campaign, { expire: 0 });
 }
 
