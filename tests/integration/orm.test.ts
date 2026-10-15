@@ -16,6 +16,28 @@ import { getSessionDefaults, saveSessionDefaults } from "@/lib/sessionDefaults";
 import { DEFAULT_SESSION_DEFAULTS } from "@/lib/sessionDefaultsFormat";
 
 describe("Drizzle auf dem bestehenden PostgreSQL-Schema", () => {
+  it("erhält die Serializer des bestehenden SQL-Clients", async () => {
+    const [row] = await sql<{ payload: { value: number }; recorded_at: Date }[]>`
+      SELECT ${sql.json({ value: 7 })}::jsonb AS payload,
+             ${new Date("2024-01-02T03:04:05.000Z")}::timestamptz AS recorded_at
+    `;
+    expect(row.payload).toEqual({ value: 7 });
+    expect(row.recorded_at).toBeInstanceOf(Date);
+  });
+
+  it("liest und schreibt JSONB mit dem bestehenden Client", async () => {
+    const rules = { costs: { attribute: 3 } };
+    await orm.insert(campaignSettings).values({
+      id: true,
+      advancementRules: rules,
+    });
+    const [row] = await orm
+      .select({ rules: campaignSettings.advancementRules })
+      .from(campaignSettings)
+      .where(eq(campaignSettings.id, true));
+    expect(row.rules).toEqual(rules);
+  });
+
   it("findet alle modellierten Spalten im SQL-Basisschema", async () => {
     for (const table of [
       users,

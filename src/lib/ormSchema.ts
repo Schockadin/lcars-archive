@@ -1,13 +1,22 @@
 import {
   boolean,
+  customType,
   integer,
-  jsonb,
   pgTable,
   serial,
   smallint,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
+
+// Der geteilte postgres.js-Client parst JSONB bereits selbst. Drizzles
+// Standard-jsonb-Spalte würde das Ergebnis ein zweites Mal JSON.parse'n.
+const existingJsonb = customType<{ data: unknown; driverData: string }>({
+  dataType: () => "jsonb",
+  toDriver: (value) => JSON.stringify(value),
+  fromDriver: (value) =>
+    typeof value === "string" ? JSON.parse(value) : value,
+});
 
 // Typisierte Projektionen der bereits vorhandenen Tabellen. DDL und
 // Migrationen bleiben in scripts/schema.sql und scripts/migrate-*.sql;
@@ -82,7 +91,7 @@ export const campaignSettings = pgTable("campaign_settings", {
   sessionDefaultLocation: text("session_default_location")
     .notNull()
     .default("David"),
-  advancementRules: jsonb("advancement_rules"),
+  advancementRules: existingJsonb("advancement_rules"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
