@@ -19,6 +19,17 @@ export const ASSET_IMAGE_MIME_TO_EXT: Record<string, string> = {
 };
 export const MAX_ASSET_IMAGE_BYTES = 5 * 1024 * 1024;
 
+export function characterPortraitAssetKey(value: string): string | null {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    const match = url.pathname.match(/\/(character-portraits\/[0-9a-f-]{36}\.(?:jpg|png|webp|gif))$/i);
+    return match?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // Baut die öffentliche Auslieferungs-URL eines Objekts aus der konfigurierten
 // Basis-URL (z.B. https://assets.neo-archiv.de oder die r2.dev-URL) und dem
 // Objekt-Key. Trailing Slash der Basis und führende Slashes des Keys werden

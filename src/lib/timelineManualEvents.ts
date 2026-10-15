@@ -162,6 +162,7 @@ export async function listManualEventsForUser(
 ): Promise<ManualEventForEdit[]> {
   return sql<ManualEventForEdit[]>`
     SELECT te.id,
+           te.created_at::text AS "createdAt",
            to_char(te.event_date, 'YYYY-MM-DD') AS date,
            te.title,
            te.teaser,

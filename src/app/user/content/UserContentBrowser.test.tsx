@@ -106,6 +106,29 @@ function renderBrowser(
 }
 
 describe("UserContentBrowser", () => {
+  it("setzt Filter bei einem Kontowechsel zurück", () => {
+    const view = renderBrowser();
+    fireEvent.change(screen.getByLabelText("Einträge filtern"), {
+      target: { value: "Deneb" },
+    });
+    expect(screen.queryByText("Erster Tag")).toBeNull();
+
+    view.rerender(
+      <UserContentBrowser
+        characters={[{ slug: "tuvok", name: "Tuvok" }]}
+        logs={[log, draftLog]}
+        dialogues={[dialogue]}
+        archiveEntries={[entry]}
+        missions={[mission]}
+        canManageMissions
+        canLinkAnyContent
+        ownUserId={2}
+      />,
+    );
+    expect(screen.getByLabelText("Einträge filtern")).toHaveValue("");
+    expect(screen.getByText("Erster Tag")).toBeInTheDocument();
+  });
+
   it("gruppiert in der Vorgabe nach Kategorie — mit h2 je Abschnitt", () => {
     renderBrowser();
 
@@ -219,6 +242,58 @@ describe("UserContentBrowser", () => {
       .filter((t): t is string => !!t);
     expect(titles).toEqual(
       [...titles].sort((a, b) => a.localeCompare(b, "de")),
+    );
+  });
+
+  it("sortiert Ingame- und Erstellungsdatum in beide Richtungen, fehlende Daten zuletzt", () => {
+    renderBrowser({
+      logs: [
+        {
+          ...log,
+          title: "Log alt",
+          log_date: "2400-01-01",
+          createdAt: "2026-10-03",
+        },
+        {
+          ...draftLog,
+          title: "Log neu",
+          log_date: "2400-05-01",
+          createdAt: "2026-10-01",
+        },
+      ],
+      dialogues: [],
+      archiveEntries: [
+        {
+          ...entry,
+          title: "Ohne Datum",
+          logDate: null,
+          createdAt: "2026-10-02",
+        },
+      ],
+      missions: [],
+    });
+    const titles = () =>
+      [...document.querySelectorAll(".timeline-card-title")].map(
+        (el) => el.textContent,
+      );
+    fireEvent.click(screen.getByRole("button", { name: /Ingame-Datum/ }));
+    expect(titles()).toEqual(["Log neu", "Log alt", "Ohne Datum"]);
+    fireEvent.click(screen.getByRole("button", { name: /Ingame-Datum/ }));
+    expect(titles()).toEqual(["Log alt", "Log neu", "Ohne Datum"]);
+    fireEvent.click(screen.getByRole("button", { name: /Erstellt am/ }));
+    expect(titles()).toEqual(["Log alt", "Ohne Datum", "Log neu"]);
+    fireEvent.click(screen.getByRole("button", { name: /Erstellt am/ }));
+    expect(titles()).toEqual(["Log neu", "Ohne Datum", "Log alt"]);
+  });
+
+  it("ordnet auf Mobilgeräten Sortierung und Suchfeld in getrennte Zeilen", () => {
+    const { container } = renderBrowser();
+    expect(container.querySelector(".content-browser-toolbar")).toBeInTheDocument();
+    expect(container.querySelector(".mission-sort")?.className).toContain("content-browser-sort");
+    expect(container.querySelectorAll(".content-browser-sort .lcars-switch-item")).toHaveLength(4);
+    expect(container.querySelector('.content-browser-toolbar > input[type="search"]')).toHaveAttribute(
+      "aria-label",
+      "Einträge filtern",
     );
   });
 

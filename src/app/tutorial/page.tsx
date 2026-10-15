@@ -371,8 +371,11 @@ export default function TutorialPage() {
                 bereits gehört. Sie ist wie Chronologie und Datenbank gebaut:
                 eine Überschrift je Kategorie, darunter die Einträge an der
                 Schiene. Sortiert wird in der Vorgabe nach Kategorie, wahlweise
-                alphabetisch über alles; Entwürfe stehen farblich markiert in
-                ihrer Kategorie und lassen sich über den Filter{" "}
+                alphabetisch sowie nach Ingame-Datum oder Erstellungsdatum,
+                jeweils auf- und absteigend; auf kleinen Bildschirmen stehen
+                Sortierung und Suchfeld in getrennten Zeilen. Entwürfe stehen
+                farblich markiert in ihrer Kategorie und lassen sich über den
+                Filter{" "}
                 <strong>„Nur Entwürfe“</strong> zusammen ansehen. Anlegen darfst
                 du:
               </p>
@@ -871,10 +874,20 @@ export default function TutorialPage() {
                 machen.
               </p>
               <p>
-                Deine eigenen Notizen kannst du jederzeit wieder löschen.
-                Kommentare für die Runde darf zusätzlich die Inhalts-Moderation
-                entfernen — private Notizen bleiben davon unberührt. Wird ein
-                Inhalt endgültig gelöscht, verschwinden seine Notizen mit ihm.
+                Unter <strong>„Profil → Meine Notizen“</strong> findest du deine
+                Notizen und die für die Runde freigegebenen Kommentare in einer
+                Tabelle. Über <strong>„Neue Notiz“</strong> kannst du dort oder
+                im Bereich „Neue Inhalte“ einen Merkzettel anlegen; die
+                Zuordnung zu einem Eintrag ist freiwillig. Über „Inhalt
+                auswählen“ öffnest du einen Browser mit Suche und Inhaltsarten.
+                Ein Klick auf eine
+                Zeile zeigt die ganze Notiz. Eigene
+                Notizen kannst du dort bearbeiten oder löschen; die
+                Inhalts-Moderation darf außerdem Kommentare für die Runde
+                bearbeiten und entfernen. Private Notizen bleiben davon
+                unberührt. Wird ein Inhalt endgültig gelöscht, verschwinden
+                seine zugeordneten Notizen mit ihm; Merkzettel ohne Eintrag
+                bleiben bis zum Löschen durch dich bestehen.
               </p>
             </div>
           </LcarsDataRow>
@@ -951,6 +964,12 @@ export default function TutorialPage() {
                 zeigt, wie der Text am Ende aussieht. Neben jedem Hinweis
                 „Unterstützt Markdown-Formatierung“ zeigt ein Fahren mit der
                 Maus über das Wort „Markdown“ zusätzlich dieses Cheatsheet an.
+              </p>
+              <p>
+                Über den <strong>Bild-Knopf</strong> fügst du Bilder aus deiner
+                persönlichen Bibliothek ein. Du kannst sie zuvor unter
+                „Profil → Meine Dateien“ hochladen; ältere Bilder an bestehenden
+                Inhalten lassen sich dort übernehmen.
               </p>
               <div className="overflow-x-auto">
                 <table className="tutorial-table">
@@ -1242,14 +1261,16 @@ export default function TutorialPage() {
                   Inhalte und die Kampagnendaten (AP-Konto, Talente,
                   Schwerpunkte, Hausregeln, Spielabende, Notizen, frühere
                   Fassungen, Bilder und Rollen). Nutzerkonten haben eine eigene,
-                  separate Sicherung.
+                  separate Sicherung. Neue Sicherungsdateien sind verschlüsselt;
+                  zum Wiederherstellen wird derselbe Backup-Schlüssel benötigt.
                 </li>
                 <li>
                   Unter <strong>„Datenbank → DB-Backup“</strong> findest du
                   außerdem Befehle für ein vollständiges PostgreSQL-Backup mit
                   <code>pg_dump</code>{" "}und zum atomaren Zurückspielen mit
                   <code>pg_restore</code>. Diese beiden Befehle laufen lokal auf
-                  deinem Rechner und sichern auch Userkonten.
+                  deinem Rechner und sichern auch Userkonten. Der neue Dump
+                  wird dabei direkt beim Erstellen verschlüsselt.
                 </li>
                 <li>
                   Unter <strong>„Import“</strong> eine oder mehrere

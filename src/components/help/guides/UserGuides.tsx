@@ -41,11 +41,11 @@ export function DashboardGuide() {
           <strong>Die Seite hält sich selbst aktuell.</strong> Neue Inhalte
           erscheinen direkt über eine Live-Verbindung — etwa eine Zusage zum
           Spielabend, eine neue Nachricht in einem offenen Gespräch oder die
-          News der anderen. Du musst nicht neu laden. Das geschieht
-          unauffällig: Die Seite bleibt stehen, wo du bist, aufgeklappte
-          Abschnitte bleiben offen, und ein Fenster, in das du gerade tippst,
-          bleibt unangetastet. Bei fehlender Verbindung aktualisiert sie sich
-          ersatzweise regelmäßig; liegt der Tab im Hintergrund, pausiert das.
+          News der anderen. Du musst nicht neu laden. Das geschieht unauffällig:
+          Die Seite bleibt stehen, wo du bist, aufgeklappte Abschnitte bleiben
+          offen, und ein Fenster, in das du gerade tippst, bleibt unangetastet.
+          Bei fehlender Verbindung aktualisiert sie sich ersatzweise regelmäßig;
+          liegt der Tab im Hintergrund, pausiert das.
         </p>
       </GuideSection>
 
@@ -88,7 +88,7 @@ export function MyContentGuide() {
           Formular in einem Fenster über der Liste — brichst du ab, stehst du
           wieder in deiner Übersicht und hast nichts verloren. Welche Knöpfe du
           siehst, hängt davon ab, was du darfst:{" "}
-          <strong>Datenbank-Eintrag</strong> darf jede:r anlegen,{" "}
+          <strong>Datenbank-Eintrag</strong> und <strong>Notiz</strong> darf jede:r anlegen,{" "}
           <strong>Charakter</strong> jede:r außer Gast-Accounts,{" "}
           <strong>Einsatzbericht</strong> und <strong>Gespräch</strong> setzen
           einen eigenen Charakter voraus, <strong>Event</strong> setzt das
@@ -133,7 +133,10 @@ export function MyContentGuide() {
           Darunter steht alles, was dir gehört — gebaut wie Chronologie und
           Datenbank: eine Überschrift je Kategorie, darunter die Einträge an der
           Schiene. Sortiert wird in der Vorgabe nach Kategorie, wahlweise
-          alphabetisch über alles. Über den Filter{" "}
+          alphabetisch, nach Ingame-Datum oder nach Erstellungsdatum. Ein zweiter
+          Klick auf die gewählte Sortierung kehrt die Richtung um. Auf kleinen
+          Bildschirmen stehen Sortierung und Suchfeld in getrennten Zeilen. Über
+          den Filter{" "}
           <strong>„Nur Entwürfe“</strong> siehst du alle unfertigen Einträge
           zusammen; ein Charakter-Filter grenzt Einsatzberichte und Gespräche
           auf eine deiner Figuren ein. Auch Ereignisse, die du selbst in die
@@ -297,9 +300,35 @@ export function UserRulesGuide() {
         Über <strong>„Regeln“</strong> liest du die aktuellen Steigerungsregeln
         mit Kosten, Erschaffungsbudgets und AP-Vorgaben nach und erreichst die
         Kataloge für <strong>Schwerpunkte</strong> und <strong>Talente</strong>.
-        Die Kataloge sind nach Department beziehungsweise Attribut gruppiert;
-        du kannst die Einträge alphabetisch von A bis Z oder Z bis A sortieren
-        und nach Namen, Gruppe oder Beschreibung suchen.
+        Die Kataloge sind nach Department beziehungsweise Attribut gruppiert; du
+        kannst die Einträge alphabetisch von A bis Z oder Z bis A sortieren und
+        nach Namen, Gruppe oder Beschreibung suchen.
+      </p>
+    </GuideSection>
+  );
+}
+
+export function UserFilesGuide() {
+  return (
+    <GuideSection title="Meine Dateien">
+      <p>
+        Unter <strong>„Profil → Meine Dateien“</strong> findest du deine
+        hochgeladenen Bilder und Dokumente in einer Tabelle. „Verlinkt in“ zeigt
+        bei Bildern die Einträge, in denen sie vorkommen, und bei Dokumenten den
+        zugeordneten Charakter. Über die drei Symbole kannst du eine Datei
+        ansehen, den Namen bearbeiten oder sie nach Rückfrage löschen.
+      </p>
+      <p>
+        Mit <strong>„Datei hochladen“</strong> speicherst du Bilder oder
+        Dokumente. Ein Dokument kann sofort einem deiner Charaktere zugeordnet
+        werden oder zunächst ohne Zuordnung in deiner Dateiliste bleiben. Die
+        Zuordnung kannst du später beim Bearbeiten ändern. Bilder bleiben
+        ebenfalls ohne feste Zuordnung in deiner Bibliothek. Bereits früher an
+        Inhalte angehängte Bilder stehen unter „Ältere Bilder“ und lassen sich
+        in die Bibliothek übernehmen. Bilder aus der Bibliothek wählst du über
+        den Bild-Knopf in jedem Texteditor aus, auch beim Anlegen neuer Inhalte.
+        Das Löschen aus der Bibliothek macht bereits eingefügte Bildverweise
+        unbrauchbar.
       </p>
     </GuideSection>
   );
@@ -312,6 +341,7 @@ export default function UserAreaGuides() {
     <GuideBody>
       <DashboardGuide />
       <MyContentGuide />
+      <UserFilesGuide />
       <ImportGuide />
       <UserProfileGuide />
       <UserRulesGuide />

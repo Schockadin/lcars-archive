@@ -139,19 +139,33 @@ export default function DSGVOContent({ year }: { year: number }) {
           Erfüllung des Nutzungsverhältnisses der Kampagne).
         </p>
         <p>
-          Zu einem eigenen Charakter können angemeldete Personen zusätzlich
+          Angemeldete Personen können unter „Meine Dateien“ zusätzlich
           <strong> private Dokumente</strong> im PDF-, Markdown-, DOCX- oder
-          Textformat speichern. Gespeichert werden die Datei, Dateiname,
+          Textformat speichern und sie optional einem eigenen Charakter
+          zuordnen. Gespeichert werden die Datei, Dateiname,
           Dateityp, Größe, ein für Vorschau und Export extrahierter Text sowie
           Upload-Zeitpunkt und hochladender Account. Die Person, der der
           Charakter gehört, kann die Dokumente ansehen, herunterladen,
-          umbenennen und löschen. Die Spielleitung kann Dokumente
-          veröffentlichter Charaktere ansehen und herunterladen; bei Entwürfen
-          gilt das nur mit dem zusätzlichen Recht, alle Inhalte zu sehen. Der
+          umbenennen und löschen. Ohne Charakterzuordnung verwaltet sie der
+          hochladende Account. Die Spielleitung kann Dokumente veröffentlichter
+          Charaktere ansehen und herunterladen; bei Entwürfen gilt das nur mit
+          dem zusätzlichen Recht, alle Inhalte zu sehen. Der
           Charakterarchiv-PDF-Export steht nur der Person offen, der der
           Charakter gehört. Mit dem endgültigen Löschen des Charakters werden
-          auch die Dokument-Metadaten entfernt (Rechtsgrundlage: Art. 6 Abs. 1
-          lit. b DSGVO — Erfüllung des Nutzungsverhältnisses der Kampagne).
+          auch die zugeordneten Dokumente und ihre Metadaten entfernt. Ohne
+          Charakterzuordnung bleiben Dokumente bis zum Löschen durch den Account
+          in dessen Dateiliste. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO —
+          Erfüllung des Nutzungsverhältnisses der Kampagne.
+        </p>
+        <p>
+          Hochgeladene Bilder können zusätzlich in einer persönlichen
+          Bildbibliothek gespeichert und in mehreren Inhalten verwendet werden.
+          Dort liegen Dateiname, Typ, Größe, Upload-Zeitpunkt und der zugehörige
+          Account. Die Bilddateien werden über eine öffentliche Asset-Adresse
+          ausgeliefert; wer diese Adresse kennt, kann das Bild abrufen. Beim
+          Löschen eines Inhalts bleiben Kopien in der persönlichen Bibliothek
+          bestehen, bis die Person sie dort selbst löscht. Die gespeicherten
+          Kopien werden auch beim Löschen des Accounts entfernt.
         </p>
         <p>
           Von Hand eingetragene <strong>Chronologie-Ereignisse</strong>{" "}
@@ -164,8 +178,9 @@ export default function DSGVOContent({ year }: { year: number }) {
         </p>
         <p>
           Angemeldete Personen können an Charakteren, Missionen, Logbüchern und
-          Datenbank-Einträgen <strong>Notizen</strong> hinterlegen. Gespeichert
-          werden der Text, der schreibende Account, der betroffene Eintrag, der
+          Datenbank-Einträgen <strong>Notizen</strong> hinterlegen oder eine
+          Notiz ohne zugeordneten Eintrag anlegen. Gespeichert werden der Text,
+          der schreibende Account, ein gegebenenfalls betroffener Eintrag, der
           Zeitpunkt und die gewählte Sichtbarkeit. Eine Notiz mit der
           Sichtbarkeit „Nur ich“ ist ausschließlich für den schreibenden Account
           abrufbar — auch Spielleitung und Administration sehen sie nicht. Eine
@@ -173,8 +188,10 @@ export default function DSGVOContent({ year }: { year: number }) {
           kann zusätzlich von der Inhalts-Moderation entfernt werden
           (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO — Erfüllung des
           Nutzungsverhältnisses der Kampagne). Eigene Notizen lassen sich
-          jederzeit selbst löschen; mit dem Konto und mit dem endgültigen
-          Löschen des zugehörigen Inhalts werden sie mit entfernt.
+          jederzeit selbst löschen; mit dem Konto werden alle eigenen Notizen
+          entfernt. Beim endgültigen Löschen eines Inhalts werden die ihm
+          zugeordneten Notizen entfernt. Notizen ohne Eintrag bleiben bis zum
+          Löschen durch den Account bestehen.
         </p>
         <p>
           Beim Bearbeiten von Charakteren, Missionen, Logbüchern und
@@ -317,18 +334,20 @@ export default function DSGVOContent({ year }: { year: number }) {
         </p>
         <p>
           Der Inhalt der Datenbank wird einmal täglich automatisch als
-          Sicherungsdatei über eine verschlüsselte Verbindung in einen nicht
+          verschlüsselte Sicherungsdatei über eine verschlüsselte Verbindung in einen nicht
           öffentlichen Speicher („R2“) bei <strong>Cloudflare</strong>{" "}
           (Cloudflare, Inc., San Francisco, USA) hochgeladen. Gesichert wird
           derselbe Datenbestand, den diese Erklärung beschreibt — also auch
-          eingestellte Inhalte, Notizen, Gesprächsnachrichten und, in einer
-          eigenen Datei, die Nutzerkonten. Zweck ist allein die
-          Wiederherstellbarkeit nach einem Datenverlust (Rechtsgrundlage: Art. 6
-          Abs. 1 lit. f DSGVO — berechtigtes Interesse an einem ausfallsicheren
-          Betrieb). Sicherungen, die älter als 30 Tage sind, werden automatisch
-          gelöscht; ein gelöschtes Konto oder ein gelöschter Inhalt kann deshalb
-          noch bis zu 30 Tage lang in einer Sicherung enthalten sein. Cloudflare
-          verarbeitet die Daten als Auftragsverarbeiter gemäß Art. 28 DSGVO.
+          eingestellte Inhalte, Notizen, Gesprächsnachrichten, persönliche
+          Dateimetadaten und, in einer eigenen Datei, die Nutzerkonten. Auch
+          manuelle Datenbank- und Nutzer-Backups werden verschlüsselt. Zweck ist
+          allein die Wiederherstellbarkeit nach einem Datenverlust
+          (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
+          an einem ausfallsicheren Betrieb). Sicherungen, die älter als 30 Tage
+          sind, werden automatisch gelöscht; ein gelöschtes Konto oder ein
+          gelöschter Inhalt kann deshalb noch bis zu 30 Tage lang in einer
+          Sicherung enthalten sein. Cloudflare verarbeitet die Daten als
+          Auftragsverarbeiter gemäß Art. 28 DSGVO.
           Mehr Informationen:{" "}
           <a
             href="https://www.cloudflare.com/privacypolicy/"
@@ -342,7 +361,7 @@ export default function DSGVOContent({ year }: { year: number }) {
           Zusätzlich kann die Administration ein vollständiges PostgreSQL-
           Backup mit den lokalen Client-Werkzeugen erstellen. Dabei werden
           Datenbankinhalte und Nutzerkonten auf den Rechner der ausführenden
-          Person übertragen und dort als Datei gespeichert; die Anwendung lädt
+          Person übertragen und dort verschlüsselt gespeichert; die Anwendung lädt
           diese Datei nicht zu einem weiteren Dienst hoch. Das Backup enthält
           besonders schützenswerte Daten, darunter Kontodaten und
           Kampagneninhalte, und muss entsprechend sicher aufbewahrt und bei

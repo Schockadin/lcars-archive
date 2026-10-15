@@ -9,6 +9,13 @@ import {
   type NoteVisibility,
 } from "@/lib/contentNoteTypes";
 import { viewerHasPermission } from "@/lib/visibility";
+import { canView, canViewMissionDraft } from "@/lib/visibility";
+import {
+  archiveHref,
+  characterHref,
+  missionHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 // Notizen und Kommentare an Inhalten (siehe content_notes in schema.sql).
 //
@@ -45,6 +52,171 @@ interface NoteRow {
   author_name: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserNote extends ContentNote {
+  targetLabel: string;
+  targetHref: string | null;
+}
+
+export interface NoteTarget {
+  type: Exclude<NoteContentType, "standalone">;
+  slug: string;
+  label: string;
+}
+
+interface UserNoteRow extends NoteRow {
+  content_type: NoteContentType;
+  target_label: string;
+  target_slug: string;
+  parent_slug: string | null;
+  target_owner_id: number | null;
+  target_is_draft: boolean;
+  parent_owner_id: number | null;
+  parent_is_draft: boolean;
+}
+
+export async function listNotesForUser(viewer: Viewer): Promise<UserNote[]> {
+  const rows = await sql<UserNoteRow[]>`
+    SELECT n.*, u.name AS author_name, c.name AS target_label,
+           c.slug AS target_slug, NULL::text AS parent_slug,
+           c.player_id AS target_owner_id, c.is_draft AS target_is_draft,
+           NULL::int AS parent_owner_id, false AS parent_is_draft
+    FROM content_notes n
+    JOIN characters c ON n.content_type = 'character' AND c.slug = n.content_slug
+    LEFT JOIN users u ON u.id = n.author_id
+    WHERE c.deleted_at IS NULL AND (n.author_id = ${viewer.userId} OR n.visibility = 'group')
+    UNION ALL
+    SELECT n.*, u.name, m.title, m.slug, NULL::text,
+           m.owner_user_id, m.is_draft, NULL::int, false
+    FROM content_notes n
+    JOIN missions m ON n.content_type = 'mission' AND m.slug = n.content_slug
+    LEFT JOIN users u ON u.id = n.author_id
+    WHERE m.deleted_at IS NULL AND (n.author_id = ${viewer.userId} OR n.visibility = 'group')
+    UNION ALL
+    SELECT n.*, u.name, ml.title, ml.slug, m.slug,
+           ml.owner_user_id, ml.is_draft, m.owner_user_id, m.is_draft
+    FROM content_notes n
+    JOIN mission_logs ml ON n.content_type = 'mission_log' AND ml.slug = n.content_slug
+    JOIN missions m ON m.id = ml.mission_id
+    LEFT JOIN users u ON u.id = n.author_id
+    WHERE ml.deleted_at IS NULL AND m.deleted_at IS NULL
+      AND (n.author_id = ${viewer.userId} OR n.visibility = 'group')
+    UNION ALL
+    SELECT n.*, u.name, a.title, a.slug, NULL::text,
+           a.owner_user_id, a.is_draft, NULL::int, false
+    FROM content_notes n
+    JOIN archive_entries a ON n.content_type = 'archive' AND a.slug = n.content_slug
+    LEFT JOIN users u ON u.id = n.author_id
+    WHERE a.deleted_at IS NULL AND (n.author_id = ${viewer.userId} OR n.visibility = 'group')
+    UNION ALL
+    SELECT n.*, u.name, 'Ohne Eintrag', ''::text, NULL::text,
+           n.author_id, false, NULL::int, false
+    FROM content_notes n
+    LEFT JOIN users u ON u.id = n.author_id
+    WHERE n.content_type = 'standalone'
+      AND (n.author_id = ${viewer.userId} OR n.visibility = 'group')
+    ORDER BY updated_at DESC, id DESC
+  `;
+  const visible = rows.filter((row) => {
+    const targetVisible =
+      row.content_type === "mission"
+        ? canViewMissionDraft(row.target_is_draft, viewer)
+        : canView(row.target_is_draft, row.target_owner_id, viewer);
+    return (
+      targetVisible &&
+      (!row.parent_is_draft || canViewMissionDraft(true, viewer))
+    );
+  });
+  const html = await Promise.all(
+    visible.map((row) => markdownToHtml(row.body)),
+  );
+  return visible.map((row, index) => ({
+    id: row.id,
+    body: row.body,
+    bodyHtml: html[index],
+    visibility: row.visibility,
+    authorId: row.author_id,
+    authorName: row.author_name,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    canEdit:
+      row.author_id === viewer.userId ||
+      (row.visibility === "group" && canModerate(viewer)),
+    targetLabel: row.target_label,
+    targetHref:
+      row.content_type === "character"
+        ? characterHref(row.target_slug)
+        : row.content_type === "mission"
+          ? missionHref(row.target_slug)
+          : row.content_type === "mission_log"
+            ? missionLogHref(row.parent_slug ?? "", row.target_slug)
+            : row.content_type === "archive"
+              ? archiveHref(row.target_slug)
+              : null,
+  }));
+}
+
+// Auswahl im Anlege-Dialog: nur Ziele, die der Betrachter selbst öffnen darf.
+export async function listNoteTargetsForUser(
+  viewer: Viewer,
+): Promise<NoteTarget[]> {
+  const rows = await sql<
+    {
+      type: NoteTarget["type"];
+      slug: string;
+      label: string;
+      owner_id: number | null;
+      is_draft: boolean;
+      parent_is_draft: boolean;
+    }[]
+  >`
+    SELECT 'character' AS type, slug, name AS label, player_id AS owner_id,
+           is_draft, false AS parent_is_draft
+    FROM characters WHERE deleted_at IS NULL
+    UNION ALL
+    SELECT 'mission', slug, title, owner_user_id, is_draft, false
+    FROM missions WHERE deleted_at IS NULL
+    UNION ALL
+    SELECT 'mission_log', ml.slug, ml.title, ml.owner_user_id,
+           ml.is_draft, m.is_draft
+    FROM mission_logs ml JOIN missions m ON m.id = ml.mission_id
+    WHERE ml.deleted_at IS NULL AND m.deleted_at IS NULL
+    UNION ALL
+    SELECT 'archive', slug, title, owner_user_id, is_draft, false
+    FROM archive_entries WHERE deleted_at IS NULL
+  `;
+  return rows
+    .filter(
+      (row) =>
+        (row.type === "mission"
+          ? canViewMissionDraft(row.is_draft, viewer)
+          : canView(row.is_draft, row.owner_id, viewer)) &&
+        (!row.parent_is_draft || canViewMissionDraft(true, viewer)),
+    )
+    .map(({ type, slug, label }) => ({ type, slug, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, "de"));
+}
+
+export async function addUserNote(
+  viewer: Viewer,
+  body: string,
+  visibility: NoteVisibility,
+  target: Pick<NoteTarget, "type" | "slug"> | null,
+): Promise<void> {
+  const clean = normalizeNoteBody(body);
+  if (!clean) throw new Error("Die Notiz ist leer.");
+  if (
+    target &&
+    !(await listNoteTargetsForUser(viewer)).some(
+      (item) => item.type === target.type && item.slug === target.slug,
+    )
+  )
+    throw new Error("Der Eintrag ist nicht verfügbar.");
+  await sql`
+    INSERT INTO content_notes (content_type, content_slug, author_id, body, visibility)
+    VALUES (${target?.type ?? "standalone"}, ${target?.slug ?? ""}, ${viewer.userId}, ${clean}, ${visibility})
+  `;
 }
 
 // Darf der Betrachter fremde Notizen moderieren (bearbeiten/löschen)?
@@ -91,7 +263,8 @@ export async function listNotes(
     updatedAt: r.updated_at,
     // Private Notizen gehören ausschließlich ihrem Autor — auch die
     // Moderation fasst sie nicht an (sie sieht sie ohnehin nicht).
-    canEdit: r.author_id === viewer.userId || (r.visibility === "group" && moderator),
+    canEdit:
+      r.author_id === viewer.userId || (r.visibility === "group" && moderator),
   }));
 }
 
@@ -113,15 +286,35 @@ export async function addNote(
 // Löschen: eigene Notiz immer, fremde nur als Moderation und nur, wenn sie
 // eine Gruppen-Notiz ist. Die WHERE-Klausel setzt das mit durch, damit die
 // Regel nicht allein an der UI hängt.
-export async function deleteNote(id: number, viewer: Viewer): Promise<void> {
+export async function updateNote(
+  id: number,
+  viewer: Viewer,
+  body: string,
+): Promise<boolean> {
+  const clean = normalizeNoteBody(body);
+  if (!clean) return false;
+  const rows = await sql<{ id: number }[]>`
+    UPDATE content_notes SET body = ${clean}, updated_at = NOW()
+    WHERE id = ${id}
+      AND (author_id = ${viewer.userId}
+        OR (visibility = 'group' AND ${canModerate(viewer)}))
+    RETURNING id
+  `;
+  return rows.length > 0;
+}
+
+export async function deleteNote(id: number, viewer: Viewer): Promise<boolean> {
   if (canModerate(viewer)) {
-    await sql`
+    const rows = await sql<{ id: number }[]>`
       DELETE FROM content_notes
       WHERE id = ${id} AND (author_id = ${viewer.userId} OR visibility = 'group')
+      RETURNING id
     `;
-    return;
+    return rows.length > 0;
   }
-  await sql`
+  const rows = await sql<{ id: number }[]>`
     DELETE FROM content_notes WHERE id = ${id} AND author_id = ${viewer.userId}
+    RETURNING id
   `;
+  return rows.length > 0;
 }

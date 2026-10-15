@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
-import { access } from "node:fs/promises";
+import { access, rm } from "node:fs/promises";
 import { resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { randomUUID } from "node:crypto";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import {
@@ -9,6 +11,7 @@ import {
   getPgDatabaseUrl,
 } from "@/lib/pgDump";
 import { resolvePgTool } from "./pgTools";
+import { decryptPgDumpFile } from "@/lib/pgDumpEncryption";
 
 function run(executable: string, args: string[]): Promise<number> {
   return new Promise((resolveRun, reject) => {
@@ -50,18 +53,26 @@ async function main() {
     return;
   }
 
-  const executable = resolvePgTool("pg_restore");
-  console.log(`Dump wird nach ${target} zurückgespielt: ${inputPath}`);
-  const exitCode = await run(
-    executable,
-    buildPgRestoreArgs(databaseUrl, inputPath),
-  );
-  if (exitCode !== 0) {
-    throw new Error(
-      `pg_restore wurde mit Exitcode ${exitCode} beendet. Die Transaktion wurde zurückgerollt.`,
+  const temporaryPath = inputPath.endsWith(".enc")
+    ? resolve(tmpdir(), `lcars-restore-${randomUUID()}.dump`)
+    : null;
+  try {
+    if (temporaryPath) await decryptPgDumpFile(inputPath, temporaryPath);
+    const executable = resolvePgTool("pg_restore");
+    console.log(`Dump wird nach ${target} zurückgespielt: ${inputPath}`);
+    const exitCode = await run(
+      executable,
+      buildPgRestoreArgs(databaseUrl, temporaryPath ?? inputPath),
     );
+    if (exitCode !== 0) {
+      throw new Error(
+        `pg_restore wurde mit Exitcode ${exitCode} beendet. Die Transaktion wurde zurückgerollt.`,
+      );
+    }
+    console.log("Wiederherstellung abgeschlossen.");
+  } finally {
+    if (temporaryPath) await rm(temporaryPath, { force: true });
   }
-  console.log("Wiederherstellung abgeschlossen.");
 }
 
 main().catch((error: unknown) => {

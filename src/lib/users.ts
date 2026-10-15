@@ -2,6 +2,8 @@ import "server-only";
 import { cache } from "react";
 import postgres from "postgres";
 import sql from "@/lib/db";
+import { deleteAllUserImageObjects } from "@/lib/userImages";
+import { deleteUnassignedUserDocumentObjects } from "@/lib/userFiles";
 import { slugifyBase } from "@/lib/slug";
 import { buildRoleMap } from "@/lib/roles";
 import { userPermissions } from "@/lib/permissions";
@@ -221,6 +223,8 @@ export async function setUserActive(
 }
 
 export async function deleteUser(id: number): Promise<void> {
+  await deleteAllUserImageObjects(id);
+  await deleteUnassignedUserDocumentObjects(id);
   await sql`DELETE FROM users WHERE id = ${id}`;
 }
 

@@ -1,63 +1,87 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { getContentImagesAction } from "@/app/actions/contentImages";
+import {
+  getOwnImagesAction,
+  importOwnContentImageAction,
+} from "@/app/user/files/actions";
 import { insertAtCursor } from "@/lib/textareaEdit";
 import { contentImageSrc } from "@/lib/contentRoutes";
 import ContentToolPreviewOverlay from "@/components/ContentToolPreviewOverlay";
 import type { ContentImage, ContentImageType } from "@/lib/contentImages";
+import type { UserImage, LegacyUserImage } from "@/lib/userImages";
 import { ImageIcon } from "@/lib/icons";
 
-// Toolbar-Werkzeug in MarkdownEditor.tsx (analog TimelineMarkerButton.tsx):
-// fügt eines der bereits über ContentImageGallery.tsx (ActionsMenu.tsx)
-// hochgeladenen Bilder als Markdown-Bild an der Cursor-Position ein. Nur für
-// bereits existierende Inhalte sinnvoll (contentId bekannt) — Charaktere
-// bewusst ausgenommen (siehe MarkdownEditor.tsx-Prop insertImage): dort gibt
-// es stattdessen Portrait-Auswahl + Karussell (CharacterPortrait.tsx).
 export default function InsertImageButton({
   textareaId,
   contentType,
   contentId,
 }: {
   textareaId: string;
-  contentType: ContentImageType;
-  contentId: number;
+  contentType?: ContentImageType;
+  contentId?: number;
 }) {
   const [open, setOpen] = useState(false);
-  const [images, setImages] = useState<ContentImage[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState<ContentImage[]>([]);
+  const [library, setLibrary] = useState<UserImage[]>([]);
+  const [legacy, setLegacy] = useState<LegacyUserImage[]>([]);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    getContentImagesAction(contentType, contentId)
-      .then((result) => {
-        if (!cancelled) setImages(result);
-      })
-      // Ein Fehlschlag darf nicht als ewiges „Lädt…" enden (siehe
-      // ContentImageGallery) — dann eben die leere Liste samt Hinweis.
-      .catch(() => {
-        if (!cancelled) setImages([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, contentType, contentId]);
+  async function openPicker() {
+    setOpen(true);
+    setLoading(true);
+    setError("");
+    try {
+      const [own, content] = await Promise.all([
+        getOwnImagesAction(),
+        contentType && contentId
+          ? getContentImagesAction(contentType, contentId)
+          : Promise.resolve([]),
+      ]);
+      setLibrary(own.images);
+      setLegacy(own.legacy);
+      setImages(content);
+    } catch {
+      setError("Bilder konnten nicht geladen werden.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  function handleInsert(imageId: number) {
+  function insert(src: string) {
     const textarea = document.getElementById(textareaId);
     if (textarea instanceof HTMLTextAreaElement) {
-      insertAtCursor(textarea, `![Bild](${contentImageSrc(imageId)})`, {
-        ownLine: true,
-      });
+      insertAtCursor(textarea, `![Bild](${src})`, { ownLine: true });
     }
     setOpen(false);
+  }
+
+  async function importAndInsert(image: LegacyUserImage) {
+    setLoading(true);
+    try {
+      const result = await importOwnContentImageAction(
+        image.id,
+        image.sourceType,
+      );
+      if (result.error || !result.image) {
+        setError(result.error ?? "Bild konnte nicht übernommen werden.");
+      } else {
+        insert(result.image.url);
+      }
+    } catch {
+      setError("Bild konnte nicht übernommen werden.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => void openPicker()}
         className="lcars-icon-btn"
         aria-label="Bild einfügen"
         title="Bild einfügen"
@@ -70,38 +94,93 @@ export default function InsertImageButton({
           onClose={() => setOpen(false)}
         >
           <p className="lcars-eyebrow">Bild einfügen</p>
-
-          {images === null && <p className="text-[13px]">Lädt…</p>}
-
-          {images !== null && images.length === 0 && (
-            <p className="text-[13px]">
-              Noch keine Bilder hochgeladen. Lade zuerst welche über den
-              Bilder-Button hoch.
+          {loading && <p className="text-[13px]">Lädt…</p>}
+          {error && (
+            <p role="alert" className="text-lcars-quinary-ink">
+              {error}
             </p>
           )}
-
-          {images !== null && images.length > 0 && (
-            <div className="flex flex-wrap gap-[10px]">
-              {images.map((image) => (
-                <button
-                  key={image.id}
-                  type="button"
-                  onClick={() => handleInsert(image.id)}
-                  className="cursor-pointer"
-                  aria-label="Dieses Bild einfügen"
-                  title="Dieses Bild einfügen"
-                >
-                  <Image
-                    src={contentImageSrc(image.id)}
-                    alt=""
-                    width={100}
-                    height={100}
-                    unoptimized
-                    className="size-[100px] object-cover rounded-[4px]"
-                  />
-                </button>
-              ))}
-            </div>
+          {!loading &&
+            !error &&
+            images.length + library.length + legacy.length === 0 && (
+              <p className="text-[13px]">
+                Noch keine Bilder vorhanden. Du kannst welche unter „Meine
+                Dateien“ hochladen.
+              </p>
+            )}
+          {images.length > 0 && (
+            <section>
+              <h3>Bilder dieses Inhalts</h3>
+              <div className="flex flex-wrap gap-[10px]">
+                {images.map((image) => (
+                  <button
+                    key={image.id}
+                    type="button"
+                    onClick={() => insert(contentImageSrc(image.id))}
+                    aria-label={`Bild ${image.id} einfügen`}
+                  >
+                    <Image
+                      src={contentImageSrc(image.id)}
+                      alt=""
+                      width={100}
+                      height={100}
+                      unoptimized
+                      className="size-[100px] object-cover rounded-[4px]"
+                    />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+          {library.length > 0 && (
+            <section>
+              <h3>Meine Bilder</h3>
+              <div className="flex flex-wrap gap-[10px]">
+                {library.map((image) => (
+                  <button
+                    key={image.id}
+                    type="button"
+                    onClick={() => insert(image.url)}
+                    aria-label={`${image.fileName} einfügen`}
+                    title={image.fileName}
+                  >
+                    <Image
+                      src={image.url}
+                      alt=""
+                      width={100}
+                      height={100}
+                      unoptimized
+                      className="size-[100px] object-cover rounded-[4px]"
+                    />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+          {legacy.length > 0 && (
+            <section>
+              <h3>Ältere Bilder übernehmen</h3>
+              <div className="flex flex-wrap gap-[10px]">
+                {legacy.map((image) => (
+                  <button
+                    key={`${image.sourceType}-${image.id}`}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => void importAndInsert(image)}
+                    aria-label={`Älteres Bild ${image.id} übernehmen und einfügen`}
+                  >
+                    <Image
+                      src={image.previewUrl}
+                      alt=""
+                      width={100}
+                      height={100}
+                      unoptimized
+                      className="size-[100px] object-cover rounded-[4px]"
+                    />
+                  </button>
+                ))}
+              </div>
+            </section>
           )}
         </ContentToolPreviewOverlay>
       )}

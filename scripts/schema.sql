@@ -238,10 +238,12 @@ CREATE INDEX IF NOT EXISTS idx_characters_name_trgm  ON characters USING GIN (na
 -- Backup-Bucket; in der Datenbank stehen nur Metadaten und der beim Upload sicher
 -- extrahierte Text für Vorschau und PDF-Export. PDF-Dateien benötigen keinen
 -- extrahierten Text, da der Browser sie direkt rendert und der Export ihre
--- Seiten unverändert übernimmt.
+-- Seiten unverändert übernimmt. Persönliche Dokumente dürfen ohne Charakter
+-- in „Meine Dateien“ liegen und behalten dafür ihre eigene Owner-Zuordnung.
 CREATE TABLE IF NOT EXISTS character_documents (
   id             SERIAL PRIMARY KEY,
-  character_id   INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  character_id   INT REFERENCES characters(id) ON DELETE CASCADE,
+  owner_user_id  INT REFERENCES users(id) ON DELETE SET NULL,
   r2_key         TEXT UNIQUE NOT NULL,
   file_name      TEXT NOT NULL,
   file_kind      TEXT NOT NULL CHECK (file_kind IN ('pdf', 'md', 'docx', 'txt')),
@@ -253,6 +255,8 @@ CREATE TABLE IF NOT EXISTS character_documents (
 );
 CREATE INDEX IF NOT EXISTS idx_character_documents_character
   ON character_documents(character_id);
+CREATE INDEX IF NOT EXISTS idx_character_documents_owner
+  ON character_documents(owner_user_id, created_at DESC);
 
 -- ---------------------------------------------------------------------------
 -- missions
@@ -748,6 +752,21 @@ CREATE TABLE IF NOT EXISTS content_images (
 );
 CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_type, content_id);
 
+-- Persönliche Bildbibliothek. Eigene Kopien bleiben erhalten, wenn ein Bild
+-- aus einer Inhaltsgalerie entfernt wird; damit sind sie überall erneut nutzbar.
+CREATE TABLE IF NOT EXISTS user_images (
+  id SERIAL PRIMARY KEY,
+  owner_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  r2_key TEXT UNIQUE NOT NULL,
+  file_name TEXT NOT NULL,
+  content_mime TEXT NOT NULL,
+  size_bytes INT NOT NULL,
+  source_image_key TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_user_images_owner ON user_images(owner_id, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_images_owner_source ON user_images(owner_id, source_image_key) WHERE source_image_key IS NOT NULL;
+
 
 -- ---------------------------------------------------------------------------
 -- character_ap_entries
@@ -1166,7 +1185,7 @@ CREATE INDEX IF NOT EXISTS idx_archive_title_fts ON archive_entries USING GIN (t
 CREATE TABLE IF NOT EXISTS content_notes (
   id           SERIAL PRIMARY KEY,
   content_type TEXT NOT NULL
-                 CHECK (content_type IN ('character', 'mission', 'mission_log', 'archive')),
+                 CHECK (content_type IN ('character', 'mission', 'mission_log', 'archive', 'standalone')),
   content_slug TEXT NOT NULL,
   author_id    INT  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   body         TEXT NOT NULL,

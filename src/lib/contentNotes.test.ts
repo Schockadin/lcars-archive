@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db", () => ({ default: () => Promise.resolve([]) }));
+vi.mock("@/lib/db", () => ({
+  default: Object.assign(() => Promise.resolve([]), {
+    options: { parsers: {}, serializers: {} },
+  }),
+}));
 
 const {
   isNoteContentType,
@@ -13,14 +17,16 @@ const {
 } = await import("./contentNotes");
 
 describe("Typen und Sichtbarkeiten", () => {
-  it("kennt genau die vier Inhaltsarten", () => {
+  it("kennt die vier Inhaltsarten und freie Notizen", () => {
     expect([...NOTE_CONTENT_TYPES]).toEqual([
       "character",
       "mission",
       "mission_log",
       "archive",
+      "standalone",
     ]);
     expect(isNoteContentType("character")).toBe(true);
+    expect(isNoteContentType("standalone")).toBe(true);
     expect(isNoteContentType("dialogue")).toBe(false);
     expect(isNoteContentType("")).toBe(false);
   });

@@ -1,10 +1,6 @@
 "use client";
-import { Fragment, useMemo, useOptimistic, useState } from "react";
-import {
-  LcarsListFilterInput,
-  LcarsSortSwitch,
-  type SortDir,
-} from "@/components/lcars";
+import { Fragment, memo, useMemo, useOptimistic } from "react";
+import { LcarsListFilterInput, LcarsSortSwitch } from "@/components/lcars";
 import ChronoRow from "@/components/timeline/ChronoRow";
 import ChronoCard from "@/components/timeline/ChronoCard";
 import type { UserContentLog } from "@/lib/characters";
@@ -37,6 +33,15 @@ import { categoryVisual } from "@/lib/timelineTypes";
 import type { ManualEventForEdit } from "@/lib/timelineManualEventTypes";
 import ManualEventForm from "@/components/timeline/ManualEventForm";
 import DeleteManualEventButton from "./DeleteManualEventButton";
+import {
+  ContentBrowserStoreProvider,
+  useContentBrowserStore,
+} from "./ContentBrowserStoreProvider";
+import type {
+  CategoryFilter,
+  ContentKind,
+  SortKey,
+} from "./contentBrowserStore";
 
 // Charaktere sind bewusst KEINE Kategorie mehr: sie haben mit
 // /user/characters eine eigene Übersicht (inkl. Werte-Formular). Die
@@ -54,13 +59,6 @@ export interface ContentFilterCharacter {
 // Die Inhaltsarten dieser Seite. „dialogue" ist kein eigener Owner-Typ (ein
 // Gespräch ist ein archive_entry der Kategorie „dialogue"), wird hier aber
 // wie überall getrennt ausgewiesen.
-type ContentKind =
-  | "mission_log"
-  | "dialogue"
-  | "timeline_event"
-  | "archive_entry"
-  | "mission";
-
 // Reihenfolge der Abschnitte bei der Sortierung nach Kategorie — von dem,
 // was beim Spielen entsteht, zu dem, was die Runde verwaltet.
 const KIND_ORDER: ContentKind[] = [
@@ -79,8 +77,6 @@ const KIND_ORDER: ContentKind[] = [
 // Zeile nebeneinander, dort trennt wieder die Karte selbst.
 const ACTION_ROW_SPACING = "mb-[12px] sm:mb-0";
 
-type CategoryFilter = "all" | ContentKind | "drafts";
-
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   all: "Alle Kategorien",
   drafts: "Nur Entwürfe",
@@ -91,8 +87,6 @@ const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   mission: CONTENT_TYPE_LABEL_PLURAL.mission,
 };
 
-type SortKey = "category" | "title";
-
 // Eine Zeile der Liste, aus allen vier Inhaltsarten auf dieselbe Form
 // gebracht: So sortiert und gruppiert der Rest dieser Datei ÜBER die Arten
 // hinweg, statt für jede eine eigene Liste zu führen.
@@ -102,6 +96,8 @@ interface ContentItem {
   title: string;
   href: string;
   isDraft: boolean;
+  ingameDate: string | null;
+  createdAt: string | null;
   // Farbe des Punktes an der Schiene: die Farbe der Inhaltsart, bei einem
   // Entwurf die Zustandsfarbe (CONTENT_DRAFT_COLOR) — an ihr erkennt man auf
   // der ganzen Seite, was noch nicht veröffentlicht ist.
@@ -124,18 +120,15 @@ interface ContentItem {
 // alternativ alphabetisch über alles. Entwürfe stehen jetzt in ihrer
 // Kategorie — erkennbar an der Farbe, dem Etikett und dem Umschalter in der
 // Zeile; der Kategorie-Filter hat dafür den Eintrag „Nur Entwürfe".
-export default function UserContentBrowser({
-  characters,
-  logs,
-  dialogues,
-  archiveEntries,
-  missions,
-  manualEvents = [],
-  eventCharacters = [],
-  canManageMissions,
-  canLinkAnyContent = false,
-  ownUserId,
-}: {
+export default function UserContentBrowser(props: UserContentBrowserProps) {
+  return (
+    <ContentBrowserStoreProvider key={props.ownUserId}>
+      <UserContentBrowserContent {...props} />
+    </ContentBrowserStoreProvider>
+  );
+}
+
+type UserContentBrowserProps = {
   characters: ContentFilterCharacter[];
   logs: UserContentLog[];
   dialogues: DialogueSummary[];
@@ -153,19 +146,29 @@ export default function UserContentBrowser({
   // ablehnt (mayUseContentTools in src/app/actions/contentTools.ts).
   canLinkAnyContent?: boolean;
   ownUserId: number;
-}) {
-  const [characterFilter, setCharacterFilter] = useState<string | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
-  const [sortKey, setSortKey] = useState<SortKey>("category");
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const [query, setQuery] = useState("");
+};
 
-  // Missionen sind eine eigene Kategorie, aber nur für Admin/GM sichtbar
-  // (siehe canManageMissions) — kein Owner-/Charakter-Konzept wie bei den
-  // anderen Kategorien, deshalb auch vom Charakter-Filter unberührt.
-  const visibleCategoryKeys = (
-    Object.keys(CATEGORY_LABELS) as CategoryFilter[]
-  ).filter((key) => key !== "mission" || canManageMissions);
+function UserContentBrowserContent({
+  characters,
+  logs,
+  dialogues,
+  archiveEntries,
+  missions,
+  manualEvents = [],
+  eventCharacters = [],
+  canManageMissions,
+  canLinkAnyContent = false,
+  ownUserId,
+}: UserContentBrowserProps) {
+  const characterFilter = useContentBrowserStore(
+    (state) => state.characterFilter,
+  );
+  const categoryFilter = useContentBrowserStore(
+    (state) => state.categoryFilter,
+  );
+  const sortKey = useContentBrowserStore((state) => state.sortKey);
+  const sortDir = useContentBrowserStore((state) => state.sortDir);
+  const query = useContentBrowserStore((state) => state.query);
 
   // Für die optimistische Löschung (DeleteOwnContentButton): entfernt den
   // Eintrag sofort aus der jeweiligen Liste, fällt aber automatisch auf die
@@ -207,6 +210,8 @@ export default function UserContentBrowser({
       title: log.title,
       href: missionLogHref(log.mission_slug, log.slug),
       isDraft: log.is_draft,
+      ingameDate: log.log_date,
+      createdAt: log.createdAt ?? null,
       color: dotColor("mission_log", log.is_draft),
       characterSlug: log.character_slug,
       meta: (
@@ -262,6 +267,8 @@ export default function UserContentBrowser({
       title: d.title,
       href: dialogueContentHref(d.slug, d.open),
       isDraft: d.isDraft,
+      ingameDate: d.logDate,
+      createdAt: d.createdAt ?? null,
       color: dotColor("dialogue", d.isDraft),
       characterSlug: d.characterSlug,
       meta: (
@@ -314,6 +321,8 @@ export default function UserContentBrowser({
         title: event.title,
         href: "/chronologie?scope=events",
         isDraft: false,
+        ingameDate: event.date,
+        createdAt: event.createdAt ?? null,
         color: visual.color,
         meta: (
           <>
@@ -358,6 +367,8 @@ export default function UserContentBrowser({
         title: entry.title,
         href: archiveHref(entry.slug),
         isDraft: entry.isDraft,
+        ingameDate: entry.logDate ?? null,
+        createdAt: entry.createdAt ?? null,
         color: dotColor("archive_entry", entry.isDraft),
         meta: (
           <span>
@@ -403,6 +414,8 @@ export default function UserContentBrowser({
           title: m.title,
           href: missionHref(m.slug),
           isDraft: m.isDraft,
+          ingameDate: m.started_at,
+          createdAt: m.created_at ?? null,
           color: dotColor("mission", m.isDraft),
           meta: (
             <span>
@@ -477,6 +490,14 @@ export default function UserContentBrowser({
       .filter((item) => !q || item.title.toLowerCase().includes(q))
       .sort((a, b) => {
         const byTitle = a.title.localeCompare(b.title, "de");
+        if (sortKey === "ingameDate" || sortKey === "createdAt") {
+          const aDate = a[sortKey];
+          const bDate = b[sortKey];
+          if (!aDate) return bDate ? 1 : byTitle;
+          if (!bDate) return -1;
+          const byDate = aDate.localeCompare(bDate);
+          return (sortDir === "asc" ? byDate : -byDate) || byTitle;
+        }
         const comparison =
           sortKey === "title"
             ? byTitle
@@ -492,53 +513,10 @@ export default function UserContentBrowser({
 
   return (
     <div>
-      <div className="lcars-toolbar">
-        <LcarsSortSwitch
-          className="mission-sort"
-          options={[
-            { key: "category", label: "Kategorie" },
-            { key: "title", label: "Alphabetisch" },
-          ]}
-          sortKey={sortKey}
-          sortDir={sortDir}
-          onChange={(key, direction) => {
-            setSortKey(key as SortKey);
-            setSortDir(direction);
-          }}
-        />
-        <LcarsListFilterInput
-          value={query}
-          onChange={setQuery}
-          ariaLabel="Einträge filtern"
-        />
-        {characters.length > 0 && (
-          <select
-            className="mission-author-filter rounded-full"
-            value={characterFilter ?? ""}
-            onChange={(e) => setCharacterFilter(e.target.value || null)}
-            aria-label="Nach Charakter filtern"
-          >
-            <option value="">Alle Charaktere</option>
-            {characters.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        )}
-        <select
-          className="mission-author-filter rounded-full"
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
-          aria-label="Nach Kategorie filtern"
-        >
-          {visibleCategoryKeys.map((key) => (
-            <option key={key} value={key}>
-              {CATEGORY_LABELS[key]}
-            </option>
-          ))}
-        </select>
-      </div>
+      <ContentBrowserToolbar
+        characters={characters}
+        canManageMissions={canManageMissions}
+      />
 
       {list.length === 0 ? (
         <p className="lcars-empty-state">Keine Einträge für diesen Filter.</p>
@@ -602,3 +580,81 @@ export default function UserContentBrowser({
     </div>
   );
 }
+
+const ContentBrowserToolbar = memo(function ContentBrowserToolbar({
+  characters,
+  canManageMissions,
+}: {
+  characters: ContentFilterCharacter[];
+  canManageMissions: boolean;
+}) {
+  const characterFilter = useContentBrowserStore(
+    (state) => state.characterFilter,
+  );
+  const categoryFilter = useContentBrowserStore(
+    (state) => state.categoryFilter,
+  );
+  const sortKey = useContentBrowserStore((state) => state.sortKey);
+  const sortDir = useContentBrowserStore((state) => state.sortDir);
+  const query = useContentBrowserStore((state) => state.query);
+  const setCharacterFilter = useContentBrowserStore(
+    (state) => state.setCharacterFilter,
+  );
+  const setCategoryFilter = useContentBrowserStore(
+    (state) => state.setCategoryFilter,
+  );
+  const setSort = useContentBrowserStore((state) => state.setSort);
+  const setQuery = useContentBrowserStore((state) => state.setQuery);
+  const visibleCategoryKeys = (
+    Object.keys(CATEGORY_LABELS) as CategoryFilter[]
+  ).filter((key) => key !== "mission" || canManageMissions);
+
+  return (
+    <div className="lcars-toolbar content-browser-toolbar">
+      <LcarsSortSwitch
+        className="mission-sort content-browser-sort"
+        options={[
+          { key: "category", label: "Kategorie" },
+          { key: "title", label: "Alphabetisch" },
+          { key: "ingameDate", label: "Ingame-Datum", defaultDir: "desc" },
+          { key: "createdAt", label: "Erstellt am", defaultDir: "desc" },
+        ]}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onChange={(key, direction) => setSort(key as SortKey, direction)}
+      />
+      <LcarsListFilterInput
+        value={query}
+        onChange={setQuery}
+        ariaLabel="Einträge filtern"
+      />
+      {characters.length > 0 && (
+        <select
+          className="mission-author-filter rounded-full"
+          value={characterFilter ?? ""}
+          onChange={(e) => setCharacterFilter(e.target.value || null)}
+          aria-label="Nach Charakter filtern"
+        >
+          <option value="">Alle Charaktere</option>
+          {characters.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      )}
+      <select
+        className="mission-author-filter rounded-full"
+        value={categoryFilter}
+        onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
+        aria-label="Nach Kategorie filtern"
+      >
+        {visibleCategoryKeys.map((key) => (
+          <option key={key} value={key}>
+            {CATEGORY_LABELS[key]}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+});

@@ -31,10 +31,10 @@ export default function UserBackupPanel() {
       description={
         <>
           Exportiert alle registrierten User (inkl. Passwort-Hash) als
-          JSON-Datei. Der Import legt anhand der E-Mail-Adresse fehlende User
+          verschlüsselte Datei. Der Import legt anhand der E-Mail-Adresse fehlende User
           neu an bzw. überschreibt bestehende vollständig mit dem Stand der
-          Datei. Die Datei ist entsprechend sensibel — nur für die
-          Administration.
+          Datei. Zum Entschlüsseln wird der bei der Sicherung verwendete
+          Backup-Schlüssel benötigt.
         </>
       }
       fileNamePrefix="neo-archiv-user-backup"

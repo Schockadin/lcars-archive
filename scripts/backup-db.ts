@@ -13,6 +13,7 @@ import sql from "@/lib/db";
 import { exportDatabaseBackup } from "@/lib/dbBackup";
 import { BACKUP_EXCLUDED_TABLES, BACKUP_TABLES } from "@/lib/dbTables";
 import { uploadDbBackupToR2 } from "./r2Client";
+import { encryptBackupJson } from "@/lib/backupEncryption";
 
 // Kennt das Backup noch alle Tabellen, die es in der LAUFENDEN Datenbank
 // gibt?
@@ -50,10 +51,10 @@ async function main() {
   // Manuelle Backups aus dem Adminpanel bekommen einen davon unterscheidbaren
   // Key, siehe buildManualDbBackupKey in src/lib/r2Backup.ts.
   const date = new Date().toISOString().slice(0, 10);
-  const key = `db-backups/${date}.json`;
+  const key = `db-backups/${date}.json.enc`;
 
   console.log(`☁️  Lade Backup nach R2 hoch (Key: ${key})...`);
-  await uploadDbBackupToR2(key, json);
+  await uploadDbBackupToR2(key, encryptBackupJson(json, "database"));
 
   const tabellen = Object.keys(backup.tables).length;
   console.log(

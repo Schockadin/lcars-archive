@@ -24,7 +24,7 @@ function targetFrom(formData: FormData):
   const type = String(formData.get("contentType") ?? "");
   const slug = String(formData.get("contentSlug") ?? "");
   const path = String(formData.get("path") ?? "");
-  if (!isNoteContentType(type) || !slug) return null;
+  if (!isNoteContentType(type) || type === "standalone" || !slug) return null;
   return { type, slug, path };
 }
 

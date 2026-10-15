@@ -39,11 +39,11 @@ export default function DbBackupPanel() {
             (Charaktere, Missionen, Mission-Logs, Datenbank-Einträge, Follows,
             Dialog-Nachrichten, Timeline, dazu seit Format 2 auch AP-Konto,
             Talente, Schwerpunkte, Hausregeln, Sessions, Notizen, Fassungen,
-            Bilder und Rollen) als eine JSON-Datei. User laufen über ein
+            Bilder und Rollen) als verschlüsselte Datei. User laufen über ein
             eigenes, paralleles Backup (siehe „User-Backup“ oben). Der Import
             ERSETZT den gesamten aktuellen Inhalt (außer Usern) durch den Stand
-            der gewählten Datei. Die Datei ist entsprechend sensibel — nur für
-            die Administration.
+            der gewählten Datei. Zum Entschlüsseln wird der bei der Sicherung
+            verwendete Backup-Schlüssel benötigt.
           </>
         }
         fileNamePrefix="neo-archiv-db-backup"

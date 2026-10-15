@@ -6,7 +6,7 @@
 // Testbarkeit.
 export const BACKUP_RETENTION_DAYS = 30;
 export const BACKUP_PREFIX = "db-backups/";
-export const BACKUP_KEY_PATTERN = /^db-backups\/(\d{4}-\d{2}-\d{2})\.json$/;
+export const BACKUP_KEY_PATTERN = /^db-backups\/(\d{4}-\d{2}-\d{2})\.json(?:\.enc)?$/;
 
 // Manuelle Backups (Adminpanel-Button "Im R2-Bucket speichern", siehe
 // exportDbBackupToR2Action in src/app/admin/dbBackupActions.ts) bekommen
@@ -21,7 +21,7 @@ export const BACKUP_KEY_PATTERN = /^db-backups\/(\d{4}-\d{2}-\d{2})\.json$/;
 // zur manuellen Löschung im Bucket erhalten.
 export function buildManualDbBackupKey(now: Date = new Date()): string {
   const timestamp = now.toISOString().replace(/[:.]/g, "-");
-  return `${BACKUP_PREFIX}manual-${timestamp}.json`;
+  return `${BACKUP_PREFIX}manual-${timestamp}.json.enc`;
 }
 
 // User-Backups (Adminpanel "Im R2-Bucket speichern" in UserBackupPanel.tsx)
@@ -33,7 +33,7 @@ export const USER_BACKUP_PREFIX = "user-backups/";
 
 export function buildManualUserBackupKey(now: Date = new Date()): string {
   const timestamp = now.toISOString().replace(/[:.]/g, "-");
-  return `${USER_BACKUP_PREFIX}manual-${timestamp}.json`;
+  return `${USER_BACKUP_PREFIX}manual-${timestamp}.json.enc`;
 }
 
 // UTC-Mitternacht statt der aktuellen Uhrzeit — Backup-Daten werden aus dem

@@ -35,8 +35,9 @@ export async function GET(
 
   const access = await getCharacterDocumentAccess(id);
   const canRead =
-    access?.ownerId === viewer.userId ||
-    (access != null &&
+    (access?.linkedToCharacter && access.ownerId === viewer.userId) ||
+    (!access?.linkedToCharacter && access?.fileOwnerId === viewer.userId) ||
+    (access?.linkedToCharacter &&
       viewerHasPermission(viewer, "gm.access") &&
       (!access.isDraft || viewerHasPermission(viewer, "content.view_all")));
   if (!access || !access.isActive || !canRead) {

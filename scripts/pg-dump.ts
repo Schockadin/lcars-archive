@@ -4,31 +4,29 @@ import { mkdir, rm, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { buildPgDumpArgs, getPgDatabaseUrl } from "@/lib/pgDump";
+import { backupEncryptionKey } from "@/lib/backupEncryption";
+import { encryptPgDumpStream } from "@/lib/pgDumpEncryption";
 import { resolvePgTool } from "./pgTools";
 
 function timestamp(): string {
   return new Date().toISOString().replace(/[:.]/g, "-");
 }
 
-function run(executable: string, args: string[]): Promise<number> {
-  return new Promise((resolveRun, reject) => {
-    const child = spawn(executable, args, { stdio: "inherit" });
-    child.once("error", reject);
-    child.once("close", (code) => resolveRun(code ?? 1));
-  });
-}
-
 async function main() {
   const databaseUrl = getPgDatabaseUrl(process.env);
+  const key = backupEncryptionKey();
   const requestedPath = process.argv[2];
   const outputPath = resolve(
-    requestedPath ||
-      join(
-        homedir(),
-        "Documents",
-        "Neo-Archiv-Backups",
-        `neo-archiv-db-${timestamp()}.dump`,
-      ),
+    requestedPath
+      ? requestedPath.endsWith(".enc")
+        ? requestedPath
+        : `${requestedPath}.enc`
+      : join(
+          homedir(),
+          "Documents",
+          "Neo-Archiv-Backups",
+          `neo-archiv-db-${timestamp()}.dump.enc`,
+        ),
   );
 
   await mkdir(dirname(outputPath), { recursive: true });
@@ -41,10 +39,24 @@ async function main() {
   console.log(`Vollständigen Datenbank-Dump erstellen: ${outputPath}`);
 
   try {
-    const exitCode = await run(
-      executable,
-      buildPgDumpArgs(databaseUrl, outputPath),
-    );
+    const child = spawn(executable, buildPgDumpArgs(databaseUrl), {
+      stdio: ["ignore", "pipe", "inherit"],
+    });
+    const completion = new Promise<number>((resolveRun, reject) => {
+      child.once("error", reject);
+      child.once("close", (code) => resolveRun(code ?? 1));
+    });
+    if (!child.stdout) throw new Error("pg_dump liefert keinen Datenstrom.");
+    let exitCode: number;
+    try {
+      [exitCode] = await Promise.all([
+        completion,
+        encryptPgDumpStream(child.stdout, outputPath, key),
+      ]);
+    } catch (error) {
+      child.kill();
+      throw error;
+    }
     if (exitCode !== 0) {
       throw new Error(`pg_dump wurde mit Exitcode ${exitCode} beendet.`);
     }

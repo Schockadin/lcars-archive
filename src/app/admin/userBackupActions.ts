@@ -7,6 +7,11 @@ import {
   type UserBackupRecord,
   type RestoreUsersSummary,
 } from "@/lib/userBackup";
+import {
+  encryptBackupJson,
+  decryptBackupJson,
+  BackupEncryptionError,
+} from "@/lib/backupEncryption";
 import { USER_BACKUP_PREFIX } from "@/lib/backupRetention";
 import {
   uploadDbBackupToR2,
@@ -27,7 +32,7 @@ export async function exportUsersBackupAction(): Promise<ExportUsersBackupResult
 
   try {
     const records = await getAllUsersBackup();
-    return { json: JSON.stringify(records, null, 2) };
+    return { json: encryptBackupJson(JSON.stringify(records), "users") };
   } catch (err) {
     return {
       error:
@@ -46,17 +51,22 @@ export interface ImportUsersBackupResult {
 // Gemeinsame Parse-/Restore-/Revalidierungs-Logik für beide Import-Wege
 // (lokale Datei, R2-Bucket) — gleiches Prinzip wie parseAndImportDbBackup in
 // dbBackupActions.ts.
-async function parseAndImportUsersBackup(json: string): Promise<ImportUsersBackupResult> {
+async function parseAndImportUsersBackup(
+  json: string,
+): Promise<ImportUsersBackupResult> {
   let records: UserBackupRecord[];
   try {
-    const parsed = JSON.parse(json);
+    const parsed = JSON.parse(decryptBackupJson(json, "users"));
     if (!Array.isArray(parsed)) {
       throw new Error("Erwartet ein Array von Usern.");
     }
     records = parsed;
   } catch (err) {
     return {
-      error: `Ungültige JSON-Datei: ${err instanceof Error ? err.message : String(err)}`,
+      error:
+        err instanceof BackupEncryptionError
+          ? err.message
+          : `Ungültige Backup-Datei: ${err instanceof Error ? err.message : String(err)}`,
     };
   }
 
@@ -88,7 +98,7 @@ export async function exportUsersBackupToR2Action(): Promise<ExportUsersBackupTo
 
   try {
     const records = await getAllUsersBackup();
-    const json = JSON.stringify(records);
+    const json = encryptBackupJson(JSON.stringify(records), "users");
     const key = buildManualUserBackupKey();
     await uploadDbBackupToR2(key, json);
     return { key };

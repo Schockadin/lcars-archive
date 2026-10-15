@@ -9,6 +9,11 @@ import {
   type RestoreDbSummary,
 } from "@/lib/dbBackup";
 import {
+  encryptBackupJson,
+  decryptBackupJson,
+  BackupEncryptionError,
+} from "@/lib/backupEncryption";
+import {
   uploadDbBackupToR2,
   buildManualDbBackupKey,
   listDbBackupsInR2,
@@ -27,7 +32,7 @@ export async function exportDbBackupAction(): Promise<ExportDbBackupResult> {
 
   try {
     const backup = await exportDatabaseBackup();
-    return { json: JSON.stringify(backup, null, 2) };
+    return { json: encryptBackupJson(JSON.stringify(backup), "database") };
   } catch (err) {
     return {
       error:
@@ -47,13 +52,18 @@ export interface ImportDbBackupResult {
 // (lokale Datei, R2-Bucket) — der rohe JSON-Text ist bei beiden bereits im
 // Speicher (lokal per FileReader gelesen, aus R2 per downloadDbBackupFromR2),
 // nur die Herkunft unterscheidet sich.
-async function parseAndImportDbBackup(json: string): Promise<ImportDbBackupResult> {
+async function parseAndImportDbBackup(
+  json: string,
+): Promise<ImportDbBackupResult> {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(json);
+    parsed = JSON.parse(decryptBackupJson(json, "database"));
   } catch (err) {
     return {
-      error: `Ungültige JSON-Datei: ${err instanceof Error ? err.message : String(err)}`,
+      error:
+        err instanceof BackupEncryptionError
+          ? err.message
+          : `Ungültige Backup-Datei: ${err instanceof Error ? err.message : String(err)}`,
     };
   }
 
@@ -105,7 +115,7 @@ export async function exportDbBackupToR2Action(): Promise<ExportDbBackupToR2Resu
 
   try {
     const backup = await exportDatabaseBackup();
-    const json = JSON.stringify(backup);
+    const json = encryptBackupJson(JSON.stringify(backup), "database");
     const key = buildManualDbBackupKey();
     await uploadDbBackupToR2(key, json);
     return { key };

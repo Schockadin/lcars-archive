@@ -48,6 +48,10 @@ vi.mock("@/components/timeline/ManualEventForm", () => ({
   ),
 }));
 
+vi.mock("@/app/user/notes/NewNoteButton", () => ({
+  default: () => <button type="button" className="lcars-pill-btn">Neue Notiz</button>,
+}));
+
 function data(overrides: Partial<NewContentData> = {}): NewContentData {
   return {
     userId: 1,

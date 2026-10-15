@@ -31,14 +31,13 @@ export function getPgDatabaseLabel(databaseUrl: string): string {
 
 export function buildPgDumpArgs(
   databaseUrl: string,
-  outputPath: string,
+  outputPath?: string,
 ): string[] {
   return [
     "--format=custom",
     "--no-owner",
     "--no-acl",
-    "--file",
-    outputPath,
+    ...(outputPath ? ["--file", outputPath] : []),
     "--dbname",
     databaseUrl,
   ];

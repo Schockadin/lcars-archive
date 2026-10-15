@@ -145,7 +145,7 @@ export async function updateCharacterPortraitAction(
     portrait: current.portrait,
     portraitSource: current.portraitSource,
     portraitCrop: current.portraitCrop,
-  });
+  }, session.userId);
   if ("error" in portraitResult) return { error: portraitResult.error };
 
   const result = await updateOwnCharacterContent(session.userId, characterId, {
@@ -200,7 +200,7 @@ export async function updateCharacterHeadAction(
     portrait: current.portrait,
     portraitSource: current.portraitSource,
     portraitCrop: current.portraitCrop,
-  });
+  }, session.userId);
   if ("error" in headResult) return { error: headResult.error };
 
   const isDraft = formData.get("isDraft") === "on";

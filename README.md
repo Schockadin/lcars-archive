@@ -1284,10 +1284,13 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   angezeigt (Datei 1 von N mit Vor-/Zurück-Navigation), in der sich alle
   Felder inklusive Text noch bearbeiten lassen, bevor sie einzeln bestätigt
   wird.
+- **Meine Dateien** — unter `/user/files` stehen Bilder und Dokumente in einer gemeinsamen Tabelle mit Verlinkungen, Vorschau, Umbenennen und bestätigtem Löschen. Bilder bleiben in der persönlichen Bibliothek und können über den Bild-Knopf in allen Markdown-Editoren erneut eingefügt werden; ältere Inhaltsbilder können übernommen werden. Dokumente können ohne Charakter hochgeladen und später einem eigenen Charakter zugeordnet werden.
+- **Meine Notizen** — unter `/user/notes` stehen eigene und für die Runde freigegebene Notizen in einer Tabelle, auf schmalen Bildschirmen als Karten. Neue Notizen lassen sich dort und über „Neue Inhalte“ anlegen, auch ohne zugeordneten Eintrag. Ein Such-Overlay zeigt die sichtbaren Einträge zur optionalen Zuordnung. Die Übersicht verlinkt zugeordnete Einträge und öffnet die ganze Notiz per Zeilenklick; eigene Notizen lassen sich dort bearbeiten und löschen.
+- **Meine Inhalte** — die Liste lässt sich nach Kategorie, Titel, Ingame-Datum oder Erstellungszeit sortieren; ein weiterer Klick wechselt zwischen auf- und absteigend. Auf kleinen Bildschirmen stehen Sortierung und Suchfeld in getrennten Zeilen.
 - **DB-Backup** — der komplette Datenbankinhalt (seit Dateiformat 2 inklusive
   AP-Konto, Talenten, Schwerpunkten, Hausregeln, Sessions, Notizen, Fassungen,
   Bildern und Rollen) lässt sich im Admin-Panel als
-  JSON-Datei herunterladen und bei Bedarf wieder vollständig einspielen; ein
+  verschlüsselte Datei herunterladen und bei Bedarf wieder vollständig einspielen; ein
   täglicher Cronjob sichert zusätzlich automatisch nach Cloudflare R2 und
   löscht dort Backups, die älter als 30 Tage sind. Manuelles Sichern/
   Einspielen ist außerdem direkt im selben R2-Bucket möglich (eigener Key
@@ -1504,6 +1507,18 @@ sie laufen gegen eine eigene, leere Datenbank mit demselben Schema. In CI
 nicht über `npm run db:setup` — das Skript fragt interaktiv nach der
 Schema-Datei und würde in einem Runner hängen.
 
+**State Management und ORM (Version 2.0):** Der Inhaltsbrowser nutzt einen
+eigenen Zustand-Store pro Ansicht für Filter und Sortierung; Formulare und
+serverseitige Daten bleiben bei ihren bisherigen Zuständigkeiten. Drizzle ORM
+verwendet denselben `postgres.js`-Client wie der bisherige Datenzugriff und ist
+für Bildbibliothek, Charakterdateien sowie ausgewählte Kampagnen-Einstellungen
+eingeführt. Die vollständige Zuordnung und der weitere Migrationspfad stehen
+in [`docs/version-2-architecture-plan.md`](docs/version-2-architecture-plan.md).
+`scripts/schema.sql` und geprüfte SQL-Migrationen bleiben die DDL-Quelle;
+`src/lib/ormSchema.ts` bildet derzeit nur die migrierten Abfragen ab. Deshalb
+keine automatische Drizzle-Schemaänderung gegen eine bestehende Datenbank
+ausführen.
+
 ### 4. Ersten Admin-User anlegen
 
 ```bash
@@ -1626,9 +1641,9 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:seed-focuses`   | Spielt den Schwerpunkt-Katalog aus `scripts/seed/focuses.json` ein (idempotent)                                                                                                                                                                                                                 |
 | `npm run embed:all`         | Baut den Vektor-Index des Datenbank-Assistenten für alle Inhalte (neu) auf — Backfill, idempotent (siehe „Datenbank-Assistent (RAG)")                                                                                                                                                           |
 | `npm run db:reset`          | Setzt die Datenbank zurück                                                                                                                                                                                                                                                                      |
-| `npm run db:backup`         | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup")                                                                                                                                                                                                           |
+| `npm run db:backup`         | Exportiert die komplette DB verschlüsselt nach Cloudflare R2 (siehe „Tägliches DB-Backup")                                                                                                                                                                                                           |
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                                                                                                                                                                   |
-| `npm run db:pg-dump`        | Erstellt mit `pg_dump` ein vollständiges lokales PostgreSQL-Backup (Custom-Format)                                                                                                                                                                                                              |
+| `npm run db:pg-dump`        | Erstellt mit `pg_dump` ein vollständig verschlüsseltes lokales PostgreSQL-Backup (Custom-Format)                                                                                                                                                                                                              |
 | `npm run db:pg-restore -- "<Datei>"` | Spielt einen lokalen pg_dump nach ausdrücklicher Bestätigung atomar zurück; ersetzt Datenbankobjekte aus dem Dump                                                                                                                                              |
 | `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                                                                                                                                                                             |
 | `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                                                                                                                                                                   |
@@ -1657,7 +1672,8 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
 Die vollständigen PostgreSQL-Dumps dieser Datenbank verwenden `DIRECT_DATABASE_URL`
 (wenn gesetzt), sonst `DATABASE_URL` aus `.env.local`. `pg_dump` und `pg_restore`
 müssen lokal installiert sein. Ohne Ausgabepfad speichert `db:pg-dump` die
-Datei in `Dokumente/Neo-Archiv-Backups`. Ein Restore verlangt die Eingabe einer
+verschlüsselte Datei (`.dump.enc`) in `Dokumente/Neo-Archiv-Backups`. Für Export
+und Restore muss derselbe `BACKUP_ENCRYPTION_KEY` gesetzt sein. Ein Restore verlangt die Eingabe einer
 Bestätigung und läuft in einer Transaktion; dennoch sollte vor dem Aufruf
 geprüft werden, dass die Verbindungs-URL auf die richtige Datenbank zeigt.
 Beide Kommandos sind auch im Admin-Bereich unter „Datenbank → DB-Backup"
@@ -1944,7 +1960,8 @@ secret"):
 | `DATABASE_URL`                              | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nötig für den Backup- UND den Purge-Schritt, nicht für das R2-Cleanup.                                                                    |
 | `R2_ACCOUNT_ID`                             | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). Nötig für den Backup- UND den Purge-Schritt (Bild-Cleanup), nicht für das R2-Cleanup.                                                                                                                                                                                       |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens").                                                                                                                                                                                                                                                                    |
-| `R2_BUCKET_NAME`                            | Name des **Backup**-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). Hochgeladene Assets liegen seit dem Asset-Bucket-Release nicht mehr hier, sondern in `R2_ASSET_BUCKET_NAME` (siehe unten).                                                                                                              |
+| `R2_BUCKET_NAME`                            | Name des **Backup**-Buckets für die Backup-Dateien (`db-backups/<Datum>.json.enc`, ein Key pro Kalendertag). Hochgeladene Assets liegen seit dem Asset-Bucket-Release nicht mehr hier, sondern in `R2_ASSET_BUCKET_NAME` (siehe unten).                                                                                                              |
+| `BACKUP_ENCRYPTION_KEY`                     | 32 zufällige Bytes, Base64-kodiert. Derselbe Schlüssel muss für App, Backup-Cronjob und lokalen Restore verfügbar sein. Ohne ihn lassen sich neue Sicherungen nicht lesen. In Netlify und als GitHub-Actions-Secret setzen und separat sicher verwahren. |
 | `R2_ASSET_BUCKET_NAME`                      | Name des **öffentlichen** Asset-Buckets für hochgeladene Assets — Content-Bilder (`content-images/...`), Charakter-Portraits (`character-portraits/...`). Muss in Cloudflare als öffentlicher Bucket eingerichtet sein (eigene Domain oder r2.dev-URL). Für den App-Betrieb (Netlify) und die Migration nötig, **nicht** für den Backup-Cronjob. |
 | `R2_ASSET_PUBLIC_BASE_URL`                  | Öffentliche Basis-URL des Asset-Buckets ohne Trailing-Slash (z.B. `https://assets.neo-archiv.de` oder die von Cloudflare vergebene `https://pub-….r2.dev`). Daraus baut die App die direkten Asset-Links.                                                                                                                                        |
 
@@ -2196,6 +2213,15 @@ Rollen-Hochstufungs-Bug verursacht). Datenverändernde bzw. einmalige Schritte
 (Backfills, Seeds, Constraint-Wechsel) liegen pro Pull Request in einer eigenen
 `scripts/migrate-pr<NN>.sql`, die nach dem Merge einmalig gegen die Produktions-
 DB ausgeführt wird.
+
+Für Version 2.0 muss `scripts/migrate-v2.sql` vor dem Deploy auf der Datenbank
+ausgeführt werden. Es legt `user_images` für die persönliche Bildbibliothek an
+und erweitert `character_documents` für Dokumente ohne Charakterzuordnung sowie
+`content_notes` für Notizen ohne Eintrag.
+Falls eine frühere Fassung der Migration bereits lief, die aktuelle Fassung
+erneut ausführen; die Änderungen sind wiederholbar.
+Zusätzlich muss `BACKUP_ENCRYPTION_KEY` in der App-Umgebung, im GitHub-Secret
+des täglichen Backup-Laufs und für lokale Dumps identisch gesetzt sein.
 
 **Achtung bei additiven Spalten:** Wird eine Spalte hinzugefügt, die die App
 anschließend liest (z.B. `users.font_sans`/`font_mono` in `USER_COLUMNS`), muss

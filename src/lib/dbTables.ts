@@ -43,6 +43,7 @@ export const DB_TABLE_COLUMNS = {
   character_documents: [
     "id",
     "character_id",
+    "owner_user_id",
     "r2_key",
     "file_name",
     "file_kind",
@@ -166,6 +167,16 @@ export const DB_TABLE_COLUMNS = {
     "content_mime",
     "size_bytes",
     "uploaded_by",
+    "created_at",
+  ],
+  user_images: [
+    "id",
+    "owner_id",
+    "r2_key",
+    "file_name",
+    "content_mime",
+    "size_bytes",
+    "source_image_key",
     "created_at",
   ],
   content_notes: [
@@ -513,6 +524,7 @@ export const BACKUP_TABLES = [
   "timeline_events",
   "timeline_event_characters",
   "content_images",
+  "user_images",
   "content_notes",
   "content_revisions",
   "editor_drafts",

@@ -502,6 +502,7 @@ export async function setCharacterDraftAdmin(
 
 export interface UserContentLog {
   id: number;
+  createdAt?: string;
   slug: string;
   title: string;
   session_nr: number | null;
@@ -523,6 +524,7 @@ export async function getLogsForUser(
   return sql<UserContentLog[]>`
     SELECT
       ml.id, ml.slug, ml.title, ml.session_nr, ml.log_date::text AS log_date,
+      ml.created_at::text AS "createdAt",
       m.slug AS mission_slug, m.title AS mission_title,
       c.slug AS character_slug, c.name AS character_name, ml.is_draft
     FROM mission_logs ml

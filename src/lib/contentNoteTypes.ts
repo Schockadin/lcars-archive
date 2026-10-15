@@ -8,6 +8,7 @@ export const NOTE_CONTENT_TYPES = [
   "mission",
   "mission_log",
   "archive",
+  "standalone",
 ] as const;
 export type NoteContentType = (typeof NOTE_CONTENT_TYPES)[number];
 

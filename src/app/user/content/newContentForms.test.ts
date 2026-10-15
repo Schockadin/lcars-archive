@@ -50,6 +50,7 @@ describe("visibleNewContentForms", () => {
       "event",
       "archiveEntry",
       "npc",
+      "note",
       "mission",
     ]);
   });
@@ -67,7 +68,7 @@ describe("visibleNewContentForms", () => {
           event: null,
         }),
       ),
-    ).toEqual(["archiveEntry", "npc"]);
+    ).toEqual(["archiveEntry", "npc", "note"]);
   });
 
   it("achtet die Auswahl der Seite", () => {

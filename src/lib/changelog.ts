@@ -147,6 +147,42 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.0",
+    title: "Meine Dateien und Bildbibliothek",
+    items: [
+      {
+        text: "Unter „Meine Dateien“ kannst du Bilder und Dokumente gemeinsam ansehen, umbenennen und löschen. Dokumente lassen sich auch ohne Charakter hochladen und später zuordnen.",
+        category: "konto",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Unter „Meine Notizen“ findest du eigene und für die Runde freigegebene Notizen an einem Ort. Du kannst sie dort lesen und deine Notizen bearbeiten oder löschen.",
+        category: "inhalte",
+        tutorial: "notizen",
+      },
+      {
+        text: "Neue Notizen lassen sich direkt in „Meine Notizen“ oder über „Neue Inhalte“ anlegen — auch ohne Zuordnung zu einem Eintrag.",
+        category: "inhalte",
+        tutorial: "notizen",
+      },
+      {
+        text: "„Meine Inhalte“ lässt sich jetzt auch nach Ingame-Datum oder Erstellungsdatum sortieren, jeweils auf- und absteigend.",
+        category: "inhalte",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Eigene Bilder lassen sich in der persönlichen Bibliothek aufbewahren und in Texten aller Inhalte erneut einfügen.",
+        category: "inhalte",
+        tutorial: "markdown",
+      },
+      {
+        text: "Datenbank-, Nutzer- und vollständige PostgreSQL-Sicherungen werden verschlüsselt erstellt.",
+        category: "export",
+        tutorial: "spielleitung-admins",
+      },
+    ],
+  },
+  {
     version: "1.67",
     title: "Personen in Gesprächen finden",
     items: [
