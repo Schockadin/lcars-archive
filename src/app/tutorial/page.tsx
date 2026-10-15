@@ -871,10 +871,14 @@ export default function TutorialPage() {
                 machen.
               </p>
               <p>
-                Deine eigenen Notizen kannst du jederzeit wieder löschen.
-                Kommentare für die Runde darf zusätzlich die Inhalts-Moderation
-                entfernen — private Notizen bleiben davon unberührt. Wird ein
-                Inhalt endgültig gelöscht, verschwinden seine Notizen mit ihm.
+                Unter <strong>„Profil → Meine Notizen“</strong> findest du deine
+                Notizen und die für die Runde freigegebenen Kommentare in einer
+                Tabelle. Ein Klick auf eine Zeile zeigt die ganze Notiz. Eigene
+                Notizen kannst du dort bearbeiten oder löschen; die
+                Inhalts-Moderation darf außerdem Kommentare für die Runde
+                bearbeiten und entfernen. Private Notizen bleiben davon
+                unberührt. Wird ein Inhalt endgültig gelöscht, verschwinden
+                seine Notizen mit ihm.
               </p>
             </div>
           </LcarsDataRow>

@@ -1285,6 +1285,7 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   Felder inklusive Text noch bearbeiten lassen, bevor sie einzeln bestätigt
   wird.
 - **Meine Dateien** — unter `/user/files` stehen Bilder und Dokumente in einer gemeinsamen Tabelle mit Verlinkungen, Vorschau, Umbenennen und bestätigtem Löschen. Bilder bleiben in der persönlichen Bibliothek und können über den Bild-Knopf in allen Markdown-Editoren erneut eingefügt werden; ältere Inhaltsbilder können übernommen werden. Dokumente können ohne Charakter hochgeladen und später einem eigenen Charakter zugeordnet werden.
+- **Meine Notizen** — unter `/user/notes` stehen eigene und für die Runde freigegebene Notizen in einer Tabelle. Die Übersicht verlinkt die zugehörigen Einträge und öffnet die ganze Notiz per Zeilenklick; eigene Notizen lassen sich dort bearbeiten und löschen.
 - **DB-Backup** — der komplette Datenbankinhalt (seit Dateiformat 2 inklusive
   AP-Konto, Talenten, Schwerpunkten, Hausregeln, Sessions, Notizen, Fassungen,
   Bildern und Rollen) lässt sich im Admin-Panel als

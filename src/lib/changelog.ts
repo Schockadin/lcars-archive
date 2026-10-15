@@ -156,6 +156,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "mein-bereich",
       },
       {
+        text: "Unter „Meine Notizen“ findest du eigene und für die Runde freigegebene Notizen an einem Ort. Du kannst sie dort lesen und deine Notizen bearbeiten oder löschen.",
+        category: "inhalte",
+        tutorial: "notizen",
+      },
+      {
         text: "Eigene Bilder lassen sich in der persönlichen Bibliothek aufbewahren und in Texten aller Inhalte erneut einfügen.",
         category: "inhalte",
         tutorial: "markdown",

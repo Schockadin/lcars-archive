@@ -67,6 +67,7 @@ describe("HeaderUserNav: Profil-Menü", () => {
     expect(menuEintraege()).toEqual([
       "Meine Inhalte",
       "Meine Dateien",
+      "Meine Notizen",
       "Einstellungen",
     ]);
   });
@@ -79,6 +80,7 @@ describe("HeaderUserNav: Profil-Menü", () => {
       "Charaktere",
       "Meine Inhalte",
       "Meine Dateien",
+      "Meine Notizen",
       "Einstellungen",
     ]);
   });
@@ -94,6 +96,7 @@ describe("HeaderUserNav: Profil-Menü", () => {
       "Charaktere",
       "Meine Inhalte",
       "Meine Dateien",
+      "Meine Notizen",
       "Einstellungen",
     ]);
   });
