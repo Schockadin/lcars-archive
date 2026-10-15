@@ -305,6 +305,28 @@ export function UserRulesGuide() {
   );
 }
 
+export function UserFilesGuide() {
+  return (
+    <GuideSection title="Meine Dateien">
+      <p>
+        Unter <strong>„Profil → Meine Dateien“</strong> findest du deine
+        hochgeladenen Bilder und die Dokumente deiner Charaktere. Die Suche
+        filtert nach Bilddatei, Dokumentname oder Charakter. Dokumente öffnest
+        und lädst du dort herunter; zum Umbenennen oder Löschen wechselst du
+        zur jeweiligen Charakterseite.
+      </p>
+      <p>
+        Bilder kannst du direkt in deine persönliche Bibliothek hochladen.
+        Bereits früher an Inhalte angehängte Bilder stehen unter „Ältere
+        Bilder“ und lassen sich in die Bibliothek übernehmen. Bilder aus der
+        Bibliothek wählst du über den Bild-Knopf in jedem Texteditor aus,
+        auch beim Anlegen neuer Inhalte. Das Löschen aus der Bibliothek macht
+        bereits eingefügte Bildverweise unbrauchbar.
+      </p>
+    </GuideSection>
+  );
+}
+
 // Alle Bausteine am Stück — so stehen sie im Abschnitt „Mein Bereich" der
 // Anleitung (/tutorial).
 export default function UserAreaGuides() {
@@ -312,6 +334,7 @@ export default function UserAreaGuides() {
     <GuideBody>
       <DashboardGuide />
       <MyContentGuide />
+      <UserFilesGuide />
       <ImportGuide />
       <UserProfileGuide />
       <UserRulesGuide />

@@ -86,7 +86,7 @@ export function assetPublicUrl(key: string): string {
 }
 
 // Lädt einen fertigen Backup-JSON-Export nach R2 hoch — der Aufrufer baut
-// den Key selbst (Cronjob: db-backups/JJJJ-MM-TT.json, siehe backup-db.ts;
+// den Key selbst (Cronjob: db-backups/JJJJ-MM-TT.json.enc, siehe backup-db.ts;
 // manueller DB-Export: buildManualDbBackupKey; manueller User-Export:
 // buildManualUserBackupKey, beide in src/lib/backupRetention.ts), diese
 // Funktion kennt nur den Upload-Mechanismus und wird für beide Backup-Arten
@@ -101,7 +101,7 @@ export async function uploadDbBackupToR2(
       Bucket: bucket,
       Key: key,
       Body: json,
-      ContentType: "application/json",
+      ContentType: key.endsWith(".enc") ? "application/octet-stream" : "application/json",
     }),
   );
 }

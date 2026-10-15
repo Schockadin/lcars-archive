@@ -48,6 +48,12 @@ describe("pgDump", () => {
     ]);
   });
 
+  it("can stream a custom-format dump to stdout for encryption", () => {
+    expect(buildPgDumpArgs("postgres://db")).toEqual([
+      "--format=custom", "--no-owner", "--no-acl", "--dbname", "postgres://db",
+    ]);
+  });
+
   it("restores atomically and stops on the first error", () => {
     expect(buildPgRestoreArgs("postgres://db", "archive.dump")).toEqual([
       "--clean",

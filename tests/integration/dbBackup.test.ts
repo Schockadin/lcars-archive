@@ -162,6 +162,7 @@ describe("DB-Backup, Umfang seit v2", () => {
       "planned_sessions",
       "content_revisions",
       "content_images",
+      "user_images",
       "content_notes",
       "roles",
     ] as const) {

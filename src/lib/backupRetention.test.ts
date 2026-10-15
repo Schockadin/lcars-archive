@@ -42,6 +42,7 @@ describe("isStaleBackupKey", () => {
 
   it("returns true for a backup dated before the cutoff", () => {
     expect(isStaleBackupKey("db-backups/2026-06-01.json", cutoff)).toBe(true);
+    expect(isStaleBackupKey("db-backups/2026-06-01.json.enc", cutoff)).toBe(true);
   });
 
   it("returns false for a backup dated exactly on the cutoff", () => {
@@ -64,7 +65,7 @@ describe("buildManualDbBackupKey", () => {
   it("builds a manual-prefixed, timestamp-based key under db-backups/", () => {
     const now = new Date("2026-07-17T14:32:05.123Z");
     expect(buildManualDbBackupKey(now)).toBe(
-      "db-backups/manual-2026-07-17T14-32-05-123Z.json",
+      "db-backups/manual-2026-07-17T14-32-05-123Z.json.enc",
     );
   });
 
@@ -87,7 +88,7 @@ describe("buildManualUserBackupKey", () => {
   it("builds a manual-prefixed, timestamp-based key under user-backups/", () => {
     const now = new Date("2026-07-17T14:32:05.123Z");
     expect(buildManualUserBackupKey(now)).toBe(
-      "user-backups/manual-2026-07-17T14-32-05-123Z.json",
+      "user-backups/manual-2026-07-17T14-32-05-123Z.json.enc",
     );
   });
 

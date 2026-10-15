@@ -748,6 +748,21 @@ CREATE TABLE IF NOT EXISTS content_images (
 );
 CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_type, content_id);
 
+-- Persönliche Bildbibliothek. Eigene Kopien bleiben erhalten, wenn ein Bild
+-- aus einer Inhaltsgalerie entfernt wird; damit sind sie überall erneut nutzbar.
+CREATE TABLE IF NOT EXISTS user_images (
+  id SERIAL PRIMARY KEY,
+  owner_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  r2_key TEXT UNIQUE NOT NULL,
+  file_name TEXT NOT NULL,
+  content_mime TEXT NOT NULL,
+  size_bytes INT NOT NULL,
+  source_image_key TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_user_images_owner ON user_images(owner_id, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_images_owner_source ON user_images(owner_id, source_image_key) WHERE source_image_key IS NOT NULL;
+
 
 -- ---------------------------------------------------------------------------
 -- character_ap_entries

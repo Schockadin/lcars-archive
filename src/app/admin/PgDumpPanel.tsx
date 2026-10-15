@@ -4,7 +4,7 @@ import { useState } from "react";
 
 const DUMP_COMMAND = "npm run db:pg-dump";
 const RESTORE_COMMAND =
-  'npm run db:pg-restore -- "$env:USERPROFILE\\Documents\\Neo-Archiv-Backups\\neo-archiv-db-DATUM.dump"';
+  'npm run db:pg-restore -- "$env:USERPROFILE\\Documents\\Neo-Archiv-Backups\\neo-archiv-db-DATUM.dump.enc"';
 
 function CommandCopy({ label, command }: { label: string; command: string }) {
   const [copied, setCopied] = useState(false);
@@ -44,11 +44,11 @@ export default function PgDumpPanel() {
       </summary>
       <div className="mt-[12px] flex flex-col gap-[12px] text-[13px] text-lcars-ink-dim">
         <p>
-          Erstellt lokal einen vollständigen Dump dieser Datenbank im
+          Erstellt lokal einen verschlüsselten Dump dieser Datenbank im
           Custom-Format, einschließlich Schema, Daten und Userkonten.
           Clusterweite Rollen und Servereinstellungen sind nicht enthalten.
           Dafür werden die PostgreSQL-Client-Tools auf deinem Rechner verwendet;
-          die Zugangsdaten bleiben in deiner lokalen <code>.env.local</code>.
+          die Zugangsdaten und der Backup-Schlüssel bleiben in deiner lokalen <code>.env.local</code>.
           Die direkte Verbindung wird bevorzugt (
           <code>DIRECT_DATABASE_URL</code>), andernfalls{" "}
           <code>DATABASE_URL</code> verwendet. Stelle vor dem Start sicher, dass

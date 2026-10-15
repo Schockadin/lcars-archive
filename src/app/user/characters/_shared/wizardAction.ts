@@ -54,7 +54,7 @@ export async function createCharacterWizardAction(
     return { error: "Gast-Accounts können keine Charaktere anlegen." };
   }
 
-  const headResult = await readCharacterHead(formData);
+  const headResult = await readCharacterHead(formData, undefined, session.userId);
   if ("error" in headResult) return { error: headResult.error };
   const head = headResult.head;
 

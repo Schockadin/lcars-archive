@@ -264,6 +264,13 @@ export async function getContentImageById(
   return row ? mapRow(row) : null;
 }
 
+export async function getContentImageStorageKey(id: number): Promise<string | null> {
+  const [row] = await sql<{ r2_key: string }[]>`
+    SELECT r2_key FROM content_images WHERE id = ${id}
+  `;
+  return row?.r2_key ?? null;
+}
+
 // Lädt die Bytes für eine Bild-Zeile — vom Proxy-Route (src/app/api/
 // content-images/[id]/route.ts) genutzt, der r2_key selbst nie an den
 // Client weitergibt (Bucket-Struktur bleibt intern).
@@ -307,13 +314,18 @@ export async function uploadContentImage(
   const key = buildContentImageKey(contentType, contentId, extension);
   await uploadAssetObjectToR2(key, file.buffer, file.mimeType);
 
-  const [row] = await sql<ContentImageRow[]>`
-    INSERT INTO content_images
-      (content_type, content_id, r2_key, content_mime, size_bytes, uploaded_by)
-    VALUES (${contentType}, ${contentId}, ${key}, ${file.mimeType}, ${file.buffer.byteLength}, ${uploadedByUserId})
-    RETURNING id, content_type, content_id, r2_key, content_mime, size_bytes, uploaded_by, created_at
-  `;
-  return mapRow(row);
+  try {
+    const [row] = await sql<ContentImageRow[]>`
+      INSERT INTO content_images
+        (content_type, content_id, r2_key, content_mime, size_bytes, uploaded_by)
+      VALUES (${contentType}, ${contentId}, ${key}, ${file.mimeType}, ${file.buffer.byteLength}, ${uploadedByUserId})
+      RETURNING id, content_type, content_id, r2_key, content_mime, size_bytes, uploaded_by, created_at
+    `;
+    return mapRow(row);
+  } catch (error) {
+    await deleteAssetObjectFromR2(key).catch(() => undefined);
+    throw error;
+  }
 }
 
 // Löscht sowohl die DB-Zeile als auch das R2-Objekt. contentType/contentId

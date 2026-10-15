@@ -8,6 +8,7 @@ const uploadCharacterPortraitImage = vi.fn(
 );
 
 vi.mock("@/lib/characterAssets", () => ({ uploadCharacterPortraitImage }));
+vi.mock("@/lib/userImages", () => ({ uploadUserImage: vi.fn() }));
 
 const { readCharacterHead, readCharacterPortrait } =
   await import("./characterHead");

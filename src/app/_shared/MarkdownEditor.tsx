@@ -115,11 +115,9 @@ export default function MarkdownEditor({
   // Content-Formulare brauchen, aber trotzdem genug Platz zum Schreiben.
   // Gesetzt, gewinnt es gegen `large`.
   rows?: number;
-  // Nur gesetzt, wenn der Inhalt bereits existiert (contentId bekannt) —
-  // ohne das kann noch kein Bild dafür hochgeladen worden sein (siehe
-  // InsertImageButton.tsx). Charaktere bewusst ausgenommen: dort gibt es
-  // stattdessen Portrait-Auswahl + Karussell statt Bild-Einbettung im
-  // Fließtext (siehe CharacterPortrait.tsx/ContentImageGallery.tsx).
+  // Optionaler Bezug auf die Galerie eines bereits vorhandenen Inhalts.
+  // Die persönliche Bildbibliothek ist unabhängig davon immer verfügbar,
+  // auch in Anlegeformularen ohne contentId.
   insertImage?: { contentType: ContentImageType; contentId: number };
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -174,13 +172,11 @@ export default function MarkdownEditor({
           </button>
         ))}
         {timelineMarker && <TimelineMarkerButton textareaId={id} />}
-        {insertImage && (
-          <InsertImageButton
-            textareaId={id}
-            contentType={insertImage.contentType}
-            contentId={insertImage.contentId}
-          />
-        )}
+        <InsertImageButton
+          textareaId={id}
+          contentType={insertImage?.contentType}
+          contentId={insertImage?.contentId}
+        />
 
         <LcarsSwitch
           className="markdown-editor-tabs"

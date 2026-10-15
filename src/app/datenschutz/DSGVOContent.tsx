@@ -154,6 +154,15 @@ export default function DSGVOContent({ year }: { year: number }) {
           lit. b DSGVO — Erfüllung des Nutzungsverhältnisses der Kampagne).
         </p>
         <p>
+          Hochgeladene Bilder können zusätzlich in einer persönlichen
+          Bildbibliothek gespeichert und in mehreren Inhalten verwendet werden.
+          Dort liegen Dateiname, Typ, Größe, Upload-Zeitpunkt und der zugehörige
+          Account. Die Bilddateien werden über eine öffentliche Asset-Adresse
+          ausgeliefert; wer diese Adresse kennt, kann das Bild abrufen. Beim
+          Löschen eines Inhalts bleiben Kopien in der persönlichen Bibliothek
+          bestehen, bis die Person sie dort selbst löscht.
+        </p>
+        <p>
           Von Hand eingetragene <strong>Chronologie-Ereignisse</strong>{" "}
           speichern Datum, Titel, Kategorie, Teaser, Volltext, beteiligte
           Figuren und den anlegenden Account; hochgeladene Ereignisbilder werden
@@ -317,7 +326,7 @@ export default function DSGVOContent({ year }: { year: number }) {
         </p>
         <p>
           Der Inhalt der Datenbank wird einmal täglich automatisch als
-          Sicherungsdatei über eine verschlüsselte Verbindung in einen nicht
+          verschlüsselte Sicherungsdatei über eine verschlüsselte Verbindung in einen nicht
           öffentlichen Speicher („R2“) bei <strong>Cloudflare</strong>{" "}
           (Cloudflare, Inc., San Francisco, USA) hochgeladen. Gesichert wird
           derselbe Datenbestand, den diese Erklärung beschreibt — also auch
@@ -342,7 +351,7 @@ export default function DSGVOContent({ year }: { year: number }) {
           Zusätzlich kann die Administration ein vollständiges PostgreSQL-
           Backup mit den lokalen Client-Werkzeugen erstellen. Dabei werden
           Datenbankinhalte und Nutzerkonten auf den Rechner der ausführenden
-          Person übertragen und dort als Datei gespeichert; die Anwendung lädt
+          Person übertragen und dort verschlüsselt gespeichert; die Anwendung lädt
           diese Datei nicht zu einem weiteren Dienst hoch. Das Backup enthält
           besonders schützenswerte Daten, darunter Kontodaten und
           Kampagneninhalte, und muss entsprechend sicher aufbewahrt und bei

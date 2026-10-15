@@ -1,7 +1,9 @@
 import "server-only";
 import { parseList, parseNumberList } from "@/lib/formParsing";
 import { uploadCharacterPortraitImage } from "@/lib/characterAssets";
-import { InvalidAssetError } from "@/lib/assetStorage";
+import { uploadUserImage } from "@/lib/userImages";
+import { characterPortraitAssetKey, InvalidAssetError } from "@/lib/assetStorage";
+import { deleteAssetObjectFromR2 } from "@/lib/r2Backup";
 import {
   isDefaultCrop,
   parsePortraitCrop,
@@ -67,6 +69,7 @@ export interface CurrentPortrait {
 export async function readCharacterPortrait(
   formData: FormData,
   current?: CurrentPortrait | null,
+  ownerId?: number,
 ): Promise<CharacterPortraitResult> {
   // Portrait: eine hochgeladene Datei — sonst bleibt stehen, was schon
   // gespeichert ist. Hochgeladen wird das ORIGINAL; der gewählte Ausschnitt
@@ -81,10 +84,27 @@ export async function readCharacterPortrait(
   const portraitFile = formData.get("portraitFile");
   if (portraitFile instanceof File && portraitFile.size > 0) {
     try {
-      portrait = await uploadCharacterPortraitImage({
-        buffer: Buffer.from(await portraitFile.arrayBuffer()),
+      const buffer = Buffer.from(await portraitFile.arrayBuffer());
+      const uploadedPortrait = await uploadCharacterPortraitImage({
+        buffer,
         mimeType: portraitFile.type,
       });
+      if (ownerId != null) {
+        const sourceImageKey = characterPortraitAssetKey(uploadedPortrait);
+        try {
+          await uploadUserImage({
+            ownerId,
+            fileName: portraitFile.name,
+            mimeType: portraitFile.type,
+            buffer,
+            sourceImageKey: sourceImageKey ?? undefined,
+          });
+        } catch (error) {
+          if (sourceImageKey) await deleteAssetObjectFromR2(sourceImageKey).catch(() => undefined);
+          throw error;
+        }
+      }
+      portrait = uploadedPortrait;
       // Das hochgeladene Bild ist das neue Original; der Altbestands-Zeiger
       // auf ein früheres Original darf nicht weiterverwendet werden.
       portraitSource = null;
@@ -114,6 +134,7 @@ export async function readCharacterPortrait(
 export async function readCharacterHead(
   formData: FormData,
   current?: CurrentPortrait | null,
+  ownerId?: number,
 ): Promise<CharacterHeadResult> {
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "Bitte einen Namen angeben." };
@@ -123,7 +144,7 @@ export async function readCharacterHead(
     return { error: "Ungültiger Status." };
   }
 
-  const portraitResult = await readCharacterPortrait(formData, current);
+  const portraitResult = await readCharacterPortrait(formData, current, ownerId);
   if ("error" in portraitResult) return portraitResult;
 
   const ageRaw = String(formData.get("age") ?? "").trim();

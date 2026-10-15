@@ -386,6 +386,7 @@ export default function HeaderUserNav({
       ? [{ href: "/user/characters", label: "Charaktere" }]
       : []),
     { href: "/user/content", label: "Meine Inhalte" },
+    { href: "/user/files", label: "Meine Dateien" },
     { href: "/user", label: "Einstellungen" },
   ];
   const playerRulesItems = visibleItems([

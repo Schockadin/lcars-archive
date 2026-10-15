@@ -147,6 +147,27 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.0",
+    title: "Meine Dateien und Bildbibliothek",
+    items: [
+      {
+        text: "Unter „Meine Dateien“ findest du deine hochgeladenen Bilder und die Dateien deiner Charaktere an einem Ort.",
+        category: "konto",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Eigene Bilder lassen sich in der persönlichen Bibliothek aufbewahren und in Texten aller Inhalte erneut einfügen.",
+        category: "inhalte",
+        tutorial: "markdown",
+      },
+      {
+        text: "Datenbank-, Nutzer- und vollständige PostgreSQL-Sicherungen werden verschlüsselt erstellt.",
+        category: "export",
+        tutorial: "spielleitung-admins",
+      },
+    ],
+  },
+  {
     version: "1.67",
     title: "Personen in Gesprächen finden",
     items: [

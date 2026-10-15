@@ -15,11 +15,13 @@ import {
   uploadContentImage,
   deleteContentImage,
   listContentImages,
+  getContentImageStorageKey,
   setCharacterPortraitFromImage,
   InvalidContentImageError,
   type ContentImage,
   type ContentImageType,
 } from "@/lib/contentImages";
+import { uploadUserImage } from "@/lib/userImages";
 
 export interface ContentImageActionState {
   error?: string;
@@ -88,12 +90,25 @@ export async function uploadContentImagesAction(
   try {
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
-      await uploadContentImage(
+      const contentImage = await uploadContentImage(
         access.contentType,
         contentId,
         { buffer, mimeType: file.type },
         session.userId,
       );
+      try {
+        const sourceContentImageKey = await getContentImageStorageKey(contentImage.id);
+        await uploadUserImage({
+          ownerId: session.userId,
+          fileName: file.name,
+          mimeType: file.type,
+          buffer,
+          sourceImageKey: sourceContentImageKey ?? undefined,
+        });
+      } catch (error) {
+        await deleteContentImage(access.contentType, contentId, contentImage.id);
+        throw error;
+      }
     }
   } catch (err) {
     if (err instanceof InvalidContentImageError) {

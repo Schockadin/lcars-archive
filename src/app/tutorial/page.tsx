@@ -952,6 +952,12 @@ export default function TutorialPage() {
                 „Unterstützt Markdown-Formatierung“ zeigt ein Fahren mit der
                 Maus über das Wort „Markdown“ zusätzlich dieses Cheatsheet an.
               </p>
+              <p>
+                Über den <strong>Bild-Knopf</strong> fügst du Bilder aus deiner
+                persönlichen Bibliothek ein. Du kannst sie zuvor unter
+                „Profil → Meine Dateien“ hochladen; ältere Bilder an bestehenden
+                Inhalten lassen sich dort übernehmen.
+              </p>
               <div className="overflow-x-auto">
                 <table className="tutorial-table">
                   <thead>
@@ -1242,14 +1248,16 @@ export default function TutorialPage() {
                   Inhalte und die Kampagnendaten (AP-Konto, Talente,
                   Schwerpunkte, Hausregeln, Spielabende, Notizen, frühere
                   Fassungen, Bilder und Rollen). Nutzerkonten haben eine eigene,
-                  separate Sicherung.
+                  separate Sicherung. Neue Sicherungsdateien sind verschlüsselt;
+                  zum Wiederherstellen wird derselbe Backup-Schlüssel benötigt.
                 </li>
                 <li>
                   Unter <strong>„Datenbank → DB-Backup“</strong> findest du
                   außerdem Befehle für ein vollständiges PostgreSQL-Backup mit
                   <code>pg_dump</code>{" "}und zum atomaren Zurückspielen mit
                   <code>pg_restore</code>. Diese beiden Befehle laufen lokal auf
-                  deinem Rechner und sichern auch Userkonten.
+                  deinem Rechner und sichern auch Userkonten. Der neue Dump
+                  wird dabei direkt beim Erstellen verschlüsselt.
                 </li>
                 <li>
                   Unter <strong>„Import“</strong> eine oder mehrere

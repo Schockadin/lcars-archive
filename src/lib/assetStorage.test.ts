@@ -6,7 +6,17 @@ import {
   sanitizeFileName,
   InvalidAssetError,
   MAX_ASSET_IMAGE_BYTES,
+  characterPortraitAssetKey,
 } from "./assetStorage";
+
+describe("characterPortraitAssetKey", () => {
+  it("accepts only a generated portrait key from a web URL", () => {
+    const key = "character-portraits/123e4567-e89b-12d3-a456-426614174000.png";
+    expect(characterPortraitAssetKey(`https://assets.example.test/${key}`)).toBe(key);
+    expect(characterPortraitAssetKey("https://other.example.test/character-portraits/manual.png")).toBeNull();
+    expect(characterPortraitAssetKey("/api/content-images/4")).toBeNull();
+  });
+});
 
 describe("buildAssetPublicUrl", () => {
   it("fügt Basis-URL und Key mit genau einem Slash zusammen", () => {

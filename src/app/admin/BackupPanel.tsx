@@ -74,7 +74,7 @@ export default function BackupPanel<S>({
   function backupLabel(obj: R2BackupObject): string {
     const name = obj.key
       .replace(new RegExp(`^${r2KeyPrefix}`), "")
-      .replace(/\.json$/, "");
+      .replace(/\.json(?:\.enc)?$/, "");
     return `${name} (${(obj.sizeBytes / 1024).toFixed(1)} KB)`;
   }
 
@@ -91,11 +91,11 @@ export default function BackupPanel<S>({
       return;
     }
 
-    const blob = new Blob([result.json], { type: "application/json" });
+    const blob = new Blob([result.json], { type: "application/octet-stream" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${fileNamePrefix}-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `${fileNamePrefix}-${new Date().toISOString().slice(0, 10)}.json.enc`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -227,7 +227,7 @@ export default function BackupPanel<S>({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="application/json"
+                accept=".enc,.json,application/json,application/octet-stream"
                 className="hidden"
                 disabled={importing}
                 onChange={(e) => {
