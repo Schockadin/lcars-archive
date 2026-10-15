@@ -56,7 +56,13 @@ interface NoteRow {
 
 export interface UserNote extends ContentNote {
   targetLabel: string;
-  targetHref: string;
+  targetHref: string | null;
+}
+
+export interface NoteTarget {
+  type: Exclude<NoteContentType, "standalone">;
+  slug: string;
+  label: string;
 }
 
 interface UserNoteRow extends NoteRow {
@@ -103,6 +109,13 @@ export async function listNotesForUser(viewer: Viewer): Promise<UserNote[]> {
     JOIN archive_entries a ON n.content_type = 'archive' AND a.slug = n.content_slug
     LEFT JOIN users u ON u.id = n.author_id
     WHERE a.deleted_at IS NULL AND (n.author_id = ${viewer.userId} OR n.visibility = 'group')
+    UNION ALL
+    SELECT n.*, u.name, 'Ohne Eintrag', ''::text, NULL::text,
+           n.author_id, false, NULL::int, false
+    FROM content_notes n
+    LEFT JOIN users u ON u.id = n.author_id
+    WHERE n.content_type = 'standalone'
+      AND (n.author_id = ${viewer.userId} OR n.visibility = 'group')
     ORDER BY updated_at DESC, id DESC
   `;
   const visible = rows.filter((row) => {
@@ -138,8 +151,72 @@ export async function listNotesForUser(viewer: Viewer): Promise<UserNote[]> {
           ? missionHref(row.target_slug)
           : row.content_type === "mission_log"
             ? missionLogHref(row.parent_slug ?? "", row.target_slug)
-            : archiveHref(row.target_slug),
+            : row.content_type === "archive"
+              ? archiveHref(row.target_slug)
+              : null,
   }));
+}
+
+// Auswahl im Anlege-Dialog: nur Ziele, die der Betrachter selbst öffnen darf.
+export async function listNoteTargetsForUser(
+  viewer: Viewer,
+): Promise<NoteTarget[]> {
+  const rows = await sql<
+    {
+      type: NoteTarget["type"];
+      slug: string;
+      label: string;
+      owner_id: number | null;
+      is_draft: boolean;
+      parent_is_draft: boolean;
+    }[]
+  >`
+    SELECT 'character' AS type, slug, name AS label, player_id AS owner_id,
+           is_draft, false AS parent_is_draft
+    FROM characters WHERE deleted_at IS NULL
+    UNION ALL
+    SELECT 'mission', slug, title, owner_user_id, is_draft, false
+    FROM missions WHERE deleted_at IS NULL
+    UNION ALL
+    SELECT 'mission_log', ml.slug, ml.title, ml.owner_user_id,
+           ml.is_draft, m.is_draft
+    FROM mission_logs ml JOIN missions m ON m.id = ml.mission_id
+    WHERE ml.deleted_at IS NULL AND m.deleted_at IS NULL
+    UNION ALL
+    SELECT 'archive', slug, title, owner_user_id, is_draft, false
+    FROM archive_entries WHERE deleted_at IS NULL
+  `;
+  return rows
+    .filter(
+      (row) =>
+        (row.type === "mission"
+          ? canViewMissionDraft(row.is_draft, viewer)
+          : canView(row.is_draft, row.owner_id, viewer)) &&
+        (!row.parent_is_draft || canViewMissionDraft(true, viewer)),
+    )
+    .map(({ type, slug, label }) => ({ type, slug, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, "de"));
+}
+
+export async function addUserNote(
+  viewer: Viewer,
+  body: string,
+  visibility: NoteVisibility,
+  target: Pick<NoteTarget, "type" | "slug"> | null,
+): Promise<void> {
+  const clean = normalizeNoteBody(body);
+  if (!clean) throw new Error("Die Notiz ist leer.");
+  if (
+    target &&
+    !(await listNoteTargetsForUser(viewer)).some(
+      (item) => item.type === target.type && item.slug === target.slug,
+    )
+  )
+    throw new Error("Der Eintrag ist nicht verfügbar.");
+  await sql`
+    INSERT INTO content_notes (content_type, content_slug, author_id, body, visibility)
+    VALUES (${target?.type ?? "standalone"}, ${target?.slug ?? ""}, ${viewer.userId}, ${clean}, ${visibility})
+  `;
 }
 
 // Darf der Betrachter fremde Notizen moderieren (bearbeiten/löschen)?

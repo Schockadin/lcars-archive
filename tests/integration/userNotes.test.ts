@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import sql from "@/lib/db";
-import { deleteNote, listNotesForUser, updateNote } from "@/lib/contentNotes";
+import {
+  addUserNote,
+  deleteNote,
+  listNotesForUser,
+  listNoteTargetsForUser,
+  updateNote,
+} from "@/lib/contentNotes";
 import { makeViewer } from "@/lib/visibility";
 import { insertCharacter, insertUser } from "./helpers";
 
@@ -41,5 +47,40 @@ describe("persönliche Notizübersicht", () => {
     expect(await updateNote(note.id, owner, "Neu")).toBe(true);
     expect((await listNotesForUser(owner))[0].body).toBe("Neu");
     expect(await deleteNote(note.id, owner)).toBe(true);
+  });
+
+  it("speichert freie Notizen und bietet nur sichtbare Ziele zur Zuordnung an", async () => {
+    const user = await insertUser();
+    const other = await insertUser();
+    const visible = await insertCharacter({ playerId: user.id });
+    const hidden = await insertCharacter({ playerId: other.id, isDraft: true });
+    const viewer = makeViewer(user.id, ["player"]);
+    const targets = await listNoteTargetsForUser(viewer);
+    expect(targets).toContainEqual({
+      type: "character",
+      slug: visible.slug,
+      label: "Test Character",
+    });
+    expect(targets.some((target) => target.slug === hidden.slug)).toBe(false);
+    await expect(
+      addUserNote(viewer, "Verboten", "private", {
+        type: "character",
+        slug: hidden.slug,
+      }),
+    ).rejects.toThrow("Der Eintrag ist nicht verfügbar.");
+    await addUserNote(viewer, "Freier Merkzettel", "private", null);
+    const notes = await listNotesForUser(viewer);
+    expect(notes).toContainEqual(
+      expect.objectContaining({
+        body: "Freier Merkzettel",
+        targetLabel: "Ohne Eintrag",
+        targetHref: null,
+      }),
+    );
+    expect(
+      (await listNotesForUser(makeViewer(other.id, ["player"]))).some(
+        (note) => note.body === "Freier Merkzettel",
+      ),
+    ).toBe(false);
   });
 });

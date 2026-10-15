@@ -25,3 +25,8 @@ FROM characters AS character
 WHERE document.character_id = character.id AND document.owner_user_id IS NULL;
 CREATE INDEX IF NOT EXISTS idx_character_documents_owner
   ON character_documents(owner_user_id, created_at DESC);
+
+-- Freie Notizen ohne zugeordneten Inhalt (content_slug bleibt dafür leer).
+ALTER TABLE content_notes DROP CONSTRAINT IF EXISTS content_notes_content_type_check;
+ALTER TABLE content_notes ADD CONSTRAINT content_notes_content_type_check
+  CHECK (content_type IN ('character', 'mission', 'mission_log', 'archive', 'standalone'));

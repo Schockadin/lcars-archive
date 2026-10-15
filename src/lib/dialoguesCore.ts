@@ -1847,6 +1847,7 @@ export async function getActiveGMs(
 
 export interface DialogueSummary {
   id: number;
+  createdAt?: string;
   slug: string;
   title: string;
   partnerName: string;
@@ -1892,6 +1893,7 @@ export async function getDialoguesForUser(
       title: string;
       metadata: unknown;
       updated_at: string;
+      created_at: string;
       last_message_character_name: string | null;
       dialogue_open: boolean;
       is_draft: boolean;
@@ -1905,7 +1907,7 @@ export async function getDialoguesForUser(
       scope === "open"
         ? await sql<DialogueRow[]>`
             SELECT ae.id, ae.slug, ae.title, ae.metadata,
-                   ae.updated_at::text AS updated_at,
+                   ae.updated_at::text AS updated_at, ae.created_at::text AS created_at,
                    latest_message.character_name AS last_message_character_name,
                    ae.dialogue_open, ae.is_draft, ae.owner_user_id
             FROM archive_entries ae
@@ -1940,7 +1942,7 @@ export async function getDialoguesForUser(
           `
         : await sql<DialogueRow[]>`
             SELECT ae.id, ae.slug, ae.title, ae.metadata,
-                   ae.updated_at::text AS updated_at,
+                   ae.updated_at::text AS updated_at, ae.created_at::text AS created_at,
                    latest_message.character_name AS last_message_character_name,
                    ae.dialogue_open, ae.is_draft, ae.owner_user_id
             FROM archive_entries ae
@@ -1989,6 +1991,7 @@ export async function getDialoguesForUser(
         partnerName: partner?.name ?? "Unbekannt",
         lastMessageCharacterName: row.last_message_character_name,
         updatedAt: row.updated_at,
+        createdAt: row.created_at,
         logDate: parseDialogueLogDate(row.metadata),
         open: row.dialogue_open,
         characterSlug: own.slug,
@@ -2009,6 +2012,7 @@ export async function getDialoguesForUser(
     title: string;
     metadata: unknown;
     updated_at: string;
+    created_at: string;
     last_message_character_name: string | null;
     dialogue_open: boolean;
     is_draft: boolean;
@@ -2018,7 +2022,7 @@ export async function getDialoguesForUser(
   };
   const npcRows = await sql<NpcDialogueRow[]>`
     SELECT ae.id, ae.slug, ae.title, ae.metadata,
-           ae.updated_at::text AS updated_at,
+           ae.updated_at::text AS updated_at, ae.created_at::text AS created_at,
            latest_message.character_name AS last_message_character_name,
            ae.dialogue_open, ae.is_draft, ae.owner_user_id,
            c.slug AS character_slug, c.title AS character_name
@@ -2052,6 +2056,7 @@ export async function getDialoguesForUser(
       partnerName: partner?.name ?? "Unbekannt",
       lastMessageCharacterName: row.last_message_character_name,
       updatedAt: row.updated_at,
+      createdAt: row.created_at,
       logDate: parseDialogueLogDate(row.metadata),
       open: row.dialogue_open,
       characterSlug: row.character_slug,

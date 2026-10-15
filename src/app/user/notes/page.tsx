@@ -18,8 +18,9 @@ export default async function UserNotesPage() {
         <HelpHeading title="Meine Notizen" tutorial="notizen">
           <p>
             Hier findest du deine privaten Notizen und die für die Runde
-            freigegebenen Kommentare. Eigene Notizen kannst du bearbeiten oder
-            löschen.
+            freigegebenen Kommentare. Mit „Neue Notiz“ kannst du auch einen
+            Merkzettel ohne Eintrag anlegen. Eigene Notizen kannst du bearbeiten
+            oder löschen.
           </p>
         </HelpHeading>
         <UserNotesBrowser initialNotes={notes} />

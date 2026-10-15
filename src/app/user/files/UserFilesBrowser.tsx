@@ -228,9 +228,9 @@ export default function UserFilesBrowser({
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-lcars border border-lcars-border">
-        <table className="w-full min-w-[650px] text-left text-[13px]">
-          <thead className="bg-lcars-panel text-lcars-primary-ink">
+      <div className="rounded-lcars border border-lcars-border sm:overflow-x-auto">
+        <table className="w-full text-left text-[13px]">
+          <thead className="hidden bg-lcars-panel text-lcars-primary-ink sm:table-header-group">
             <tr>
               <th scope="col" className="p-[12px]">
                 Name
@@ -246,19 +246,28 @@ export default function UserFilesBrowser({
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="block space-y-[10px] p-[10px] sm:table-row-group sm:space-y-0 sm:p-0">
             {shown.map((row) => (
               <tr
                 key={`${row.type}:${row.id}`}
-                className="border-t border-lcars-border"
+                className="block rounded-lcars border border-lcars-border bg-lcars-surface sm:table-row sm:rounded-none sm:border-x-0 sm:border-b-0"
               >
-                <td className="max-w-[260px] break-all p-[12px]">
+                <td
+                  data-label="Name"
+                  className="block break-all p-[10px] before:mr-[8px] before:font-bold before:content-[attr(data-label)] sm:table-cell sm:max-w-[260px] sm:p-[12px] sm:before:hidden"
+                >
                   {row.fileName}
                 </td>
-                <td className="p-[12px]">
+                <td
+                  data-label="Typ"
+                  className="block p-[10px] before:mr-[8px] before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
+                >
                   {row.type === "image" ? "Bild" : "Dokument"}
                 </td>
-                <td className="p-[12px]">
+                <td
+                  data-label="Verlinkt in"
+                  className="block p-[10px] before:mb-[5px] before:block before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
+                >
                   {row.type === "image" ? (
                     (linkedImages[row.id] ?? []).length > 0 ? (
                       <div className="flex flex-wrap gap-x-[10px] gap-y-[4px]">
@@ -286,7 +295,10 @@ export default function UserFilesBrowser({
                     "Nicht zugeordnet"
                   )}
                 </td>
-                <td className="p-[12px]">
+                <td
+                  data-label="Aktionen"
+                  className="block p-[10px] before:mb-[5px] before:block before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
+                >
                   <div className="flex gap-[6px]">
                     <button
                       type="button"

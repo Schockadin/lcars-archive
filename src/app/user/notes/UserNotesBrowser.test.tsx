@@ -14,6 +14,9 @@ vi.mock("./actions", () => ({
   editMyNoteAction,
   deleteMyNoteAction,
 }));
+vi.mock("./NewNoteButton", () => ({
+  default: () => <button type="button">Neue Notiz</button>,
+}));
 
 const own = {
   id: 1,
@@ -100,5 +103,30 @@ describe("UserNotesBrowser", () => {
     expect(confirm).toHaveBeenCalledOnce();
     expect(deleteMyNoteAction).not.toHaveBeenCalled();
     confirm.mockRestore();
+  });
+
+  it("zeigt freie Notizen ohne Link in einer mobilen Kartenansicht", () => {
+    const { container } = render(
+      <UserNotesBrowser
+        initialNotes={[
+          {
+            ...own,
+            targetLabel: "Ohne Eintrag",
+            targetHref: null,
+          },
+        ]}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Neue Notiz" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Ohne Eintrag")).toBeInTheDocument();
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(container.querySelector("tbody")?.className).toContain(
+      "sm:table-row-group",
+    );
+    expect(
+      container.querySelector("td[data-label='Inhalt']"),
+    ).toBeInTheDocument();
   });
 });

@@ -38,6 +38,7 @@ export interface MissionParticipant {
 // Log-Autoren (für den Autor-Filter).
 export interface MissionPreview {
   id: number;
+  created_at?: string;
   slug: string;
   title: string;
   status: MissionStatus;

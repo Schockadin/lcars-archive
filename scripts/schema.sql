@@ -1185,7 +1185,7 @@ CREATE INDEX IF NOT EXISTS idx_archive_title_fts ON archive_entries USING GIN (t
 CREATE TABLE IF NOT EXISTS content_notes (
   id           SERIAL PRIMARY KEY,
   content_type TEXT NOT NULL
-                 CHECK (content_type IN ('character', 'mission', 'mission_log', 'archive')),
+                 CHECK (content_type IN ('character', 'mission', 'mission_log', 'archive', 'standalone')),
   content_slug TEXT NOT NULL,
   author_id    INT  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   body         TEXT NOT NULL,

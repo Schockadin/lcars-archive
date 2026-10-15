@@ -161,6 +161,16 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "notizen",
       },
       {
+        text: "Neue Notizen lassen sich direkt in „Meine Notizen“ oder über „Neue Inhalte“ anlegen — auch ohne Zuordnung zu einem Eintrag.",
+        category: "inhalte",
+        tutorial: "notizen",
+      },
+      {
+        text: "„Meine Inhalte“ lässt sich jetzt auch nach Ingame-Datum oder Erstellungsdatum sortieren, jeweils auf- und absteigend.",
+        category: "inhalte",
+        tutorial: "mein-bereich",
+      },
+      {
         text: "Eigene Bilder lassen sich in der persönlichen Bibliothek aufbewahren und in Texten aller Inhalte erneut einfügen.",
         category: "inhalte",
         tutorial: "markdown",

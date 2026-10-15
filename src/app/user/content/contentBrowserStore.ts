@@ -7,7 +7,7 @@ export type ContentKind =
   | "archive_entry"
   | "mission";
 export type CategoryFilter = "all" | ContentKind | "drafts";
-export type SortKey = "category" | "title";
+export type SortKey = "category" | "title" | "ingameDate" | "createdAt";
 export type SortDirection = "asc" | "desc";
 
 export interface ContentBrowserFilters {

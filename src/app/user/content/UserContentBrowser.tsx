@@ -96,6 +96,8 @@ interface ContentItem {
   title: string;
   href: string;
   isDraft: boolean;
+  ingameDate: string | null;
+  createdAt: string | null;
   // Farbe des Punktes an der Schiene: die Farbe der Inhaltsart, bei einem
   // Entwurf die Zustandsfarbe (CONTENT_DRAFT_COLOR) — an ihr erkennt man auf
   // der ganzen Seite, was noch nicht veröffentlicht ist.
@@ -208,6 +210,8 @@ function UserContentBrowserContent({
       title: log.title,
       href: missionLogHref(log.mission_slug, log.slug),
       isDraft: log.is_draft,
+      ingameDate: log.log_date,
+      createdAt: log.createdAt ?? null,
       color: dotColor("mission_log", log.is_draft),
       characterSlug: log.character_slug,
       meta: (
@@ -263,6 +267,8 @@ function UserContentBrowserContent({
       title: d.title,
       href: dialogueContentHref(d.slug, d.open),
       isDraft: d.isDraft,
+      ingameDate: d.logDate,
+      createdAt: d.createdAt ?? null,
       color: dotColor("dialogue", d.isDraft),
       characterSlug: d.characterSlug,
       meta: (
@@ -315,6 +321,8 @@ function UserContentBrowserContent({
         title: event.title,
         href: "/chronologie?scope=events",
         isDraft: false,
+        ingameDate: event.date,
+        createdAt: event.createdAt ?? null,
         color: visual.color,
         meta: (
           <>
@@ -359,6 +367,8 @@ function UserContentBrowserContent({
         title: entry.title,
         href: archiveHref(entry.slug),
         isDraft: entry.isDraft,
+        ingameDate: entry.logDate ?? null,
+        createdAt: entry.createdAt ?? null,
         color: dotColor("archive_entry", entry.isDraft),
         meta: (
           <span>
@@ -404,6 +414,8 @@ function UserContentBrowserContent({
           title: m.title,
           href: missionHref(m.slug),
           isDraft: m.isDraft,
+          ingameDate: m.started_at,
+          createdAt: m.created_at ?? null,
           color: dotColor("mission", m.isDraft),
           meta: (
             <span>
@@ -478,6 +490,14 @@ function UserContentBrowserContent({
       .filter((item) => !q || item.title.toLowerCase().includes(q))
       .sort((a, b) => {
         const byTitle = a.title.localeCompare(b.title, "de");
+        if (sortKey === "ingameDate" || sortKey === "createdAt") {
+          const aDate = a[sortKey];
+          const bDate = b[sortKey];
+          if (!aDate) return bDate ? 1 : byTitle;
+          if (!bDate) return -1;
+          const byDate = aDate.localeCompare(bDate);
+          return (sortDir === "asc" ? byDate : -byDate) || byTitle;
+        }
         const comparison =
           sortKey === "title"
             ? byTitle
@@ -596,6 +616,8 @@ const ContentBrowserToolbar = memo(function ContentBrowserToolbar({
         options={[
           { key: "category", label: "Kategorie" },
           { key: "title", label: "Alphabetisch" },
+          { key: "ingameDate", label: "Ingame-Datum", defaultDir: "desc" },
+          { key: "createdAt", label: "Erstellt am", defaultDir: "desc" },
         ]}
         sortKey={sortKey}
         sortDir={sortDir}

@@ -1285,7 +1285,8 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   Felder inklusive Text noch bearbeiten lassen, bevor sie einzeln bestätigt
   wird.
 - **Meine Dateien** — unter `/user/files` stehen Bilder und Dokumente in einer gemeinsamen Tabelle mit Verlinkungen, Vorschau, Umbenennen und bestätigtem Löschen. Bilder bleiben in der persönlichen Bibliothek und können über den Bild-Knopf in allen Markdown-Editoren erneut eingefügt werden; ältere Inhaltsbilder können übernommen werden. Dokumente können ohne Charakter hochgeladen und später einem eigenen Charakter zugeordnet werden.
-- **Meine Notizen** — unter `/user/notes` stehen eigene und für die Runde freigegebene Notizen in einer Tabelle. Die Übersicht verlinkt die zugehörigen Einträge und öffnet die ganze Notiz per Zeilenklick; eigene Notizen lassen sich dort bearbeiten und löschen.
+- **Meine Notizen** — unter `/user/notes` stehen eigene und für die Runde freigegebene Notizen in einer Tabelle, auf schmalen Bildschirmen als Karten. Neue Notizen lassen sich dort und über „Neue Inhalte“ anlegen, auch ohne zugeordneten Eintrag. Die Übersicht verlinkt zugeordnete Einträge und öffnet die ganze Notiz per Zeilenklick; eigene Notizen lassen sich dort bearbeiten und löschen.
+- **Meine Inhalte** — die Liste lässt sich nach Kategorie, Titel, Ingame-Datum oder Erstellungszeit sortieren; ein weiterer Klick wechselt zwischen auf- und absteigend.
 - **DB-Backup** — der komplette Datenbankinhalt (seit Dateiformat 2 inklusive
   AP-Konto, Talenten, Schwerpunkten, Hausregeln, Sessions, Notizen, Fassungen,
   Bildern und Rollen) lässt sich im Admin-Panel als
@@ -2215,7 +2216,8 @@ DB ausgeführt wird.
 
 Für Version 2.0 muss `scripts/migrate-v2.sql` vor dem Deploy auf der Datenbank
 ausgeführt werden. Es legt `user_images` für die persönliche Bildbibliothek an
-und erweitert `character_documents` für Dokumente ohne Charakterzuordnung.
+und erweitert `character_documents` für Dokumente ohne Charakterzuordnung sowie
+`content_notes` für Notizen ohne Eintrag.
 Falls eine frühere Fassung der Migration bereits lief, die aktuelle Fassung
 erneut ausführen; die Änderungen sind wiederholbar.
 Zusätzlich muss `BACKUP_ENCRYPTION_KEY` in der App-Umgebung, im GitHub-Secret

@@ -245,6 +245,47 @@ describe("UserContentBrowser", () => {
     );
   });
 
+  it("sortiert Ingame- und Erstellungsdatum in beide Richtungen, fehlende Daten zuletzt", () => {
+    renderBrowser({
+      logs: [
+        {
+          ...log,
+          title: "Log alt",
+          log_date: "2400-01-01",
+          createdAt: "2026-10-03",
+        },
+        {
+          ...draftLog,
+          title: "Log neu",
+          log_date: "2400-05-01",
+          createdAt: "2026-10-01",
+        },
+      ],
+      dialogues: [],
+      archiveEntries: [
+        {
+          ...entry,
+          title: "Ohne Datum",
+          logDate: null,
+          createdAt: "2026-10-02",
+        },
+      ],
+      missions: [],
+    });
+    const titles = () =>
+      [...document.querySelectorAll(".timeline-card-title")].map(
+        (el) => el.textContent,
+      );
+    fireEvent.click(screen.getByRole("button", { name: /Ingame-Datum/ }));
+    expect(titles()).toEqual(["Log neu", "Log alt", "Ohne Datum"]);
+    fireEvent.click(screen.getByRole("button", { name: /Ingame-Datum/ }));
+    expect(titles()).toEqual(["Log alt", "Log neu", "Ohne Datum"]);
+    fireEvent.click(screen.getByRole("button", { name: /Erstellt am/ }));
+    expect(titles()).toEqual(["Log alt", "Ohne Datum", "Log neu"]);
+    fireEvent.click(screen.getByRole("button", { name: /Erstellt am/ }));
+    expect(titles()).toEqual(["Log neu", "Ohne Datum", "Log alt"]);
+  });
+
   it("hält den Charakter-Filter auf Berichte und Gespräche beschränkt", () => {
     // Datenbank-Einträge und Missionen hängen am Konto, nicht an einer Figur —
     // sie dürfen durch den Figuren-Filter nicht verschwinden.

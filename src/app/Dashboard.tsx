@@ -86,12 +86,14 @@ export default function Dashboard({ user }: { user: User }) {
   const zeigtNeuesEvent = zeigt("neues-event");
   const zeigtNeuenEintrag = zeigt("neuer-eintrag");
   const zeigtNeuenNpc = zeigt("neuer-npc");
+  const zeigtNeueNotiz = zeigt("neue-notiz");
   const anlegeKnoepfe = [
     ...(zeigtNeuesLog ? (["missionLog"] as const) : []),
     ...(zeigtNeuesGespraech ? (["dialogue"] as const) : []),
     ...(zeigtNeuesEvent ? (["event"] as const) : []),
     ...(zeigtNeuenEintrag ? (["archiveEntry"] as const) : []),
     ...(zeigtNeuenNpc ? (["npc"] as const) : []),
+    ...(zeigtNeueNotiz ? (["note"] as const) : []),
   ];
   const firstVisit = user.previous_login_at === null;
 

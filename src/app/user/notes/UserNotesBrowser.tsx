@@ -11,6 +11,7 @@ import {
   editMyNoteAction,
   getMyNotesAction,
 } from "./actions";
+import NewNoteButton from "./NewNoteButton";
 
 export function noteExcerpt(body: string): string {
   const plain = body.replace(/\s+/g, " ").trim();
@@ -115,14 +116,17 @@ export default function UserNotesBrowser({
 
   return (
     <div className="lcars-text flex flex-col gap-[18px]">
+      <div>
+        <NewNoteButton onCreated={refresh} />
+      </div>
       {error && !selected && (
         <p role="alert" className="text-lcars-quinary-ink">
           {error}
         </p>
       )}
-      <div className="overflow-x-auto rounded-lcars border border-lcars-border">
-        <table className="w-full min-w-[650px] text-left text-[13px]">
-          <thead className="bg-lcars-panel text-lcars-primary-ink">
+      <div className="rounded-lcars border border-lcars-border sm:overflow-x-auto">
+        <table className="w-full text-left text-[13px]">
+          <thead className="hidden bg-lcars-panel text-lcars-primary-ink sm:table-header-group">
             <tr>
               <th scope="col" className="p-[12px]">
                 Notiz zu
@@ -135,13 +139,13 @@ export default function UserNotesBrowser({
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="block space-y-[10px] p-[10px] sm:table-row-group sm:space-y-0 sm:p-0">
             {notes.map((note) => (
               <tr
                 key={note.id}
                 tabIndex={0}
                 aria-label={`Notiz zu „${note.targetLabel}“ anzeigen`}
-                className="cursor-pointer border-t border-lcars-border hover:bg-lcars-panel focus-visible:outline-2 focus-visible:outline-lcars-primary"
+                className="block cursor-pointer rounded-lcars border border-lcars-border bg-lcars-surface hover:bg-lcars-panel focus-visible:outline-2 focus-visible:outline-lcars-primary sm:table-row sm:rounded-none sm:border-x-0 sm:border-b-0"
                 onClick={() => open(note)}
                 onKeyDown={(event) => {
                   if (
@@ -153,20 +157,31 @@ export default function UserNotesBrowser({
                   }
                 }}
               >
-                <td className="p-[12px]">
-                  <Link
-                    href={note.targetHref}
-                    className="text-lcars-primary-ink underline"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    {note.targetLabel}
-                  </Link>
+                <td
+                  data-label="Notiz zu"
+                  className="block p-[10px] before:mr-[8px] before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
+                >
+                  {note.targetHref ? (
+                    <Link
+                      href={note.targetHref}
+                      className="text-lcars-primary-ink underline"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {note.targetLabel}
+                    </Link>
+                  ) : (
+                    note.targetLabel
+                  )}
                 </td>
-                <td className="max-w-[600px] break-words p-[12px]">
+                <td
+                  data-label="Inhalt"
+                  className="block max-w-[600px] break-words p-[10px] before:mr-[8px] before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
+                >
                   {noteExcerpt(note.body)}
                 </td>
                 <td
-                  className="p-[12px]"
+                  data-label="Aktionen"
+                  className="block p-[10px] before:mb-[5px] before:block before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
                   onClick={(event) => event.stopPropagation()}
                 >
                   {actions(note)}
@@ -189,12 +204,16 @@ export default function UserNotesBrowser({
           title={`Notiz zu ${selected.targetLabel}`}
           onClose={() => setSelectedId(null)}
         >
-          <Link
-            href={selected.targetHref}
-            className="text-lcars-primary-ink underline"
-          >
-            {selected.targetLabel}
-          </Link>
+          {selected.targetHref ? (
+            <Link
+              href={selected.targetHref}
+              className="text-lcars-primary-ink underline"
+            >
+              {selected.targetLabel}
+            </Link>
+          ) : (
+            <span>{selected.targetLabel}</span>
+          )}
           <p className="text-lcars-ink-dim text-[12px]">
             {selected.visibility === "private" ? "Nur ich" : "Für die Runde"} ·{" "}
             {selected.authorName ?? "Unbekannt"}

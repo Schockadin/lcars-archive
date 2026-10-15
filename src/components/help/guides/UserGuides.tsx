@@ -88,7 +88,7 @@ export function MyContentGuide() {
           Formular in einem Fenster über der Liste — brichst du ab, stehst du
           wieder in deiner Übersicht und hast nichts verloren. Welche Knöpfe du
           siehst, hängt davon ab, was du darfst:{" "}
-          <strong>Datenbank-Eintrag</strong> darf jede:r anlegen,{" "}
+          <strong>Datenbank-Eintrag</strong> und <strong>Notiz</strong> darf jede:r anlegen,{" "}
           <strong>Charakter</strong> jede:r außer Gast-Accounts,{" "}
           <strong>Einsatzbericht</strong> und <strong>Gespräch</strong> setzen
           einen eigenen Charakter voraus, <strong>Event</strong> setzt das
@@ -133,7 +133,8 @@ export function MyContentGuide() {
           Darunter steht alles, was dir gehört — gebaut wie Chronologie und
           Datenbank: eine Überschrift je Kategorie, darunter die Einträge an der
           Schiene. Sortiert wird in der Vorgabe nach Kategorie, wahlweise
-          alphabetisch über alles. Über den Filter{" "}
+          alphabetisch, nach Ingame-Datum oder nach Erstellungsdatum. Ein zweiter
+          Klick auf die gewählte Sortierung kehrt die Richtung um. Über den Filter{" "}
           <strong>„Nur Entwürfe“</strong> siehst du alle unfertigen Einträge
           zusammen; ein Charakter-Filter grenzt Einsatzberichte und Gespräche
           auf eine deiner Figuren ein. Auch Ereignisse, die du selbst in die

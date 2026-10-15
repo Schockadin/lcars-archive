@@ -1,5 +1,6 @@
 export interface ManualEventForEdit {
   id: number;
+  createdAt?: string;
   date: string;
   title: string;
   teaser: string | null;

@@ -345,6 +345,8 @@ export async function getArchiveEntryBySlug(
 
 export interface UserContentArchiveEntry {
   id: number;
+  createdAt?: string;
+  logDate?: string | null;
   slug: string;
   title: string;
   category: ArchiveCategory;
@@ -360,7 +362,8 @@ export async function getArchiveEntriesForUser(
   userId: number,
 ): Promise<UserContentArchiveEntry[]> {
   return sql<UserContentArchiveEntry[]>`
-    SELECT id, slug, title, category, is_draft AS "isDraft"
+    SELECT id, slug, title, category, is_draft AS "isDraft",
+           created_at::text AS "createdAt", metadata->>'logDate' AS "logDate"
     FROM archive_entries
     WHERE owner_user_id = ${userId} AND category != 'dialogue' AND deleted_at IS NULL
     ORDER BY title ASC

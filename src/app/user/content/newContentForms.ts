@@ -18,7 +18,8 @@ export type OpenForm =
   | "event"
   | "archiveEntry"
   | "npc"
-  | "mission";
+  | "mission"
+  | "note";
 
 export const NEW_CONTENT_FORMS: readonly OpenForm[] = [
   "missionLog",
@@ -26,6 +27,7 @@ export const NEW_CONTENT_FORMS: readonly OpenForm[] = [
   "event",
   "archiveEntry",
   "npc",
+  "note",
   "mission",
 ];
 
@@ -35,6 +37,7 @@ export const NEW_CONTENT_TITLES: Record<OpenForm, string> = {
   event: "Neues Event anlegen",
   archiveEntry: "Neuen Datenbank-Eintrag anlegen",
   npc: "Neuen NPC anlegen",
+  note: "Neue Notiz",
   mission: "Neue Mission anlegen",
 };
 
@@ -44,6 +47,7 @@ export const NEW_CONTENT_LABELS: Record<OpenForm, string> = {
   event: "Neues Event",
   archiveEntry: "Neuer Datenbank-Eintrag",
   npc: "Neuer NPC",
+  note: "Neue Notiz",
   mission: "Neue Mission",
 };
 

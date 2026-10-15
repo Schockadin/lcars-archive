@@ -97,6 +97,21 @@ describe("UserFilesBrowser", () => {
     expect(screen.getByRole("cell", { name: "akte.pdf" })).toBeInTheDocument();
   });
 
+  it("stellt Dateizeilen auf schmalen Bildschirmen als beschriftete Karten dar", () => {
+    const { container } = render(<UserFilesBrowser {...props} />);
+    expect(container.querySelector("tbody")?.className).toContain(
+      "sm:table-row-group",
+    );
+    for (const label of ["Name", "Typ", "Verlinkt in", "Aktionen"]) {
+      expect(
+        container.querySelector(`td[data-label='${label}']`),
+      ).toBeInTheDocument();
+    }
+    expect(container.querySelector("tbody tr")?.className).toContain(
+      "sm:table-row",
+    );
+  });
+
   it("öffnet die Vorschau und kann Dokumente umbenennen und lösen", async () => {
     editOwnFileAction.mockResolvedValue({});
     getOwnFilesAction.mockResolvedValue({

@@ -7,6 +7,7 @@ import NewArchiveEntryForm from "@/app/user/archive/new/NewArchiveEntryForm";
 import NewMissionForm from "@/app/user/missions/new/NewMissionForm";
 import ManualEventForm from "@/components/timeline/ManualEventForm";
 import { CreatePlannedSessionModal } from "@/app/gm/sessions/PlannedSessionManager";
+import NewNoteButton from "@/app/user/notes/NewNoteButton";
 import type { NewContentData } from "./newContentData";
 import {
   NEW_CONTENT_LABELS,
@@ -52,6 +53,7 @@ export default function NewContentButtons({
 
   // Breite und Umbruch kommen aus .lcars-btn-row (controls.css).
   const button = (form: OpenForm) => {
+    if (form === "note") return <NewNoteButton key={form} />;
     // Das Event-Formular verwaltet sein Fenster selbst, weil dieselbe
     // Komponente auch in Chronologie und Inhaltsliste zum Bearbeiten dient.
     if (form === "event" && data.event) {

@@ -25,6 +25,7 @@ const VORGABEN: Record<DashboardSectionId, boolean> = {
   "neues-event": true,
   "neuer-eintrag": true,
   "neuer-npc": true,
+  "neue-notiz": true,
   entwuerfe: true,
   charaktere: true,
   versionen: false,

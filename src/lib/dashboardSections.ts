@@ -68,6 +68,12 @@ export const DASHBOARD_SECTIONS = [
     default: true,
   },
   {
+    id: "neue-notiz",
+    label: "Neue Notiz",
+    hint: "Knopf, der das Formular für eine neue Notiz öffnet.",
+    default: true,
+  },
+  {
     id: "entwuerfe",
     label: "Entwürfe",
     hint: "Deine unfertigen Inhalte mit dem Weg zurück in den Editor.",

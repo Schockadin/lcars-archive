@@ -24,6 +24,9 @@ vi.mock("@/app/gm/sessions/PlannedSessionManager", () => ({
 vi.mock("@/components/timeline/ManualEventForm", () => ({
   default: () => <button type="button">Neues Event</button>,
 }));
+vi.mock("@/app/user/notes/NewNoteButton", () => ({
+  default: () => <button type="button">Neue Notiz</button>,
+}));
 
 function data(over: Partial<NewContentData> = {}): NewContentData {
   return {
@@ -63,8 +66,8 @@ describe("NewContentPanel", () => {
   it("nennt in der Kopfzeile so viele Knöpfe, wie darunter stehen", () => {
     render(<NewContentPanel data={data()} storageId="content:anlegen" />);
 
-    expect(knopfZahl()).toBe(6);
-    expect(screen.getByText("6")).toBeInTheDocument();
+    expect(knopfZahl()).toBe(7);
+    expect(screen.getByText("7")).toBeInTheDocument();
   });
 
   it("zählt nur, was die Auswahl der Seite hergibt", () => {
