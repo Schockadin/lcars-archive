@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { getContentImagesAction } from "@/app/actions/contentImages";
 import {
@@ -29,33 +29,26 @@ export default function InsertImageButton({
   const [legacy, setLegacy] = useState<LegacyUserImage[]>([]);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
+  async function openPicker() {
+    setOpen(true);
     setLoading(true);
-    Promise.all([
-      getOwnImagesAction(),
-      contentType && contentId
-        ? getContentImagesAction(contentType, contentId)
-        : Promise.resolve([]),
-    ])
-      .then(([own, content]) => {
-        if (cancelled) return;
-        setLibrary(own.images);
-        setLegacy(own.legacy);
-        setImages(content);
-        setError("");
-      })
-      .catch(() => {
-        if (!cancelled) setError("Bilder konnten nicht geladen werden.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, contentType, contentId]);
+    setError("");
+    try {
+      const [own, content] = await Promise.all([
+        getOwnImagesAction(),
+        contentType && contentId
+          ? getContentImagesAction(contentType, contentId)
+          : Promise.resolve([]),
+      ]);
+      setLibrary(own.images);
+      setLegacy(own.legacy);
+      setImages(content);
+    } catch {
+      setError("Bilder konnten nicht geladen werden.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function insert(src: string) {
     const textarea = document.getElementById(textareaId);
@@ -88,7 +81,7 @@ export default function InsertImageButton({
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => void openPicker()}
         className="lcars-icon-btn"
         aria-label="Bild einfügen"
         title="Bild einfügen"
