@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import HelpHeading from "@/components/help/HelpHeading";
-import { requireOwnUser } from "@/app/user/dal";
-import { listUserCharacterFiles } from "@/lib/userFiles";
-import { getOwnImagesAction } from "./actions";
+import { getOwnFilesAction } from "./actions";
 import UserFilesBrowser from "./UserFilesBrowser";
 import { UserFilesGuide } from "@/components/help/guides/UserGuides";
 
@@ -13,11 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function UserFilesPage() {
-  const user = await requireOwnUser();
-  const [images, documents] = await Promise.all([
-    getOwnImagesAction(),
-    listUserCharacterFiles(user.id),
-  ]);
+  const files = await getOwnFilesAction();
   return (
     <>
       <PageMeta title="Meine Dateien" section="users" />
@@ -26,9 +20,11 @@ export default async function UserFilesPage() {
           <UserFilesGuide />
         </HelpHeading>
         <UserFilesBrowser
-          initialImages={images.images}
-          initialLegacy={images.legacy}
-          documents={documents}
+          initialImages={files.images}
+          initialLegacy={files.legacy}
+          initialDocuments={files.documents}
+          initialCharacters={files.characters}
+          initialLinkedImages={files.linkedImages}
         />
       </div>
     </>

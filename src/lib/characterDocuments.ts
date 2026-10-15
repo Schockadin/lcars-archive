@@ -149,6 +149,8 @@ export interface CharacterDocumentAccess {
   contentMime: string;
   extractedText: string | null;
   ownerId: number | null;
+  fileOwnerId: number | null;
+  linkedToCharacter: boolean;
   isDraft: boolean;
   isActive: boolean;
 }
@@ -165,14 +167,17 @@ export async function getCharacterDocumentAccess(
       content_mime: string;
       extracted_text: string | null;
       player_id: number | null;
+      owner_user_id: number | null;
+      character_id: number | null;
       is_draft: boolean;
       deleted_at: Date | null;
     }[]
   >`
     SELECT d.id, d.r2_key, d.file_name, d.file_kind, d.content_mime,
-           d.extracted_text, c.player_id, c.is_draft, c.deleted_at
+           d.extracted_text, d.owner_user_id, d.character_id,
+           c.player_id, COALESCE(c.is_draft, false) AS is_draft, c.deleted_at
     FROM character_documents d
-    JOIN characters c ON c.id = d.character_id
+    LEFT JOIN characters c ON c.id = d.character_id
     WHERE d.id = ${id}
   `;
   return row
@@ -184,8 +189,10 @@ export async function getCharacterDocumentAccess(
         contentMime: row.content_mime,
         extractedText: row.extracted_text,
         ownerId: row.player_id,
+        fileOwnerId: row.owner_user_id,
+        linkedToCharacter: row.character_id !== null,
         isDraft: row.is_draft,
-        isActive: row.deleted_at == null,
+        isActive: row.character_id === null || row.deleted_at == null,
       }
     : null;
 }

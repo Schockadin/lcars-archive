@@ -1284,7 +1284,7 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   angezeigt (Datei 1 von N mit Vor-/Zurück-Navigation), in der sich alle
   Felder inklusive Text noch bearbeiten lassen, bevor sie einzeln bestätigt
   wird.
-- **Meine Dateien** — unter `/user/files` stehen die hochgeladenen Bilder eines Kontos und die Dateien seiner Charaktere. Bilder lassen sich in einer persönlichen Bibliothek speichern und über den Bild-Knopf in allen Markdown-Editoren erneut einfügen; ältere Inhaltsbilder können übernommen werden.
+- **Meine Dateien** — unter `/user/files` stehen Bilder und Dokumente in einer gemeinsamen Tabelle mit Verlinkungen, Vorschau, Umbenennen und bestätigtem Löschen. Bilder bleiben in der persönlichen Bibliothek und können über den Bild-Knopf in allen Markdown-Editoren erneut eingefügt werden; ältere Inhaltsbilder können übernommen werden. Dokumente können ohne Charakter hochgeladen und später einem eigenen Charakter zugeordnet werden.
 - **DB-Backup** — der komplette Datenbankinhalt (seit Dateiformat 2 inklusive
   AP-Konto, Talenten, Schwerpunkten, Hausregeln, Sessions, Notizen, Fassungen,
   Bildern und Rollen) lässt sich im Admin-Panel als
@@ -2213,7 +2213,10 @@ Rollen-Hochstufungs-Bug verursacht). Datenverändernde bzw. einmalige Schritte
 DB ausgeführt wird.
 
 Für Version 2.0 muss `scripts/migrate-v2.sql` vor dem Deploy auf der Datenbank
-ausgeführt werden. Es legt `user_images` für die persönliche Bildbibliothek an.
+ausgeführt werden. Es legt `user_images` für die persönliche Bildbibliothek an
+und erweitert `character_documents` für Dokumente ohne Charakterzuordnung.
+Falls eine frühere Fassung der Migration bereits lief, die aktuelle Fassung
+erneut ausführen; die Änderungen sind wiederholbar.
 Zusätzlich muss `BACKUP_ENCRYPTION_KEY` in der App-Umgebung, im GitHub-Secret
 des täglichen Backup-Laufs und für lokale Dumps identisch gesetzt sein.
 

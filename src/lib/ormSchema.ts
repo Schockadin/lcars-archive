@@ -38,9 +38,12 @@ export const characters = pgTable("characters", {
 
 export const characterDocuments = pgTable("character_documents", {
   id: serial("id").primaryKey(),
-  characterId: integer("character_id")
-    .notNull()
-    .references(() => characters.id, { onDelete: "cascade" }),
+  characterId: integer("character_id").references(() => characters.id, {
+    onDelete: "cascade",
+  }),
+  ownerUserId: integer("owner_user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
   fileName: text("file_name").notNull(),
   fileKind: text("file_kind").notNull(),
   sizeBytes: integer("size_bytes").notNull(),

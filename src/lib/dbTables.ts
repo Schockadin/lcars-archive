@@ -43,6 +43,7 @@ export const DB_TABLE_COLUMNS = {
   character_documents: [
     "id",
     "character_id",
+    "owner_user_id",
     "r2_key",
     "file_name",
     "file_kind",

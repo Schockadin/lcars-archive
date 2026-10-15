@@ -121,6 +121,22 @@ export async function deleteUserImage(
   return deleted.length > 0;
 }
 
+export async function renameUserImage(
+  ownerId: number,
+  id: number,
+  fileName: string,
+): Promise<string | null> {
+  if (!fileName.trim()) return null;
+  const normalized = sanitizeFileName(fileName, "");
+  if (!normalized) return null;
+  const [row] = await orm
+    .update(userImages)
+    .set({ fileName: normalized })
+    .where(and(eq(userImages.ownerId, ownerId), eq(userImages.id, id)))
+    .returning({ fileName: userImages.fileName });
+  return row?.fileName ?? null;
+}
+
 // Vor dem Löschen eines Accounts aufrufen: Der FK entfernt nur die Metadaten,
 // nicht die öffentlich erreichbaren Objekte im Asset-Bucket.
 export async function deleteAllUserImageObjects(

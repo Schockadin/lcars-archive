@@ -3,6 +3,16 @@ import { revalidatePath } from "next/cache";
 import { requireOwnUser } from "@/app/user/dal";
 import { getRoleMap } from "@/lib/roles";
 import { resolveViewer, canView } from "@/lib/visibility";
+import { listUserImageReferences } from "@/lib/userImageReferences";
+import {
+  deleteUserDocument,
+  editUserDocument,
+  listOwnCharacterOptions,
+  listUserCharacterFiles,
+  uploadUserDocument,
+} from "@/lib/userFiles";
+import { InvalidCharacterDocumentError } from "@/lib/characterDocumentValidation";
+import { MAX_CHARACTER_DOCUMENT_BYTES } from "@/lib/characterDocumentTypes";
 import {
   assertImageAsset,
   characterPortraitAssetKey,
@@ -21,10 +31,120 @@ import {
   deleteUserImage,
   listLegacyUserImages,
   listUserImages,
+  renameUserImage,
   uploadUserImage,
   type UserImage,
   type LegacyUserImage,
 } from "@/lib/userImages";
+
+export async function getOwnFilesAction() {
+  const user = await requireOwnUser();
+  const [imageData, documents, characters, roleMap] = await Promise.all([
+    getOwnImagesAction(),
+    listUserCharacterFiles(user.id),
+    listOwnCharacterOptions(user.id),
+    getRoleMap(),
+  ]);
+  const linkedImages = await listUserImageReferences(
+    user.id,
+    resolveViewer(user, roleMap),
+  );
+  return { ...imageData, documents, characters, linkedImages };
+}
+
+function parsedCharacterId(value: FormDataEntryValue | null): number | null {
+  if (value === null || value === "") return null;
+  const id = Number(value);
+  if (!Number.isInteger(id) || id <= 0)
+    throw new Error("Ungültiger Charakter.");
+  return id;
+}
+
+export async function uploadOwnFileAction(
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const user = await requireOwnUser();
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Bitte eine Datei auswählen." };
+  }
+  try {
+    if (file.type.startsWith("image/")) {
+      assertImageAsset(file.type, file.size);
+      await uploadUserImage({
+        ownerId: user.id,
+        fileName: file.name,
+        mimeType: file.type,
+        buffer: Buffer.from(await file.arrayBuffer()),
+      });
+    } else {
+      if (file.size > MAX_CHARACTER_DOCUMENT_BYTES) {
+        return { error: "Die Datei ist zu groß (max. 8 MB)." };
+      }
+      await uploadUserDocument({
+        userId: user.id,
+        characterId: parsedCharacterId(formData.get("characterId")),
+        fileName: file.name,
+        buffer: Buffer.from(await file.arrayBuffer()),
+      });
+    }
+    revalidatePath("/user/files");
+    return {};
+  } catch (error) {
+    if (
+      error instanceof InvalidAssetError ||
+      error instanceof InvalidCharacterDocumentError
+    ) {
+      return { error: error.message };
+    }
+    if (error instanceof Error && error.message.includes("Charakter")) {
+      return { error: error.message };
+    }
+    throw error;
+  }
+}
+
+export async function editOwnFileAction(
+  type: "image" | "document",
+  id: number,
+  fileName: string,
+  characterId: number | null,
+): Promise<{ error?: string }> {
+  const user = await requireOwnUser();
+  if (!Number.isInteger(id) || id <= 0) return { error: "Ungültige Datei." };
+  try {
+    const name =
+      type === "image"
+        ? await renameUserImage(user.id, id, fileName)
+        : await editUserDocument(user.id, id, fileName, characterId);
+    if (!name) return { error: "Datei nicht gefunden oder Dateiname leer." };
+    revalidatePath("/user/files");
+    return {};
+  } catch (error) {
+    if (error instanceof InvalidCharacterDocumentError) {
+      return { error: error.message };
+    }
+    if (error instanceof Error && error.message.includes("Charakter")) {
+      return { error: error.message };
+    }
+    throw error;
+  }
+}
+
+export async function deleteOwnFileAction(
+  type: "image" | "document",
+  id: number,
+): Promise<{ error?: string }> {
+  const user = await requireOwnUser();
+  if (!Number.isInteger(id) || id <= 0) return { error: "Ungültige Datei." };
+  const removed =
+    type === "image"
+      ? await deleteUserImage(user.id, id)
+      : await deleteUserDocument(user.id, id);
+  if (!removed) return { error: "Datei nicht gefunden." };
+  revalidatePath("/user/files");
+  return {};
+}
 
 export async function getOwnImagesAction(): Promise<{
   images: UserImage[];

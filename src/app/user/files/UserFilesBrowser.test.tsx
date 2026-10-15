@@ -1,16 +1,26 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import UserFilesBrowser from "./UserFilesBrowser";
 
-const { getOwnImagesAction, importOwnContentImageAction } = vi.hoisted(() => ({
-  getOwnImagesAction: vi.fn(),
+const {
+  getOwnFilesAction,
+  importOwnContentImageAction,
+  uploadOwnFileAction,
+  editOwnFileAction,
+  deleteOwnFileAction,
+} = vi.hoisted(() => ({
+  getOwnFilesAction: vi.fn(),
   importOwnContentImageAction: vi.fn(),
+  uploadOwnFileAction: vi.fn(),
+  editOwnFileAction: vi.fn(),
+  deleteOwnFileAction: vi.fn(),
 }));
 vi.mock("./actions", () => ({
-  getOwnImagesAction,
+  getOwnFilesAction,
   importOwnContentImageAction,
-  uploadOwnImageAction: vi.fn(),
-  deleteOwnImageAction: vi.fn(),
+  uploadOwnFileAction,
+  editOwnFileAction,
+  deleteOwnFileAction,
 }));
 
 const image = {
@@ -27,45 +37,153 @@ const document = {
   characterName: "Tuvok",
   characterId: 2,
   fileName: "akte.pdf",
-  kind: "pdf",
+  kind: "pdf" as const,
   sizeBytes: 500,
   createdAt: "2026-10-15T12:00:00Z",
   previewUrl: "/api/character-documents/8",
   downloadUrl: "/api/character-documents/8?download=1",
 };
 
-describe("UserFilesBrowser", () => {
-  it("shows images and character files and filters by file name", () => {
-    render(
-      <UserFilesBrowser
-        initialImages={[image]}
-        initialLegacy={[]}
-        documents={[document]}
-      />,
-    );
-    expect(screen.getByText("bruecke.png")).toBeInTheDocument();
-    expect(screen.getByText("akte.pdf")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Herunterladen" })).toHaveAttribute(
-      "href",
-      document.downloadUrl,
-    );
+const props = {
+  initialImages: [image],
+  initialLegacy: [],
+  initialDocuments: [document],
+  initialCharacters: [{ id: 2, name: "Tuvok" }],
+  initialLinkedImages: {
+    4: [{ label: "Erste Mission", href: "/chronologie/mission/erste-mission" }],
+  },
+};
 
+describe("UserFilesBrowser", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getOwnFilesAction.mockResolvedValue({
+      images: [image],
+      legacy: [],
+      documents: [document],
+      characters: props.initialCharacters,
+      linkedImages: props.initialLinkedImages,
+    });
+  });
+
+  it("zeigt Bilder und Dokumente in einer Tabelle mit Verlinkungen und Suche", () => {
+    render(<UserFilesBrowser {...props} />);
+    for (const title of ["Name", "Typ", "Verlinkt in", "Aktionen"]) {
+      expect(
+        screen.getByRole("columnheader", { name: title }),
+      ).toBeInTheDocument();
+    }
+    expect(
+      screen.getByRole("cell", { name: "bruecke.png" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "akte.pdf" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Erste Mission" })).toHaveAttribute(
+      "href",
+      "/chronologie/mission/erste-mission",
+    );
+    expect(screen.getByRole("link", { name: "Tuvok" })).toHaveAttribute(
+      "href",
+      "/user/characters/2",
+    );
     fireEvent.change(
       screen.getByRole("searchbox", { name: "Dateien suchen" }),
       {
         target: { value: "akte" },
       },
     );
-    expect(screen.queryByText("bruecke.png")).not.toBeInTheDocument();
-    expect(screen.getByText("akte.pdf")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("cell", { name: "bruecke.png" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "akte.pdf" })).toBeInTheDocument();
   });
 
-  it("can move an older content image into the reusable library", async () => {
+  it("öffnet die Vorschau und kann Dokumente umbenennen und lösen", async () => {
+    editOwnFileAction.mockResolvedValue({});
+    getOwnFilesAction.mockResolvedValue({
+      images: [image],
+      legacy: [],
+      documents: [
+        {
+          ...document,
+          fileName: "neu.pdf",
+          characterId: null,
+          characterName: null,
+        },
+      ],
+      characters: props.initialCharacters,
+      linkedImages: props.initialLinkedImages,
+    });
+    render(<UserFilesBrowser {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "„akte.pdf“ ansehen" }));
+    expect(screen.getByTitle("Vorschau: akte.pdf")).toHaveAttribute(
+      "src",
+      document.previewUrl,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Schließen" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "„akte.pdf“ bearbeiten" }),
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Dateiname" }), {
+      target: { value: "neu.pdf" },
+    });
+    fireEvent.change(
+      screen.getByRole("combobox", { name: /Charakter zuordnen/ }),
+      {
+        target: { value: "" },
+      },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Speichern" }));
+    await waitFor(() =>
+      expect(editOwnFileAction).toHaveBeenCalledWith(
+        "document",
+        8,
+        "neu.pdf",
+        null,
+      ),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole("cell", { name: "neu.pdf" })).toBeInTheDocument(),
+    );
+    expect(screen.getByText("Nicht zugeordnet")).toBeInTheDocument();
+  });
+
+  it("lädt ein Dokument ohne Charakterzuordnung hoch", async () => {
+    uploadOwnFileAction.mockResolvedValue({});
+    render(<UserFilesBrowser {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "Datei hochladen" }));
+    fireEvent.change(screen.getByLabelText("Datei auswählen"), {
+      target: {
+        files: [new File(["Akte"], "neu.txt", { type: "text/plain" })],
+      },
+    });
+    expect(
+      screen.getByRole("combobox", { name: /Charakter zuordnen/ }),
+    ).toHaveValue("");
+    fireEvent.click(screen.getByRole("button", { name: "Hochladen" }));
+    await waitFor(() => expect(uploadOwnFileAction).toHaveBeenCalledOnce());
+    const data = uploadOwnFileAction.mock.calls[0][0] as FormData;
+    expect(data.get("characterId")).toBe("");
+    expect((data.get("file") as File).name).toBe("neu.txt");
+  });
+
+  it("fordert vor dem Löschen eine Bestätigung", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<UserFilesBrowser {...props} />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "„bruecke.png“ löschen" }),
+    );
+    expect(confirm).toHaveBeenCalled();
+    expect(deleteOwnFileAction).not.toHaveBeenCalled();
+    confirm.mockRestore();
+  });
+
+  it("übernimmt ältere Inhaltsbilder in die Bibliothek", async () => {
     importOwnContentImageAction.mockResolvedValue({ image });
-    getOwnImagesAction.mockResolvedValue({ images: [image], legacy: [] });
     render(
       <UserFilesBrowser
+        {...props}
         initialImages={[]}
+        initialDocuments={[]}
         initialLegacy={[
           {
             id: 19,
@@ -78,7 +196,6 @@ describe("UserFilesBrowser", () => {
             createdAt: "2026-10-15T12:00:00Z",
           },
         ]}
-        documents={[]}
       />,
     );
     fireEvent.click(

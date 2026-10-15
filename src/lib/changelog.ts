@@ -151,7 +151,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Meine Dateien und Bildbibliothek",
     items: [
       {
-        text: "Unter „Meine Dateien“ findest du deine hochgeladenen Bilder und die Dateien deiner Charaktere an einem Ort.",
+        text: "Unter „Meine Dateien“ kannst du Bilder und Dokumente gemeinsam ansehen, umbenennen und löschen. Dokumente lassen sich auch ohne Charakter hochladen und später zuordnen.",
         category: "konto",
         tutorial: "mein-bereich",
       },

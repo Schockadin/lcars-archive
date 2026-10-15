@@ -238,10 +238,12 @@ CREATE INDEX IF NOT EXISTS idx_characters_name_trgm  ON characters USING GIN (na
 -- Backup-Bucket; in der Datenbank stehen nur Metadaten und der beim Upload sicher
 -- extrahierte Text für Vorschau und PDF-Export. PDF-Dateien benötigen keinen
 -- extrahierten Text, da der Browser sie direkt rendert und der Export ihre
--- Seiten unverändert übernimmt.
+-- Seiten unverändert übernimmt. Persönliche Dokumente dürfen ohne Charakter
+-- in „Meine Dateien“ liegen und behalten dafür ihre eigene Owner-Zuordnung.
 CREATE TABLE IF NOT EXISTS character_documents (
   id             SERIAL PRIMARY KEY,
-  character_id   INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  character_id   INT REFERENCES characters(id) ON DELETE CASCADE,
+  owner_user_id  INT REFERENCES users(id) ON DELETE SET NULL,
   r2_key         TEXT UNIQUE NOT NULL,
   file_name      TEXT NOT NULL,
   file_kind      TEXT NOT NULL CHECK (file_kind IN ('pdf', 'md', 'docx', 'txt')),
@@ -253,6 +255,8 @@ CREATE TABLE IF NOT EXISTS character_documents (
 );
 CREATE INDEX IF NOT EXISTS idx_character_documents_character
   ON character_documents(character_id);
+CREATE INDEX IF NOT EXISTS idx_character_documents_owner
+  ON character_documents(owner_user_id, created_at DESC);
 
 -- ---------------------------------------------------------------------------
 -- missions

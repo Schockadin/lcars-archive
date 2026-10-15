@@ -41,11 +41,11 @@ export function DashboardGuide() {
           <strong>Die Seite hält sich selbst aktuell.</strong> Neue Inhalte
           erscheinen direkt über eine Live-Verbindung — etwa eine Zusage zum
           Spielabend, eine neue Nachricht in einem offenen Gespräch oder die
-          News der anderen. Du musst nicht neu laden. Das geschieht
-          unauffällig: Die Seite bleibt stehen, wo du bist, aufgeklappte
-          Abschnitte bleiben offen, und ein Fenster, in das du gerade tippst,
-          bleibt unangetastet. Bei fehlender Verbindung aktualisiert sie sich
-          ersatzweise regelmäßig; liegt der Tab im Hintergrund, pausiert das.
+          News der anderen. Du musst nicht neu laden. Das geschieht unauffällig:
+          Die Seite bleibt stehen, wo du bist, aufgeklappte Abschnitte bleiben
+          offen, und ein Fenster, in das du gerade tippst, bleibt unangetastet.
+          Bei fehlender Verbindung aktualisiert sie sich ersatzweise regelmäßig;
+          liegt der Tab im Hintergrund, pausiert das.
         </p>
       </GuideSection>
 
@@ -297,9 +297,9 @@ export function UserRulesGuide() {
         Über <strong>„Regeln“</strong> liest du die aktuellen Steigerungsregeln
         mit Kosten, Erschaffungsbudgets und AP-Vorgaben nach und erreichst die
         Kataloge für <strong>Schwerpunkte</strong> und <strong>Talente</strong>.
-        Die Kataloge sind nach Department beziehungsweise Attribut gruppiert;
-        du kannst die Einträge alphabetisch von A bis Z oder Z bis A sortieren
-        und nach Namen, Gruppe oder Beschreibung suchen.
+        Die Kataloge sind nach Department beziehungsweise Attribut gruppiert; du
+        kannst die Einträge alphabetisch von A bis Z oder Z bis A sortieren und
+        nach Namen, Gruppe oder Beschreibung suchen.
       </p>
     </GuideSection>
   );
@@ -310,18 +310,22 @@ export function UserFilesGuide() {
     <GuideSection title="Meine Dateien">
       <p>
         Unter <strong>„Profil → Meine Dateien“</strong> findest du deine
-        hochgeladenen Bilder und die Dokumente deiner Charaktere. Die Suche
-        filtert nach Bilddatei, Dokumentname oder Charakter. Dokumente öffnest
-        und lädst du dort herunter; zum Umbenennen oder Löschen wechselst du
-        zur jeweiligen Charakterseite.
+        hochgeladenen Bilder und Dokumente in einer Tabelle. „Verlinkt in“ zeigt
+        bei Bildern die Einträge, in denen sie vorkommen, und bei Dokumenten den
+        zugeordneten Charakter. Über die drei Symbole kannst du eine Datei
+        ansehen, den Namen bearbeiten oder sie nach Rückfrage löschen.
       </p>
       <p>
-        Bilder kannst du direkt in deine persönliche Bibliothek hochladen.
-        Bereits früher an Inhalte angehängte Bilder stehen unter „Ältere
-        Bilder“ und lassen sich in die Bibliothek übernehmen. Bilder aus der
-        Bibliothek wählst du über den Bild-Knopf in jedem Texteditor aus,
-        auch beim Anlegen neuer Inhalte. Das Löschen aus der Bibliothek macht
-        bereits eingefügte Bildverweise unbrauchbar.
+        Mit <strong>„Datei hochladen“</strong> speicherst du Bilder oder
+        Dokumente. Ein Dokument kann sofort einem deiner Charaktere zugeordnet
+        werden oder zunächst ohne Zuordnung in deiner Dateiliste bleiben. Die
+        Zuordnung kannst du später beim Bearbeiten ändern. Bilder bleiben
+        ebenfalls ohne feste Zuordnung in deiner Bibliothek. Bereits früher an
+        Inhalte angehängte Bilder stehen unter „Ältere Bilder“ und lassen sich
+        in die Bibliothek übernehmen. Bilder aus der Bibliothek wählst du über
+        den Bild-Knopf in jedem Texteditor aus, auch beim Anlegen neuer Inhalte.
+        Das Löschen aus der Bibliothek macht bereits eingefügte Bildverweise
+        unbrauchbar.
       </p>
     </GuideSection>
   );
