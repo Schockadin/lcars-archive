@@ -55,16 +55,20 @@ describe("HeaderUserNav: getrennte Staff-Menüs", () => {
   });
 });
 
-// Charaktere, Inhalte und Einstellungen liegen seit v1.29.48 unter
+// Charaktere, Inhalte, Dateien und Einstellungen liegen unter
 // EINEM Pill „Profil" — gebaut wie Leitung/Admin. Vorher waren es drei
 // einzelne Pills, die zusammen mit den Staff-Menüs und dem Logout die Zeile
 // sprengten.
 describe("HeaderUserNav: Profil-Menü", () => {
-  it("führt Inhalte und Einstellungen unter einem Pill zusammen", () => {
+  it("führt Inhalte, Dateien und Einstellungen unter einem Pill zusammen", () => {
     render(<HeaderUserNav permissions={["users.browse"]} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Profil/ }));
-    expect(menuEintraege()).toEqual(["Meine Inhalte", "Einstellungen"]);
+    expect(menuEintraege()).toEqual([
+      "Meine Inhalte",
+      "Meine Dateien",
+      "Einstellungen",
+    ]);
   });
 
   it("zeigt den Charaktere-Eintrag mit eigenen Figuren", () => {
@@ -74,6 +78,7 @@ describe("HeaderUserNav: Profil-Menü", () => {
     expect(menuEintraege()).toEqual([
       "Charaktere",
       "Meine Inhalte",
+      "Meine Dateien",
       "Einstellungen",
     ]);
   });
@@ -88,6 +93,7 @@ describe("HeaderUserNav: Profil-Menü", () => {
     expect(menuEintraege()).toEqual([
       "Charaktere",
       "Meine Inhalte",
+      "Meine Dateien",
       "Einstellungen",
     ]);
   });
