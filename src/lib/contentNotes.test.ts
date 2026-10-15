@@ -17,14 +17,16 @@ const {
 } = await import("./contentNotes");
 
 describe("Typen und Sichtbarkeiten", () => {
-  it("kennt genau die vier Inhaltsarten", () => {
+  it("kennt die vier Inhaltsarten und freie Notizen", () => {
     expect([...NOTE_CONTENT_TYPES]).toEqual([
       "character",
       "mission",
       "mission_log",
       "archive",
+      "standalone",
     ]);
     expect(isNoteContentType("character")).toBe(true);
+    expect(isNoteContentType("standalone")).toBe(true);
     expect(isNoteContentType("dialogue")).toBe(false);
     expect(isNoteContentType("")).toBe(false);
   });
