@@ -159,7 +159,13 @@ describe("UserFilesBrowser", () => {
     expect(
       screen.getByRole("combobox", { name: /Charakter zuordnen/ }),
     ).toHaveValue("");
-    fireEvent.click(screen.getByRole("button", { name: "Hochladen" }));
+    // jsdom führt die native Gültigkeitsprüfung von Dateifeldern nach einem
+    // künstlichen files-Change nicht zuverlässig aus; das Formular direkt senden.
+    fireEvent.submit(
+      screen
+        .getByRole("dialog", { name: "Datei hochladen" })
+        .querySelector("form")!,
+    );
     await waitFor(() => expect(uploadOwnFileAction).toHaveBeenCalledOnce());
     const data = uploadOwnFileAction.mock.calls[0][0] as FormData;
     expect(data.get("characterId")).toBe("");
