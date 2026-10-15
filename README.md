@@ -1286,7 +1286,7 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   wird.
 - **Meine Dateien** — unter `/user/files` stehen Bilder und Dokumente in einer gemeinsamen Tabelle mit Verlinkungen, Vorschau, Umbenennen und bestätigtem Löschen. Bilder bleiben in der persönlichen Bibliothek und können über den Bild-Knopf in allen Markdown-Editoren erneut eingefügt werden; ältere Inhaltsbilder können übernommen werden. Dokumente können ohne Charakter hochgeladen und später einem eigenen Charakter zugeordnet werden.
 - **Meine Notizen** — unter `/user/notes` stehen eigene und für die Runde freigegebene Notizen in einer Tabelle, auf schmalen Bildschirmen als Karten. Neue Notizen lassen sich dort und über „Neue Inhalte“ anlegen, auch ohne zugeordneten Eintrag. Ein Such-Overlay zeigt die sichtbaren Einträge zur optionalen Zuordnung. Die Übersicht verlinkt zugeordnete Einträge und öffnet die ganze Notiz per Zeilenklick; eigene Notizen lassen sich dort bearbeiten und löschen.
-- **Meine Inhalte** — die Liste lässt sich nach Kategorie, Titel, Ingame-Datum oder Erstellungszeit sortieren; ein weiterer Klick wechselt zwischen auf- und absteigend.
+- **Meine Inhalte** — die Liste lässt sich nach Kategorie, Titel, Ingame-Datum oder Erstellungszeit sortieren; ein weiterer Klick wechselt zwischen auf- und absteigend. Auf kleinen Bildschirmen stehen Sortierung und Suchfeld in getrennten Zeilen.
 - **DB-Backup** — der komplette Datenbankinhalt (seit Dateiformat 2 inklusive
   AP-Konto, Talenten, Schwerpunkten, Hausregeln, Sessions, Notizen, Fassungen,
   Bildern und Rollen) lässt sich im Admin-Panel als

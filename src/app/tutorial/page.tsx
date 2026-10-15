@@ -371,8 +371,11 @@ export default function TutorialPage() {
                 bereits gehört. Sie ist wie Chronologie und Datenbank gebaut:
                 eine Überschrift je Kategorie, darunter die Einträge an der
                 Schiene. Sortiert wird in der Vorgabe nach Kategorie, wahlweise
-                alphabetisch über alles; Entwürfe stehen farblich markiert in
-                ihrer Kategorie und lassen sich über den Filter{" "}
+                alphabetisch sowie nach Ingame-Datum oder Erstellungsdatum,
+                jeweils auf- und absteigend; auf kleinen Bildschirmen stehen
+                Sortierung und Suchfeld in getrennten Zeilen. Entwürfe stehen
+                farblich markiert in ihrer Kategorie und lassen sich über den
+                Filter{" "}
                 <strong>„Nur Entwürfe“</strong> zusammen ansehen. Anlegen darfst
                 du:
               </p>
@@ -883,7 +886,8 @@ export default function TutorialPage() {
                 Inhalts-Moderation darf außerdem Kommentare für die Runde
                 bearbeiten und entfernen. Private Notizen bleiben davon
                 unberührt. Wird ein Inhalt endgültig gelöscht, verschwinden
-                seine Notizen mit ihm.
+                seine zugeordneten Notizen mit ihm; Merkzettel ohne Eintrag
+                bleiben bis zum Löschen durch dich bestehen.
               </p>
             </div>
           </LcarsDataRow>

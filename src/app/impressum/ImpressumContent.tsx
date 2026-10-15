@@ -83,9 +83,10 @@ export default function ImpressumContent() {
           Die Rechte an den von den Mitspielenden selbst verfassten Inhalten –
           etwa Charakterbiografien, Einsatzberichten, Session-Zusammenfassungen,
           Gesprächen, freien Chronologie-Ereignissen, Datenbank-Einträgen und
-          zusätzlich zu einer Figur hinterlegten Dokumenten – liegen bei den
-          jeweiligen Autor*innen. Das gilt auch für die aus den datierten
-          Session-Zusammenfassungen automatisch zusammengestellte
+          zusätzlich zu einer Figur hinterlegten Dokumenten sowie den in der
+          persönlichen Dateiverwaltung gespeicherten Bildern und Dokumenten –
+          liegen bei den jeweiligen Autor*innen. Das gilt auch für die aus den
+          datierten Session-Zusammenfassungen automatisch zusammengestellte
           Missions-Synopsis: Einträge mit gleichem Ingame-Datum stehen dort
           unter einer gemeinsamen Datumsüberschrift. In der Missionschronik
           lassen sich die Session-Zusammenfassungen als „Log-Einträge“ anzeigen
@@ -94,9 +95,11 @@ export default function ImpressumContent() {
           ändert nichts an der Autorenschaft oder den Rechten am Text.
           Der Seitenbetreiber stellt lediglich die Plattform zur gemeinsamen
           Dokumentation der Kampagne bereit und beansprucht keine darüber
-          hinausgehenden Rechte an diesen nutzergenerierten Beiträgen. Die Owner
-          eines Charakters verwalten die angehängten Dokumente; die Spielleitung
-          kann Dateien veröffentlichter Charaktere ansehen und herunterladen.
+          hinausgehenden Rechte an diesen nutzergenerierten Beiträgen. Der
+          Charakter-Owner verwaltet angehängte Dokumente; nicht zugeordnete
+          Dokumente und persönliche Bilder verwaltet der hochladende Account.
+          Die Spielleitung kann Dateien veröffentlichter Charaktere ansehen und
+          herunterladen.
         </p>
         <p>
           In offenen Gesprächen kann der Owner weitere Charaktere und NPCs über

@@ -134,7 +134,9 @@ export function MyContentGuide() {
           Datenbank: eine Überschrift je Kategorie, darunter die Einträge an der
           Schiene. Sortiert wird in der Vorgabe nach Kategorie, wahlweise
           alphabetisch, nach Ingame-Datum oder nach Erstellungsdatum. Ein zweiter
-          Klick auf die gewählte Sortierung kehrt die Richtung um. Über den Filter{" "}
+          Klick auf die gewählte Sortierung kehrt die Richtung um. Auf kleinen
+          Bildschirmen stehen Sortierung und Suchfeld in getrennten Zeilen. Über
+          den Filter{" "}
           <strong>„Nur Entwürfe“</strong> siehst du alle unfertigen Einträge
           zusammen; ein Charakter-Filter grenzt Einsatzberichte und Gespräche
           auf eine deiner Figuren ein. Auch Ereignisse, die du selbst in die
