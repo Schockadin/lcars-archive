@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import UserFilesBrowser from "./UserFilesBrowser";
 
-const getOwnImagesAction = vi.fn();
-const importOwnContentImageAction = vi.fn();
+const { getOwnImagesAction, importOwnContentImageAction } = vi.hoisted(() => ({
+  getOwnImagesAction: vi.fn(),
+  importOwnContentImageAction: vi.fn(),
+}));
 vi.mock("./actions", () => ({
   getOwnImagesAction,
   importOwnContentImageAction,
