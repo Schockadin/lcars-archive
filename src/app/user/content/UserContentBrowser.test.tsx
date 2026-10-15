@@ -286,10 +286,15 @@ describe("UserContentBrowser", () => {
     expect(titles()).toEqual(["Log neu", "Ohne Datum", "Log alt"]);
   });
 
-  it("nutzt für den mobilen Sortierschalter ein zweireihiges Layout", () => {
+  it("ordnet auf Mobilgeräten Sortierung und Suchfeld in getrennte Zeilen", () => {
     const { container } = renderBrowser();
+    expect(container.querySelector(".content-browser-toolbar")).toBeInTheDocument();
     expect(container.querySelector(".mission-sort")?.className).toContain("content-browser-sort");
     expect(container.querySelectorAll(".content-browser-sort .lcars-switch-item")).toHaveLength(4);
+    expect(container.querySelector('.content-browser-toolbar > input[type="search"]')).toHaveAttribute(
+      "aria-label",
+      "Einträge filtern",
+    );
   });
 
   it("hält den Charakter-Filter auf Berichte und Gespräche beschränkt", () => {

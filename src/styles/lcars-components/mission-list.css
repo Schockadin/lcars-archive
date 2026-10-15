@@ -27,6 +27,11 @@
     height: auto;
     min-width: 0;
   }
+  .content-browser-toolbar .content-browser-sort,
+  .content-browser-toolbar > input[type="search"] {
+    flex: 0 0 100%;
+    width: 100%;
+  }
   .content-browser-sort .lcars-switch-item {
     min-height: 38px;
     padding-inline: 6px;

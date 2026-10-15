@@ -610,7 +610,7 @@ const ContentBrowserToolbar = memo(function ContentBrowserToolbar({
   ).filter((key) => key !== "mission" || canManageMissions);
 
   return (
-    <div className="lcars-toolbar">
+    <div className="lcars-toolbar content-browser-toolbar">
       <LcarsSortSwitch
         className="mission-sort content-browser-sort"
         options={[
