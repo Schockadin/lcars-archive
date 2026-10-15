@@ -25,6 +25,7 @@ describe("NewNoteButton", () => {
     const onCreated = vi.fn();
     render(<NewNoteButton onCreated={onCreated} />);
     fireEvent.click(screen.getByRole("button", { name: "Neue Notiz" }));
+    expect(getNoteTargetsAction).not.toHaveBeenCalled();
     expect(
       screen.getByRole("dialog", { name: "Neue Notiz" }),
     ).toBeInTheDocument();
@@ -47,13 +48,23 @@ describe("NewNoteButton", () => {
   it("ordnet die Notiz auf Wunsch einem sichtbaren Eintrag zu", async () => {
     render(<NewNoteButton />);
     fireEvent.click(screen.getByRole("button", { name: "Neue Notiz" }));
-    await screen.findByRole("option", { name: "Tuvok (Charakter)" });
+    fireEvent.click(screen.getByRole("button", { name: "Inhalt auswählen" }));
+    expect(
+      screen.getByRole("dialog", { name: "Inhalt auswählen" }),
+    ).toBeInTheDocument();
+    await screen.findByRole("button", { name: "Tuvok — Charakter auswählen" });
     fireEvent.change(
-      screen.getByRole("combobox", { name: "Notiz zu (optional)" }),
+      screen.getByRole("searchbox", { name: "Einträge für die Notiz suchen" }),
       {
-        target: { value: "character:tuvok" },
+        target: { value: "Tuvok" },
       },
     );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Tuvok — Charakter auswählen" }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Neue Notiz" }),
+    ).toHaveTextContent("Tuvok (Charakter)");
     fireEvent.change(screen.getByRole("combobox", { name: "Sichtbarkeit" }), {
       target: { value: "group" },
     });
@@ -69,5 +80,21 @@ describe("NewNoteButton", () => {
         targetSlug: "tuvok",
       }),
     );
+  });
+
+  it("lässt die Zielsuche abbrechen und eine Zuordnung wieder entfernen", async () => {
+    render(<NewNoteButton />);
+    fireEvent.click(screen.getByRole("button", { name: "Neue Notiz" }));
+    fireEvent.click(screen.getByRole("button", { name: "Inhalt auswählen" }));
+    await screen.findByRole("button", { name: "Tuvok — Charakter auswählen" });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Tuvok — Charakter auswählen" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Zuordnung entfernen" }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Neue Notiz" }),
+    ).toHaveTextContent("Ohne Eintrag");
   });
 });

@@ -875,7 +875,9 @@ export default function TutorialPage() {
                 Notizen und die für die Runde freigegebenen Kommentare in einer
                 Tabelle. Über <strong>„Neue Notiz“</strong> kannst du dort oder
                 im Bereich „Neue Inhalte“ einen Merkzettel anlegen; die
-                Zuordnung zu einem Eintrag ist freiwillig. Ein Klick auf eine
+                Zuordnung zu einem Eintrag ist freiwillig. Über „Inhalt
+                auswählen“ öffnest du einen Browser mit Suche und Inhaltsarten.
+                Ein Klick auf eine
                 Zeile zeigt die ganze Notiz. Eigene
                 Notizen kannst du dort bearbeiten oder löschen; die
                 Inhalts-Moderation darf außerdem Kommentare für die Runde

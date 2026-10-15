@@ -612,7 +612,7 @@ const ContentBrowserToolbar = memo(function ContentBrowserToolbar({
   return (
     <div className="lcars-toolbar">
       <LcarsSortSwitch
-        className="mission-sort"
+        className="mission-sort content-browser-sort"
         options={[
           { key: "category", label: "Kategorie" },
           { key: "title", label: "Alphabetisch" },

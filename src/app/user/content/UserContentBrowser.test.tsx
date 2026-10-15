@@ -286,6 +286,12 @@ describe("UserContentBrowser", () => {
     expect(titles()).toEqual(["Log neu", "Ohne Datum", "Log alt"]);
   });
 
+  it("nutzt für den mobilen Sortierschalter ein zweireihiges Layout", () => {
+    const { container } = renderBrowser();
+    expect(container.querySelector(".mission-sort")?.className).toContain("content-browser-sort");
+    expect(container.querySelectorAll(".content-browser-sort .lcars-switch-item")).toHaveLength(4);
+  });
+
   it("hält den Charakter-Filter auf Berichte und Gespräche beschränkt", () => {
     // Datenbank-Einträge und Missionen hängen am Konto, nicht an einer Figur —
     // sie dürfen durch den Figuren-Filter nicht verschwinden.
