@@ -10,7 +10,6 @@ import {
 } from "@/lib/dbInspect";
 import { getClientIp } from "@/lib/http";
 import { jsonRootType, parseJsonEditValue } from "@/lib/dbJsonEdit";
-import type postgres from "postgres";
 import {
   lockDbRowSnapshot,
   getTableColumnInfoInTransaction,
@@ -153,10 +152,11 @@ export async function updateDbRowAction(input: {
               expectedRootType,
             );
             if ("error" in parsed) return { error: parsed.error };
-            // Bind a typed JSONB parameter. Passing JSON text as a JS string
-            // to a ::jsonb placeholder makes postgres.js JSON-stringify that
-            // string again, storing a JSON string instead of the object.
-            params.push(sql.json(parsed.value as postgres.JSONValue));
+            // Send JSON text as a text-typed parameter and cast it in SQL.
+            // A JS string bound to a jsonb parameter is JSON-stringified by
+            // postgres.js; sql.typed(..., 25) preserves the JSON text, including
+            // the JSON null literal, for PostgreSQL to parse.
+            params.push(sql.typed(JSON.stringify(parsed.value), 25));
             placeholder += `::${dataType}`;
           } else {
             params.push(rawValue);
