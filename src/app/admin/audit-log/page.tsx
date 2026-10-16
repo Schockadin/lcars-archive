@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
-import { requireAdmin } from "@/lib/dal";
+import { getCurrentUserPermissions, requireAdmin } from "@/lib/dal";
 import { listRecentAdminActions } from "@/lib/auditLog";
 import { getRecentContentActivity } from "@/lib/contentActivityLog";
 import AuditActionsTable from "./AuditActionsTable";
@@ -27,6 +27,7 @@ const CONTENT_ACTIVITY_DAYS = 3;
 // Wrapper-Komponenten ihre columns intern, hier kommen nur die reinen Daten an.
 export default async function AdminAuditLogPage() {
   await requireAdmin();
+  const permissions = await getCurrentUserPermissions();
 
   const [entries, contentActivity] = await Promise.all([
     listRecentAdminActions(),
@@ -46,11 +47,15 @@ export default async function AdminAuditLogPage() {
               Sicherheitsrelevante Aktionen
             </h2>
             <p className="text-lcars-ink-dim text-[13px]">
-              Die letzten {entries.length} sicherheitsrelevanten
-              Useraccount-Actions (anlegen, Rolle ändern, (de)aktivieren,
-              löschen, Passwort-Reset auslösen) — wer hat wann was gemacht.
+              Die letzten {entries.length} sicherheitsrelevanten Aktionen —
+              darunter Useraccount-Änderungen und Bearbeitungen von
+              Datenbankzeilen. Datenbankänderungen enthalten Vorher-/Nachher-
+              Werte und können mit „Rückgängig“ gezielt zurückgesetzt werden.
             </p>
-            <AuditActionsTable entries={entries} />
+            <AuditActionsTable
+              entries={entries}
+              canUndo={permissions.has("sql_write")}
+            />
           </section>
 
           <section className="flex flex-col gap-[16px]">

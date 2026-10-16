@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.1",
+    title: "Datenbankänderungen im Audit-Log zurücksetzen",
+    items: [
+      {
+        text: "Bearbeitungen im Datenbank-Zeilen-Overlay werden mit Vorher-/Nachher-Stand im Audit-Log festgehalten und lassen sich dort jederzeit gezielt zurücksetzen.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+    ],
+  },
+  {
     version: "2.0",
     title: "Meine Dateien und Bildbibliothek",
     items: [

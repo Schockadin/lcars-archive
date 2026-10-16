@@ -1310,7 +1310,9 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   Anmelde-Protokolle, Audit-Log) sind gegen Schreibzugriff gesperrt — über das
   freie Feld wie über den zeilenweisen Editor. Ein
   Audit-Log protokolliert sicherheitsrelevante Useraccount- sowie Rollen-/
-  Rechteänderungen (inkl. IP-Adresse) sowie, separat, eine 3-Tage-Übersicht aller
+  Rechteänderungen (inkl. IP-Adresse); Änderungen aus dem Zeilen-Overlay des
+  Datenbankbrowsers enthalten Vorher-/Nachher-Werte und lassen sich dort gezielt
+  zurücksetzen. Daneben gibt es eine 3-Tage-Übersicht aller
   neu angelegten, bearbeiteten und gelöschten Inhalte. Drei Wartungs-Skripte
   laufen blockweise mit Fortschrittsanzeige (jeweils ausblendbar): „Alle Inhalte
   verlinken" (Bulk-Autolinking; Autolinking ist bei neuen Inhalten außerdem

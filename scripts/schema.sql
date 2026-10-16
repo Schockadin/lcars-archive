@@ -620,8 +620,10 @@ CREATE INDEX IF NOT EXISTS idx_rag_requests_user_time ON rag_requests(user_id, r
 -- ---------------------------------------------------------------------------
 -- admin_audit_log
 -- ---------------------------------------------------------------------------
--- Protokoll sicherheitsrelevanter Admin-Actions auf Useraccounts (src/lib/
--- auditLog.ts). Rein lesend über /admin/audit-log. target_user_id bleibt bei
+-- Protokoll sicherheitsrelevanter Admin-Actions (src/lib/auditLog.ts). Rein
+-- lesend über /admin/audit-log; Änderungen aus dem Datenbank-Zeilen-Overlay
+-- bewahren Vorher-/Nachher-Werte und können dort gezielt zurückgesetzt werden.
+-- target_user_id bleibt bei
 -- einem gelöschten User NULL — details enthält deshalb zusätzlich Name/E-Mail
 -- als Klartext-Schnappschuss. ip = Actor-IP (getClientIp), wichtig für die
 -- forensische Aufarbeitung eines vermuteten kompromittierten Admin-Accounts.
@@ -634,14 +636,18 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
                      'create_user', 'reset_password', 'update_role', 'update_profile',
                      'deactivate_user', 'reactivate_user', 'delete_user', 'force_logout',
                      'update_roles', 'update_permissions',
-                     'create_role', 'edit_role', 'delete_role'
+                     'create_role', 'edit_role', 'delete_role',
+                     'update_db_row', 'undo_db_row'
                    )),
   target_user_id INT REFERENCES users(id) ON DELETE SET NULL,
   details        TEXT,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  ip             TEXT
+  ip             TEXT,
+  reverts_audit_id INT REFERENCES admin_audit_log(id) ON DELETE RESTRICT
 );
 CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created_at ON admin_audit_log(created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_audit_log_reverts_audit_id
+  ON admin_audit_log(reverts_audit_id) WHERE reverts_audit_id IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
 -- dialogue_npc_speakers
@@ -1370,17 +1376,23 @@ CREATE TABLE IF NOT EXISTS roles (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- admin_audit_log: neue Aktionsarten 'update_roles'/'update_permissions' sowie
--- die Rollen-Editor-Aktionen 'create_role'/'edit_role'/'delete_role' zulassen
--- (DROP/ADD des CHECK, idempotent).
+-- admin_audit_log: aktuelle Aktionsarten zulassen (DROP/ADD des CHECK,
+-- idempotent). Der Zurück-Verweis bleibt eindeutig, damit derselbe
+-- DB-Änderungseintrag nicht mehrfach zurückgesetzt wird.
+ALTER TABLE admin_audit_log
+  ADD COLUMN IF NOT EXISTS reverts_audit_id INT
+  REFERENCES admin_audit_log(id) ON DELETE RESTRICT;
 ALTER TABLE admin_audit_log DROP CONSTRAINT IF EXISTS admin_audit_log_action_check;
 ALTER TABLE admin_audit_log ADD CONSTRAINT admin_audit_log_action_check
   CHECK (action IN (
     'create_user', 'reset_password', 'update_role', 'update_profile',
     'deactivate_user', 'reactivate_user', 'delete_user', 'force_logout',
     'update_roles', 'update_permissions',
-    'create_role', 'edit_role', 'delete_role'
+    'create_role', 'edit_role', 'delete_role',
+    'update_db_row', 'undo_db_row'
   ));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_audit_log_reverts_audit_id
+  ON admin_audit_log(reverts_audit_id) WHERE reverts_audit_id IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
 -- content_revisions
