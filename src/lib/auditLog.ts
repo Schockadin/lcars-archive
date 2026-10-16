@@ -61,26 +61,10 @@ export async function listRecentAdminActions(
   limit = 200,
   before?: { createdAt: string; id: number },
 ): Promise<AdminAuditLogEntry[]> {
-  const where = before
-    ? "WHERE (l.created_at, l.id) < ($1::timestamptz, $2::int)"
-    : "";
-  const limitIndex = before ? 3 : 1;
-  const params = before ? [before.createdAt, before.id, limit] : [limit];
-  const query = `
-    SELECT
-      l.id, l.actor_id, actor.name AS actor_name,
-      l.action, l.target_user_id, target.name AS target_name,
-      l.details, reversal.id AS reverted_by_audit_id, l.ip,
-      l.created_at::text AS created_at
-    FROM admin_audit_log l
-    LEFT JOIN users actor ON actor.id = l.actor_id
-    LEFT JOIN users target ON target.id = l.target_user_id
-    LEFT JOIN admin_audit_log reversal ON reversal.reverts_audit_id = l.id
-    ${where}
-    ORDER BY l.created_at DESC, l.id DESC
-    LIMIT $${limitIndex}
-  `;
-  const rows = await sql.unsafe<
+  const cursor = before
+    ? sql`WHERE (l.created_at, l.id) < (${before.createdAt}::timestamptz, ${before.id}::int)`
+    : sql``;
+  const rows = await sql<
     {
       id: number;
       actor_id: number | null;
@@ -93,7 +77,20 @@ export async function listRecentAdminActions(
       ip: string | null;
       created_at: string;
     }[]
-  >(query, params as never[]);
+  >`
+    SELECT
+      l.id, l.actor_id, actor.name AS actor_name,
+      l.action, l.target_user_id, target.name AS target_name,
+      l.details, reversal.id AS reverted_by_audit_id, l.ip,
+      l.created_at::text AS created_at
+    FROM admin_audit_log l
+    LEFT JOIN users actor ON actor.id = l.actor_id
+    LEFT JOIN users target ON target.id = l.target_user_id
+    LEFT JOIN admin_audit_log reversal ON reversal.reverts_audit_id = l.id
+    ${cursor}
+    ORDER BY l.created_at DESC, l.id DESC
+    LIMIT ${limit}
+  `;
   return rows.map((row) => {
     const dbRowDetails =
       row.action === "update_db_row" || row.action === "undo_db_row"
