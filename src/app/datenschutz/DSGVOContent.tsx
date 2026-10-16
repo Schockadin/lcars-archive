@@ -84,6 +84,18 @@ export default function DSGVOContent({ year }: { year: number }) {
           Aufklärung eines vermuteten kompromittierten Admin-Accounts).
         </p>
         <p>
+          Änderungen, die berechtigte Personen im Bearbeiten-Overlay des
+          Datenbankbereichs vornehmen, werden ebenfalls dauerhaft protokolliert.
+          Gespeichert werden die betroffene Tabelle und Zeile, die geänderten
+          Spalten sowie deren jeweilige Werte vor und nach der Änderung,
+          zusammen mit Zeitpunkt, ausführendem Account und IP-Adresse. Diese
+          Einträge sind nur für die Administration einsehbar und ermöglichen,
+          die geänderten Spalten später auf den vorherigen Stand zu setzen.
+          (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
+          an der Nachvollziehbarkeit privilegierter Datenbankänderungen und der
+          Wiederherstellung versehentlich geänderter Werte.)
+        </p>
+        <p>
           Tritt ein unerwarteter Serverfehler auf, werden Fehlermeldung,
           Stacktrace, betroffene Route und Zeitpunkt dauerhaft in einem nur für
           Administration einsehbaren Protokoll gespeichert (Rechtsgrundlage:

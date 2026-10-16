@@ -1235,9 +1235,14 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   Unter <strong>„Audit-Log“</strong> nachvollziehen, wer wann
-                  welche sicherheitsrelevante Kontoaktion durchgeführt hat,
-                  sowie eine separate Übersicht aller in den letzten drei Tagen
-                  neu angelegten, bearbeiteten oder gelöschten Inhalte.
+                  welche sicherheitsrelevante Kontoaktion durchgeführt hat.
+                  Bearbeitungen im Zeilen-Overlay unter „Datenbank“ werden dort
+                  mit Vorher-/Nachher-Stand protokolliert und lassen sich über
+                  den Rückgängig-Knopf auf den vorherigen Stand setzen. Dabei
+                  werden nur die damals bearbeiteten Spalten zurückgesetzt;
+                  spätere Änderungen an denselben Spalten werden überschrieben.
+                  Daneben gibt es eine separate Übersicht aller in den letzten
+                  drei Tagen neu angelegten, bearbeiteten oder gelöschten Inhalte.
                 </li>
                 <li>
                   Unter <strong>„Fehler-Log“</strong> alle unerwarteten

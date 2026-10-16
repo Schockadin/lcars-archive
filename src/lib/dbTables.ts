@@ -402,6 +402,7 @@ export const DB_TABLE_COLUMNS = {
     "details",
     "created_at",
     "ip",
+    "reverts_audit_id",
   ],
   push_subscriptions: [
     "id",

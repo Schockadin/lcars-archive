@@ -19,13 +19,19 @@ import {
   type RoleMap,
   type Permission,
 } from "@/lib/permissions";
+import {
+  parseDbRowAuditDetails,
+  summarizeDbRowAuditDetails,
+} from "@/lib/dbRowAudit";
 
 // „Admin" = hat das Recht admin.access (granulares RBAC), nicht mehr nur die
 // Primärrolle role='admin'. Bewusst rohes SQL + die REINE permissions.ts-Logik
 // (kein Import von users.ts/roles.ts) — dieses Skript läuft außerhalb von Next
 // und vermeidet gezielt die "server-only"/next-cache-Importkette (siehe
 // Datei-Kopf). Bei fehlender roles-Tabelle greifen die Code-Defaults.
-async function listAdminRecipients(): Promise<{ email: string; name: string }[]> {
+async function listAdminRecipients(): Promise<
+  { email: string; name: string }[]
+> {
   let roleMap: RoleMap = { ...DEFAULT_ROLE_PRESETS };
   try {
     const roleRows = await sql<{ key: string; permissions: string[] }[]>`
@@ -67,6 +73,19 @@ function fmt(ts: string): string {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(ts));
+}
+
+function digestAuditDetails(action: string, raw: string | null): string {
+  if (action === "update_db_row" || action === "undo_db_row") {
+    const details = parseDbRowAuditDetails(raw);
+    // Snapshots can contain entire content fields. The digest records which
+    // row and columns changed, while the full values stay in the restricted
+    // Audit-Log page.
+    return details
+      ? summarizeDbRowAuditDetails(details)
+      : "Datenbankänderung; Details im Audit-Log";
+  }
+  return raw ?? "";
 }
 
 interface ErrorRow {
@@ -223,7 +242,7 @@ async function main() {
         `<tr><td>${fmt(a.created_at)}</td><td>${escapeHtml(a.action)}</td><td>${escapeHtml(
           a.actor_name ?? "—",
         )} → ${escapeHtml(a.target_name ?? "—")}</td><td>${escapeHtml(
-          a.details ?? "",
+          digestAuditDetails(a.action, a.details),
         )}</td></tr>`,
     )
     .join("\n");
