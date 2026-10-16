@@ -41,15 +41,6 @@ export async function getTableColumnInfoInTransaction(
   }));
 }
 
-function jsonObjectPairs(
-  columns: string[],
-  expression: (column: string) => string,
-) {
-  return columns
-    .map((column) => `'${column.replace(/'/g, "''")}', ${expression(column)}`)
-    .join(", ");
-}
-
 export async function lockDbRowSnapshot(
   tx: TransactionSql,
   table: string,
@@ -57,23 +48,32 @@ export async function lockDbRowSnapshot(
   pkValue: string,
   columns: string[],
 ): Promise<DbRowAuditSnapshot[]> {
-  const values = jsonObjectPairs(
-    columns,
-    (column) => `t.${quoteIdent(column)}`,
-  );
-  const sqlNulls = jsonObjectPairs(
-    columns,
-    (column) => `t.${quoteIdent(column)} IS NULL`,
-  );
-  return tx.unsafe<DbRowAuditSnapshot[]>(
-    `SELECT
-      jsonb_build_object(${values}) AS "values",
-      jsonb_build_object(${sqlNulls}) AS "sqlNulls"
+  const usedNames = new Set(columns);
+  const nullAliases = columns.map((_, index) => {
+    let alias = `__dbrow_sql_null_${index}`;
+    while (usedNames.has(alias)) alias = `_${alias}`;
+    usedNames.add(alias);
+    return alias;
+  });
+  const projection = columns
+    .flatMap((column, index) => [
+      `t.${quoteIdent(column)} AS ${quoteIdent(column)}`,
+      `t.${quoteIdent(column)} IS NULL AS ${quoteIdent(nullAliases[index])}`,
+    ])
+    .join(", ");
+  const rows = await tx.unsafe<Record<string, unknown>[]>(
+    `SELECT ${projection}
     FROM ${quoteIdent(table)} AS t
     WHERE t.${quoteIdent(pkColumn)}::text = $1
     FOR UPDATE OF t`,
     [pkValue],
   );
+  return rows.map((row) => ({
+    values: Object.fromEntries(columns.map((column) => [column, row[column]])),
+    sqlNulls: Object.fromEntries(
+      columns.map((column, index) => [column, row[nullAliases[index]]]),
+    ) as Record<string, boolean>,
+  }));
 }
 
 export async function restoreDbRowSnapshot(
