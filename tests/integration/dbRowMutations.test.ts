@@ -30,7 +30,7 @@ describe("DB-Zeilen-Schnappschüsse", () => {
 
       await tx.unsafe(
         `UPDATE campaign_settings SET ingame_year = $1, advancement_rules = $2::jsonb WHERE id = TRUE`,
-        [2402, '{"ap":3}'],
+        [2402, sql.json({ ap: 3 })],
       );
       const [afterJsonObject] = await lockDbRowSnapshot(
         tx,
@@ -63,7 +63,7 @@ describe("DB-Zeilen-Schnappschüsse", () => {
 
       await tx.unsafe(
         `UPDATE campaign_settings SET advancement_rules = $1::jsonb WHERE id = TRUE`,
-        ["null"],
+        [sql.json(null)],
       );
       const [beforeJsonNull] = await lockDbRowSnapshot(
         tx,
@@ -76,7 +76,7 @@ describe("DB-Zeilen-Schnappschüsse", () => {
       expect(beforeJsonNull.values.advancement_rules).toBeNull();
       await tx.unsafe(
         `UPDATE campaign_settings SET advancement_rules = $1::jsonb WHERE id = TRUE`,
-        ['{"restored":true}'],
+        [sql.json({ restored: true })],
       );
       await restoreDbRowSnapshot(
         tx,

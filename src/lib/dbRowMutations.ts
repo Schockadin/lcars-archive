@@ -1,4 +1,5 @@
 import "server-only";
+import sql from "@/lib/db";
 import type postgres from "postgres";
 import type { DbRowAuditSnapshot } from "./dbRowAudit";
 import { quoteIdent } from "./dbInspect";
@@ -85,8 +86,6 @@ export async function restoreDbRowSnapshot(
   columnTypes: Map<string, string>,
   snapshot: DbRowAuditSnapshot,
 ): Promise<number> {
-  const values = JSON.stringify(snapshot.values);
-  const nulls = JSON.stringify(snapshot.sqlNulls);
   const keyParams = columns.map((_, index) => `$${index + 3}::text`);
   const rowType = `${quoteIdent("public")}.${quoteIdent(table)}`;
   const assignments = columns
@@ -109,7 +108,12 @@ export async function restoreDbRowSnapshot(
     })
     .join(", ");
   const pkIndex = columns.length + 3;
-  const params: (string | unknown)[] = [values, nulls, ...columns, pkValue];
+  const params: unknown[] = [
+    sql.json(snapshot.values as postgres.JSONValue),
+    sql.json(snapshot.sqlNulls as postgres.JSONValue),
+    ...columns,
+    pkValue,
+  ];
   const result = await tx.unsafe(
     `UPDATE ${quoteIdent(table)} SET ${assignments} WHERE ${quoteIdent(pkColumn)}::text = $${pkIndex}`,
     params as never[],
