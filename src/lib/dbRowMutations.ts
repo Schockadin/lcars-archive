@@ -59,7 +59,7 @@ export async function lockDbRowSnapshot(
 ): Promise<DbRowAuditSnapshot[]> {
   const values = jsonObjectPairs(
     columns,
-    (column) => `to_jsonb(t.${quoteIdent(column)})`,
+    (column) => `t.${quoteIdent(column)}`,
   );
   const sqlNulls = jsonObjectPairs(
     columns,
