@@ -155,8 +155,8 @@ export default function InviteDialogueParticipantForm({
     <div className="flex flex-col gap-[8px] mt-[12px]">
       <FormField
         label="Weitere Personen einladen"
-        htmlFor="dlg-invite-participants"
-        hint="Suche nach Namen oder Spielernamen. Mehrfachauswahl per Strg/Cmd- oder Shift-Klick. Direkt hinzugefügt, kein Annehmen/Ablehnen nötig — die eingeladene Person bekommt eine Info-Mail. NPCs schreibt die Spielleitung."
+        htmlFor="dlg-invite-participant-search"
+        hint="Suche nach Namen oder Spielernamen und hake alle gewünschten Personen an. Sie werden direkt hinzugefügt und per E-Mail informiert. NPCs schreibt die Spielleitung."
       >
         <input
           id="dlg-invite-participant-search"
@@ -167,38 +167,51 @@ export default function InviteDialogueParticipantForm({
           aria-label="Personen suchen"
           className="lcars-input rounded-lcars-pill w-full mb-[8px]"
         />
-        <select
+        <fieldset
           id="dlg-invite-participants"
-          multiple
-          size={Math.min(8, Math.max(4, visibleCandidates.length))}
-          value={selectedKeys}
-          onChange={(event) => {
-            const visibleKeys = new Set(
-              visibleCandidates.map((candidate) => candidate.key),
-            );
-            const selectedHiddenKeys = selectedKeys.filter(
-              (key) => !visibleKeys.has(key),
-            );
-            const selectedVisibleKeys = Array.from(
-              event.currentTarget.selectedOptions,
-            ).map((option) => option.value);
-            setSelectedKeys([...selectedHiddenKeys, ...selectedVisibleKeys]);
-          }}
-          className="lcars-input rounded-lcars-pill w-full h-auto py-[8px]"
+          aria-label="Personen auswählen"
+          className="max-h-[320px] overflow-y-auto rounded-lg border border-lcars-border p-[8px]"
         >
+          <legend className="sr-only">Personen auswählen</legend>
           {groups.map(
             (group) =>
               group.candidates.length > 0 && (
-                <optgroup key={group.label} label={group.label}>
+                <div
+                  key={group.label}
+                  className="border-b border-lcars-border py-[4px] last:border-b-0"
+                >
+                  <p className="lcars-eyebrow px-[8px] py-[4px]">
+                    {group.label}
+                  </p>
                   {group.candidates.map((candidate) => (
-                    <option key={candidate.key} value={candidate.key}>
-                      {candidate.name} ({candidate.playerName})
-                    </option>
+                    <label
+                      key={candidate.key}
+                      htmlFor={`dlg-invite-${candidate.key}`}
+                      className="flex min-h-[42px] cursor-pointer items-center gap-[10px] rounded-md px-[8px] py-[6px] hover:bg-lcars-surface"
+                    >
+                      <input
+                        id={`dlg-invite-${candidate.key}`}
+                        type="checkbox"
+                        checked={selectedKeys.includes(candidate.key)}
+                        onChange={(event) => {
+                          const checked = event.currentTarget.checked;
+                          setSelectedKeys((current) =>
+                            checked
+                              ? [...current, candidate.key]
+                              : current.filter((key) => key !== candidate.key),
+                          );
+                        }}
+                        className="h-[18px] w-[18px] shrink-0"
+                      />
+                      <span>
+                        {candidate.name} ({candidate.playerName})
+                      </span>
+                    </label>
                   ))}
-                </optgroup>
+                </div>
               ),
           )}
-        </select>
+        </fieldset>
         {visibleCandidates.length === 0 && (
           <p className="lcars-text text-[13px] mt-[6px]">
             Keine passenden Personen.

@@ -52,13 +52,14 @@
     "assets:import-portrait-links": "tsx --conditions=react-server --env-file=.env.local scripts/import-portrait-links.ts"
   },
   "overrides": {
-    "gray-matter": {
-      "js-yaml": "^3.15.2"
+    "mammoth": {
+      "argparse": "2.0.1"
     },
     "baseline-browser-mapping": "^2.11.0"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1085.0",
+    "argparse": "2.0.1",
     "@codemirror/lang-markdown": "^6.5.0",
     "@codemirror/lang-sql": "^6.10.0",
     "@codemirror/language": "^6.12.4",
@@ -72,9 +73,8 @@
     "codemirror": "^6.0.2",
     "drizzle-orm": "^0.45.4",
     "github-slugger": "^2.0.0",
-    "gray-matter": "^4.0.3",
     "mammoth": "^1.12.3",
-    "next": "^16.3.5",
+    "next": "^16.4.2",
     "openai": "^4.104.0",
     "pdf-lib": "^1.17.1",
     "postgres": "^3.4.9",
@@ -89,6 +89,7 @@
     "server-only": "^0.0.1",
     "unist-util-visit": "^5.1.0",
     "web-push": "^3.6.7",
+    "yaml": "^2.9.1",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
@@ -104,7 +105,7 @@
     "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^9",
-    "eslint-config-next": "16.3.5",
+    "eslint-config-next": "16.4.2",
     "eslint-plugin-react-you-might-not-need-an-effect": "^1.0.1",
     "jsdom": "^29.1.1",
     "prettier": "^3.8.4",
@@ -112,6 +113,6 @@
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.12"
   }
 }

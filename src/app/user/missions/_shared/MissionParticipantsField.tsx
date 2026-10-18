@@ -3,18 +3,6 @@ import { useState } from "react";
 import { FormField } from "@/app/_shared/FormPrimitives";
 import type { CharacterParticipantOption } from "@/lib/characters";
 
-// Natives <select multiple> (Dropdown-Multiselect) statt der vorherigen
-// Checkbox-Liste — Mehrfachauswahl per Strg/Cmd- bzw. Shift-Klick, wie bei
-// jedem Standard-Mehrfachauswahl-Dropdown. Alle ausgewählten <option>-Werte
-// landen unter demselben name="participantCharacterIds" per
-// formData.getAll("participantCharacterIds") im Server-Handler
-// (missionAction, contentAction.ts) — unverändert gegenüber der
-// Checkbox-Variante. Ein Klick OHNE Strg/Cmd/Shift hebt dabei die vorherige
-// Auswahl auf (Standardverhalten von <select multiple>) — leicht zu
-// übersehen, da es keine visuelle Warnung gibt. Der Live-Zähler unten macht
-// die tatsächlich ausgewählte Anzahl sofort sichtbar, damit eine
-// versehentlich verlorene Auswahl vor dem Absenden auffällt statt erst an
-// einer ausgebliebenen Benachrichtigung.
 export default function MissionParticipantsField({
   idPrefix,
   characters,
@@ -24,22 +12,33 @@ export default function MissionParticipantsField({
   characters: CharacterParticipantOption[];
   defaultSelectedIds?: number[];
 }) {
-  const [selectedCount, setSelectedCount] = useState(defaultSelectedIds.length);
+  const [selectedIds, setSelectedIds] = useState(defaultSelectedIds);
   const [showAll, setShowAll] = useState(false);
 
-  // Standardmäßig nur aktive Charaktere — bereits ausgewählte, inzwischen
-  // inaktive Teilnehmer bleiben trotzdem sichtbar (sonst verschwindet eine
-  // bestehende Zuordnung beim Bearbeiten unbemerkt aus der Auswahl, sobald
-  // der Charakter z.B. auf "retired" gesetzt wird).
+  // Inaktive, bereits ausgewählte Figuren bleiben beim Filtern sichtbar.
   const visibleCharacters = characters.filter(
-    (c) => showAll || c.status === "active" || defaultSelectedIds.includes(c.id),
+    (character) =>
+      showAll ||
+      character.status === "active" ||
+      selectedIds.includes(character.id),
   );
+
+  function refreshSelectedIds(form: HTMLFormElement | null) {
+    const selected = form?.querySelectorAll<HTMLInputElement>(
+      'input[name="participantCharacterIds"]:checked',
+    );
+    setSelectedIds(
+      selected
+        ? Array.from(selected, (input) => Number(input.value)).filter(Number.isSafeInteger)
+        : [],
+    );
+  }
 
   return (
     <FormField
       label="Teilnehmende Charaktere"
-      htmlFor={`${idPrefix}-participants`}
-      hint="Wer bei dieser Mission mitspielt (Mehrfachauswahl per Strg/Cmd- oder Shift-Klick — ein Klick ohne diese Taste ersetzt die bisherige Auswahl). Löst kein automatisches Abo aus — die Teilnehmer bekommen beim Anlegen stattdessen eine Benachrichtigung mit einem Link, um das Abo selbst zu aktivieren."
+      htmlFor={`${idPrefix}-participant-${visibleCharacters[0]?.id ?? "empty"}`}
+      hint="Tippe oder klicke auf die Kästchen, um Figuren hinzuzufügen oder abzuwählen. Das löst kein automatisches Abo aus — die Teilnehmenden bekommen beim Anlegen stattdessen einen Link, um das Abo selbst zu aktivieren."
       className="content-editor-field--full"
     >
       {characters.length === 0 ? (
@@ -51,40 +50,58 @@ export default function MissionParticipantsField({
         </p>
       ) : (
         <>
-          <select
-            id={`${idPrefix}-participants`}
-            name="participantCharacterIds"
-            multiple
-            size={Math.min(8, visibleCharacters.length)}
-            defaultValue={defaultSelectedIds.map(String)}
-            onChange={(e) =>
-              setSelectedCount(
-                Array.from(e.currentTarget.selectedOptions).length,
-              )
-            }
-            className="lcars-input rounded-lcars-pill w-full h-auto py-[8px]"
+          <fieldset
+            aria-label="Teilnehmende Charaktere"
+            className="max-h-[280px] overflow-y-auto rounded-lg border border-lcars-border p-[8px]"
           >
-            {visibleCharacters.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.playerName})
-              </option>
-            ))}
-          </select>
-          <label className="flex items-center gap-[6px] px-[12px] text-[13px] text-lcars-ink-dim">
+            <legend className="sr-only">Teilnehmende Charaktere</legend>
+            {visibleCharacters.length > 0 ? (
+              <div className="flex flex-col gap-[2px]">
+                {visibleCharacters.map((character) => (
+                  <label
+                    key={character.id}
+                    htmlFor={`${idPrefix}-participant-${character.id}`}
+                    className="flex min-h-[42px] cursor-pointer items-center gap-[10px] rounded-md px-[8px] py-[6px] hover:bg-lcars-surface"
+                  >
+                    <input
+                      id={`${idPrefix}-participant-${character.id}`}
+                      type="checkbox"
+                      name="participantCharacterIds"
+                      value={character.id}
+                      defaultChecked={defaultSelectedIds.includes(character.id)}
+                      onChange={(event) => {
+                        refreshSelectedIds(event.currentTarget.form);
+                      }}
+                      className="h-[18px] w-[18px] shrink-0"
+                    />
+                    <span>
+                      {character.name} ({character.playerName})
+                    </span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p className="px-[8px] py-[10px] text-[13px] text-lcars-ink-dim">
+                Keine aktiven Figuren vorhanden.
+              </p>
+            )}
+          </fieldset>
+          <label className="flex min-h-[40px] items-center gap-[8px] px-[8px] text-[13px] text-lcars-ink-dim">
             <input
               type="checkbox"
               name="showAllParticipantCharacters"
               checked={showAll}
-              onChange={(e) => setShowAll(e.target.checked)}
+              onChange={(event) => setShowAll(event.target.checked)}
+              className="h-[18px] w-[18px] shrink-0"
             />
             Alle Charaktere anzeigen (auch inaktive)
           </label>
-          <p className="text-lcars-ink-dim text-[13px] px-[12px]">
-            {selectedCount === 0
+          <p className="text-lcars-ink-dim text-[13px] px-[8px]" aria-live="polite">
+            {selectedIds.length === 0
               ? "Keine Teilnehmer ausgewählt."
-              : selectedCount === 1
+              : selectedIds.length === 1
                 ? "1 Teilnehmer ausgewählt."
-                : `${selectedCount} Teilnehmer ausgewählt.`}
+                : `${selectedIds.length} Teilnehmer ausgewählt.`}
           </p>
         </>
       )}

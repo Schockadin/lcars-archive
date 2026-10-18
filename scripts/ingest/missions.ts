@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
-import matter from "gray-matter";
+import matter from "../../src/lib/markdownFrontmatter";
 import postgres from "postgres";
 import {
   markdownToHtml,

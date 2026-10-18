@@ -1,13 +1,11 @@
-// Service Worker: (1) Web Push (Zustellung/Klick), (2) Laufzeit-Caching
-// statischer Assets für schnelle Wiederbesuche und (3) OFFLINE-BETRIEB
-// (soweit möglich) für eine installierte PWA.
+// Service Worker: (1) Web Push (Zustellung/Klick), (2) Cache öffentlicher
+// statischer Assets und (3) eine generische Offline-Ausweichseite. Navigations-
+// und RSC-Antworten werden nie persistent gespeichert, da sie private und
+// authentifizierte Inhalte enthalten können.
 //
-// Offline-Strategie (bewusst konservativ, da die App authentifiziert und
-// personalisiert ist):
-//   - Navigationen (HTML) und RSC-Payloads: network-first. Online kommt immer
-//     der frische Server-Stand; die Antwort wird zusätzlich in einen Runtime-
-//     Cache gelegt. Offline wird die zuletzt gesehene Version derselben URL
-//     ausgeliefert; fehlt sie, die statische Offline-Ausweichseite (/offline).
+// Offline-Strategie:
+//   - Navigationen (HTML): immer Netz; offline nur die generische /offline-Seite.
+//   - RSC-Payloads: immer Netz; offline schlägt die Navigation fehl.
 //   - Content-gehashte Build-Assets (/_next/static/): cache-first, unveränder-
 //     lich.
 //   - Icons/Fonts/Manifest/Bilder: stale-while-revalidate.
@@ -19,9 +17,8 @@
 // Build-Assets unter /_next/static/ sind content-gehasht (neuer Deploy = neue
 // Dateinamen = automatischer Cache-Miss); die Version räumt verwaiste Einträge
 // auf und erneuert das Precache (u.a. die Offline-Seite).
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 const ASSET_CACHE = `neo-archive-assets-${CACHE_VERSION}`;
-const PAGE_CACHE = `neo-archive-pages-${CACHE_VERSION}`;
 const PRECACHE = `neo-archive-precache-${CACHE_VERSION}`;
 
 // Beim Install vorgeladene, netz-unabhängige Ausweichressourcen.
@@ -47,7 +44,7 @@ self.addEventListener("activate", (event) => {
       // Alte Cache-Versionen entfernen (alles, was nicht zur aktuellen
       // Version gehört).
       const keys = await caches.keys();
-      const current = new Set([ASSET_CACHE, PAGE_CACHE, PRECACHE]);
+      const current = new Set([ASSET_CACHE, PRECACHE]);
       await Promise.all(
         keys
           .filter((k) => k.startsWith("neo-archive-") && !current.has(k))
@@ -83,17 +80,16 @@ self.addEventListener("fetch", (event) => {
   // Cache-Control-Header egal, deshalb hier explizit ausschließen.
   if (url.pathname.startsWith("/api/")) return;
 
-  // RSC-Payloads (React Server Components) der clientseitigen Navigation:
-  // dieselbe URL wie die HTML-Seite, aber mit RSC-Header/_rsc-Query. Wie eine
-  // Navigation behandeln (network-first mit Cache-Fallback), damit auch das
-  // Weiterklicken zwischen bereits besuchten Seiten offline funktioniert.
+  // RSC-Payloads (React Server Components) und echte Navigationen enthalten
+  // oft kontobezogene Inhalte. Sie bleiben ausschließlich im Netzabruf und
+  // werden nie in der Cache-API abgelegt.
   const isRsc = req.headers.get("RSC") === "1" || url.searchParams.has("_rsc");
 
   // Echte Seiten-Navigationen (Adressleiste, Reload, Link ohne JS).
   const isNavigation = req.mode === "navigate";
 
   if (isNavigation || isRsc) {
-    event.respondWith(networkFirstPage(req, isNavigation));
+    event.respondWith(fetchPage(req, isNavigation));
     return;
   }
 
@@ -118,25 +114,12 @@ self.addEventListener("fetch", (event) => {
   // direkt ans Netz. (/api ist bereits oben ausgeschlossen.)
 });
 
-// Network-first für Navigationen und RSC-Payloads: online frisch (und in den
-// Page-Cache gelegt), offline aus dem Page-Cache, sonst die Offline-Seite.
-async function networkFirstPage(req, isNavigation) {
-  const cache = await caches.open(PAGE_CACHE);
+// Private Seiten bleiben ausschließlich im Netz. Offline erscheint bei einer
+// vollständigen Navigation die allgemeine Ausweichseite ohne Nutzerdaten.
+async function fetchPage(req, isNavigation) {
   try {
-    const res = await fetch(req);
-    // Nur erfolgreiche, „basic"/„default"-Antworten cachen (keine Redirects/
-    // Opaques). Eine Kopie ablegen, das Original ausliefern.
-    if (res && res.ok && (res.type === "basic" || res.type === "default")) {
-      cache.put(req, res.clone());
-    }
-    return res;
+    return await fetch(req);
   } catch {
-    // Offline: zuerst die exakt passende gecachte Version dieser URL.
-    const cached = await cache.match(req);
-    if (cached) return cached;
-    // Für echte Navigationen die Offline-Ausweichseite; für RSC-Payloads
-    // ohne Cache gibt es keinen sinnvollen Fallback → Fehler durchreichen,
-    // damit der Router-Fetch scheitert (die bereits sichtbare Seite bleibt).
     if (isNavigation) {
       const precache = await caches.open(PRECACHE);
       const offline = await precache.match(OFFLINE_URL);
@@ -167,17 +150,19 @@ async function staleWhileRevalidate(req) {
   return hit || fetching;
 }
 
-// ── Logout: personalisierten Seiten-Cache leeren ───────────────────────────
-// Vom Client (Logout-/Login-Form, siehe HeaderUserNav.tsx / LoginForm.tsx) per
-// postMessage getriggert: der Laufzeit-Seiten-Cache kann authentifizierte,
-// personalisierte Seiten/RSC-Payloads enthalten, die nach einem Abmelden nicht
-// mehr offline abrufbar sein dürfen — besonders auf geteilten Geräten. Online
-// ist das unkritisch (network-first liefert stets frisch); dies schließt die
-// Offline-Lücke. Precache (/offline, Manifest) und Asset-Cache bleiben, da rein
-// öffentlich/statisch.
+// Alte Page-Caches aus früheren Service-Worker-Versionen zusätzlich beim
+// Login/Logout entfernen. Neue Versionen schreiben keine Seitenantworten.
 self.addEventListener("message", (event) => {
   if (event.data === "neo-archive:clear-page-cache") {
-    event.waitUntil(caches.delete(PAGE_CACHE));
+    event.waitUntil(
+      caches.keys().then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith("neo-archive-pages-"))
+            .map((key) => caches.delete(key)),
+        ),
+      ),
+    );
   }
 });
 

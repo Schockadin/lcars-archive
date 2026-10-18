@@ -17,14 +17,11 @@ import EditorDraftForm from "@/components/ContentEditor/EditorDraftForm";
 const initialState: CreateDialogueState = {};
 
 const inputClass = "rounded-lcars-pill lcars-input";
-// Selects tragen durchgängig lcars-input + rounded-full (siehe die übrigen
-// Auswahlfelder der App); die Textfelder daneben behalten ihren Pillen-Radius.
+// Auswahlfelder tragen durchgängig lcars-input + rounded-full; die Textfelder
+// daneben behalten ihren Pillen-Radius.
 const selectClass = "lcars-input rounded-full";
-// Ausnahme: die Charakter-Auswahl. Ein aufgeklapptes Mehrfach-Listenfeld
-// (size > 1) ist ein hoher Kasten — mit rounded-full schneidet der
-// Vollkreis-Radius die obersten und untersten Zeilen an. Dieselbe
-// Pillen-Rundung wie beim nachträglichen Einladen
-// (InviteDialogueParticipantForm) statt eines Sonderwegs.
+// Das Feld zur Wahl des eigenen Sprechers bleibt ein normales, einzelnes
+// Auswahlfeld mit Pillen-Rundung.
 const characterListClass = "lcars-input rounded-lcars-pill";
 
 export default function CreateDialogueForm({
@@ -62,12 +59,24 @@ export default function CreateDialogueForm({
   const [ownIsNpc, setOwnIsNpc] = useState(
     canPlayNpcs && ownCharacters.length === 0,
   );
-  const [npcPartnerCount, setNpcPartnerCount] = useState(0);
+  const [selectedPartnerKeys, setSelectedPartnerKeys] = useState<string[]>([]);
+  const npcPartnerCount = selectedPartnerKeys.filter((key) =>
+    key.startsWith("n"),
+  ).length;
   const npcInvolved = ownIsNpc || npcPartnerCount > 0;
   // Bei genau einer Spielleitung gibt es nichts zu wählen — sie wird still
   // mitgeschickt (die Action setzt sie auch ohne Feld, das Feld hält die
   // Anzeige nur ehrlich).
   const needsGmChoice = npcInvolved && !canPlayNpcs && gms.length > 1;
+
+  function refreshPartnerSelection(form: HTMLFormElement | null) {
+    const selected = form?.querySelectorAll<HTMLInputElement>(
+      'input[name="partners"]:checked',
+    );
+    setSelectedPartnerKeys(
+      selected ? Array.from(selected, (input) => input.value) : [],
+    );
+  }
 
   return (
     <EditorDraftForm
@@ -120,44 +129,77 @@ export default function CreateDialogueForm({
       <FormField
         label="Gesprächspartner"
         htmlFor="dlg-partner-character"
-        hint="Mehrfachauswahl per Strg/Cmd- oder Shift-Klick möglich — ein Gespräch kann bereits bei der Erstellung mehr als zwei Teilnehmende haben. NPCs schreibt die Spielleitung."
+        hint="Wähle eine oder mehrere Figuren aus. Ein Gespräch kann bereits bei der Erstellung mehr als zwei Teilnehmende haben. NPCs schreibt die Spielleitung."
       >
-        <select
-          id="dlg-partner-character"
-          name="partners"
-          multiple
-          required
-          size={Math.min(6, Math.max(partnerCharacters.length + npcs.length, 2))}
-          className={`${characterListClass} h-auto py-[8px]`}
-          onChange={(e) =>
-            setNpcPartnerCount(
-              [...e.target.selectedOptions].filter((o) =>
-                o.value.startsWith("n"),
-              ).length,
-            )
-          }
+        <fieldset
+          aria-label="Gesprächspartner"
+          className="max-h-[280px] overflow-y-auto rounded-lg border border-lcars-border p-[8px]"
         >
-          {partnerCharacters.map((c) => (
-            <option
-              key={c.id}
-              value={speakerKey({ kind: "character", id: c.id })}
-            >
-              {c.name} (gespielt von {c.playerName})
-            </option>
-          ))}
-          {npcs.length > 0 && (
-            <optgroup label="NPCs">
-              {npcs.map((n) => (
-                <option
-                  key={n.id}
-                  value={speakerKey({ kind: "npc", id: n.id })}
+          <legend className="sr-only">Gesprächspartner</legend>
+          <div className="flex flex-col gap-[2px]">
+            {partnerCharacters.map((character, index) => {
+              const value = speakerKey({ kind: "character", id: character.id });
+              const id = index === 0 ? "dlg-partner-character" : `dlg-partner-${value}`;
+              return (
+                <label
+                  key={value}
+                  htmlFor={id}
+                  className="flex min-h-[42px] cursor-pointer items-center gap-[10px] rounded-md px-[8px] py-[6px] hover:bg-lcars-surface"
                 >
-                  {n.name}
-                </option>
-              ))}
-            </optgroup>
-          )}
-        </select>
+                  <input
+                    id={id}
+                    type="checkbox"
+                    name="partners"
+                    value={value}
+                    required={selectedPartnerKeys.length === 0 && index === 0}
+                    onChange={(event) =>
+                      refreshPartnerSelection(event.currentTarget.form)
+                    }
+                    className="h-[18px] w-[18px] shrink-0"
+                  />
+                  <span>
+                    {character.name} (gespielt von {character.playerName})
+                  </span>
+                </label>
+              );
+            })}
+            {npcs.length > 0 && (
+              <div className="mt-[6px] border-t border-lcars-border pt-[6px]">
+                <p className="lcars-eyebrow px-[8px]">NPCs</p>
+                {npcs.map((npc, index) => {
+                  const value = speakerKey({ kind: "npc", id: npc.id });
+                  const isFirst = partnerCharacters.length === 0 && index === 0;
+                  const id = isFirst ? "dlg-partner-character" : `dlg-partner-${value}`;
+                  return (
+                    <label
+                      key={value}
+                      htmlFor={id}
+                      className="flex min-h-[42px] cursor-pointer items-center gap-[10px] rounded-md px-[8px] py-[6px] hover:bg-lcars-surface"
+                    >
+                      <input
+                        id={id}
+                        type="checkbox"
+                        name="partners"
+                        value={value}
+                        required={selectedPartnerKeys.length === 0 && isFirst}
+                        onChange={(event) =>
+                          refreshPartnerSelection(event.currentTarget.form)
+                        }
+                        className="h-[18px] w-[18px] shrink-0"
+                      />
+                      <span>{npc.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+            {partnerCharacters.length === 0 && npcs.length === 0 && (
+              <p id="dlg-partner-character" className="px-[8px] py-[10px] text-[13px] text-lcars-ink-dim">
+                Keine Gesprächspartner verfügbar.
+              </p>
+            )}
+          </div>
+        </fieldset>
       </FormField>
 
       {/* Wer schreibt für die NPCs? Nur wenn welche beteiligt sind und die

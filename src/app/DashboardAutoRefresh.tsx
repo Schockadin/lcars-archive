@@ -3,7 +3,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useRealtimeUpdates } from "@/components/RealtimeUpdatesProvider";
 
-export const DASHBOARD_REFRESH_INTERVAL_MS = 10_000;
+export const DASHBOARD_REFRESH_INTERVAL_MS = 30_000;
+export const DASHBOARD_REFRESH_MAX_INTERVAL_MS = 120_000;
 
 // Die RealtimeUpdatesProvider hält die Startseite über WebSockets aktuell.
 // Dieses Intervall ist nur der Rückfallweg, falls Ably nicht konfiguriert oder
@@ -23,17 +24,38 @@ export default function DashboardAutoRefresh() {
   useEffect(() => {
     if (connected) return;
 
-    const intervalId = setInterval(() => {
-      if (!document.hidden) router.refresh();
-    }, DASHBOARD_REFRESH_INTERVAL_MS);
+    let interval = DASHBOARD_REFRESH_INTERVAL_MS;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    function scheduleRefresh() {
+      if (document.hidden) return;
+      timeoutId = setTimeout(() => {
+        timeoutId = null;
+        if (document.hidden) return;
+        router.refresh();
+        interval = Math.min(interval * 2, DASHBOARD_REFRESH_MAX_INTERVAL_MS);
+        scheduleRefresh();
+      }, interval);
+    }
+
+    scheduleRefresh();
 
     function handleVisibilityChange() {
-      if (!document.hidden) router.refresh();
+      if (document.hidden) {
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = null;
+        return;
+      }
+
+      interval = DASHBOARD_REFRESH_INTERVAL_MS;
+      router.refresh();
+      if (timeoutId) clearTimeout(timeoutId);
+      scheduleRefresh();
     }
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      clearInterval(intervalId);
+      if (timeoutId) clearTimeout(timeoutId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [connected, router]);
