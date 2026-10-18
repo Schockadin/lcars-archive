@@ -19,15 +19,19 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: check.error }, { status: 403 });
   }
 
-  let body: { id?: unknown };
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Ungültige Anfrage." }, { status: 400 });
   }
 
-  const id = Number(body.id);
-  if (!Number.isInteger(id) || id <= 0) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Ungültige Anfrage." }, { status: 400 });
+  }
+
+  const id = (body as { id?: unknown }).id;
+  if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) {
     return NextResponse.json({ error: "Unbekannter Termin." }, { status: 400 });
   }
 

@@ -139,4 +139,24 @@ describe("POST /api/planned-session-reminder", () => {
     expect(response.status).toBe(400);
     expect(getPlannedSession).not.toHaveBeenCalled();
   });
+
+  it("weist JSON null als ungültigen Request ab", async () => {
+    checkPermission.mockResolvedValue({ user: { id: 9 } });
+
+    const response = await POST(anfrage(null));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Ungültige Anfrage." });
+    expect(getPlannedSession).not.toHaveBeenCalled();
+  });
+
+  it("akzeptiert keine boolesche Termin-ID", async () => {
+    checkPermission.mockResolvedValue({ user: { id: 9 } });
+
+    const response = await POST(anfrage({ id: true }));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Unbekannter Termin." });
+    expect(getPlannedSession).not.toHaveBeenCalled();
+  });
 });

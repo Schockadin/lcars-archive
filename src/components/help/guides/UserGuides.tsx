@@ -27,8 +27,9 @@ export function DashboardGuide() {
         </p>
         <p>
           Die Spielleitung kann Personen ohne Rückmeldung direkt am Termin per
-          E-Mail erinnern. Dabei gelten die persönlichen Einstellungen für
-          E-Mail-Benachrichtigungen.
+          E-Mail erinnern. Die drei farbigen Zahlen am Panel stehen in der
+          Reihenfolge Zusagen, Absagen und offene Rückmeldungen. Dabei gelten
+          die persönlichen Einstellungen für E-Mail-Benachrichtigungen.
         </p>
         <p>
           Dazu kommen deine <strong>Entwürfe</strong> — alles, was du angefangen

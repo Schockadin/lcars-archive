@@ -145,9 +145,10 @@ export default function DSGVOContent({ year }: { year: number }) {
           Werte werden beim Planen eines Termins vorausgewählt. Zu- und Absagen
           sowie offene Rückmeldungen der eingeplanten Personen werden mit den
           Namen der Teilnehmenden auf der Kampagnen-Startseite angezeigt. Die
-          Spielleitung kann Personen ohne Antwort manuell per E-Mail erinnern;
-          dabei wird die persönliche Einstellung für E-Mail-Benachrichtigungen
-          berücksichtigt. Diese Nachrichten dienen der Terminplanung. Die
+          Spielleitung kann aktive Personen ohne Antwort manuell per E-Mail
+          erinnern. Die Nachricht wird einzeln und nur versendet, wenn die
+          persönliche Einstellung für E-Mail-Benachrichtigungen eingeschaltet
+          ist. Diese Nachrichten dienen der Terminplanung. Die
           öffentliche Session-Ansicht enthält keine AP-Buchungen oder realen
           Spieltermine. Die
           Teilnehmerzuordnung wird mit dem Charakter entfernt, die Session und

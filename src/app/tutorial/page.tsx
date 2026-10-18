@@ -757,7 +757,10 @@ export default function TutorialPage() {
                 <strong>„Ich bin dabei“</strong> oder{" "}
                 <strong>„Ich kann nicht“</strong> sagst du zu oder ab — du
                 kannst es dir jederzeit anders überlegen, die neue Antwort
-                ersetzt die alte. Wer zugesagt hat, steht am Termin.
+                ersetzt die alte. Am Termin siehst du, wer zu- oder abgesagt
+                hat und von wem noch eine Rückmeldung fehlt. Oben am Panel steht
+                die Anzahl in der Reihenfolge Zusage, Absage und offen; die
+                Spielleitung kann offene Rückmeldungen per E-Mail erinnern.
               </p>
               <p>
                 Die Spielleitung plant Termine und verwaltet gespielte Abende

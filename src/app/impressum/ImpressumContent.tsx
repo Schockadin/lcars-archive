@@ -48,6 +48,17 @@ export default function ImpressumContent() {
           Diese Seite steht in keiner Verbindung zu diesen Unternehmen.
         </p>
 
+        <h2>Funktionen der Plattform</h2>
+        <p>
+          Angemeldete Personen können auf der Startseite Rückmeldungen zu
+          angekündigten Spielterminen abgeben und sehen, wer bereits zu- oder
+          abgesagt hat. Die Spielleitung kann Personen ohne Antwort manuell per
+          E-Mail erinnern; dabei gelten die persönlichen
+          E-Mail-Benachrichtigungseinstellungen. Einzelheiten zur Anzeige und
+          Verarbeitung dieser Angaben stehen in der{" "}
+          <a href="/datenschutz">Datenschutzerklärung</a>.
+        </p>
+
         <h2>Haftung für Inhalte</h2>
         <p>
           Als Diensteanbieter bin ich gemäß § 7 Abs. 1 TMG für eigene Inhalte
