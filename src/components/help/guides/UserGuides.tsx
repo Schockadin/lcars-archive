@@ -17,12 +17,18 @@ export function DashboardGuide() {
         <p>
           Angemeldet zeigt die Startseite deinen eigenen Stand statt der
           öffentlichen Übersicht: die nächsten <strong>Spielabende</strong> samt
-          Zu- und Absage, deine <strong>offenen Gespräche</strong>, den
+          Zusagen, Absagen und offenen Rückmeldungen mit den Namen der
+          Teilnehmenden, deine <strong>offenen Gespräche</strong>, den
           Abschnitt <strong>„Neues anlegen“</strong> (dieselben Knöpfe und
           Fenster wie unter „Meine Inhalte“), deine <strong>Charaktere</strong>{" "}
           (ein Klick auf die Karte öffnet direkt ihre Akte) und die{" "}
           <strong>News</strong> — was andere zuletzt angelegt, geändert oder
           gelöscht haben.
+        </p>
+        <p>
+          Die Spielleitung kann Personen ohne Rückmeldung direkt am Termin per
+          E-Mail erinnern. Dabei gelten die persönlichen Einstellungen für
+          E-Mail-Benachrichtigungen.
         </p>
         <p>
           Dazu kommen deine <strong>Entwürfe</strong> — alles, was du angefangen

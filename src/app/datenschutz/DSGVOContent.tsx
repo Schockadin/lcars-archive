@@ -142,7 +142,12 @@ export default function DSGVOContent({ year }: { year: number }) {
           legt keine zusätzlichen Inhalte an. Die Spielleitung kann außerdem
           kampagnenweite Vorgaben für neue Termine
           speichern: Wochentag, Kalenderwochen-Parität, Uhrzeit und Ort. Diese
-          Werte werden beim Planen eines Termins vorausgewählt. Die
+          Werte werden beim Planen eines Termins vorausgewählt. Zu- und Absagen
+          sowie offene Rückmeldungen der eingeplanten Personen werden mit den
+          Namen der Teilnehmenden auf der Kampagnen-Startseite angezeigt. Die
+          Spielleitung kann Personen ohne Antwort manuell per E-Mail erinnern;
+          dabei wird die persönliche Einstellung für E-Mail-Benachrichtigungen
+          berücksichtigt. Diese Nachrichten dienen der Terminplanung. Die
           öffentliche Session-Ansicht enthält keine AP-Buchungen oder realen
           Spieltermine. Die
           Teilnehmerzuordnung wird mit dem Charakter entfernt, die Session und
