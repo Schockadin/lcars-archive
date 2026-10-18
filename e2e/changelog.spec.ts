@@ -6,6 +6,20 @@ import { test, expect } from "@playwright/test";
 // und Sortierung.
 
 test.describe("Changelog", () => {
+  test("zeigt die Rücknahme von Datenbankänderungen mit Tutorial-Link", async ({
+    page,
+  }) => {
+    await page.goto("/changelog");
+    const latest = page.locator("article .lcars-accordion").first();
+    await expect(latest).toContainText("Version 2.1");
+    await expect(latest).toContainText(
+      "Bearbeitungen im Datenbank-Zeilen-Overlay",
+    );
+    await expect(
+      latest.getByRole("link", { name: "Im Tutorial: Spielleitung & Admins" }),
+    ).toHaveAttribute("href", "/tutorial#spielleitung-admins");
+  });
+
   test("führt jede vorkommende Kategorie im Auswahlfeld, „Alle“ ist gewählt", async ({
     page,
   }) => {

@@ -81,7 +81,14 @@ describe("formatSessionMoment", () => {
   });
 });
 
-function session(rsvps: PlannedSession["rsvps"]): PlannedSession {
+function session(
+  rsvps: PlannedSession["rsvps"],
+  participants: PlannedSession["participants"] = rsvps.map((rsvp) => ({
+    userId: rsvp.userId,
+    userName: rsvp.userName,
+    response: rsvp.response,
+  })),
+): PlannedSession {
   return {
     id: 1,
     scheduledAt: "2026-06-12 19:30",
@@ -96,17 +103,23 @@ function session(rsvps: PlannedSession["rsvps"]): PlannedSession {
     characterIds: [],
     gameSessionId: null,
     rsvps,
+    participants,
   };
 }
 
 describe("countRsvps / ownResponse", () => {
-  it("zählt Zu- und Absagen getrennt", () => {
+  it("zählt Zusagen, Absagen und noch offene Rückmeldungen getrennt", () => {
     const s = session([
       { userId: 1, userName: "A", response: "yes", note: "" },
       { userId: 2, userName: "B", response: "no", note: "" },
       { userId: 3, userName: "C", response: "yes", note: "" },
+    ], [
+      { userId: 1, userName: "A", response: "yes" },
+      { userId: 2, userName: "B", response: "no" },
+      { userId: 3, userName: "C", response: "yes" },
+      { userId: 4, userName: "D", response: null },
     ]);
-    expect(countRsvps(s)).toEqual({ yes: 2, no: 1 });
+    expect(countRsvps(s)).toEqual({ yes: 2, no: 1, pending: 1 });
   });
 
   it("kennt die eigene Antwort — und dass es keine gibt", () => {

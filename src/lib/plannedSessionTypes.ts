@@ -12,6 +12,12 @@ export interface PlannedSessionRsvp {
   note: string;
 }
 
+export interface PlannedSessionParticipant {
+  userId: number;
+  userName: string;
+  response: RsvpResponse | null;
+}
+
 export interface PlannedSession {
   id: number;
   scheduledAt: string;
@@ -32,4 +38,7 @@ export interface PlannedSession {
   // noch aus). Erledigte Termine fallen von der Startseite weg.
   gameSessionId: number | null;
   rsvps: PlannedSessionRsvp[];
+  // Aktive Konten hinter den eingeplanten Figuren samt Antwort. Bestehende
+  // Antworten von weiteren Usern bleiben ebenfalls sichtbar.
+  participants: PlannedSessionParticipant[];
 }

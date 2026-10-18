@@ -757,7 +757,10 @@ export default function TutorialPage() {
                 <strong>„Ich bin dabei“</strong> oder{" "}
                 <strong>„Ich kann nicht“</strong> sagst du zu oder ab — du
                 kannst es dir jederzeit anders überlegen, die neue Antwort
-                ersetzt die alte. Wer zugesagt hat, steht am Termin.
+                ersetzt die alte. Am Termin siehst du, wer zu- oder abgesagt
+                hat und von wem noch eine Rückmeldung fehlt. Oben am Panel steht
+                die Anzahl in der Reihenfolge Zusage, Absage und offen; die
+                Spielleitung kann offene Rückmeldungen per E-Mail erinnern.
               </p>
               <p>
                 Die Spielleitung plant Termine und verwaltet gespielte Abende
@@ -1235,9 +1238,14 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   Unter <strong>„Audit-Log“</strong> nachvollziehen, wer wann
-                  welche sicherheitsrelevante Kontoaktion durchgeführt hat,
-                  sowie eine separate Übersicht aller in den letzten drei Tagen
-                  neu angelegten, bearbeiteten oder gelöschten Inhalte.
+                  welche sicherheitsrelevante Kontoaktion durchgeführt hat.
+                  Bearbeitungen im Zeilen-Overlay unter „Datenbank“ werden dort
+                  mit Vorher-/Nachher-Stand protokolliert und lassen sich über
+                  den Rückgängig-Knopf auf den vorherigen Stand setzen. Dabei
+                  werden nur die damals bearbeiteten Spalten zurückgesetzt;
+                  spätere Änderungen an denselben Spalten werden überschrieben.
+                  Daneben gibt es eine separate Übersicht aller in den letzten
+                  drei Tagen neu angelegten, bearbeiteten oder gelöschten Inhalte.
                 </li>
                 <li>
                   Unter <strong>„Fehler-Log“</strong> alle unerwarteten

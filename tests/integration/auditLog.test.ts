@@ -55,6 +55,46 @@ describe("logAdminAction / listRecentAdminActions", () => {
     expect(entry.action).toBe("update_profile");
   });
 
+  it("lists DB-row edits and the audit entry that undid them", async () => {
+    const admin = await insertUser({ role: "admin" });
+    const details = JSON.stringify({
+      kind: "db_row_update",
+      table: "archive_entries",
+      pkColumn: "id",
+      pkValue: "525",
+      columns: ["metadata"],
+      before: {
+        values: { metadata: { participants: [] } },
+        sqlNulls: { metadata: false },
+      },
+      after: {
+        values: { metadata: "serialized value" },
+        sqlNulls: { metadata: false },
+      },
+    });
+    const [original] = await sql<{ id: number }[]>`
+      INSERT INTO admin_audit_log (actor_id, action, details)
+      VALUES (${admin.id}, 'update_db_row', ${details})
+      RETURNING id
+    `;
+    const [undo] = await sql<{ id: number }[]>`
+      INSERT INTO admin_audit_log (actor_id, action, details, reverts_audit_id)
+      VALUES (${admin.id}, 'undo_db_row', 'undo details', ${original.id})
+      RETURNING id
+    `;
+
+    const entries = await listRecentAdminActions();
+    const originalEntry = entries.find((entry) => entry.id === original.id);
+    expect(originalEntry).toMatchObject({
+      action: "update_db_row",
+      details: "archive_entries · id=525 · Felder: metadata",
+      revertedByAuditId: undo.id,
+    });
+    expect(entries.find((entry) => entry.id === undo.id)?.action).toBe(
+      "undo_db_row",
+    );
+  });
+
   it("rejects an action outside the CHECK constraint's allowed set, even bypassing logAdminAction", async () => {
     // Regression: admin_audit_log.action hatte vorher keinen DB-CHECK,
     // anders als jede andere enum-artige Spalte im Schema — dieser Test
@@ -67,7 +107,10 @@ describe("logAdminAction / listRecentAdminActions", () => {
 
   it("keeps the details snapshot readable after the target user is deleted, even though target_user_id/targetName become null", async () => {
     const admin = await insertUser({ role: "admin" });
-    const target = await insertUser({ name: "Doomed Dana", email: "dana@example.test" });
+    const target = await insertUser({
+      name: "Doomed Dana",
+      email: "dana@example.test",
+    });
 
     await logAdminAction(
       admin.id,
@@ -95,5 +138,21 @@ describe("logAdminAction / listRecentAdminActions", () => {
     const entries = await listRecentAdminActions(2);
     expect(entries).toHaveLength(2);
     expect(entries.map((e) => e.details)).toEqual(["third", "second"]);
+  });
+
+  it("loads older audit rows from a stable timestamp-and-id cursor", async () => {
+    const admin = await insertUser({ role: "admin" });
+    await logAdminAction(admin.id, "create_user", null, "first");
+    await logAdminAction(admin.id, "reset_password", null, "second");
+    await logAdminAction(admin.id, "force_logout", null, "third");
+
+    const recent = await listRecentAdminActions(2);
+    const older = await listRecentAdminActions(2, {
+      createdAt: recent[1].createdAt,
+      id: recent[1].id,
+    });
+
+    expect(recent.map((entry) => entry.details)).toEqual(["third", "second"]);
+    expect(older.map((entry) => entry.details)).toEqual(["first"]);
   });
 });

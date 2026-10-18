@@ -1,5 +1,9 @@
 import "server-only";
 import sql from "@/lib/db";
+import {
+  parseDbRowAuditDetails,
+  summarizeDbRowAuditDetails,
+} from "@/lib/dbRowAudit";
 
 export type AdminAuditAction =
   | "create_user"
@@ -14,7 +18,9 @@ export type AdminAuditAction =
   | "update_permissions"
   | "create_role"
   | "edit_role"
-  | "delete_role";
+  | "delete_role"
+  | "update_db_row"
+  | "undo_db_row";
 
 export interface AdminAuditLogEntry {
   id: number;
@@ -24,6 +30,7 @@ export interface AdminAuditLogEntry {
   targetUserId: number | null;
   targetName: string | null;
   details: string | null;
+  revertedByAuditId: number | null;
   ip: string | null;
   createdAt: string;
 }
@@ -52,7 +59,11 @@ export async function logAdminAction(
 
 export async function listRecentAdminActions(
   limit = 200,
+  before?: { createdAt: string; id: number },
 ): Promise<AdminAuditLogEntry[]> {
+  const cursor = before
+    ? sql`WHERE (l.created_at, l.id) < (${before.createdAt}::timestamptz, ${before.id}::int)`
+    : sql``;
   const rows = await sql<
     {
       id: number;
@@ -62,6 +73,7 @@ export async function listRecentAdminActions(
       target_user_id: number | null;
       target_name: string | null;
       details: string | null;
+      reverted_by_audit_id: number | null;
       ip: string | null;
       created_at: string;
     }[]
@@ -69,22 +81,37 @@ export async function listRecentAdminActions(
     SELECT
       l.id, l.actor_id, actor.name AS actor_name,
       l.action, l.target_user_id, target.name AS target_name,
-      l.details, l.ip, l.created_at
+      l.details, reversal.id AS reverted_by_audit_id, l.ip,
+      l.created_at::text AS created_at
     FROM admin_audit_log l
     LEFT JOIN users actor ON actor.id = l.actor_id
     LEFT JOIN users target ON target.id = l.target_user_id
-    ORDER BY l.created_at DESC
+    LEFT JOIN admin_audit_log reversal ON reversal.reverts_audit_id = l.id
+    ${cursor}
+    ORDER BY l.created_at DESC, l.id DESC
     LIMIT ${limit}
   `;
-  return rows.map((row) => ({
-    id: row.id,
-    actorId: row.actor_id,
-    actorName: row.actor_name,
-    action: row.action,
-    targetUserId: row.target_user_id,
-    targetName: row.target_name,
-    details: row.details,
-    ip: row.ip,
-    createdAt: row.created_at,
-  }));
+  return rows.map((row) => {
+    const dbRowDetails =
+      row.action === "update_db_row" || row.action === "undo_db_row"
+        ? parseDbRowAuditDetails(row.details)
+        : null;
+    return {
+      id: row.id,
+      actorId: row.actor_id,
+      actorName: row.actor_name,
+      action: row.action,
+      targetUserId: row.target_user_id,
+      targetName: row.target_name,
+      details:
+        row.action === "update_db_row" || row.action === "undo_db_row"
+          ? dbRowDetails
+            ? summarizeDbRowAuditDetails(dbRowDetails)
+            : "Änderungsdetails nicht lesbar."
+          : row.details,
+      revertedByAuditId: row.reverted_by_audit_id,
+      ip: row.ip,
+      createdAt: row.created_at,
+    };
+  });
 }

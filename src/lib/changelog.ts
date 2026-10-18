@@ -147,6 +147,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.1",
+    title: "Audit-Log und Spieltermin-Rückmeldungen",
+    items: [
+      {
+        text: "Bearbeitungen im Datenbank-Zeilen-Overlay werden mit Vorher-/Nachher-Stand im Audit-Log festgehalten und lassen sich dort jederzeit gezielt zurücksetzen.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Auf der Startseite siehst du, wer Spielterminen zu- oder abgesagt hat und von wem noch eine Rückmeldung fehlt. Die Spielleitung kann offene Rückmeldungen per E-Mail erinnern.",
+        category: "benachrichtigungen",
+        tutorial: "mein-bereich",
+      },
+    ],
+  },
+  {
     version: "2.0",
     title: "Meine Dateien und Bildbibliothek",
     items: [

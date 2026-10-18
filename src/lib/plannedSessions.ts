@@ -4,6 +4,7 @@ import sql from "@/lib/db";
 import { markdownToHtml } from "@/lib/markdown";
 import type {
   PlannedSession,
+  PlannedSessionParticipant,
   PlannedSessionRsvp,
   RsvpResponse,
 } from "@/lib/plannedSessionTypes";
@@ -19,6 +20,7 @@ import type {
 
 export type {
   PlannedSession,
+  PlannedSessionParticipant,
   PlannedSessionRsvp,
   RsvpResponse,
 } from "@/lib/plannedSessionTypes";
@@ -49,22 +51,38 @@ async function withDetails(rows: Row[]): Promise<PlannedSession[]> {
   const ids = rows.map((r) => r.id);
   // Eine Abfrage für alle Termine statt einer je Termin: die Liste ist kurz,
   // die Roundtrips zur (entfernten) Datenbank sind es nicht.
-  const rsvps = await sql<
-    {
-      sessionId: number;
-      userId: number;
-      userName: string;
-      response: RsvpResponse;
-      note: string;
-    }[]
-  >`
-    SELECT r.session_id AS "sessionId", r.user_id AS "userId",
-           u.name AS "userName", r.response, r.note
-    FROM planned_session_rsvps r
-    JOIN users u ON u.id = r.user_id
-    WHERE r.session_id = ANY(${ids})
-    ORDER BY u.name ASC
-  `;
+  const [rsvps, planned, expectedParticipants] = await Promise.all([
+    sql<
+      {
+        sessionId: number;
+        userId: number;
+        userName: string;
+        response: RsvpResponse;
+        note: string;
+      }[]
+    >`
+      SELECT r.session_id AS "sessionId", r.user_id AS "userId",
+             u.name AS "userName", r.response, r.note
+      FROM planned_session_rsvps r
+      JOIN users u ON u.id = r.user_id
+      WHERE r.session_id = ANY(${ids})
+      ORDER BY u.name ASC
+    `,
+    sql<{ sessionId: number; characterId: number }[]>`
+      SELECT session_id AS "sessionId", character_id AS "characterId"
+      FROM planned_session_characters
+      WHERE session_id = ANY(${ids})
+    `,
+    sql<{ sessionId: number; userId: number; userName: string }[]>`
+      SELECT DISTINCT pc.session_id AS "sessionId",
+             u.id AS "userId", u.name AS "userName"
+      FROM planned_session_characters pc
+      JOIN characters c ON c.id = pc.character_id AND c.deleted_at IS NULL
+      JOIN users u ON u.id = c.player_id AND u.is_active = true
+      WHERE pc.session_id = ANY(${ids})
+      ORDER BY pc.session_id, u.name ASC
+    `,
+  ]);
   const bySession = new Map<number, PlannedSessionRsvp[]>();
   for (const r of rsvps) {
     const list = bySession.get(r.sessionId) ?? [];
@@ -76,18 +94,36 @@ async function withDetails(rows: Row[]): Promise<PlannedSession[]> {
     });
     bySession.set(r.sessionId, list);
   }
-  // Die eingeplanten Figuren in derselben Bauart: eine Abfrage für alle
-  // Termine statt einer je Termin.
-  const planned = await sql<{ sessionId: number; characterId: number }[]>`
-    SELECT session_id AS "sessionId", character_id AS "characterId"
-    FROM planned_session_characters
-    WHERE session_id = ANY(${ids})
-  `;
   const charactersBySession = new Map<number, number[]>();
   for (const row of planned) {
     const list = charactersBySession.get(row.sessionId) ?? [];
     list.push(row.characterId);
     charactersBySession.set(row.sessionId, list);
+  }
+
+  const participantsBySession = new Map<
+    number,
+    Map<number, PlannedSessionParticipant>
+  >();
+  for (const participant of expectedParticipants) {
+    const list = participantsBySession.get(participant.sessionId) ?? new Map();
+    list.set(participant.userId, {
+      userId: participant.userId,
+      userName: participant.userName,
+      response: null,
+    });
+    participantsBySession.set(participant.sessionId, list);
+  }
+  // Alte Antworten bleiben sichtbar, auch wenn die Spielleitung die Besetzung
+  // seitdem geändert oder eine Person nicht über eine Figur eingeplant hat.
+  for (const rsvp of rsvps) {
+    const list = participantsBySession.get(rsvp.sessionId) ?? new Map();
+    list.set(rsvp.userId, {
+      userId: rsvp.userId,
+      userName: rsvp.userName,
+      response: rsvp.response,
+    });
+    participantsBySession.set(rsvp.sessionId, list);
   }
 
   // Die Notiz ist Markdown (MarkdownEditor im Termin-Fenster); für die
@@ -102,6 +138,9 @@ async function withDetails(rows: Row[]): Promise<PlannedSession[]> {
     notesHtml: notesHtml[index],
     characterIds: charactersBySession.get(row.id) ?? [],
     rsvps: bySession.get(row.id) ?? [],
+    participants: [...(participantsBySession.get(row.id)?.values() ?? [])].sort(
+      (a, b) => a.userName.localeCompare(b.userName, "de"),
+    ),
   }));
 }
 

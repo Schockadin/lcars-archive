@@ -673,3 +673,34 @@ export async function sendPlannedSessionAnnouncedEmail(input: {
     `,
   });
 }
+
+// Erinnerung an aktive Spielende, die zu einem angekündigten Termin noch
+// nicht geantwortet haben. Der Dashboard-Link führt direkt zu Zu- und Absage.
+export async function sendPlannedSessionReminderEmail(input: {
+  to: string;
+  name: string;
+  sessionTitle: string;
+  scheduledAtLabel: string;
+  location: string;
+  dashboardUrl: string;
+}): Promise<SendEmailResult> {
+  const dashboardUrl = escapeHtml(input.dashboardUrl);
+  const withTitle = input.sessionTitle
+    ? `„${input.sessionTitle}" am ${input.scheduledAtLabel}`
+    : input.scheduledAtLabel;
+  return sendEmail({
+    to: input.to,
+    subject: `Rückmeldung zum Spieltermin: ${withTitle}`,
+    html: `
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>
+        für den angekündigten Spieltermin <strong>${escapeHtml(withTitle)}</strong>
+        fehlt noch deine Zu- oder Absage.
+      </p>
+      ${input.location ? `<p><strong>Wo:</strong> ${escapeHtml(input.location)}</p>` : ""}
+      <p>Du kannst deine Antwort auf deiner Startseite abgeben oder jederzeit ändern:</p>
+      <p><a href="${dashboardUrl}">${dashboardUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}

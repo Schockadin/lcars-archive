@@ -84,6 +84,18 @@ export default function DSGVOContent({ year }: { year: number }) {
           Aufklärung eines vermuteten kompromittierten Admin-Accounts).
         </p>
         <p>
+          Änderungen, die berechtigte Personen im Bearbeiten-Overlay des
+          Datenbankbereichs vornehmen, werden ebenfalls dauerhaft protokolliert.
+          Gespeichert werden die betroffene Tabelle und Zeile, die geänderten
+          Spalten sowie deren jeweilige Werte vor und nach der Änderung,
+          zusammen mit Zeitpunkt, ausführendem Account und IP-Adresse. Diese
+          Einträge sind nur für die Administration einsehbar und ermöglichen,
+          die geänderten Spalten später auf den vorherigen Stand zu setzen.
+          (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
+          an der Nachvollziehbarkeit privilegierter Datenbankänderungen und der
+          Wiederherstellung versehentlich geänderter Werte.)
+        </p>
+        <p>
           Tritt ein unerwarteter Serverfehler auf, werden Fehlermeldung,
           Stacktrace, betroffene Route und Zeitpunkt dauerhaft in einem nur für
           Administration einsehbaren Protokoll gespeichert (Rechtsgrundlage:
@@ -130,7 +142,13 @@ export default function DSGVOContent({ year }: { year: number }) {
           legt keine zusätzlichen Inhalte an. Die Spielleitung kann außerdem
           kampagnenweite Vorgaben für neue Termine
           speichern: Wochentag, Kalenderwochen-Parität, Uhrzeit und Ort. Diese
-          Werte werden beim Planen eines Termins vorausgewählt. Die
+          Werte werden beim Planen eines Termins vorausgewählt. Zu- und Absagen
+          sowie offene Rückmeldungen der eingeplanten Personen werden mit den
+          Namen der Teilnehmenden auf der Kampagnen-Startseite angezeigt. Die
+          Spielleitung kann aktive Personen ohne Antwort manuell per E-Mail
+          erinnern. Die Nachricht wird einzeln und nur versendet, wenn die
+          persönliche Einstellung für E-Mail-Benachrichtigungen eingeschaltet
+          ist. Diese Nachrichten dienen der Terminplanung. Die
           öffentliche Session-Ansicht enthält keine AP-Buchungen oder realen
           Spieltermine. Die
           Teilnehmerzuordnung wird mit dem Charakter entfernt, die Session und

@@ -608,6 +608,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `listUnrecordedPlannedSessions` unter `/gm/campaign`. Eine zweite Antwort ersetzt
   die erste; eine verschobene Uhrzeit lässt die Zusagen stehen.
 
+  Auf der Startseite zeigt eine farbige Übersicht für den nächsten Termin die
+  Zahl der Zusagen, Absagen und offenen Antworten; darunter stehen die Namen
+  der jeweiligen Personen. Die Spielleitung kann die noch nicht
+  zurückmeldenden, eingeplanten Personen manuell per E-Mail erinnern. Dabei
+  werden nur aktive Konten mit eingeschalteten E-Mail-Benachrichtigungen
+  angeschrieben.
+
   Ein **neu angekündigter** Termin erreicht die Spielenden seiner eingeplanten
   Figuren per **Mail/Push** (`notifyPlannedSessionPlayers` in
   `src/app/actions/plannedSessions.ts`, Empfänger aus
@@ -1310,7 +1317,9 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   Anmelde-Protokolle, Audit-Log) sind gegen Schreibzugriff gesperrt — über das
   freie Feld wie über den zeilenweisen Editor. Ein
   Audit-Log protokolliert sicherheitsrelevante Useraccount- sowie Rollen-/
-  Rechteänderungen (inkl. IP-Adresse) sowie, separat, eine 3-Tage-Übersicht aller
+  Rechteänderungen (inkl. IP-Adresse); Änderungen aus dem Zeilen-Overlay des
+  Datenbankbrowsers enthalten Vorher-/Nachher-Werte und lassen sich dort gezielt
+  zurücksetzen. Daneben gibt es eine 3-Tage-Übersicht aller
   neu angelegten, bearbeiteten und gelöschten Inhalte. Drei Wartungs-Skripte
   laufen blockweise mit Fortschrittsanzeige (jeweils ausblendbar): „Alle Inhalte
   verlinken" (Bulk-Autolinking; Autolinking ist bei neuen Inhalten außerdem
@@ -2255,6 +2264,14 @@ Ausliefern des neuen Stands angewendet werden:
 
 ```bash
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr101.sql
+```
+
+Für PR #111 muss außerdem `scripts/migrate-pr111.sql` vor dem Deploy ausgeführt
+werden. Sie ergänzt den Verweis auf rückgängig gemachte Audit-Einträge und lässt
+die neuen Datenbankänderungs-Aktionen im Audit-Log zu:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr111.sql
 ```
 
 Ebenso `scripts/migrate-pr78.sql`: Es ergänzt `error_logs` um die drei

@@ -278,6 +278,7 @@ async function UpcomingSessionsBlock({ userId }: { userId: number }) {
       sessions={sessions}
       userId={userId}
       canRsvp={permissions.has("users.browse")}
+      canRemind={permissions.has("gm.access")}
     />
   );
 }

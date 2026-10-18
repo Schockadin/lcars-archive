@@ -147,6 +147,42 @@ describe("Session-Planer", () => {
     expect(session.rsvps[0].response).toBe("no");
   });
 
+  it("zeigt aktive eingeplante User mit Status und behält weitere Antworten", async () => {
+    const gm = await insertUser();
+    const anna = await insertUser({ name: "Anna" });
+    const bert = await insertUser({ name: "Bert" });
+    const charlotte = await insertUser({ name: "Charlotte" });
+    const tuvok = await insertCharacter({ playerId: anna.id, name: "Tuvok" });
+    const kim = await insertCharacter({ playerId: anna.id, name: "Kim" });
+    const shran = await insertCharacter({ playerId: bert.id, name: "Shran" });
+    const sessionId = await createPlannedSession(
+      {
+        scheduledAt: inTagen(5),
+        missionId: (await insertMission()).id,
+        location: "",
+        notes: "",
+        characterIds: [tuvok.id, kim.id, shran.id],
+      },
+      gm.id,
+    );
+
+    await setRsvp(sessionId, anna.id, "yes", "");
+    await setRsvp(sessionId, charlotte.id, "no", "");
+
+    const session = await getPlannedSession(sessionId);
+    expect(session?.participants).toEqual(
+      expect.arrayContaining([
+        { userId: anna.id, userName: "Anna", response: "yes" },
+        { userId: bert.id, userName: "Bert", response: null },
+        { userId: charlotte.id, userName: "Charlotte", response: "no" },
+      ]),
+    );
+    // Zwei eingeplante Figuren derselben Person sind eine einzige Stimme.
+    expect(
+      session?.participants.filter((participant) => participant.userId === anna.id),
+    ).toHaveLength(1);
+  });
+
   it("räumt die Antworten mit dem Termin ab", async () => {
     const gm = await insertUser();
     const spielerin = await insertUser();

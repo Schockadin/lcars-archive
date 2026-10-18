@@ -118,18 +118,21 @@ export function isUpcoming(iso: string, now: Date = new Date()): boolean {
   return date.getTime() > now.getTime();
 }
 
-// Wie viele haben zu-, wie viele abgesagt.
-export function countRsvps(session: Pick<PlannedSession, "rsvps">): {
+// Wie viele haben zugesagt, abgesagt oder noch nicht geantwortet.
+export function countRsvps(session: Pick<PlannedSession, "participants">): {
   yes: number;
   no: number;
+  pending: number;
 } {
   let yes = 0;
   let no = 0;
-  for (const r of session.rsvps) {
-    if (r.response === "yes") yes++;
-    else no++;
+  let pending = 0;
+  for (const participant of session.participants) {
+    if (participant.response === "yes") yes++;
+    else if (participant.response === "no") no++;
+    else pending++;
   }
-  return { yes, no };
+  return { yes, no, pending };
 }
 
 // Die eigene Antwort, falls es eine gibt. „Noch offen" ist die Abwesenheit

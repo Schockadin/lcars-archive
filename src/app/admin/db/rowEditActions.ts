@@ -8,6 +8,13 @@ import {
   tableAccessError,
   isProtectedWriteTable,
 } from "@/lib/dbInspect";
+import { getClientIp } from "@/lib/http";
+import { jsonRootType, parseJsonEditValue } from "@/lib/dbJsonEdit";
+import {
+  lockDbRowSnapshot,
+  getTableColumnInfoInTransaction,
+} from "@/lib/dbRowMutations";
+import type { DbRowAuditDetails } from "@/lib/dbRowAudit";
 
 export interface RowMutationResult {
   error?: string;
@@ -16,21 +23,28 @@ export interface RowMutationResult {
 
 const STATEMENT_TIMEOUT_MS = 5000;
 
-// Aktualisiert genau EINE Zeile einer Basis-Tabelle aus dem Zeilen-Overlay
-// (RowDetailModal). Gegated durch sql_write. Sicherheit: Tabellenname,
-// Schlüssel- und Wertspalten werden gegen die echten Spalten der Tabelle
-// (getTableColumns → information_schema) geprüft, bevor sie als (gequotete)
-// Identifier in die Query gehen; ALLE Werte laufen als gebundene $n-Parameter.
-// Der Schlüsselvergleich läuft über "pk"::text = $n, damit der String-Parameter
-// unabhängig vom PK-Typ passt. Werte kommen als Strings/NULL — Postgres wandelt
-// sie im Assignment-Kontext in den Spaltentyp um (int/bool/date/jsonb/…).
+// Aktualisiert eine einzelne Zeile aus dem Bearbeiten-Overlay. Der alte und
+// neue Wert werden gemeinsam mit der Änderung im append-only Audit-Log
+// gespeichert; dadurch ist die Änderung dort später rückgängig zu machen.
 export async function updateDbRowAction(input: {
   table: string;
   pkColumn: string;
   pkValue: string;
   updates: Record<string, string | null>;
 }): Promise<RowMutationResult> {
-  await requireDbAccess();
+  if (
+    !input ||
+    typeof input.table !== "string" ||
+    input.pkColumn !== "id" ||
+    typeof input.pkValue !== "string" ||
+    !input.updates ||
+    typeof input.updates !== "object" ||
+    Array.isArray(input.updates)
+  ) {
+    return { error: "Ungültige Zeilenänderung." };
+  }
+
+  const actor = await requireDbAccess();
   const perms = await getCurrentUserPermissions();
   if (!perms.has("sql_write")) {
     return { error: "Dir fehlt das Recht „SQL schreiben“." };
@@ -42,53 +56,159 @@ export async function updateDbRowAction(input: {
   );
   if (accessError) return { error: accessError };
 
-  // Die Sperre, auf die es hier ankommt: Der Tabellen-Browser zeigt seit
-  // dbTables.ts ALLE Tabellen außer den reinen Geheimnis-Tabellen — also auch
-  // users, roles, die Rate-Limit-Tabellen und das Audit-Protokoll.
-  // tableAccessError lässt sie damit durch (Lesen ist gewollt), und einzig
-  // diese Prüfung verhindert, dass sich jemand mit sql_write über das Overlay
-  // selbst Rechte einträgt. Dieselbe PROTECTED_WRITE_TABLES-Liste wie im
-  // freien SQL-Panel. Nicht entfernen.
+  // Tabellen mit Zugangsdaten, Rollen oder Audit-Daten bleiben auch dann
+  // schreibgeschützt, wenn sie im Explorer lesbar sind.
   if (isProtectedWriteTable(input.table)) {
     return { error: `Schreibzugriff auf „${input.table}“ ist gesperrt.` };
   }
 
   const columns = await getTableColumns(input.table);
   if (columns.length === 0) return { error: "Unbekannte Tabelle." };
-  const columnSet = new Set(columns);
-  if (!columnSet.has(input.pkColumn)) {
+  if (!columns.includes(input.pkColumn)) {
     return { error: "Unbekannte Schlüsselspalte." };
   }
 
-  // Nur echte Spalten übernehmen; die PK-Spalte selbst nie ändern.
-  const setColumns = Object.keys(input.updates).filter(
-    (c) => columnSet.has(c) && c !== input.pkColumn,
+  const requestedColumns = Object.keys(input.updates);
+  if (
+    requestedColumns.some(
+      (column) =>
+        typeof input.updates[column] !== "string" &&
+        input.updates[column] !== null,
+    )
+  ) {
+    return { error: "Ungültiger Zellenwert." };
+  }
+
+  // Nur echte Spalten übernehmen; den Primärschlüssel nie ändern. Generierte
+  // und Identity-Spalten lassen sich nicht regulär aktualisieren.
+  const requestedSet = new Set(requestedColumns);
+  const setColumns = columns.filter(
+    (column) => requestedSet.has(column) && column !== input.pkColumn,
   );
   if (setColumns.length === 0) {
     return { error: "Keine gültigen Spalten zum Aktualisieren." };
   }
+  if (setColumns.length > 200) {
+    return { error: "Zu viele Spalten für eine einzelne Änderung." };
+  }
 
-  const setSql = setColumns
-    .map((c, i) => `${quoteIdent(c)} = $${i + 1}`)
-    .join(", ");
-  const params: (string | null)[] = setColumns.map((c) => input.updates[c]);
-  const pkIndex = setColumns.length + 1;
-  params.push(input.pkValue);
-
-  const query = `UPDATE ${quoteIdent(input.table)} SET ${setSql} WHERE ${quoteIdent(input.pkColumn)}::text = $${pkIndex}`;
-
+  const ip = await getClientIp();
   try {
-    const rowCount = await sql.begin(async (tx) => {
-      await tx.unsafe(`SET LOCAL statement_timeout = ${STATEMENT_TIMEOUT_MS}`);
-      const result = await tx.unsafe(query, params);
-      return result.count;
-    });
-    if (rowCount === 0) return { error: "Keine passende Zeile gefunden." };
-    await publishContentChanged();
-    return { rowCount };
+    const result: RowMutationResult = await sql.begin(
+      async (tx): Promise<RowMutationResult> => {
+        await tx.unsafe(
+          `SET LOCAL statement_timeout = ${STATEMENT_TIMEOUT_MS}`,
+        );
+        const columnInfo = await getTableColumnInfoInTransaction(
+          tx,
+          input.table,
+        );
+        const infoByName = new Map(
+          columnInfo.map((column) => [column.name, column]),
+        );
+        const editableColumns = setColumns.filter((column) => {
+          const info = infoByName.get(column);
+          return info && !info.generated && !info.identity;
+        });
+        if (editableColumns.length === 0) {
+          return { error: "Keine bearbeitbaren Spalten zum Aktualisieren." };
+        }
+
+        const beforeRows = await lockDbRowSnapshot(
+          tx,
+          input.table,
+          input.pkColumn,
+          input.pkValue,
+          editableColumns,
+        );
+        if (beforeRows.length === 0)
+          return { error: "Keine passende Zeile gefunden." };
+        if (beforeRows.length !== 1) {
+          return {
+            error: "Die Schlüsselspalte identifiziert keine einzelne Zeile.",
+          };
+        }
+        const before = beforeRows[0];
+
+        const params: unknown[] = [];
+        const assignments: string[] = [];
+        for (const column of editableColumns) {
+          const rawValue = input.updates[column];
+          const dataType = infoByName.get(column)?.dataType;
+          let placeholder = `$${params.length + 1}`;
+          if (
+            rawValue !== null &&
+            (dataType === "json" || dataType === "jsonb")
+          ) {
+            const hasObjectSemantics =
+              column === "metadata" || column === "frontmatter";
+            const expectedRootType =
+              !hasObjectSemantics && before.sqlNulls[column] === false
+                ? jsonRootType(before.values[column])
+                : undefined;
+            const parsed = parseJsonEditValue(
+              column,
+              rawValue,
+              expectedRootType,
+            );
+            if ("error" in parsed) return { error: parsed.error };
+            // Send JSON text as a text-typed parameter and cast it in SQL.
+            // A JS string bound to a jsonb parameter is JSON-stringified by
+            // postgres.js; sql.typed(..., 25) preserves the JSON text, including
+            // the JSON null literal, for PostgreSQL to parse.
+            params.push(sql.typed(JSON.stringify(parsed.value), 25));
+            placeholder += `::${dataType}`;
+          } else {
+            params.push(rawValue);
+          }
+          assignments.push(`${quoteIdent(column)} = ${placeholder}`);
+        }
+
+        const pkIndex = params.length + 1;
+        params.push(input.pkValue);
+        const update = await tx.unsafe(
+          `UPDATE ${quoteIdent(input.table)} SET ${assignments.join(", ")} WHERE ${quoteIdent(input.pkColumn)}::text = $${pkIndex}`,
+          params as never[],
+        );
+        if (update.count !== 1) {
+          return { error: "Die Zeile wurde nicht aktualisiert." };
+        }
+
+        const [after] = await lockDbRowSnapshot(
+          tx,
+          input.table,
+          input.pkColumn,
+          input.pkValue,
+          editableColumns,
+        );
+        if (!after)
+          throw new Error("Die aktualisierte Zeile ist nicht mehr vorhanden.");
+
+        const details: DbRowAuditDetails = {
+          kind: "db_row_update",
+          table: input.table,
+          pkColumn: input.pkColumn,
+          pkValue: input.pkValue,
+          columns: editableColumns,
+          before,
+          after,
+        };
+        await tx.unsafe(
+          `INSERT INTO admin_audit_log (actor_id, action, details, ip)
+         VALUES ($1, 'update_db_row', $2, $3)`,
+          [actor.id, JSON.stringify(details), ip],
+        );
+        return { rowCount: update.count };
+      },
+    );
+
+    if (result.error) return result;
+    if (result.rowCount) await publishContentChanged();
+    return result;
   } catch (err) {
     return {
-      error: err instanceof Error ? err.message : "Aktualisierung fehlgeschlagen.",
+      error:
+        err instanceof Error ? err.message : "Aktualisierung fehlgeschlagen.",
     };
   }
 }
@@ -112,7 +232,6 @@ export async function deleteDbRowAction(input: {
   );
   if (accessError) return { error: accessError };
 
-  // Defense in Depth wie in updateDbRowAction (siehe dortiger Kommentar).
   if (isProtectedWriteTable(input.table)) {
     return { error: `Löschen in „${input.table}“ ist gesperrt.` };
   }
@@ -140,4 +259,3 @@ export async function deleteDbRowAction(input: {
     };
   }
 }
-

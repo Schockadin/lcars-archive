@@ -99,10 +99,7 @@ export default function AdminLogTable<T>({
   const pageRows =
     pageSize === "all"
       ? visibleRows
-      : visibleRows.slice(
-          (currentPage - 1) * pageSize,
-          currentPage * pageSize,
-        );
+      : visibleRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="flex flex-col gap-[12px]">
@@ -124,31 +121,36 @@ export default function AdminLogTable<T>({
                       onSort={handleSort}
                     />
                   ) : (
-                    <div key={c.key} className="lcars-eyebrow font-bold">
+                    <th
+                      key={c.key}
+                      scope="col"
+                      className="pr-[16px] pb-[8px] whitespace-nowrap lcars-eyebrow font-bold"
+                    >
                       {c.label}
-                    </div>
+                    </th>
                   ),
                 )}
               </tr>
               <tr>
-                {columns.map(
-                  (c) =>
-                    c.key !== "actions" && (
-                      <td key={c.key} className="pr-[16px] pb-[8px]">
-                        <input
-                          type="search"
-                          value={filters[c.key] ?? ""}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setFilters((prev) => ({ ...prev, [c.key]: v }));
-                            setPage(1);
-                          }}
-                          placeholder="Filtern…"
-                          aria-label={`Nach ${c.label} filtern`}
-                          className="lcars-input rounded-full w-full text-[12px]"
-                        />
-                      </td>
-                    ),
+                {columns.map((c) =>
+                  c.key === "actions" ? (
+                    <td key={c.key} className="pr-[16px] pb-[8px]" />
+                  ) : (
+                    <td key={c.key} className="pr-[16px] pb-[8px]">
+                      <input
+                        type="search"
+                        value={filters[c.key] ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setFilters((prev) => ({ ...prev, [c.key]: v }));
+                          setPage(1);
+                        }}
+                        placeholder="Filtern…"
+                        aria-label={`Nach ${c.label} filtern`}
+                        className="lcars-input rounded-full w-full text-[12px]"
+                      />
+                    </td>
+                  ),
                 )}
               </tr>
             </thead>
@@ -243,12 +245,14 @@ export default function AdminLogTable<T>({
       {selectedRow && (
         <RowDetailModal
           title="Zeilendetails"
-          fields={columns.map((c) => ({
-            label: c.label,
-            value: c.modalValue
-              ? c.modalValue(selectedRow)
-              : c.filterValue(selectedRow),
-          }))}
+          fields={columns
+            .filter((c) => c.key !== "actions")
+            .map((c) => ({
+              label: c.label,
+              value: c.modalValue
+                ? c.modalValue(selectedRow)
+                : c.filterValue(selectedRow),
+            }))}
           onClose={() => setSelectedRow(null)}
         />
       )}
