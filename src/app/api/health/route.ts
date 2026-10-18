@@ -6,6 +6,7 @@ export async function GET() {
     await sql`SELECT 1`;
     return Response.json({ ok: true, ts: Date.now() });
   } catch (error) {
-    return Response.json({ ok: false, error: String(error) }, { status: 500 });
+    console.error("Healthcheck: Datenbankverbindung fehlgeschlagen.", error);
+    return Response.json({ ok: false }, { status: 500 });
   }
 }

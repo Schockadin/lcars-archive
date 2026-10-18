@@ -4,9 +4,7 @@ import { redirect } from "next/navigation";
 import { createSession, deleteSession } from "@/lib/session";
 import { getUserCredentialsByEmail, recordLogin } from "@/lib/users";
 import { verifyPassword, DUMMY_PASSWORD_HASH } from "@/lib/password";
-import { createPasswordSetupToken } from "@/lib/passwordSetupTokens";
-import { sendActivationEmail } from "@/lib/mail";
-import { getBaseUrl, getClientIp } from "@/lib/http";
+import { getClientIp } from "@/lib/http";
 import {
   isLoginLocked,
   recordLoginAttempt,
@@ -20,8 +18,6 @@ export interface LoginState {
 
 type LoginOutcome =
   | { kind: "locked" }
-  | { kind: "inactive" }
-  | { kind: "needs-activation"; user: UserCredentials }
   | { kind: "invalid" }
   | { kind: "success"; user: UserCredentials };
 
@@ -55,24 +51,13 @@ export async function login(
 
     const user = await getUserCredentialsByEmail(email, tx);
 
-    // is_active/password_hash-Sonderfälle unten liefern absichtlich einen
-    // anderen Text als "E-Mail-Adresse oder Passwort ist falsch" (hilfreich
-    // für echte Nutzer dieser Accounts) — das verrät für sich genommen
-    // bereits, dass die Adresse registriert ist. Damit wenigstens die
-    // Antwortzeit dabei nicht zusätzlich verrät, ob überhaupt ein Account
-    // existiert, wird verifyPassword() auch hier durchlaufen und das
-    // Ergebnis verworfen — gleicher scrypt-Aufwand wie im Haupt-Login-Pfad
-    // unten.
-    if (user && !user.is_active) {
+    // Deaktivierte und noch nicht aktivierte Konten erhalten dieselbe Antwort
+    // wie unbekannte Adressen. Der Dummy-Hash gleicht den Passwortaufwand an,
+    // damit auch die Antwortzeit keine registrierten Konten verrät.
+    if (user && (!user.is_active || !user.password_hash)) {
       await verifyPassword(password, DUMMY_PASSWORD_HASH);
       await recordLoginAttempt(email, ip, false, tx);
-      return { kind: "inactive" };
-    }
-
-    if (user && !user.password_hash) {
-      await verifyPassword(password, DUMMY_PASSWORD_HASH);
-      await recordLoginAttempt(email, ip, false, tx);
-      return { kind: "needs-activation", user };
+      return { kind: "invalid" };
     }
 
     // Unabhängig davon, ob user existiert: verifyPassword läuft in JEDEM
@@ -100,29 +85,6 @@ export async function login(
       return {
         error: "Zu viele Anmeldeversuche. Bitte versuche es in ein paar Minuten erneut.",
       };
-    case "inactive":
-      return { error: "Dieses Konto wurde deaktiviert." };
-    case "needs-activation": {
-      // Passwort ist Pflicht — weder ein frisch vom Admin angelegtes Konto
-      // (requires_activation) noch ein Alt-Konto (vor der Passwort-
-      // Einführung) darf sich mehr per E-Mail allein einloggen. Statt eines
-      // toten Endes wird bei jedem Versuch ein frischer Aktivierungslink
-      // verschickt — derselbe Mechanismus wie beim Anlegen neuer User
-      // (createUserAction).
-      const { user } = outcome;
-      const rawToken = await createPasswordSetupToken(user.id);
-      const activationUrl = `${await getBaseUrl()}/activate?token=${rawToken}`;
-      const result = await sendActivationEmail({
-        to: user.email,
-        name: user.name,
-        activationUrl,
-      });
-      return {
-        error: result.sent
-          ? "Für dieses Konto ist noch kein Passwort gesetzt. Wir haben dir einen Link zum Festlegen geschickt."
-          : "Für dieses Konto ist noch kein Passwort gesetzt, und die Mail konnte nicht gesendet werden. Bitte wende dich an die Spielleitung.",
-      };
-    }
     case "invalid":
       return { error: "E-Mail-Adresse oder Passwort ist falsch." };
     case "success":

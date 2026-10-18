@@ -112,6 +112,9 @@ function SessionFields({
 }) {
   const id = session ? `p${session.id}` : "neu";
   const [missionChoice, setMissionChoice] = useState(String(session?.missionId ?? ""));
+  const activeMissionCharacters = missionCharacters.filter(
+    (character) => character.status === "active",
+  );
   return (
     <>
       <FormField label="Zeitpunkt" htmlFor={`ps-at-${id}`}>
@@ -179,14 +182,41 @@ function SessionFields({
           <FormField label="Teaser (optional)" htmlFor={`ps-new-teaser-${id}`}>
             <textarea id={`ps-new-teaser-${id}`} name="missionTeaser" rows={2} maxLength={1000} className="lcars-input rounded-lg" />
           </FormField>
-          <FormField label="Teilnehmende Charaktere" htmlFor={`ps-new-participants-${id}`} hint="Mehrfachauswahl mit Strg/Cmd- oder Shift-Klick.">
-            {missionCharacters.length > 0 ? (
-              <select id={`ps-new-participants-${id}`} name="participantCharacterIds" multiple size={Math.min(8, missionCharacters.length)} className="lcars-input rounded-lg h-auto py-[8px]">
-                {missionCharacters.filter((character) => character.status === "active").map((character) => (
-                  <option key={character.id} value={character.id}>{character.name} ({character.playerName})</option>
-                ))}
-              </select>
-            ) : <p className="lcars-empty-state">Keine Charaktere zur Auswahl.</p>}
+          <FormField
+            label="Teilnehmende Charaktere"
+            htmlFor={`ps-new-participant-${activeMissionCharacters[0]?.id ?? "none"}-${id}`}
+            hint="Tippe oder klicke auf die Kästchen, um Figuren hinzuzufügen oder abzuwählen."
+          >
+            {activeMissionCharacters.length > 0 ? (
+              <fieldset
+                aria-label="Teilnehmende Charaktere"
+                className="max-h-[240px] overflow-y-auto rounded-lg border border-lcars-border p-[8px]"
+              >
+                <legend className="sr-only">Teilnehmende Charaktere</legend>
+                <div className="flex flex-col gap-[2px]">
+                  {activeMissionCharacters.map((character) => (
+                    <label
+                      key={character.id}
+                      htmlFor={`ps-new-participant-${character.id}-${id}`}
+                      className="flex min-h-[42px] cursor-pointer items-center gap-[10px] rounded-md px-[8px] py-[6px] hover:bg-lcars-surface"
+                    >
+                      <input
+                        id={`ps-new-participant-${character.id}-${id}`}
+                        type="checkbox"
+                        name="participantCharacterIds"
+                        value={character.id}
+                        className="h-[18px] w-[18px] shrink-0"
+                      />
+                      <span>
+                        {character.name} ({character.playerName})
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ) : (
+              <p className="lcars-empty-state">Keine aktiven Charaktere zur Auswahl.</p>
+            )}
           </FormField>
           <p className="text-lcars-ink-dim text-[12px]">Die Mission wird als laufend angelegt. Ihre Synopsis entsteht automatisch aus den später eingetragenen Session-Blöcken.</p>
         </fieldset>

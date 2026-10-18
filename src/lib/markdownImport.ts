@@ -43,7 +43,7 @@
 // ablehnen. Wer commit* von einer neuen Stelle aus aufruft, muss dasselbe
 // tun — siehe src/lib/importAccess.ts.
 import "server-only";
-import matter from "gray-matter";
+import matter from "@/lib/markdownFrontmatter";
 import type postgres from "postgres";
 import sql from "@/lib/db";
 import { markdownToHtml } from "@/lib/markdown";

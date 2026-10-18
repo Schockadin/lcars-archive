@@ -39,7 +39,7 @@ export function validateSlug(slug: unknown, file: string): string {
 export function parseDate(value: unknown): string | null {
   if (!value) return null;
 
-  // gray-matter parsed YYYY-MM-DD automatisch als Date-Objekt
+  // Der YAML-1.1-Parser liest YYYY-MM-DD als Date-Objekt.
   if (value instanceof Date) {
     const year = value.getUTCFullYear();
     const month = String(value.getUTCMonth() + 1).padStart(2, "0");

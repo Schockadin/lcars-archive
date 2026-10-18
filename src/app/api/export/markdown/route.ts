@@ -4,7 +4,7 @@
 // Content-Disposition-Header selbst als Download behandelt, ohne
 // Blob/base64-Umweg über den Client. Sichtbarkeits-/Teilnehmer-Prüfung
 // passiert vollständig in loadExportableContent (src/lib/contentExport.ts).
-import matter from "gray-matter";
+import matter from "@/lib/markdownFrontmatter";
 import {
   loadExportableContent,
   isExportContentType,

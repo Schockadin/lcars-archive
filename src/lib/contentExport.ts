@@ -34,7 +34,7 @@ export function isExportContentType(value: string): value is ExportContentType {
 export interface ExportableContent {
   title: string;
   // Nur primitive/einfache Werte bzw. Arrays davon — direkt an
-  // gray-matter/matter.stringify durchgereicht.
+  // als YAML-Frontmatter serialisiert.
   frontmatter: Record<string, unknown>;
   bodyMarkdown: string;
   filenameBase: string;
