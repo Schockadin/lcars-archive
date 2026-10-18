@@ -57,8 +57,10 @@ export default async function CategoryTimeline({
   // Kopfzeile bliebe doppelt beknöpft, wenn man von dort weiterklickt.
   help?: boolean;
 }) {
-  const viewer = await getViewer();
-  const events = await getTimeline();
+  const [viewer, events] = await Promise.all([
+    getViewer(),
+    getTimeline({ renderManualDetails: false }),
+  ]);
   // Wer eigene Inhalte anlegen darf, darf auch ein Ereignis eintragen, das zu
   // keinem Inhalt gehört (siehe timelineManualEvents.ts).
   const canAddEvent = viewerHasPermission(viewer, "content.create");

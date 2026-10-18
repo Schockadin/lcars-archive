@@ -34,7 +34,14 @@ import { HelpTitleRow } from "@/components/help/HelpHeading";
 import ModalOverlay from "@/components/ModalOverlay";
 import ContentImageGallery from "@/components/ContentImageGallery";
 import ContentCardMenu from "@/components/timeline/ContentCardMenu";
-import { SessionSummaryPanel, useSessionPanels } from "./SessionPanels";
+import {
+  SessionSummaryPanel,
+  useSessionPanels,
+  useTimelineDetail,
+} from "./SessionPanels";
+
+const INITIAL_TIMELINE_RENDER_COUNT = 50;
+const TIMELINE_RENDER_INCREMENT = 50;
 
 // Die Chronologie als Zeitstrahl: links Datum und Schiene, rechts die
 // Ereigniskarte. Aufbau nach dem Entwurf (Jahresleiste, Monats-Trenner,
@@ -49,7 +56,8 @@ import { SessionSummaryPanel, useSessionPanels } from "./SessionPanels";
 // Alle Filter laufen im Browser über die bereits geladene Liste: die
 // Chronologie ist die Kampagne, nicht ein Suchindex — sie umfasst ein paar
 // hundert Ereignisse, und ein Filter, der eine Server-Runde kostet, fühlt
-// sich bei dieser Größe falsch an.
+// sich bei dieser Größe falsch an. Für den ersten Aufbau werden aber nur die
+// ersten 50 Karten ins DOM gesetzt; weitere kommen auf Knopfdruck dazu.
 // Die Ereignisart aus der aktuellen Adresse: /chronologie/<art> → <art>,
 // /chronologie → null. Umfänge sind keine Arten (siehe
 // RESERVED_CHRONOLOGY_SEGMENTS in contentRoutes.ts) und kommen hier nicht vor,
@@ -158,6 +166,13 @@ export default function TimelineView({
   const [person, setPerson] = useState<string | null>(initialPerson);
   const [year, setYear] = useState<string | null>(null);
   const [manualDetail, setManualDetail] = useState<TimelineEvent | null>(null);
+  const [renderCount, setRenderCount] = useState(INITIAL_TIMELINE_RENDER_COUNT);
+  const manualDetailResource = manualDetail?.manualEventId
+    ? `/api/timeline-details/manual/${manualDetail.manualEventId}`
+    : null;
+  const loadedManualDetail = useTimelineDetail(
+    manualDetail?.fullDetailHtml ? null : manualDetailResource,
+  );
   const panels = useSessionPanels(events.filter(isSessionEvent).map((event) => event.id));
 
   // Ereignisart und Beteiligte richten sich nach dem UMFANG, nicht nach dem
@@ -217,6 +232,7 @@ export default function TimelineView({
       ),
     [events, query, category, person, year, scope, sortDir],
   );
+  const renderedEvents = visible.slice(0, renderCount);
 
   // Zurück/Vorwärts: die Art steht in der Adresse, also von dort lesen. Nur
   // der Zustand wird gesetzt — die Seite bleibt stehen, sonst ginge beim
@@ -229,6 +245,7 @@ export default function TimelineView({
       setCategory(selection.category);
       setPerson(null);
       setYear(null);
+      setRenderCount(INITIAL_TIMELINE_RENDER_COUNT);
     }
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -241,6 +258,7 @@ export default function TimelineView({
   // /chronologie.
   function changeCategory(next: string | null) {
     setCategory(next);
+    setRenderCount(INITIAL_TIMELINE_RENDER_COUNT);
     if (syncUrl && next !== categoryFromPath()) {
       window.history.pushState(
         null,
@@ -258,6 +276,7 @@ export default function TimelineView({
     setCategory(null);
     setPerson(null);
     setYear(null);
+    setRenderCount(INITIAL_TIMELINE_RENDER_COUNT);
     if (syncUrl) {
       const href =
         next === DEFAULT_TIMELINE_SCOPE
@@ -335,12 +354,18 @@ export default function TimelineView({
               options={[{ key: "date", label: "Datum" }]}
               sortKey="date"
               sortDir={sortDir}
-              onChange={(_key, dir) => setSortDir(dir)}
+              onChange={(_key, dir) => {
+                setSortDir(dir);
+                setRenderCount(INITIAL_TIMELINE_RENDER_COUNT);
+              }}
             />
 
             <LcarsListFilterInput
               value={query}
-              onChange={setQuery}
+              onChange={(value) => {
+                setQuery(value);
+                setRenderCount(INITIAL_TIMELINE_RENDER_COUNT);
+              }}
               ariaLabel="Ereignisse filtern"
             />
 
@@ -368,7 +393,10 @@ export default function TimelineView({
               <select
                 className="mission-author-filter rounded-full"
                 value={person ?? ""}
-                onChange={(e) => setPerson(e.target.value || null)}
+                onChange={(e) => {
+                  setPerson(e.target.value || null);
+                  setRenderCount(INITIAL_TIMELINE_RENDER_COUNT);
+                }}
                 aria-label="Nach beteiligter Person filtern"
               >
                 <option value="">Alle Beteiligten</option>
@@ -392,7 +420,10 @@ export default function TimelineView({
                 type="button"
                 className="timeline-year"
                 aria-pressed={year === null}
-                onClick={() => setYear(null)}
+                onClick={() => {
+                  setYear(null);
+                  setRenderCount(INITIAL_TIMELINE_RENDER_COUNT);
+                }}
               >
                 Alle
               </button>
@@ -405,9 +436,10 @@ export default function TimelineView({
                   // Ein zweiter Klick auf das aktive Jahr hebt den Filter
                   // wieder auf — sonst müsste man dafür bis nach „Alle"
                   // zurückscrollen.
-                  onClick={() =>
-                    setYear((current) => (current === y ? null : y))
-                  }
+                  onClick={() => {
+                    setYear((current) => (current === y ? null : y));
+                    setRenderCount(INITIAL_TIMELINE_RENDER_COUNT);
+                  }}
                 >
                   {y}
                 </button>
@@ -421,7 +453,7 @@ export default function TimelineView({
             </p>
           ) : (
             <div>
-              {visible.map((event, index) => {
+              {renderedEvents.map((event, index) => {
                 const previous = index > 0 ? visible[index - 1] : null;
                 const showPeriod =
                   !previous ||
@@ -436,7 +468,14 @@ export default function TimelineView({
                     <EventRow
                       event={event}
                       currentUserId={currentUserId}
-                      onOpenManual={() => setManualDetail(event)}
+                      onOpenManual={() => {
+                        setManualDetail(event);
+                        if (event.manualEventId && !event.fullDetailHtml) {
+                          void loadedManualDetail.load(
+                            `/api/timeline-details/manual/${event.manualEventId}`,
+                          );
+                        }
+                      }}
                       sessionOpen={panels.isOpen(event.id)}
                       onSessionOpenChange={(open) => panels.setOpen(event.id, open)}
                       endDate={
@@ -449,6 +488,23 @@ export default function TimelineView({
                 );
               })}
             </div>
+          )}
+
+          {renderCount < visible.length && (
+            <button
+              type="button"
+              className="lcars-pill-btn--outline self-start mt-[12px]"
+              onClick={() =>
+                setRenderCount((count) =>
+                  Math.min(count + TIMELINE_RENDER_INCREMENT, visible.length),
+                )
+              }
+            >
+              Weitere {Math.min(
+                TIMELINE_RENDER_INCREMENT,
+                visible.length - renderCount,
+              )} Ereignisse laden
+            </button>
           )}
 
           {/* Gezählt wird gegen den UMFANG, nicht gegen den ganzen Bestand:
@@ -481,13 +537,27 @@ export default function TimelineView({
             {manualDetail.detail && (
               <p className="text-lcars-ink-contrast">{manualDetail.detail}</p>
             )}
-            {manualDetail.fullDetailHtml ? (
+            {manualDetail.fullDetailHtml ?? loadedManualDetail.html ? (
               <div
                 className="mission-body lcars-text"
                 dangerouslySetInnerHTML={{
-                  __html: manualDetail.fullDetailHtml,
+                  __html: manualDetail.fullDetailHtml ?? loadedManualDetail.html ?? "",
                 }}
               />
+            ) : loadedManualDetail.error ? (
+              <button
+                type="button"
+                className="text-lcars-primary-ink underline"
+                onClick={() => loadedManualDetail.load()}
+              >
+                Volltext konnte nicht geladen werden. Erneut versuchen
+              </button>
+            ) : loadedManualDetail.loaded ? (
+              <p className="lcars-empty-state">Kein Volltext hinterlegt.</p>
+            ) : manualDetailResource ? (
+              <p className="lcars-eyebrow" aria-live="polite">
+                Volltext wird geladen …
+              </p>
             ) : (
               <p className="lcars-empty-state">Kein Volltext hinterlegt.</p>
             )}
@@ -606,7 +676,12 @@ function EventRow({
         }
       >
         {session ? (
-          <SessionSummaryPanel bodyHtml={event.fullDetailHtml ?? ""} open={sessionOpen} onOpenChange={onSessionOpenChange} />
+          <SessionSummaryPanel
+            blockId={event.sessionBlockId}
+            bodyHtml={event.fullDetailHtml}
+            open={sessionOpen}
+            onOpenChange={onSessionOpenChange}
+          />
         ) : event.detail && (
           <ChronoPanel label="Teaser" open>
             {event.detail}

@@ -314,8 +314,10 @@ export async function getArchiveEntryBySlug(
   const entry = rows[0];
   if (!entry) return null;
 
-  // Ausgehende Verweise (dieser Eintrag → Ziel).
-  const links = await sql<ArchiveLink[]>`
+  // Aus- und eingehende Verweise brauchen beide nur die ID des Eintrags und
+  // können unabhängig voneinander geladen werden.
+  const [links, backlinks] = await Promise.all([
+    sql<ArchiveLink[]>`
         SELECT
           e.slug,
           e.title,
@@ -325,10 +327,8 @@ export async function getArchiveEntryBySlug(
         JOIN archive_entries e ON e.id = al.target_id
         WHERE al.source_id = ${entry.id} AND e.deleted_at IS NULL
         ORDER BY e.title ASC
-      `;
-
-  // Eingehende Verweise (Quelle → dieser Eintrag).
-  const backlinks = await sql<ArchiveLink[]>`
+      `,
+    sql<ArchiveLink[]>`
         SELECT
           e.slug,
           e.title,
@@ -338,7 +338,8 @@ export async function getArchiveEntryBySlug(
         JOIN archive_entries e ON e.id = al.source_id
         WHERE al.target_id = ${entry.id} AND e.deleted_at IS NULL
         ORDER BY e.title ASC
-      `;
+      `,
+  ]);
 
   return { ...parseMeta(entry), links, backlinks };
 }
