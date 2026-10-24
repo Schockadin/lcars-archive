@@ -93,9 +93,10 @@ export default function ImpressumContent() {
         <p>
           Die Rechte an den von den Mitspielenden selbst verfassten Inhalten –
           etwa Charakterbiografien, Einsatzberichten, Session-Zusammenfassungen,
-          Gesprächen, freien Chronologie-Ereignissen, Datenbank-Einträgen und
-          zusätzlich zu einer Figur hinterlegten Dokumenten sowie den in der
-          persönlichen Dateiverwaltung gespeicherten Bildern und Dokumenten –
+          Gesprächen, freien Chronologie-Ereignissen, Datenbank-Einträgen,
+          Notizen und zusätzlich zu einer Figur hinterlegten Dokumenten sowie
+          den in der persönlichen Dateiverwaltung gespeicherten Bildern und
+          Dokumenten –
           liegen bei den jeweiligen Autor*innen. Das gilt auch für die aus den
           datierten Session-Zusammenfassungen automatisch zusammengestellte
           Missions-Synopsis: Einträge mit gleichem Ingame-Datum stehen dort

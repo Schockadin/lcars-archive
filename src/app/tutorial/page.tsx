@@ -879,13 +879,15 @@ export default function TutorialPage() {
               <p>
                 Unter <strong>„Profil → Meine Notizen“</strong> findest du deine
                 Notizen und die für die Runde freigegebenen Kommentare in einer
-                Tabelle. Über <strong>„Neue Notiz“</strong> kannst du dort oder
-                im Bereich „Neue Inhalte“ einen Merkzettel anlegen; die
-                Zuordnung zu einem Eintrag ist freiwillig. Über „Inhalt
-                auswählen“ öffnest du einen Browser mit Suche und Inhaltsarten.
-                Ein Klick auf eine
-                Zeile zeigt die ganze Notiz. Eigene
-                Notizen kannst du dort bearbeiten oder löschen; die
+                chronologischen Liste. Mit der Suche findest du Text, Eintrag
+                oder Autor; außerdem kannst du nach Sichtbarkeit filtern und
+                nach Datum oder Eintrag sortieren. Über{" "}
+                <strong>„Neue Notiz“</strong> kannst du dort oder im Bereich
+                „Neue Inhalte“ einen Merkzettel anlegen; die Zuordnung zu einem
+                Eintrag ist freiwillig. Über „Inhalt auswählen“ öffnest du
+                einen Browser mit Suche und Inhaltsarten. Mit „Ansehen“ öffnest
+                du die ganze Notiz. Eigene Notizen kannst du dort bearbeiten
+                oder löschen; die
                 Inhalts-Moderation darf außerdem Kommentare für die Runde
                 bearbeiten und entfernen. Private Notizen bleiben davon
                 unberührt. Wird ein Inhalt endgültig gelöscht, verschwinden
@@ -970,9 +972,11 @@ export default function TutorialPage() {
               </p>
               <p>
                 Über den <strong>Bild-Knopf</strong> fügst du Bilder aus deiner
-                persönlichen Bibliothek ein. Du kannst sie zuvor unter
-                „Profil → Meine Dateien“ hochladen; ältere Bilder an bestehenden
-                Inhalten lassen sich dort übernehmen.
+                persönlichen Bibliothek ein. Unter „Profil → Meine Dateien“
+                verwaltest du Bilder, Dokumente und ältere Inhaltsbilder in
+                einer gemeinsamen Liste. Du kannst nach Dateityp filtern,
+                Dateien durchsuchen und nach Name oder Datum sortieren; ältere
+                Bilder an bestehenden Inhalten lassen sich dort übernehmen.
               </p>
               <div className="overflow-x-auto">
                 <table className="tutorial-table">

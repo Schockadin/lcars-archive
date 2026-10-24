@@ -80,9 +80,7 @@ describe("UpcomingSessionsSection", () => {
     expect(screen.getByText("Cleo")).toBeInTheDocument();
     expect(screen.getByText("Abgesagt")).toBeInTheDocument();
     expect(screen.getByText("Noch keine Rückmeldung")).toBeInTheDocument();
-    expect(
-      screen.queryByText(/Personen ohne Rückmeldung erinnern/),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Erinnern (1)")).not.toBeInTheDocument();
   });
 
   it("bietet die E-Mail-Erinnerung nur der Spielleitung an", () => {
