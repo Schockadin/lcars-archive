@@ -163,6 +163,11 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
+    version: "2.2",
+    title: "Wartung und Fehlerbehebungen",
+    items: [],
+  },
+  {
     version: "2.1",
     title: "Audit-Log und Spieltermin-Rückmeldungen",
     items: [

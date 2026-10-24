@@ -61,7 +61,12 @@ describe("UserNotesBrowser", () => {
       "href",
       own.targetHref,
     );
-    expect(screen.getByText("Für die Runde")).toBeInTheDocument();
+    expect(
+      Array.from(
+        container.querySelectorAll(".timeline-tag"),
+        (tag) => tag.textContent,
+      ),
+    ).toContain("Für die Runde");
     expect(
       screen.queryByRole("button", { name: "Notiz zu „Mission“ bearbeiten" }),
     ).not.toBeInTheDocument();
