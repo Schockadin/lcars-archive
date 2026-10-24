@@ -26,6 +26,13 @@ describe("persönliche Notizübersicht", () => {
     `;
     const notes = await listNotesForUser(makeViewer(user.id, ["player"]));
     expect(notes.map((note) => note.body)).toEqual(["Geteilt", "Privat"]);
+    expect(
+      notes.every(
+        (note) =>
+          typeof note.createdAt === "string" &&
+          typeof note.updatedAt === "string",
+      ),
+    ).toBe(true);
     expect(notes[0].canEdit).toBe(false);
     expect(notes[1].canEdit).toBe(true);
     expect(notes[1].targetHref).toBe(`/characters/${visible.slug}`);

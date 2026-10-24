@@ -78,7 +78,10 @@ interface UserNoteRow extends NoteRow {
 
 export async function listNotesForUser(viewer: Viewer): Promise<UserNote[]> {
   const rows = await sql<UserNoteRow[]>`
-    SELECT n.*, u.name AS author_name, c.name AS target_label,
+    SELECT n.id, n.content_type, n.content_slug, n.author_id, n.body,
+           n.visibility, n.created_at::text AS created_at,
+           n.updated_at::text AS updated_at, u.name AS author_name,
+           c.name AS target_label,
            c.slug AS target_slug, NULL::text AS parent_slug,
            c.player_id AS target_owner_id, c.is_draft AS target_is_draft,
            NULL::int AS parent_owner_id, false AS parent_is_draft
@@ -87,14 +90,18 @@ export async function listNotesForUser(viewer: Viewer): Promise<UserNote[]> {
     LEFT JOIN users u ON u.id = n.author_id
     WHERE c.deleted_at IS NULL AND (n.author_id = ${viewer.userId} OR n.visibility = 'group')
     UNION ALL
-    SELECT n.*, u.name, m.title, m.slug, NULL::text,
+    SELECT n.id, n.content_type, n.content_slug, n.author_id, n.body,
+           n.visibility, n.created_at::text, n.updated_at::text,
+           u.name, m.title, m.slug, NULL::text,
            m.owner_user_id, m.is_draft, NULL::int, false
     FROM content_notes n
     JOIN missions m ON n.content_type = 'mission' AND m.slug = n.content_slug
     LEFT JOIN users u ON u.id = n.author_id
     WHERE m.deleted_at IS NULL AND (n.author_id = ${viewer.userId} OR n.visibility = 'group')
     UNION ALL
-    SELECT n.*, u.name, ml.title, ml.slug, m.slug,
+    SELECT n.id, n.content_type, n.content_slug, n.author_id, n.body,
+           n.visibility, n.created_at::text, n.updated_at::text,
+           u.name, ml.title, ml.slug, m.slug,
            ml.owner_user_id, ml.is_draft, m.owner_user_id, m.is_draft
     FROM content_notes n
     JOIN mission_logs ml ON n.content_type = 'mission_log' AND ml.slug = n.content_slug
@@ -103,14 +110,18 @@ export async function listNotesForUser(viewer: Viewer): Promise<UserNote[]> {
     WHERE ml.deleted_at IS NULL AND m.deleted_at IS NULL
       AND (n.author_id = ${viewer.userId} OR n.visibility = 'group')
     UNION ALL
-    SELECT n.*, u.name, a.title, a.slug, NULL::text,
+    SELECT n.id, n.content_type, n.content_slug, n.author_id, n.body,
+           n.visibility, n.created_at::text, n.updated_at::text,
+           u.name, a.title, a.slug, NULL::text,
            a.owner_user_id, a.is_draft, NULL::int, false
     FROM content_notes n
     JOIN archive_entries a ON n.content_type = 'archive' AND a.slug = n.content_slug
     LEFT JOIN users u ON u.id = n.author_id
     WHERE a.deleted_at IS NULL AND (n.author_id = ${viewer.userId} OR n.visibility = 'group')
     UNION ALL
-    SELECT n.*, u.name, 'Ohne Eintrag', ''::text, NULL::text,
+    SELECT n.id, n.content_type, n.content_slug, n.author_id, n.body,
+           n.visibility, n.created_at::text, n.updated_at::text,
+           u.name, 'Ohne Eintrag', ''::text, NULL::text,
            n.author_id, false, NULL::int, false
     FROM content_notes n
     LEFT JOIN users u ON u.id = n.author_id
