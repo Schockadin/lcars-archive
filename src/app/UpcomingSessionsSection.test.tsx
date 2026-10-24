@@ -27,7 +27,7 @@ vi.mock("@/components/session/SessionRsvp", () => ({
 vi.mock("@/components/session/SessionRsvpReminder", () => ({
   default: ({ unansweredCount }: { unansweredCount: number }) => (
     <button type="button">
-      Per Mail an Personen ohne Rückmeldung erinnern ({unansweredCount})
+      Erinnern ({unansweredCount})
     </button>
   ),
 }));
@@ -80,9 +80,7 @@ describe("UpcomingSessionsSection", () => {
     expect(screen.getByText("Cleo")).toBeInTheDocument();
     expect(screen.getByText("Abgesagt")).toBeInTheDocument();
     expect(screen.getByText("Noch keine Rückmeldung")).toBeInTheDocument();
-    expect(
-      screen.queryByText(/Personen ohne Rückmeldung erinnern/),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Erinnern (1)")).not.toBeInTheDocument();
   });
 
   it("bietet die E-Mail-Erinnerung nur der Spielleitung an", () => {
@@ -96,7 +94,7 @@ describe("UpcomingSessionsSection", () => {
     );
 
     expect(
-      screen.getByText("Per Mail an Personen ohne Rückmeldung erinnern (1)"),
+      screen.getByText("Erinnern (1)"),
     ).toBeInTheDocument();
   });
 });

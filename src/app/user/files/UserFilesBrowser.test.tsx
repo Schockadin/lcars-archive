@@ -66,17 +66,13 @@ describe("UserFilesBrowser", () => {
     });
   });
 
-  it("zeigt Bilder und Dokumente in einer Tabelle mit Verlinkungen und Suche", () => {
-    render(<UserFilesBrowser {...props} />);
-    for (const title of ["Name", "Typ", "Verlinkt in", "Aktionen"]) {
-      expect(
-        screen.getByRole("columnheader", { name: title }),
-      ).toBeInTheDocument();
-    }
-    expect(
-      screen.getByRole("cell", { name: "bruecke.png" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("cell", { name: "akte.pdf" })).toBeInTheDocument();
+  it("zeigt ChronoRail-Karten und filtert nach Typ und Text", () => {
+    const { container } = render(<UserFilesBrowser {...props} />);
+    expect(container.querySelector("table")).toBeNull();
+    expect(container.querySelectorAll(".timeline-event")).toHaveLength(2);
+    expect(container.querySelectorAll(".timeline-card")).toHaveLength(2);
+    expect(screen.getByText("bruecke.png")).toBeInTheDocument();
+    expect(screen.getByText("akte.pdf")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Erste Mission" })).toHaveAttribute(
       "href",
       "/chronologie/mission/erste-mission",
@@ -85,31 +81,49 @@ describe("UserFilesBrowser", () => {
       "href",
       "/user/characters/2",
     );
+    fireEvent.change(screen.getByLabelText("Nach Dateityp filtern"), {
+      target: { value: "document" },
+    });
+    expect(container.querySelectorAll(".timeline-card")).toHaveLength(1);
+    expect(screen.queryByText("bruecke.png")).not.toBeInTheDocument();
+    expect(screen.getByText("akte.pdf")).toBeInTheDocument();
     fireEvent.change(
-      screen.getByRole("searchbox", { name: "Dateien suchen" }),
+      screen.getByRole("searchbox", { name: "Dateien filtern" }),
       {
-        target: { value: "akte" },
+        target: { value: "fehlend" },
       },
     );
     expect(
-      screen.queryByRole("cell", { name: "bruecke.png" }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("cell", { name: "akte.pdf" })).toBeInTheDocument();
+      screen.getByText("Keine Dateien für diesen Filter."),
+    ).toBeInTheDocument();
   });
 
-  it("stellt Dateizeilen auf schmalen Bildschirmen als beschriftete Karten dar", () => {
-    const { container } = render(<UserFilesBrowser {...props} />);
-    expect(container.querySelector("tbody")?.className).toContain(
-      "sm:table-row-group",
+  it("sortiert Dateien nach Datum und Name", () => {
+    const { container } = render(
+      <UserFilesBrowser
+        {...props}
+        initialDocuments={[{ ...document, createdAt: "2026-10-14T12:00:00Z" }]}
+      />,
     );
-    for (const label of ["Name", "Typ", "Verlinkt in", "Aktionen"]) {
-      expect(
-        container.querySelector(`td[data-label='${label}']`),
-      ).toBeInTheDocument();
-    }
-    expect(container.querySelector("tbody tr")?.className).toContain(
-      "sm:table-row",
-    );
+    expect(
+      [...container.querySelectorAll(".timeline-card-title")].map(
+        (title) => title.textContent,
+      ),
+    ).toEqual(["bruecke.png", "akte.pdf"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Name" }));
+    expect(
+      [...container.querySelectorAll(".timeline-card-title")].map(
+        (title) => title.textContent,
+      ),
+    ).toEqual(["akte.pdf", "bruecke.png"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Datum" }));
+    expect(
+      [...container.querySelectorAll(".timeline-card-title")].map(
+        (title) => title.textContent,
+      ),
+    ).toEqual(["bruecke.png", "akte.pdf"]);
   });
 
   it("öffnet die Vorschau und kann Dokumente umbenennen und lösen", async () => {
@@ -157,7 +171,7 @@ describe("UserFilesBrowser", () => {
       ),
     );
     await waitFor(() =>
-      expect(screen.getByRole("cell", { name: "neu.pdf" })).toBeInTheDocument(),
+      expect(screen.getByText("neu.pdf")).toBeInTheDocument(),
     );
     expect(screen.getByText("Nicht zugeordnet")).toBeInTheDocument();
   });
@@ -219,6 +233,7 @@ describe("UserFilesBrowser", () => {
         ]}
       />,
     );
+    expect(screen.getByText("Altes Bild #19")).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "In Bibliothek übernehmen" }),
     );

@@ -2,7 +2,14 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  LcarsListFilterInput,
+  LcarsSortSwitch,
+  type SortDir,
+} from "@/components/lcars";
 import ModalOverlay from "@/components/ModalOverlay";
+import ChronoCard from "@/components/timeline/ChronoCard";
+import ChronoRow from "@/components/timeline/ChronoRow";
 import { DownloadIcon, EyeIcon, PencilIcon, TrashIcon } from "@/lib/icons";
 import { CHARACTER_DOCUMENT_ACCEPT } from "@/lib/characterDocumentTypes";
 import type { UserImage, LegacyUserImage } from "@/lib/userImages";
@@ -32,6 +39,24 @@ type FileRow =
       document: UserCharacterFile;
     };
 
+type LegacyFileRow = {
+  type: "legacy";
+  id: number;
+  fileName: string;
+  createdAt: string;
+  legacy: LegacyUserImage;
+};
+
+type FileListRow = FileRow | LegacyFileRow;
+type FileFilter = "all" | "image" | "document" | "legacy";
+type FileSortKey = "date" | "name";
+
+const FILE_COLORS: Record<FileListRow["type"], string> = {
+  image: "var(--lcars-tertiary)",
+  document: "var(--lcars-primary)",
+  legacy: "var(--lcars-secondary)",
+};
+
 const FILE_ACCEPT = `image/jpeg,image/png,image/webp,image/gif,${CHARACTER_DOCUMENT_ACCEPT}`;
 
 export default function UserFilesBrowser({
@@ -53,6 +78,9 @@ export default function UserFilesBrowser({
   const [characters, setCharacters] = useState(initialCharacters);
   const [linkedImages, setLinkedImages] = useState(initialLinkedImages);
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<FileFilter>("all");
+  const [sortKey, setSortKey] = useState<FileSortKey>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -171,7 +199,7 @@ export default function UserFilesBrowser({
     }
   }
 
-  const rows: FileRow[] = [
+  const rows: FileListRow[] = [
     ...images.map((image) => ({
       type: "image" as const,
       id: image.id,
@@ -186,15 +214,38 @@ export default function UserFilesBrowser({
       createdAt: document.createdAt,
       document,
     })),
+    ...legacy.map((image) => ({
+      type: "legacy" as const,
+      id: image.id,
+      fileName:
+        image.sourceType === "portrait"
+          ? `Altes Charakterportrait #${image.id}`
+          : `Altes Bild #${image.id}`,
+      createdAt: image.createdAt,
+      legacy: image,
+    })),
   ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const needle = query.trim().toLocaleLowerCase("de");
-  const shown = rows.filter((row) => {
-    const linked =
-      row.type === "image"
-        ? (linkedImages[row.id] ?? []).map((ref) => ref.label).join(" ")
-        : (row.document.characterName ?? "");
-    return `${row.fileName} ${linked}`.toLocaleLowerCase("de").includes(needle);
-  });
+  const shown = rows
+    .filter((row) => filter === "all" || row.type === filter)
+    .filter((row) => {
+      const linked =
+        row.type === "image"
+          ? (linkedImages[row.id] ?? []).map((ref) => ref.label).join(" ")
+          : row.type === "document"
+            ? (row.document.characterName ?? "")
+            : (row.legacy.contentType ?? row.legacy.sourceType);
+      return `${row.fileName} ${linked}`
+        .toLocaleLowerCase("de")
+        .includes(needle);
+    })
+    .sort((a, b) => {
+      const comparison =
+        sortKey === "name"
+          ? a.fileName.localeCompare(b.fileName, "de", { sensitivity: "base" })
+          : a.createdAt.localeCompare(b.createdAt);
+      return sortDir === "asc" ? comparison : -comparison;
+    });
 
   return (
     <div className="lcars-text flex flex-col gap-[18px]">
@@ -213,14 +264,35 @@ export default function UserFilesBrowser({
         >
           Datei hochladen
         </button>
-        <input
-          type="search"
-          className="lcars-input rounded-full"
-          aria-label="Dateien suchen"
-          placeholder="Dateien suchen"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
+        <LcarsSortSwitch
+          className="mission-sort"
+          options={[
+            { key: "date", label: "Datum", defaultDir: "desc" },
+            { key: "name", label: "Name" },
+          ]}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onChange={(key, direction) => {
+            setSortKey(key as FileSortKey);
+            setSortDir(direction);
+          }}
         />
+        <LcarsListFilterInput
+          value={query}
+          onChange={setQuery}
+          ariaLabel="Dateien filtern"
+        />
+        <select
+          className="mission-author-filter rounded-full"
+          value={filter}
+          onChange={(event) => setFilter(event.target.value as FileFilter)}
+          aria-label="Nach Dateityp filtern"
+        >
+          <option value="all">Alle Dateien</option>
+          <option value="image">Bilder</option>
+          <option value="document">Dokumente</option>
+          <option value="legacy">Ältere Bilder</option>
+        </select>
       </div>
       {message && !uploadOpen && !editing && (
         <p role="alert" className="text-lcars-quinary-ink">
@@ -228,158 +300,141 @@ export default function UserFilesBrowser({
         </p>
       )}
 
-      <div className="rounded-lcars border border-lcars-border sm:overflow-x-auto">
-        <table className="w-full text-left text-[13px]">
-          <thead className="hidden bg-lcars-panel text-lcars-primary-ink sm:table-header-group">
-            <tr>
-              <th scope="col" className="p-[12px]">
-                Name
-              </th>
-              <th scope="col" className="p-[12px]">
-                Typ
-              </th>
-              <th scope="col" className="p-[12px]">
-                Verlinkt in
-              </th>
-              <th scope="col" className="p-[12px]">
-                Aktionen
-              </th>
-            </tr>
-          </thead>
-          <tbody className="block space-y-[10px] p-[10px] sm:table-row-group sm:space-y-0 sm:p-0">
-            {shown.map((row) => (
-              <tr
-                key={`${row.type}:${row.id}`}
-                className="block rounded-lcars border border-lcars-border bg-lcars-surface sm:table-row sm:rounded-none sm:border-x-0 sm:border-b-0"
-              >
-                <td
-                  data-label="Name"
-                  className="block break-all p-[10px] before:mr-[8px] before:font-bold before:content-[attr(data-label)] sm:table-cell sm:max-w-[260px] sm:p-[12px] sm:before:hidden"
-                >
-                  {row.fileName}
-                </td>
-                <td
-                  data-label="Typ"
-                  className="block p-[10px] before:mr-[8px] before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
-                >
-                  {row.type === "image" ? "Bild" : "Dokument"}
-                </td>
-                <td
-                  data-label="Verlinkt in"
-                  className="block p-[10px] before:mb-[5px] before:block before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
-                >
-                  {row.type === "image" ? (
-                    (linkedImages[row.id] ?? []).length > 0 ? (
-                      <div className="flex flex-wrap gap-x-[10px] gap-y-[4px]">
-                        {(linkedImages[row.id] ?? []).map((ref) => (
-                          <Link
-                            key={ref.href}
-                            href={ref.href}
-                            className="text-lcars-primary-ink underline"
-                          >
-                            {ref.label}
-                          </Link>
-                        ))}
-                      </div>
-                    ) : (
-                      "Nicht verlinkt"
-                    )
-                  ) : row.document.characterId && row.document.characterName ? (
-                    <Link
-                      href={`/user/characters/${row.document.characterId}`}
-                      className="text-lcars-primary-ink underline"
-                    >
-                      {row.document.characterName}
-                    </Link>
+      {legacy.length > 0 && (filter === "all" || filter === "legacy") && (
+        <p className="text-lcars-ink-dim text-[12px]">
+          Ältere Bilder wurden direkt an Inhalte angehängt. Übernimm sie in
+          deine Bibliothek, um sie hier zu verwalten und erneut einzufügen.
+        </p>
+      )}
+      {shown.length === 0 ? (
+        <p className="lcars-empty-state">
+          {rows.length === 0
+            ? "Noch keine Dateien vorhanden."
+            : "Keine Dateien für diesen Filter."}
+        </p>
+      ) : (
+        <>
+          <div className="archive-entry-list">
+            {shown.map((row) => {
+              const color = FILE_COLORS[row.type];
+              const refs =
+                row.type === "image" ? (linkedImages[row.id] ?? []) : [];
+              const linkedContent =
+                row.type === "document" &&
+                row.document.characterId &&
+                row.document.characterName ? (
+                  <Link
+                    href={`/user/characters/${row.document.characterId}`}
+                    className="text-lcars-primary-ink underline"
+                  >
+                    {row.document.characterName}
+                  </Link>
+                ) : row.type === "document" ? (
+                  "Nicht zugeordnet"
+                ) : row.type === "image" ? (
+                  refs.length > 0 ? (
+                    <span className="flex flex-wrap gap-x-[10px] gap-y-[4px]">
+                      {refs.map((ref) => (
+                        <Link
+                          key={ref.href}
+                          href={ref.href}
+                          className="text-lcars-primary-ink underline"
+                        >
+                          {ref.label}
+                        </Link>
+                      ))}
+                    </span>
                   ) : (
-                    "Nicht zugeordnet"
-                  )}
-                </td>
-                <td
-                  data-label="Aktionen"
-                  className="block p-[10px] before:mb-[5px] before:block before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
-                >
-                  <div className="flex gap-[6px]">
-                    <button
-                      type="button"
-                      className="lcars-icon-btn size-[30px]"
-                      aria-label={`„${row.fileName}“ ansehen`}
-                      title="Ansehen"
-                      onClick={() => setPreview(row)}
-                    >
-                      <EyeIcon />
-                    </button>
-                    <button
-                      type="button"
-                      className="lcars-icon-btn size-[30px]"
-                      aria-label={`„${row.fileName}“ bearbeiten`}
-                      title="Bearbeiten"
-                      disabled={busy}
-                      onClick={() => beginEdit(row)}
-                    >
-                      <PencilIcon />
-                    </button>
-                    <button
-                      type="button"
-                      className="lcars-icon-btn lcars-icon-btn--danger size-[30px]"
-                      aria-label={`„${row.fileName}“ löschen`}
-                      title="Löschen"
-                      disabled={busy}
-                      onClick={() => void remove(row)}
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {shown.length === 0 && (
-              <tr>
-                <td colSpan={4} className="p-[14px] text-lcars-ink-dim">
-                  Keine passenden Dateien.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                    "Nicht verlinkt"
+                  )
+                ) : row.legacy.sourceType === "portrait" ? (
+                  "Älteres Charakterportrait · Noch nicht in der Bibliothek"
+                ) : (
+                  "An Inhalt angehängt · Noch nicht in der Bibliothek"
+                );
 
-      {legacy.length > 0 && (
-        <section
-          aria-labelledby="older-images-title"
-          className="flex flex-col gap-[8px]"
-        >
-          <h2 id="older-images-title">Ältere Bilder ({legacy.length})</h2>
-          <p>
-            Diese Bilder wurden direkt an Inhalte angehängt. Übernimm sie in
-            deine Bibliothek, um sie hier zu verwalten und erneut einzufügen.
-          </p>
-          <div className="grid grid-cols-2 gap-[12px] md:grid-cols-4">
-            {legacy.map((image) => (
-              <div
-                key={`${image.sourceType}:${image.id}`}
-                className="rounded-lcars bg-lcars-panel p-[10px] flex flex-col gap-[8px]"
-              >
-                <Image
-                  src={image.previewUrl}
-                  alt={`Bild ${image.id}`}
-                  width={200}
-                  height={150}
-                  unoptimized
-                  className="h-[150px] w-full object-contain"
-                />
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void importLegacy(image)}
-                  className="lcars-pill-btn--outline"
-                >
-                  In Bibliothek übernehmen
-                </button>
-              </div>
-            ))}
+              const rowKey =
+                row.type === "legacy"
+                  ? `legacy:${row.legacy.sourceType}:${row.id}`
+                  : `${row.type}:${row.id}`;
+
+              return (
+                <ChronoRow key={rowKey} date={row.createdAt} color={color}>
+                  <div className="flex flex-1 flex-col gap-[8px] sm:flex-row sm:items-start">
+                    <div className="flex-1">
+                      <ChronoCard
+                        color={color}
+                        thumbnailSrc={
+                          row.type === "image"
+                            ? row.image.url
+                            : row.type === "legacy"
+                              ? row.legacy.previewUrl
+                              : undefined
+                        }
+                        tag={
+                          row.type === "image"
+                            ? "Bild"
+                            : row.type === "document"
+                              ? "Dokument"
+                              : "Älteres Bild"
+                        }
+                        title={row.fileName}
+                        meta={linkedContent}
+                      />
+                    </div>
+                    {row.type === "legacy" ? (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void importLegacy(row.legacy)}
+                        className="lcars-pill-btn--outline"
+                      >
+                        In Bibliothek übernehmen
+                      </button>
+                    ) : (
+                      <div className="flex gap-[6px]">
+                        <button
+                          type="button"
+                          className="lcars-icon-btn size-[30px]"
+                          aria-label={`„${row.fileName}“ ansehen`}
+                          title="Ansehen"
+                          onClick={() => setPreview(row)}
+                        >
+                          <EyeIcon />
+                        </button>
+                        <button
+                          type="button"
+                          className="lcars-icon-btn size-[30px]"
+                          aria-label={`„${row.fileName}“ bearbeiten`}
+                          title="Bearbeiten"
+                          disabled={busy}
+                          onClick={() => beginEdit(row)}
+                        >
+                          <PencilIcon />
+                        </button>
+                        <button
+                          type="button"
+                          className="lcars-icon-btn lcars-icon-btn--danger size-[30px]"
+                          aria-label={`„${row.fileName}“ löschen`}
+                          title="Löschen"
+                          disabled={busy}
+                          onClick={() => void remove(row)}
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </ChronoRow>
+              );
+            })}
           </div>
-        </section>
+          <p className="lcars-eyebrow mt-[12px]">
+            {shown.length === rows.length
+              ? `${rows.length} Dateien`
+              : `${shown.length} von ${rows.length} Dateien`}
+          </p>
+        </>
       )}
 
       {uploadOpen && (

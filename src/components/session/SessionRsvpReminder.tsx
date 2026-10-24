@@ -52,7 +52,7 @@ export default function SessionRsvpReminder({
       >
         {pending
           ? "Erinnerungen werden gesendet…"
-          : `Per Mail an Personen ohne Rückmeldung erinnern (${unansweredCount})`}
+          : `Erinnern (${unansweredCount})`}
       </button>
       {message && (
         <p className="text-lcars-ink-dim text-[12px]" role="status">

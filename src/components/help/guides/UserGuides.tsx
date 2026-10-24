@@ -320,10 +320,12 @@ export function UserFilesGuide() {
     <GuideSection title="Meine Dateien">
       <p>
         Unter <strong>„Profil → Meine Dateien“</strong> findest du deine
-        hochgeladenen Bilder und Dokumente in einer Tabelle. „Verlinkt in“ zeigt
-        bei Bildern die Einträge, in denen sie vorkommen, und bei Dokumenten den
-        zugeordneten Charakter. Über die drei Symbole kannst du eine Datei
-        ansehen, den Namen bearbeiten oder sie nach Rückfrage löschen.
+        hochgeladenen Bilder und Dokumente in einer chronologischen Liste. Du
+        kannst nach Dateityp filtern, nach Name oder Datum sortieren und Dateien
+        durchsuchen. „Verlinkt in“ zeigt bei Bildern die Einträge, in denen sie
+        vorkommen, und bei Dokumenten den zugeordneten Charakter. Über die drei
+        Symbole kannst du eine Datei ansehen, den Namen bearbeiten oder sie nach
+        Rückfrage löschen.
       </p>
       <p>
         Mit <strong>„Datei hochladen“</strong> speicherst du Bilder oder

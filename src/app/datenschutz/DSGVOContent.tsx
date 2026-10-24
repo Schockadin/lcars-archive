@@ -173,7 +173,9 @@ export default function DSGVOContent({ year }: { year: number }) {
           auch die zugeordneten Dokumente und ihre Metadaten entfernt. Ohne
           Charakterzuordnung bleiben Dokumente bis zum Löschen durch den Account
           in dessen Dateiliste. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO —
-          Erfüllung des Nutzungsverhältnisses der Kampagne.
+          Erfüllung des Nutzungsverhältnisses der Kampagne. Die Such-, Filter-
+          und Sortierauswahl in der Dateiliste gilt nur für die aktuelle Anzeige
+          und wird nicht dauerhaft gespeichert.
         </p>
         <p>
           Hochgeladene Bilder können zusätzlich in einer persönlichen
@@ -209,7 +211,9 @@ export default function DSGVOContent({ year }: { year: number }) {
           jederzeit selbst löschen; mit dem Konto werden alle eigenen Notizen
           entfernt. Beim endgültigen Löschen eines Inhalts werden die ihm
           zugeordneten Notizen entfernt. Notizen ohne Eintrag bleiben bis zum
-          Löschen durch den Account bestehen.
+          Löschen durch den Account bestehen. Die Such-, Filter- und
+          Sortierauswahl der persönlichen Notizübersicht bleibt im Browser und
+          wird nicht dauerhaft gespeichert.
         </p>
         <p>
           Beim Bearbeiten von Charakteren, Missionen, Logbüchern und
