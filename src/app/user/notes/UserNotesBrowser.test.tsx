@@ -50,13 +50,13 @@ describe("UserNotesBrowser", () => {
     getMyNotesAction.mockResolvedValue([own, shared]);
   });
 
-  it("zeigt die Tabelle und kürzt die Vorschau nach 150 Zeichen", () => {
-    render(<UserNotesBrowser initialNotes={[own, shared]} />);
-    for (const title of ["Notiz zu", "Inhalt", "Aktionen"]) {
-      expect(
-        screen.getByRole("columnheader", { name: title }),
-      ).toBeInTheDocument();
-    }
+  it("zeigt ChronoRail-Karten und filtert nach Notizart und Text", () => {
+    const { container } = render(
+      <UserNotesBrowser initialNotes={[own, shared]} />,
+    );
+    expect(container.querySelector("table")).toBeNull();
+    expect(container.querySelectorAll(".timeline-event")).toHaveLength(2);
+    expect(container.querySelectorAll(".timeline-card")).toHaveLength(2);
     expect(screen.getByRole("link", { name: "USS Voyager" })).toHaveAttribute(
       "href",
       own.targetHref,
@@ -66,17 +66,40 @@ describe("UserNotesBrowser", () => {
       screen.queryByRole("button", { name: "Notiz zu „Mission“ bearbeiten" }),
     ).not.toBeInTheDocument();
     expect(noteExcerpt("a".repeat(151))).toBe(`${"a".repeat(150)}…`);
+
+    fireEvent.change(screen.getByLabelText("Nach Notizart filtern"), {
+      target: { value: "private" },
+    });
+    expect(container.querySelectorAll(".timeline-card")).toHaveLength(1);
+    expect(screen.getByText("USS Voyager")).toBeInTheDocument();
+    expect(screen.queryByText("Mission")).not.toBeInTheDocument();
+
+    fireEvent.change(
+      screen.getByRole("searchbox", { name: "Notizen filtern" }),
+      {
+        target: { value: "unbekannt" },
+      },
+    );
+    expect(
+      screen.getByText("Keine Notizen für diesen Filter."),
+    ).toBeInTheDocument();
   });
 
-  it("öffnet die ganze Notiz per Zeilenklick und bearbeitet sie", async () => {
+  it("sortiert nach Eintrag und öffnet die ganze Notiz zum Bearbeiten", async () => {
     editMyNoteAction.mockResolvedValue({});
     getMyNotesAction.mockResolvedValue([
       { ...own, body: "Neu", bodyHtml: "<p>Neu</p>" },
       shared,
     ]);
     render(<UserNotesBrowser initialNotes={[own, shared]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Eintrag" }));
+    expect(
+      [...document.querySelectorAll(".timeline-card-title")].map(
+        (title) => title.textContent,
+      ),
+    ).toEqual(["Mission", "USS Voyager"]);
     fireEvent.click(
-      screen.getByRole("row", { name: /Notiz zu „USS Voyager“ anzeigen/ }),
+      screen.getByRole("button", { name: "Notiz zu „USS Voyager“ anzeigen" }),
     );
     expect(
       screen.getByRole("dialog", { name: /Notiz zu USS Voyager/ }),
@@ -105,7 +128,7 @@ describe("UserNotesBrowser", () => {
     confirm.mockRestore();
   });
 
-  it("zeigt freie Notizen ohne Link in einer mobilen Kartenansicht", () => {
+  it("zeigt freie Notizen ohne Link als ChronoCard", () => {
     const { container } = render(
       <UserNotesBrowser
         initialNotes={[
@@ -122,11 +145,9 @@ describe("UserNotesBrowser", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Ohne Eintrag")).toBeInTheDocument();
     expect(screen.queryByRole("link")).toBeNull();
-    expect(container.querySelector("tbody")?.className).toContain(
-      "sm:table-row-group",
-    );
     expect(
-      container.querySelector("td[data-label='Inhalt']"),
+      container.querySelector(".timeline-event .timeline-rail"),
     ).toBeInTheDocument();
+    expect(container.querySelector(".timeline-card")).toBeInTheDocument();
   });
 });

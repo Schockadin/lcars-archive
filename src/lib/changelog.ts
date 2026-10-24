@@ -147,6 +147,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.3",
+    title: "Chronologie für Notizen und Dateien",
+    items: [
+      {
+        text: "„Meine Notizen“ lässt sich nach Sichtbarkeit und Text filtern sowie nach Datum oder Bezug sortieren.",
+        category: "inhalte",
+        tutorial: "notizen",
+      },
+      {
+        text: "Unter „Meine Dateien“ kannst du Bilder, Dokumente und ältere Inhaltsbilder gemeinsam durchsuchen, nach Dateityp filtern und nach Datum oder Name sortieren.",
+        category: "konto",
+        tutorial: "mein-bereich",
+      },
+    ],
+  },
+  {
     version: "2.1",
     title: "Audit-Log und Spieltermin-Rückmeldungen",
     items: [

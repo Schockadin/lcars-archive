@@ -2,8 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import {
+  LcarsListFilterInput,
+  LcarsSortSwitch,
+  type SortDir,
+} from "@/components/lcars";
 import ModalOverlay from "@/components/ModalOverlay";
-import { PencilIcon, TrashIcon } from "@/lib/icons";
+import ChronoCard from "@/components/timeline/ChronoCard";
+import ChronoRow from "@/components/timeline/ChronoRow";
+import { EyeIcon, PencilIcon, TrashIcon } from "@/lib/icons";
 import { NOTE_MAX_LENGTH } from "@/lib/contentNoteTypes";
 import type { UserNote } from "@/lib/contentNotes";
 import {
@@ -18,6 +25,14 @@ export function noteExcerpt(body: string): string {
   return plain.length > 150 ? `${plain.slice(0, 150)}…` : plain;
 }
 
+type NoteFilter = "all" | "private" | "group";
+type NoteSortKey = "date" | "target";
+
+const NOTE_COLORS: Record<"private" | "group", string> = {
+  private: "var(--lcars-primary)",
+  group: "var(--lcars-secondary)",
+};
+
 export default function UserNotesBrowser({
   initialNotes,
 }: {
@@ -29,6 +44,10 @@ export default function UserNotesBrowser({
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<NoteFilter>("all");
+  const [sortKey, setSortKey] = useState<NoteSortKey>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const selected = notes.find((note) => note.id === selectedId) ?? null;
 
   function open(note: UserNote, edit = false) {
@@ -86,6 +105,16 @@ export default function UserNotesBrowser({
           type="button"
           className="lcars-icon-btn size-[30px]"
           disabled={busy}
+          aria-label={`Notiz zu „${note.targetLabel}“ anzeigen`}
+          title="Ansehen"
+          onClick={() => open(note)}
+        >
+          <EyeIcon />
+        </button>
+        <button
+          type="button"
+          className="lcars-icon-btn size-[30px]"
+          disabled={busy}
           aria-label={`Notiz zu „${note.targetLabel}“ bearbeiten`}
           title="Bearbeiten"
           onClick={(event) => {
@@ -110,94 +139,120 @@ export default function UserNotesBrowser({
         </button>
       </div>
     ) : (
-      <span className="text-lcars-ink-dim">Nur ansehen</span>
+      <button
+        type="button"
+        className="lcars-icon-btn size-[30px]"
+        aria-label={`Notiz zu „${note.targetLabel}“ anzeigen`}
+        title="Ansehen"
+        onClick={() => open(note)}
+      >
+        <EyeIcon />
+      </button>
     );
   }
+
+  const needle = query.trim().toLocaleLowerCase("de");
+  const shownNotes = [...notes]
+    .filter((note) => filter === "all" || note.visibility === filter)
+    .filter(
+      (note) =>
+        !needle ||
+        `${note.targetLabel} ${note.body} ${note.authorName ?? ""}`
+          .toLocaleLowerCase("de")
+          .includes(needle),
+    )
+    .sort((a, b) => {
+      const comparison =
+        sortKey === "target"
+          ? a.targetLabel.localeCompare(b.targetLabel, "de", {
+              sensitivity: "base",
+            })
+          : a.createdAt.localeCompare(b.createdAt);
+      return sortDir === "asc" ? comparison : -comparison;
+    });
 
   return (
     <div className="lcars-text flex flex-col gap-[18px]">
       <div>
         <NewNoteButton onCreated={refresh} />
       </div>
+      <div className="flex flex-wrap items-center gap-[12px]">
+        <LcarsSortSwitch
+          className="mission-sort"
+          options={[
+            { key: "date", label: "Datum", defaultDir: "desc" },
+            { key: "target", label: "Eintrag" },
+          ]}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onChange={(key, direction) => {
+            setSortKey(key as NoteSortKey);
+            setSortDir(direction);
+          }}
+        />
+        <LcarsListFilterInput
+          value={query}
+          onChange={setQuery}
+          ariaLabel="Notizen filtern"
+        />
+        <select
+          className="mission-author-filter rounded-full"
+          value={filter}
+          onChange={(event) => setFilter(event.target.value as NoteFilter)}
+          aria-label="Nach Notizart filtern"
+        >
+          <option value="all">Alle Notizen</option>
+          <option value="private">Nur ich</option>
+          <option value="group">Für die Runde</option>
+        </select>
+      </div>
       {error && !selected && (
         <p role="alert" className="text-lcars-quinary-ink">
           {error}
         </p>
       )}
-      <div className="rounded-lcars border border-lcars-border sm:overflow-x-auto">
-        <table className="w-full text-left text-[13px]">
-          <thead className="hidden bg-lcars-panel text-lcars-primary-ink sm:table-header-group">
-            <tr>
-              <th scope="col" className="p-[12px]">
-                Notiz zu
-              </th>
-              <th scope="col" className="p-[12px]">
-                Inhalt
-              </th>
-              <th scope="col" className="p-[12px]">
-                Aktionen
-              </th>
-            </tr>
-          </thead>
-          <tbody className="block space-y-[10px] p-[10px] sm:table-row-group sm:space-y-0 sm:p-0">
-            {notes.map((note) => (
-              <tr
+      {shownNotes.length === 0 ? (
+        <p className="lcars-empty-state">
+          {notes.length === 0
+            ? "Noch keine Notizen vorhanden."
+            : "Keine Notizen für diesen Filter."}
+        </p>
+      ) : (
+        <>
+          <div className="archive-entry-list">
+            {shownNotes.map((note) => (
+              <ChronoRow
                 key={note.id}
-                tabIndex={0}
-                aria-label={`Notiz zu „${note.targetLabel}“ anzeigen`}
-                className="block cursor-pointer rounded-lcars border border-lcars-border bg-lcars-surface hover:bg-lcars-panel focus-visible:outline-2 focus-visible:outline-lcars-primary sm:table-row sm:rounded-none sm:border-x-0 sm:border-b-0"
-                onClick={() => open(note)}
-                onKeyDown={(event) => {
-                  if (
-                    event.target === event.currentTarget &&
-                    (event.key === "Enter" || event.key === " ")
-                  ) {
-                    event.preventDefault();
-                    open(note);
-                  }
-                }}
+                date={note.createdAt}
+                color={NOTE_COLORS[note.visibility]}
               >
-                <td
-                  data-label="Notiz zu"
-                  className="block p-[10px] before:mr-[8px] before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
-                >
-                  {note.targetHref ? (
-                    <Link
-                      href={note.targetHref}
-                      className="text-lcars-primary-ink underline"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      {note.targetLabel}
-                    </Link>
-                  ) : (
-                    note.targetLabel
-                  )}
-                </td>
-                <td
-                  data-label="Inhalt"
-                  className="block max-w-[600px] break-words p-[10px] before:mr-[8px] before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
-                >
-                  {noteExcerpt(note.body)}
-                </td>
-                <td
-                  data-label="Aktionen"
-                  className="block p-[10px] before:mb-[5px] before:block before:font-bold before:content-[attr(data-label)] sm:table-cell sm:p-[12px] sm:before:hidden"
-                  onClick={(event) => event.stopPropagation()}
-                >
+                <div className="flex flex-1 flex-col gap-[8px] sm:flex-row sm:items-start">
+                  <div className="flex-1">
+                    <ChronoCard
+                      color={NOTE_COLORS[note.visibility]}
+                      tag={
+                        note.visibility === "private"
+                          ? "Nur ich"
+                          : "Für die Runde"
+                      }
+                      title={note.targetLabel}
+                      href={note.targetHref ?? undefined}
+                      summary={noteExcerpt(note.body)}
+                      meta={note.authorName ?? "Unbekannt"}
+                    />
+                  </div>
                   {actions(note)}
-                </td>
-              </tr>
+                </div>
+              </ChronoRow>
             ))}
-            {notes.length === 0 && (
-              <tr>
-                <td colSpan={3} className="p-[14px] text-lcars-ink-dim">
-                  Noch keine Notizen vorhanden.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+          </div>
+          <p className="lcars-eyebrow mt-[12px]">
+            {shownNotes.length === notes.length
+              ? `${notes.length} Notizen`
+              : `${shownNotes.length} von ${notes.length} Notizen`}
+          </p>
+        </>
+      )}
 
       {selected && (
         <ModalOverlay
