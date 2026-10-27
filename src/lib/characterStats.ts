@@ -177,6 +177,12 @@ export const EMPTY_CHARACTER_STATS: CharacterStats = {
     primarySchool: null,
     weakSchools: [],
     spells: [],
+    slotProgress: {
+      creationReason: null,
+      organellesReason: null,
+      ftlAttunementReason: null,
+      apMilestones: [],
+    },
   },
   assignment: null,
   environment: null,
@@ -300,10 +306,23 @@ function normalizeTechnomage(value: unknown): TechnomageCharacterData {
     ),
   ].slice(0, 3);
 
+  const progressSource = asRecord(source.slotProgress);
+  const apMilestones = Array.isArray(progressSource.apMilestones)
+    ? progressSource.apMilestones
+        .map((value) => normalizeNumber(value, 7, 12))
+        .filter((value): value is number => value !== null)
+    : [];
+
   return {
     primarySchool,
     weakSchools,
     spells: normalizeList(source.spells),
+    slotProgress: {
+      creationReason: normalizeNumber(progressSource.creationReason, 7, 12),
+      organellesReason: normalizeNumber(progressSource.organellesReason, 7, 12),
+      ftlAttunementReason: normalizeNumber(progressSource.ftlAttunementReason, 7, 12),
+      apMilestones,
+    },
   };
 }
 

@@ -1152,6 +1152,14 @@ export async function updateOwnCharacterTechnomage(
           ${sql.json(expected.weakSchools as ReturnType<typeof JSON.parse>)}
       AND COALESCE(metadata #> '{stats,technomage,spells}', '[]'::jsonb) =
           ${sql.json(expected.spells as ReturnType<typeof JSON.parse>)}
+      AND COALESCE(metadata #>> '{stats,technomage,slotProgress,creationReason}', '') =
+          ${expected.slotProgress.creationReason?.toString() ?? ''}
+      AND COALESCE(metadata #>> '{stats,technomage,slotProgress,organellesReason}', '') =
+          ${expected.slotProgress.organellesReason?.toString() ?? ''}
+      AND COALESCE(metadata #>> '{stats,technomage,slotProgress,ftlAttunementReason}', '') =
+          ${expected.slotProgress.ftlAttunementReason?.toString() ?? ''}
+      AND COALESCE(metadata #> '{stats,technomage,slotProgress,apMilestones}', '[]'::jsonb) =
+          ${sql.json(expected.slotProgress.apMilestones as ReturnType<typeof JSON.parse>)}
     RETURNING slug`;
   return rows[0] ?? null;
 }

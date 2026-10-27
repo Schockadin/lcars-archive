@@ -26,6 +26,7 @@ import type {
 import {
   buyTechnomageSpellAction,
   configureTechnomageSchoolsAction,
+  markTechnomageSlotMilestoneAction,
   type TechnomageActionState,
 } from "../_shared/technomageActions";
 
@@ -212,26 +213,45 @@ function SpellTree({
   primarySchool,
   weakSchools,
   pending,
+  searchQuery,
 }: {
   schoolId: TechnomageSchool;
   knownSpellIds: readonly string[];
   primarySchool: TechnomageSchool | null;
   weakSchools: readonly TechnomageSchool[];
   pending: boolean;
+  searchQuery: string;
 }) {
-  const spells = useMemo(
-    () =>
-      TECHNOMAGE_SPELLS.filter((spell) => spell.school === schoolId).sort(
-        (a, b) =>
-          spellTreeDepth(a.id, schoolId) - spellTreeDepth(b.id, schoolId) ||
-          a.name.localeCompare(b.name),
-      ),
-    [schoolId],
-  );
+  const spells = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase();
+    return TECHNOMAGE_SPELLS.filter((spell) => {
+      if (spell.school !== schoolId) return false;
+      if (!query) return true;
+      const searchable = [
+        spell.name,
+        spell.requirements,
+        spell.elementalCategory ?? "",
+        technomageSpellFluff(spell),
+        technomageSpellExplanation(spell, primarySchool, weakSchools),
+      ]
+        .join(" ")
+        .toLocaleLowerCase();
+      return searchable.includes(query);
+    }).sort(
+      (a, b) =>
+        spellTreeDepth(a.id, schoolId) - spellTreeDepth(b.id, schoolId) ||
+        a.name.localeCompare(b.name),
+    );
+  }, [schoolId, searchQuery, primarySchool, weakSchools]);
   const known = new Set(knownSpellIds);
 
   return (
     <ol className="ml-[8px] flex flex-col gap-[10px] border-l-2 border-current/25 pl-[14px]">
+      {spells.length === 0 && (
+        <li className="list-none py-[8px] text-sm opacity-75" role="status">
+          Keine passenden Spells in dieser Schule.
+        </li>
+      )}
       {spells.map((spell) => {
         const learned = known.has(spell.id);
         const prerequisiteGroups = spellPrerequisiteGroups(spell.id);
@@ -325,20 +345,32 @@ export default function TechnomageSpellsPanel({
   userId,
   characterId,
   stats,
+  earnedAp,
 }: {
   userId: number;
   characterId: number;
   stats: CharacterStats;
+  earnedAp: number;
 }) {
   const [schoolIndex, setSchoolIndex] = useState(0);
   const [state, action, pending] = useActionState(
     buyTechnomageSpellAction,
     initialActionState,
   );
+  const [milestoneState, milestoneAction, milestonePending] = useActionState(
+    markTechnomageSlotMilestoneAction,
+    initialActionState,
+  );
+  const [searchQuery, setSearchQuery] = useState("");
   useActionFeedback(state);
+  useActionFeedback(milestoneState);
 
   const technomage = stats.technomage;
-  const total = technomageSpellSlotTotal(stats.experience);
+  const total = technomageSpellSlotTotal(
+    technomage.slotProgress,
+    stats.attributes.reason,
+    earnedAp,
+  );
   const learnedCount = new Set(technomage.spells).size;
   const available = Math.max(0, total - learnedCount);
   const activeSchool = TECHNOMAGE_SCHOOLS[schoolIndex];
@@ -351,24 +383,70 @@ export default function TechnomageSpellsPanel({
       aria-labelledby="technomage-spells-title"
       className="flex flex-col gap-[12px] rounded-[12px] border border-current/30 p-[12px]"
     >
-      <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-[8px] rounded-[8px] bg-black/90 px-[10px] py-[8px]">
+      <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-[8px] rounded-[8px] border border-lcars-primary/50 bg-lcars-surface px-[10px] py-[8px] text-lcars-text shadow-md">
         <div>
           <h2 id="technomage-spells-title" className="text-lg font-bold">
             Spells
           </h2>
           <p className="text-xs opacity-75">
-            Gelernte Spells belegen einen Platz; Voraussetzungen werden beim
-            Kauf mitgelernt. Kontingent: Neuling 5, Erfahren 15, Veteran 30.
+            Jeder Spell belegt einen Platz. Erschaffung, Organellen,
+            FTL-Attunement und je 20 verdiente AP geben Slots; jede Stufe nutzt
+            den damals gespeicherten Verstand-Wert.
           </p>
         </div>
         <p
-          className="rounded-full border border-current/50 px-[12px] py-[6px] font-bold"
+          className="rounded-full border border-lcars-secondary/70 bg-lcars-secondary/15 px-[12px] py-[6px] font-bold"
           role="status"
           aria-live="polite"
         >
           Spellplätze: {available} / {total} frei
         </p>
       </div>
+
+      <div className="grid gap-[8px] sm:grid-cols-2">
+        {([
+          {
+            id: "organelles",
+            label: "Organellen",
+            reason: technomage.slotProgress.organellesReason,
+          },
+          {
+            id: "ftlAttunement",
+            label: "FTL-Attunement",
+            reason: technomage.slotProgress.ftlAttunementReason,
+          },
+        ] as const).map((milestone) => (
+          <div
+            key={milestone.id}
+            className="flex flex-wrap items-center justify-between gap-[8px] rounded-[8px] border border-lcars-border bg-lcars-surface px-[10px] py-[8px]"
+          >
+            <p className="text-sm">
+              <strong>{milestone.label}</strong>
+              {milestone.reason !== null
+                ? " · erhalten · Verstand " + milestone.reason
+                : " · noch nicht erfasst"}
+            </p>
+            {milestone.reason === null && (
+              <form action={milestoneAction}>
+                <input type="hidden" name="userId" value={userId} />
+                <input type="hidden" name="characterId" value={characterId} />
+                <button
+                  type="submit"
+                  name="milestone"
+                  value={milestone.id}
+                  disabled={milestonePending}
+                  className="lcars-pill-btn--outline text-xs disabled:opacity-50"
+                >
+                  {milestonePending
+                    ? "Speichert …"
+                    : milestone.label + " erhalten markieren"}
+                </button>
+              </form>
+            )}
+          </div>
+        ))}
+      </div>
+      <FormError message={milestoneState.error} />
 
       <div className="flex flex-wrap gap-[6px] text-xs">
         {TECHNOMAGE_SCHOOLS.map((school) => (
@@ -468,6 +546,16 @@ export default function TechnomageSpellsPanel({
             }{" "}
             Spells
           </p>
+          <label className="flex flex-col gap-[4px] text-sm">
+            Spell-Liste durchsuchen
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Name, Voraussetzung oder STA-Mechanik"
+              className="w-full rounded-[8px] border border-lcars-border bg-lcars-surface px-[10px] py-[8px] text-lcars-text placeholder:opacity-60"
+            />
+          </label>
           <form action={action} className="flex flex-col gap-[10px]">
             <input type="hidden" name="userId" value={userId} />
             <input type="hidden" name="characterId" value={characterId} />
@@ -477,6 +565,7 @@ export default function TechnomageSpellsPanel({
               primarySchool={technomage.primarySchool}
               weakSchools={technomage.weakSchools}
               pending={pending}
+              searchQuery={searchQuery}
             />
             <FormError message={state.error} />
           </form>

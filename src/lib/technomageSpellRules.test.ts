@@ -6,8 +6,11 @@ import {
   isTechnomageRole,
   spellPrerequisiteGroups,
   technomageSpellExplanation,
-  technomageSpellSlotTotal,
 } from "@/lib/technomageSpellCatalog";
+import {
+  snapshotTechnomageApSlotReasons,
+  technomageSpellSlotTotal,
+} from "@/lib/technomageSpellSlots";
 import { createSpellPurchasePlan } from "@/lib/technomageSpellRules";
 
 const schools = ["elements", "movement", "creation"] as const;
@@ -30,11 +33,35 @@ describe("Technomage spell catalog", () => {
     expect(isTechnomageRole("Mediziner")).toBe(false);
   });
 
-  it("normalizes experience tiers to the spell-slot budget", () => {
-    expect(technomageSpellSlotTotal("novice")).toBe(5);
-    expect(technomageSpellSlotTotal("experienced")).toBe(15);
-    expect(technomageSpellSlotTotal("veteran")).toBe(30);
-    expect(technomageSpellSlotTotal(null)).toBe(5);
+  it("rounds each spell-slot milestone up and keeps its saved Reason value", () => {
+    const progress = {
+      creationReason: 7,
+      organellesReason: 8,
+      ftlAttunementReason: null,
+      apMilestones: [7],
+    };
+    expect(technomageSpellSlotTotal(progress, 12, 20)).toBe(15);
+    expect(technomageSpellSlotTotal(progress, 8, 40)).toBe(19);
+    const beforeReasonChange = technomageSpellSlotTotal(
+      { ...progress, apMilestones: [] },
+      8,
+      40,
+    );
+    const savedMilestones = snapshotTechnomageApSlotReasons(
+      { ...progress, apMilestones: [] },
+      40,
+      8,
+    );
+    expect(savedMilestones.apMilestones).toEqual([8, 8]);
+    expect(technomageSpellSlotTotal(savedMilestones, 12, 40)).toBe(
+      beforeReasonChange,
+    );
+    expect(
+      technomageSpellSlotTotal(
+        { ...progress, creationReason: null, organellesReason: null, apMilestones: [] },
+        7,
+      ),
+    ).toBe(8);
   });
 
   it("translates targets and keeps school-specific round durations", () => {

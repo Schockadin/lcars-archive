@@ -382,6 +382,8 @@ export interface CharacterSheetPdfInput {
   // Der auf dem Original gewählte Ausschnitt (siehe src/lib/portraitCrop.ts).
   portraitCrop?: PortraitCrop | null;
   stats: CharacterStats;
+  // Insgesamt erhaltene AP für Technomage-Spellslot-Meilensteine.
+  earnedAp?: number;
   // Katalog für den Spickzettel — der Regeltext steht nicht am Charakter.
   talents: Talent[];
   // Hausregeln der Runde (gepflegt unter /gm/campaign); leer = kein Abschnitt.
@@ -613,9 +615,13 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
   const learnedSpells = input.stats.technomage.spells
     .map(getTechnomageSpell)
     .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
+  const totalSpellSlots = technomageSpellSlotTotal(
+    input.stats.technomage.slotProgress,
+    input.stats.attributes.reason,
+    input.earnedAp ?? 0,
+  );
   const spellSlots =
-    technomageSpellSlotTotal(input.stats.experience) -
-    new Set(input.stats.technomage.spells).size;
+    totalSpellSlots - new Set(input.stats.technomage.spells).size;
 
   return (
     <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.cheatPage}>
@@ -668,7 +674,7 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
           <Text style={styles.cheatSection}>SPELLS · TECHNO-MAGIE</Text>
           <Text style={styles.cheatIntro}>
             Spellplätze: {Math.max(0, spellSlots)} /{" "}
-            {technomageSpellSlotTotal(input.stats.experience)} frei
+            {totalSpellSlots} frei
           </Text>
           {learnedSpells.map((spell) => (
             <View key={spell.id} style={styles.cheatItem} wrap={false}>

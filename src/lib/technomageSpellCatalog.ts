@@ -1,7 +1,5 @@
-import type {
-  CharacterExperience,
-  TechnomageSchool,
-} from "@/types/characterStats";
+import type { TechnomageSchool } from "@/types/characterStats";
+export { technomageSpellSlotTotal } from "@/lib/technomageSpellSlots";
 
 export const TECHNOMAGE_SCHOOLS = [
   { id: "defence", label: "Abwehr", original: "Defence" },
@@ -3823,22 +3821,9 @@ export function isTechnomageRole(role: string | null | undefined): boolean {
     .includes("technomage");
 }
 
-// Abbildung der STA-Erfahrungsstufen auf gelernte Techno-Magie-Talente.
-// Ein gekaufter Spell belegt einen Platz. Das Fact Book nutzt Klassenstufen,
-// die STA 2e nicht hat.
-export function technomageSpellSlotTotal(
-  experience: CharacterExperience | null,
-): number {
-  switch (experience) {
-    case "experienced":
-      return 15;
-    case "veteran":
-      return 30;
-    case "novice":
-    default:
-      return 5;
-  }
-}
+// Spellplätze werden aus gespeicherten Reason-Meilensteinen berechnet.
+// Die Berechnung selbst liegt in technomageSpellSlots.ts und wird hier für
+// bestehende Aufrufstellen des Spell-Katalogs mit exportiert.
 
 export function technomageSchoolLabel(schoolId: string): string {
   const school = getTechnomageSchool(schoolId);

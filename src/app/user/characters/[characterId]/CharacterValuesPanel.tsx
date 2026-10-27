@@ -191,6 +191,7 @@ export default function CharacterValuesPanel({
           userId={userId}
           characterId={characterId}
           stats={savedStats}
+          earnedAp={account.earned}
         />
       )}
     </>

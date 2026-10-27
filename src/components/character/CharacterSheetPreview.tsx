@@ -83,6 +83,8 @@ export interface CharacterSheetPreviewInput {
   portrait: string | null;
   portraitCrop?: PortraitCrop | null;
   stats: CharacterStats;
+  // Insgesamt erhaltene AP für Technomage-Spellslot-Meilensteine.
+  earnedAp?: number;
   // Bereits gerendertes, bereinigtes Biografie-HTML (markdownToHtml). Der
   // Assistent lässt es beim Wechsel auf die Vorschau erzeugen, die
   // Charakterseite reicht das gespeicherte HTML durch.
@@ -97,18 +99,23 @@ function TalentSheet({
   characterName,
   stats,
   talents,
+  earnedAp,
 }: {
   characterName: string;
   stats: CharacterStats;
   talents: Talent[];
+  earnedAp: number;
 }) {
   const entries = stats.talents;
   const learnedSpells = stats.technomage.spells
     .map(getTechnomageSpell)
     .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
-  const spellSlots =
-    technomageSpellSlotTotal(stats.experience) -
-    new Set(stats.technomage.spells).size;
+  const totalSpellSlots = technomageSpellSlotTotal(
+    stats.technomage.slotProgress,
+    stats.attributes.reason,
+    earnedAp,
+  );
+  const spellSlots = totalSpellSlots - new Set(stats.technomage.spells).size;
   // Zuordnung über den Katalognamen (siehe parseTalentEntry) — ein
   // umbenanntes Talent findet seinen Regeltext also weiterhin.
   const byName = new Map(
@@ -157,7 +164,7 @@ function TalentSheet({
           </h3>
           <p className="pf-doc-meta">
             Spellplätze: {Math.max(0, spellSlots)} /{" "}
-            {technomageSpellSlotTotal(stats.experience)} frei
+            {totalSpellSlots} frei
           </p>
           {learnedSpells.length === 0 ? (
             <p className="pf-doc-empty">Noch keine Spells gelernt.</p>
@@ -306,6 +313,7 @@ export default function CharacterSheetPreview({
         characterName={input.characterName}
         stats={input.stats}
         talents={input.talents}
+        earnedAp={input.earnedAp ?? 0}
       />
       <RulesSheet
         characterName={input.characterName}

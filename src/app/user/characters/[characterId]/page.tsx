@@ -118,6 +118,7 @@ export default async function OwnCharacterPage({ params }: Props) {
                   portrait: sheet.portrait,
                   portraitCrop: sheet.portraitCrop,
                   stats: sheet.stats,
+                  earnedAp: account.earned,
                   bioHtml: character.bioHtml,
                   talents,
                   campaignRules,

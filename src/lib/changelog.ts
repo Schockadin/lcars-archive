@@ -151,7 +151,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Techno-Magie für Technomages",
     items: [
       {
-        text: "Technomages können Spells aus sieben Schulen lernen, Voraussetzungen automatisch erwerben und ihre Spell-Erklärungen auf dem Charakterbogen nachschlagen.",
+        text: "Technomages können Spells aus sieben Schulen lernen und filtern, Voraussetzungen automatisch erwerben und ihre Spell-Erklärungen auf dem Charakterbogen nachschlagen. Spellplätze wachsen bei Erschaffung, Organellen, FTL-Attunement und je 20 verdiente AP; jeder Meilenstein verwendet den damals gespeicherten Verstand-Wert.",
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },

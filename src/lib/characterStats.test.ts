@@ -73,6 +73,12 @@ describe("parseCharacterStats", () => {
       primarySchool: "defence",
       weakSchools: ["elements", "movement", "creation"],
       spells: ["personal-shield", "fireball"],
+      slotProgress: {
+        creationReason: null,
+        organellesReason: null,
+        ftlAttunementReason: null,
+        apMilestones: [],
+      },
     });
   });
 
