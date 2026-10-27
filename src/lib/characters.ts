@@ -1107,11 +1107,52 @@ export async function updateOwnCharacterStats(
 ): Promise<{ slug: string; name: string } | null> {
   const rows = await sql<{ slug: string; name: string }[]>`
     UPDATE characters
-    SET metadata = metadata || ${sql.json({ stats } as ReturnType<typeof JSON.parse>)},
+    SET metadata = COALESCE(metadata, '{}'::jsonb) ||
+          jsonb_build_object(
+            'stats',
+            ${sql.json(stats as ReturnType<typeof JSON.parse>)} ||
+              jsonb_build_object(
+                'technomage',
+                COALESCE(
+                  metadata #> '{stats,technomage}',
+                  ${sql.json(stats.technomage as ReturnType<typeof JSON.parse>)}
+                )
+              )
+          ),
         updated_at = NOW()
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
     RETURNING slug, name
   `;
+  return rows[0] ?? null;
+}
+
+// Aktualisiert nur den Techno-Magie-Teilbaum. Der Vergleich mit dem gelesenen
+// Stand verhindert, dass zwei gleichzeitige Spell-Käufe einander überschreiben;
+// jsonb-Merge bewahrt parallel gespeicherte Charakterwerte.
+export async function updateOwnCharacterTechnomage(
+  userId: number,
+  characterId: number,
+  expected: CharacterStats["technomage"],
+  next: CharacterStats["technomage"],
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`UPDATE characters
+    SET metadata = COALESCE(metadata, '{}'::jsonb) ||
+          jsonb_build_object(
+            'stats',
+            COALESCE(metadata -> 'stats', '{}'::jsonb) ||
+              jsonb_build_object('technomage', ${sql.json(next as ReturnType<typeof JSON.parse>)})
+          ),
+        updated_at = NOW()
+    WHERE id = ${characterId}
+      AND player_id = ${userId}
+      AND deleted_at IS NULL
+      AND COALESCE(metadata #>> '{stats,technomage,primarySchool}', '') =
+          ${expected.primarySchool ?? ''}
+      AND COALESCE(metadata #> '{stats,technomage,weakSchools}', '[]'::jsonb) =
+          ${sql.json(expected.weakSchools as ReturnType<typeof JSON.parse>)}
+      AND COALESCE(metadata #> '{stats,technomage,spells}', '[]'::jsonb) =
+          ${sql.json(expected.spells as ReturnType<typeof JSON.parse>)}
+    RETURNING slug`;
   return rows[0] ?? null;
 }
 

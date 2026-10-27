@@ -10,6 +10,14 @@ import {
 import type { CharacterStats } from "@/types/characterStats";
 import { CORE_RULES } from "@/lib/coreRules";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
+import {
+  getTechnomageSpell,
+  isTechnomageRole,
+  technomageSchoolLabel,
+  technomageSpellExplanation,
+  technomageSpellFluff,
+  technomageSpellSlotTotal,
+} from "@/lib/technomageSpellCatalog";
 
 // Der Charakterbogen als vierblättrige Vorschau — dasselbe, was der
 // PDF-Export erzeugt:
@@ -87,13 +95,20 @@ export interface CharacterSheetPreviewInput {
 
 function TalentSheet({
   characterName,
-  entries,
+  stats,
   talents,
 }: {
   characterName: string;
-  entries: string[];
+  stats: CharacterStats;
   talents: Talent[];
 }) {
+  const entries = stats.talents;
+  const learnedSpells = stats.technomage.spells
+    .map(getTechnomageSpell)
+    .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
+  const spellSlots =
+    technomageSpellSlotTotal(stats.experience) -
+    new Set(stats.technomage.spells).size;
   // Zuordnung über den Katalognamen (siehe parseTalentEntry) — ein
   // umbenanntes Talent findet seinen Regeltext also weiterhin.
   const byName = new Map(
@@ -134,6 +149,42 @@ function TalentSheet({
             </div>
           );
         })
+      )}
+      {isTechnomageRole(stats.characterRole) && (
+        <>
+          <h3 className="pf-doc-heading">
+            Spells <span className="pf-doc-heading-original">Techno-Magie</span>
+          </h3>
+          <p className="pf-doc-meta">
+            Spellplätze: {Math.max(0, spellSlots)} /{" "}
+            {technomageSpellSlotTotal(stats.experience)} frei
+          </p>
+          {learnedSpells.length === 0 ? (
+            <p className="pf-doc-empty">Noch keine Spells gelernt.</p>
+          ) : (
+            learnedSpells.map((spell) => (
+              <div key={spell.id} className="pf-doc-entry">
+                <div className="pf-doc-term">{spell.name}</div>
+                <div className="pf-doc-meta">
+                  {technomageSchoolLabel(spell.school)} · Fact Book S.{" "}
+                  {spell.sourcePage}
+                </div>
+                <p className="pf-doc-text">
+                  <strong>STA 2e: </strong>
+                  {technomageSpellExplanation(
+                    spell,
+                    stats.technomage.primarySchool,
+                    stats.technomage.weakSchools,
+                  )}
+                </p>
+                <p className="pf-doc-text">
+                  <strong>Fluff: </strong>
+                  {technomageSpellFluff(spell)}
+                </p>
+              </div>
+            ))
+          )}
+        </>
       )}
     </DocSheet>
   );
@@ -253,7 +304,7 @@ export default function CharacterSheetPreview({
       />
       <TalentSheet
         characterName={input.characterName}
-        entries={input.stats.talents}
+        stats={input.stats}
         talents={input.talents}
       />
       <RulesSheet

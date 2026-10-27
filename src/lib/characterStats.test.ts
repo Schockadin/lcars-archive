@@ -60,6 +60,22 @@ describe("parseCharacterStats", () => {
     expect(stats.talents).toEqual([]);
   });
 
+  it("normalisiert Techno-Magie-Schulen und gelernte Spells", () => {
+    const stats = parseCharacterStats({
+      technomage: {
+        primarySchool: "defence",
+        weakSchools: ["elements", "elements", "invalid", "movement", "defence", "creation"],
+        spells: ["personal-shield", "personal-shield", "  fireball  ", 42],
+      },
+    });
+
+    expect(stats.technomage).toEqual({
+      primarySchool: "defence",
+      weakSchools: ["elements", "movement", "creation"],
+      spells: ["personal-shield", "fireball"],
+    });
+  });
+
   it("verwirft Zahlen außerhalb des erlaubten Bereichs und Nicht-Ganzzahlen", () => {
     const stats = parseCharacterStats({
       // Attribute liegen zwischen 7 und 12, Disziplinen zwischen 1 und 5.

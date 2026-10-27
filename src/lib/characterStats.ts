@@ -12,7 +12,10 @@ import type {
   CharacterExperience,
   CharacterStats,
   PendingAdvancement,
+  TechnomageCharacterData,
+  TechnomageSchool,
 } from "@/types/characterStats";
+import { TECHNOMAGE_SCHOOL_IDS } from "@/types/characterStats";
 
 // Labels: deutsches Label plus der englische Begriff des offiziellen Bogens —
 // die Spielrunde nutzt beides gemischt (siehe Beispielbogen). Das Formular
@@ -170,6 +173,11 @@ export const EMPTY_CHARACTER_STATS: CharacterStats = {
   pendingAdvancements: [],
   pronouns: null,
   characterRole: null,
+  technomage: {
+    primarySchool: null,
+    weakSchools: [],
+    spells: [],
+  },
   assignment: null,
   environment: null,
   upbringing: null,
@@ -275,6 +283,30 @@ function normalizeList(value: unknown): string[] {
     .filter(Boolean);
 }
 
+function normalizeTechnomage(value: unknown): TechnomageCharacterData {
+  const source = asRecord(value);
+  const primarySchool =
+    typeof source.primarySchool === "string" &&
+    (TECHNOMAGE_SCHOOL_IDS as readonly string[]).includes(source.primarySchool)
+      ? (source.primarySchool as TechnomageSchool)
+      : null;
+  const weakSchools = [
+    ...new Set(
+      normalizeList(source.weakSchools).filter(
+        (school): school is TechnomageSchool =>
+          (TECHNOMAGE_SCHOOL_IDS as readonly string[]).includes(school) &&
+          school !== primarySchool,
+      ),
+    ),
+  ].slice(0, 3);
+
+  return {
+    primarySchool,
+    weakSchools,
+    spells: normalizeList(source.spells),
+  };
+}
+
 // Tolerante Normalisierung beliebiger jsonb-Daten auf die vollständige
 // CharacterStats-Form: fehlende/kaputte Felder werden zu null bzw. [], nie zu
 // undefined — die Anzeige und das Formular können sich so auf jedes Feld
@@ -314,6 +346,8 @@ export function parseCharacterStats(raw: unknown): CharacterStats {
         ? source.experience
         : null,
   };
+
+  stats.technomage = normalizeTechnomage(source.technomage);
 
   for (const field of TEXT_FIELDS) {
     stats[field.key] = normalizeText(source[field.key]);

@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.4",
+    title: "Techno-Magie für Technomages",
+    items: [
+      {
+        text: "Technomages können Spells aus sieben Schulen lernen, Voraussetzungen automatisch erwerben und ihre Spell-Erklärungen auf dem Charakterbogen nachschlagen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+    ],
+  },
+  {
     version: "2.3",
     title: "Chronologie für Notizen und Dateien",
     items: [

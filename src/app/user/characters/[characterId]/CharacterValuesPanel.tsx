@@ -23,6 +23,8 @@ import type { ApAccount } from "@/lib/apReasons";
 import type { Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
 import CharacterPanel from "./CharacterPanel";
+import TechnomageSpellsPanel from "./TechnomageSpellsPanel";
+import { isTechnomageRole } from "@/lib/technomageSpellCatalog";
 
 const initialState: CharacterPanelState = {};
 const initialAdvancementState: AdvancementActionResult = {};
@@ -78,7 +80,8 @@ export default function CharacterValuesPanel({
   const savedComplete = hasCompleteCreationValues(savedStats);
 
   return (
-    <CharacterPanel en="Values" de="Werte">
+    <>
+      <CharacterPanel en="Values" de="Werte">
       <div className="stat-editor-body">
         <form action={saveAction} className="flex flex-col gap-[12px]">
           <input type="hidden" name="userId" value={userId} />
@@ -182,6 +185,14 @@ export default function CharacterValuesPanel({
           </FormSuccess>
         )}
       </div>
-    </CharacterPanel>
+      </CharacterPanel>
+      {isTechnomageRole(savedStats.characterRole) && (
+        <TechnomageSpellsPanel
+          userId={userId}
+          characterId={characterId}
+          stats={savedStats}
+        />
+      )}
+    </>
   );
 }
