@@ -111,9 +111,10 @@ export default async function AdminCharactersPage() {
                   const primary = TECHNOMAGE_SCHOOLS.find(
                     (school) => school.id === techno.primarySchool,
                   );
-                  const weak = techno.weakSchools
-                    .map((id) => TECHNOMAGE_SCHOOLS.find((school) => school.id === id)?.label)
-                    .filter((label): label is string => Boolean(label));
+                  const weak = techno.weakSchools.flatMap((id) => {
+                    const school = TECHNOMAGE_SCHOOLS.find((entry) => entry.id === id);
+                    return school ? [school.label] : [];
+                  });
                   const spells = techno.spells
                     .map(getTechnomageSpell)
                     .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
