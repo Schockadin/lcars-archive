@@ -19,6 +19,7 @@ import {
 } from "@/lib/creationReset";
 import type { CharacterStats } from "@/types/characterStats";
 import { snapshotTechnomageApSlotReasons } from "@/lib/technomageSpellSlots";
+import { getTechnomageSpellSlotRules } from "@/lib/technomageSpellSlotSettings";
 
 function isTechnomageRole(role: string | null): boolean {
   return (role ?? "")
@@ -181,7 +182,10 @@ export async function advanceOwnCharacter(
   // Regelwerk VOR der Transaktion laden: src/lib/db.ts erlaubt nur EINE
   // Connection pro Prozess, eine zweite Abfrage innerhalb der offenen
   // Transaktion würde auf eine nie freiwerdende Connection warten.
-  const rules: AdvancementRules = await getAdvancementRules();
+  const [rules, technomageSlotRules]: [AdvancementRules, Awaited<ReturnType<typeof getTechnomageSpellSlotRules>>] = await Promise.all([
+    getAdvancementRules(),
+    getTechnomageSpellSlotRules(),
+  ]);
 
   return sql.begin(async (tx) => {
     const rows = await tx<{ slug: string; stats: unknown }[]>`
@@ -228,6 +232,7 @@ export async function advanceOwnCharacter(
         nextStats.technomage.slotProgress,
         balance?.earned ?? 0,
         stats.attributes.reason,
+        technomageSlotRules.apThreshold,
       );
       nextStats.technomage = {
         ...nextStats.technomage,

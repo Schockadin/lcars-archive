@@ -66,6 +66,7 @@ import {
   type Talent,
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
+import type { TechnomageSpellSlotRules } from "@/lib/technomageSpellSlotRules";
 import {
   DEFAULT_CROP,
   pdfCropBox,
@@ -384,6 +385,7 @@ export interface CharacterSheetPdfInput {
   stats: CharacterStats;
   // Insgesamt erhaltene AP für Technomage-Spellslot-Meilensteine.
   earnedAp?: number;
+  technomageSpellSlotRules?: TechnomageSpellSlotRules;
   // Katalog für den Spickzettel — der Regeltext steht nicht am Charakter.
   talents: Talent[];
   // Hausregeln der Runde (gepflegt unter /gm/campaign); leer = kein Abschnitt.
@@ -619,6 +621,7 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
     input.stats.technomage.slotProgress,
     input.stats.attributes.reason,
     input.earnedAp ?? 0,
+    input.technomageSpellSlotRules,
   );
   const spellSlots =
     totalSpellSlots - new Set(input.stats.technomage.spells).size;

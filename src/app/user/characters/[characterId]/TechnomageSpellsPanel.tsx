@@ -23,6 +23,7 @@ import type {
   CharacterStats,
   TechnomageSchool,
 } from "@/types/characterStats";
+import type { TechnomageSpellSlotRules } from "@/lib/technomageSpellSlotRules";
 import {
   buyTechnomageSpellAction,
   configureTechnomageSchoolsAction,
@@ -346,11 +347,13 @@ export default function TechnomageSpellsPanel({
   characterId,
   stats,
   earnedAp,
+  slotRules,
 }: {
   userId: number;
   characterId: number;
   stats: CharacterStats;
   earnedAp: number;
+  slotRules: TechnomageSpellSlotRules;
 }) {
   const [schoolIndex, setSchoolIndex] = useState(0);
   const [state, action, pending] = useActionState(
@@ -370,6 +373,7 @@ export default function TechnomageSpellsPanel({
     technomage.slotProgress,
     stats.attributes.reason,
     earnedAp,
+    slotRules,
   );
   const learnedCount = new Set(technomage.spells).size;
   const available = Math.max(0, total - learnedCount);
@@ -390,7 +394,7 @@ export default function TechnomageSpellsPanel({
           </h2>
           <p className="text-xs opacity-75">
             Jeder Spell belegt einen Platz. Erschaffung, Organellen,
-            FTL-Attunement und je 20 verdiente AP geben Slots; jede Stufe nutzt
+            FTL-Attunement und je {slotRules.apThreshold} verdiente AP geben Slots; jede Stufe nutzt
             den damals gespeicherten Verstand-Wert.
           </p>
         </div>

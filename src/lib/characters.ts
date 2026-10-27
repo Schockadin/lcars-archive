@@ -211,6 +211,55 @@ export async function getAllCharactersForAdmin(): Promise<Character[]> {
   return rows.map((row) => parseCharacter(row));
 }
 
+// Vollständige Technomage-Werte für die nur nach requireGM erreichbare
+// Übersicht auf /gm/characters. Die Charakterliste bleibt weiterhin schlank;
+// nur diese GM-Ansicht lädt die gewählten Schulen, Spells und Aptitudes.
+export interface GmTechnomageCharacterSummary {
+  id: number;
+  name: string;
+  playerId: number | null;
+  stats: CharacterStats;
+}
+
+export async function getTechnomageCharactersForGm(): Promise<
+  GmTechnomageCharacterSummary[]
+> {
+  "use cache";
+  cacheTag(cacheTags.characters);
+  cacheLife("max");
+  const rows = await sql<
+    {
+      id: number;
+      name: string;
+      player_id: number | null;
+      stats: unknown;
+    }[]
+  >`
+      SELECT c.id, c.name, c.player_id, c.metadata -> 'stats' AS stats
+      FROM characters c
+      WHERE c.deleted_at IS NULL AND c.is_draft = false
+        AND NOT EXISTS (
+          SELECT 1 FROM character_npc_conversions conversion
+          WHERE conversion.character_id = c.id
+        )
+        AND regexp_replace(
+          lower(COALESCE(c.metadata #>> '{stats,characterRole}', '')),
+          '[^a-z]',
+          '',
+          'g'
+        ) LIKE '%technomage%'
+      ORDER BY c.name ASC
+    `;
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    playerId: row.player_id,
+    stats: parseCharacterStats(
+      typeof row.stats === "string" ? JSON.parse(row.stats) : row.stats,
+    ),
+  }));
+}
+
 // Erschaffungs-Stand aller Charaktere für die Verwaltung der Spielleitung
 // (/gm/characters, Abschnitt „Erschaffung").
 //

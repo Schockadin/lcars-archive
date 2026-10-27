@@ -8,6 +8,7 @@ import {
   type Talent,
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
+import type { TechnomageSpellSlotRules } from "@/lib/technomageSpellSlotRules";
 import { CORE_RULES } from "@/lib/coreRules";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
 import {
@@ -85,6 +86,7 @@ export interface CharacterSheetPreviewInput {
   stats: CharacterStats;
   // Insgesamt erhaltene AP für Technomage-Spellslot-Meilensteine.
   earnedAp?: number;
+  technomageSpellSlotRules?: TechnomageSpellSlotRules;
   // Bereits gerendertes, bereinigtes Biografie-HTML (markdownToHtml). Der
   // Assistent lässt es beim Wechsel auf die Vorschau erzeugen, die
   // Charakterseite reicht das gespeicherte HTML durch.
@@ -100,11 +102,13 @@ function TalentSheet({
   stats,
   talents,
   earnedAp,
+  slotRules,
 }: {
   characterName: string;
   stats: CharacterStats;
   talents: Talent[];
   earnedAp: number;
+  slotRules?: TechnomageSpellSlotRules;
 }) {
   const entries = stats.talents;
   const learnedSpells = stats.technomage.spells
@@ -114,6 +118,7 @@ function TalentSheet({
     stats.technomage.slotProgress,
     stats.attributes.reason,
     earnedAp,
+    slotRules,
   );
   const spellSlots = totalSpellSlots - new Set(stats.technomage.spells).size;
   // Zuordnung über den Katalognamen (siehe parseTalentEntry) — ein
@@ -314,6 +319,7 @@ export default function CharacterSheetPreview({
         stats={input.stats}
         talents={input.talents}
         earnedAp={input.earnedAp ?? 0}
+        slotRules={input.technomageSpellSlotRules}
       />
       <RulesSheet
         characterName={input.characterName}

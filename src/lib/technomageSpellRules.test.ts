@@ -64,6 +64,35 @@ describe("Technomage spell catalog", () => {
     ).toBe(8);
   });
 
+  it("uses GM-configured bonuses, Reason modifiers, and AP thresholds", () => {
+    const rules = {
+      creationBaseSlots: 5,
+      creationBonusSlots: 2.5,
+      reasonBaseline: 7,
+      reasonModifier: 2,
+      organellesBonusSlots: 2.5,
+      ftlAttunementBonusSlots: 2.5,
+      apThreshold: 10,
+      apBonusSlots: 2.5,
+    };
+    const savedMilestones = snapshotTechnomageApSlotReasons(
+      {
+        creationReason: 7,
+        organellesReason: null,
+        ftlAttunementReason: null,
+        apMilestones: [],
+      },
+      20,
+      8,
+      rules.apThreshold,
+    );
+
+    expect(savedMilestones.apMilestones).toEqual([8, 8]);
+    expect(
+      technomageSpellSlotTotal(savedMilestones, 12, 20, rules),
+    ).toBe(18);
+  });
+
   it("translates targets and keeps school-specific round durations", () => {
     const armour = getTechnomageSpell("armour-lesser");
     const blurryImage = getTechnomageSpell("blurry-image");

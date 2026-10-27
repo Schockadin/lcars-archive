@@ -16,6 +16,7 @@ import {
   technomageSpellSlotTotal,
 } from "@/lib/technomageSpellCatalog";
 import { createSpellPurchasePlan } from "@/lib/technomageSpellRules";
+import { getTechnomageSpellSlotRules } from "@/lib/technomageSpellSlotSettings";
 import type { TechnomageSchool } from "@/types/characterStats";
 
 export interface TechnomageActionState {
@@ -177,7 +178,10 @@ export async function buyTechnomageSpellAction(
   }
 
   const saved = current.stats.technomage;
-  const account = await getApAccount(characterId);
+  const [account, slotRules] = await Promise.all([
+    getApAccount(characterId),
+    getTechnomageSpellSlotRules(),
+  ]);
   const plan = createSpellPurchasePlan({
     spellId,
     knownSpellIds: saved.spells,
@@ -185,6 +189,7 @@ export async function buyTechnomageSpellAction(
       saved.slotProgress,
       current.stats.attributes.reason,
       account.earned,
+      slotRules,
     ),
     primarySchool: saved.primarySchool,
     weakSchools: saved.weakSchools,
