@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#090d17" />
+    <meta name="description" content="Offlinefähiger, modularer Charaktereditor für Star Trek Adventures 2e." />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>STA Character Editor</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="Zum Charaktereditor">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span><strong>STA</strong><small>CHARACTER EDITOR</small></span>
+        </a>
+        <div class="topbar-actions">
+          <span id="connection-status" class="status-pill" role="status">Lokaler Speicher</span>
+          <button id="sync-button" class="button button-quiet" type="button">Jetzt synchronisieren</button>
+          <button id="install-button" class="button button-quiet hidden" type="button">App installieren</button>
+          <button id="app-update-button" class="button button-accent hidden" type="button">App aktualisieren</button>
+        </div>
+      </header>
+
+      <div class="intro-bar">
+        <div>
+          <p class="eyebrow">PERSONAL RECORD</p>
+          <h1>Charaktere</h1>
+          <p class="muted">Deine Änderungen werden auf diesem Gerät gespeichert und später mit LCARS abgeglichen.</p>
+        </div>
+        <div class="intro-meta"><span id="sync-detail">Offline bereit</span><span id="module-summary">STA 2e Grundmodul</span></div>
+      </div>
+
+      <nav class="tabs" aria-label="Bereiche">
+        <button class="tab active" data-panel="characters" type="button">Charaktere <span id="character-count" class="tab-count">0</span></button>
+        <button class="tab" data-panel="modules" type="button">Module <span id="module-count" class="tab-count">1</span></button>
+        <button class="tab" data-panel="conflicts" type="button">Konflikte <span id="conflict-count" class="tab-count">0</span></button>
+      </nav>
+
+      <main>
+        <section id="panel-characters" class="panel active" aria-labelledby="character-list-title">
+          <aside class="character-rail">
+            <div class="rail-heading">
+              <div><p class="eyebrow">PERSONENREGISTER</p><h2 id="character-list-title">Meine Charaktere</h2></div>
+              <button id="new-character" class="icon-button" type="button" aria-label="Neuen Charakter anlegen" title="Neuer Charakter">＋</button>
+            </div>
+            <label class="search-box"><span aria-hidden="true">⌕</span><input id="character-search" type="search" placeholder="Charakter suchen" aria-label="Charakter suchen" /></label>
+            <div id="character-list" class="character-list"></div>
+            <p id="empty-list" class="empty-note">Noch keine Charaktere angelegt.</p>
+          </aside>
+
+          <section class="editor-area" aria-label="Charakter bearbeiten">
+            <form id="character-form" class="character-form">
+              <div class="form-heading">
+                <div><p class="eyebrow">CHARAKTERBOGEN</p><h2 id="editor-title">Neuer Charakter</h2></div>
+                <div class="form-heading-actions"><span id="save-state" class="save-state">Entwurf</span><button id="save-character" class="button button-accent" type="submit">Speichern</button></div>
+              </div>
+
+              <div class="form-grid">
+                <label class="field field-wide"><span>Name</span><input name="name" maxlength="100" required autocomplete="off" placeholder="Vor- und Nachname" /></label>
+                <label class="field"><span>Spezies</span><input name="species" maxlength="80" list="species-options" autocomplete="off" placeholder="Spezies" /><datalist id="species-options"></datalist></label>
+                <label class="field"><span>Beruf / Laufbahn</span><input name="profession" maxlength="100" list="profession-options" autocomplete="off" placeholder="z. B. Wissenschaftsoffizier" /><datalist id="profession-options"></datalist></label>
+                <label class="field"><span>Konzept</span><input name="concept" maxlength="120" placeholder="Kurzbeschreibung" /></label>
+                <label class="field"><span>Herkunft</span><input name="upbringing" maxlength="120" placeholder="Herkunft und Prägung" /></label>
+                <label class="field"><span>Karriere</span><input name="career" maxlength="120" placeholder="Ausbildung und Werdegang" /></label>
+                <label class="field"><span>Rang</span><input name="rank" maxlength="80" placeholder="Rang oder Status" /></label>
+                <div id="custom-fields" class="form-grid field-wide custom-fields"></div>
+                <label class="field"><span>Freigabe</span><select name="visibility"><option value="private">Privat</option><option value="campaign">Kampagne</option></select><small>Geteilte Charaktere sind für angemeldete Kampagnenmitglieder sichtbar.</small></label>
+                <label class="field"><span>Erschaffungsmodus</span><select name="creationMethod" id="creation-method"><option value="points">Punkte</option><option value="ap">AP</option></select><small>Der aktive Regelmodul-Satz bestimmt die verfügbaren Modi.</small></label>
+              </div>
+
+              <div class="module-pins-wrap"><div class="section-heading"><div><p class="eyebrow">REGELSTAND</p><h3>Verwendete Module</h3></div><span class="muted small">Versionen bleiben am Charakter fixiert.</span></div><div id="module-pins" class="module-pins"></div></div>
+
+              <div class="stats-grid">
+                <section class="stat-card"><div class="section-heading"><div><p class="eyebrow">ATTRIBUTE</p><h3>Eigenschaften</h3></div><div class="stat-indicators"><span class="stat-total" id="attribute-total">42</span><small id="attribute-budget" class="stat-budget">Budget 56</small></div></div><div id="attribute-fields" class="numeric-fields"></div></section>
+                <section class="stat-card"><div class="section-heading"><div><p class="eyebrow">DISZIPLINEN</p><h3>Fertigkeiten</h3></div><div class="stat-indicators"><span class="stat-total" id="discipline-total">6</span><small id="discipline-budget" class="stat-budget">Budget 16</small></div></div><div id="discipline-fields" class="numeric-fields"></div></section>
+              </div>
+              <div id="rule-summary" class="rule-summary" role="status"></div>
+
+              <div class="form-grid text-grid">
+                <label class="field"><span>Werte <small>ein Eintrag pro Zeile</small></span><textarea name="values" rows="4" maxlength="2000" placeholder="Ich halte mein Wort.&#10;Wissen ist der beste Schutz."></textarea></label>
+                <label class="field"><span>Talente <small>ein Eintrag pro Zeile</small></span><textarea name="talents" rows="4" maxlength="2000" placeholder="Talent oder Spezialisierung"></textarea></label>
+                <label class="field"><span>Schwerpunkte <small>ein Eintrag pro Zeile</small></span><textarea name="focuses" rows="3" maxlength="2000" placeholder="Schwerpunkt oder Spezialisierung"></textarea></label>
+                <label class="field field-wide"><span>Notizen</span><textarea name="notes" rows="4" maxlength="10000" placeholder="Hintergrund, Ausrüstung, offene Fragen …"></textarea></label>
+              </div>
+              <p class="form-footnote">Privat gespeicherte Bögen gehören zu deinem LCARS-Konto. Kampagnenbögen kann die Spielleitung bearbeiten.</p>
+            </form>
+          </section>
+        </section>
+
+        <section id="panel-modules" class="panel module-panel" aria-labelledby="modules-title">
+          <div class="panel-heading"><div><p class="eyebrow">DECLARATIVE DATA PACKS</p><h2 id="modules-title">Regelmodule</h2><p class="muted">Module sind versionierte JSON-Daten. Sie können zusätzliche Spezies, Laufbahnen und Erschaffungsmodi bereitstellen, führen aber keinen Code aus.</p></div><div class="panel-actions"><select id="publish-scope" aria-label="Ablageort für importierte Module"><option value="private">Privat auf LCARS</option><option value="campaign">Für die Kampagne</option></select><label class="publish-check"><input id="publish-activate" type="checkbox" />Aktivieren</label><button id="check-modules" class="button button-quiet" type="button">Online nach Updates suchen</button><button id="import-module" class="button button-accent" type="button">Modul importieren</button><input id="module-file" type="file" accept="application/json,.json" hidden /></div></div>
+          <div id="module-list" class="module-list"></div>
+          <div class="module-help"><strong>Modulformat</strong><p>Jedes Paket enthält ein Manifest mit ID, Version und Schema-Version. Module können Spezies, Klassen/Laufbahnen, zusätzliche Charakterfelder und Erschaffungsregeln deklarieren. Die Kampagnenleitung kann freigegebene Versionen aktivieren; private Charaktere dürfen zusätzlich lokale oder persönliche Module verwenden.</p><div class="module-downloads"><a href="./modules/base-sta2e.json" download>STA 2e Grundmodul herunterladen</a><a href="./modules/example-technomage.json" download>Technomage-Beispielmodul herunterladen</a></div></div>
+        </section>
+
+        <section id="panel-conflicts" class="panel conflict-panel" aria-labelledby="conflicts-title">
+          <div class="panel-heading"><div><p class="eyebrow">SYNC REVIEW</p><h2 id="conflicts-title">Synchronisationskonflikte</h2><p class="muted">Beide Fassungen bleiben erhalten, bis du entscheidest, welche weiterverwendet wird.</p></div></div>
+          <div id="conflict-list" class="conflict-list"></div>
+          <p id="no-conflicts" class="empty-note">Keine offenen Konflikte.</p>
+        </section>
+      </main>
+
+      <footer><span>STA CHARACTER EDITOR <span class="version-label">v0.3.1</span></span><span>Offline zuerst · Synchronisierung bei Verbindung</span></footer>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
