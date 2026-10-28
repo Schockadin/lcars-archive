@@ -11,7 +11,10 @@ import {
   snapshotTechnomageApSlotReasons,
   technomageSpellSlotTotal,
 } from "@/lib/technomageSpellSlots";
-import { createSpellPurchasePlan } from "@/lib/technomageSpellRules";
+import {
+  createSpellPurchasePlan,
+  getSpellPurchaseSlotCost,
+} from "@/lib/technomageSpellRules";
 
 const schools = ["elements", "movement", "creation"] as const;
 
@@ -140,6 +143,32 @@ describe("Technomage spell catalog", () => {
     expect(
       spellPrerequisiteGroups("elemental-resistance-lesser")[0],
     ).toContain("create-fire");
+  });
+
+  it("reports the purchase cost including prerequisites and its slot threshold", () => {
+    const input = {
+      spellId: "skin-of-wood",
+      knownSpellIds: [],
+      primarySchool: "defence" as const,
+      weakSchools: [...schools],
+    };
+    const cost = getSpellPurchaseSlotCost(input);
+
+    expect(cost).not.toBeNull();
+    if (cost === null) return;
+
+    const exactlyAffordable = createSpellPurchasePlan({
+      ...input,
+      slotTotal: cost,
+    });
+    const oneShort = createSpellPurchasePlan({
+      ...input,
+      slotTotal: cost - 1,
+    });
+
+    expect(exactlyAffordable.ok).toBe(true);
+    expect(oneShort.ok).toBe(false);
+    expect(cost).toBeGreaterThan(1);
   });
 
   it("rejects a purchase when the full prerequisite chain exceeds available slots", () => {

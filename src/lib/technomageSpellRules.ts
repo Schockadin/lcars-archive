@@ -1,6 +1,7 @@
 import type { TechnomageSchool } from "@/types/characterStats";
 import {
   TECHNOMAGE_SCHOOLS,
+  TECHNOMAGE_SPELLS,
   getTechnomageSpell,
   spellPrerequisiteGroups,
 } from "@/lib/technomageSpellCatalog";
@@ -152,6 +153,16 @@ export function createSpellPurchasePlan(
     };
   }
   return { ok: true, spellIds: [...planned] };
+}
+
+export function getSpellPurchaseSlotCost(
+  input: Omit<SpellPurchasePlanInput, "slotTotal">,
+): number | null {
+  const plan = createSpellPurchasePlan({
+    ...input,
+    slotTotal: input.knownSpellIds.length + TECHNOMAGE_SPELLS.length,
+  });
+  return plan.ok ? plan.spellIds.length : null;
 }
 
 export function spellTreeDepth(

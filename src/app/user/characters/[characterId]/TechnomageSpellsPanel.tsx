@@ -17,6 +17,7 @@ import {
   type TechnomageSpell,
 } from "@/lib/technomageSpellCatalog";
 import {
+  getSpellPurchaseSlotCost,
   spellTreeDepth,
 } from "@/lib/technomageSpellRules";
 import type {
@@ -215,6 +216,8 @@ function SpellTree({
   weakSchools,
   pending,
   searchQuery,
+  availableSlots,
+  reachableOnly,
 }: {
   schoolId: TechnomageSchool;
   knownSpellIds: readonly string[];
@@ -222,28 +225,57 @@ function SpellTree({
   weakSchools: readonly TechnomageSchool[];
   pending: boolean;
   searchQuery: string;
+  availableSlots: number;
+  reachableOnly: boolean;
 }) {
   const spells = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase();
-    return TECHNOMAGE_SPELLS.filter((spell) => {
-      if (spell.school !== schoolId) return false;
-      if (!query) return true;
-      const searchable = [
-        spell.name,
-        spell.requirements,
-        spell.elementalCategory ?? "",
-        technomageSpellFluff(spell),
-        technomageSpellExplanation(spell, primarySchool, weakSchools),
-      ]
-        .join(" ")
-        .toLocaleLowerCase();
-      return searchable.includes(query);
-    }).sort(
-      (a, b) =>
-        spellTreeDepth(a.id, schoolId) - spellTreeDepth(b.id, schoolId) ||
-        a.name.localeCompare(b.name),
-    );
-  }, [schoolId, searchQuery, primarySchool, weakSchools]);
+    return TECHNOMAGE_SPELLS.filter((spell) => spell.school === schoolId)
+      .map((spell) => ({
+        spell,
+        slotCost: getSpellPurchaseSlotCost({
+          spellId: spell.id,
+          knownSpellIds,
+          primarySchool,
+          weakSchools,
+        }),
+      }))
+      .filter(({ spell, slotCost }) => {
+        if (
+          reachableOnly &&
+          (knownSpellIds.includes(spell.id) ||
+            slotCost === null ||
+            slotCost > availableSlots)
+        ) {
+          return false;
+        }
+        if (!query) return true;
+        const searchable = [
+          spell.name,
+          spell.requirements,
+          spell.elementalCategory ?? "",
+          technomageSpellFluff(spell),
+          technomageSpellExplanation(spell, primarySchool, weakSchools),
+        ]
+          .join(" ")
+          .toLocaleLowerCase();
+        return searchable.includes(query);
+      })
+      .sort(
+        (a, b) =>
+          spellTreeDepth(a.spell.id, schoolId) -
+            spellTreeDepth(b.spell.id, schoolId) ||
+          a.spell.name.localeCompare(b.spell.name),
+      );
+  }, [
+    schoolId,
+    searchQuery,
+    primarySchool,
+    weakSchools,
+    knownSpellIds,
+    availableSlots,
+    reachableOnly,
+  ]);
   const known = new Set(knownSpellIds);
 
   return (
@@ -253,7 +285,7 @@ function SpellTree({
           Keine passenden Spells in dieser Schule.
         </li>
       )}
-      {spells.map((spell) => {
+      {spells.map(({ spell, slotCost }) => {
         const learned = known.has(spell.id);
         const prerequisiteGroups = spellPrerequisiteGroups(spell.id);
         const prerequisiteIds = prerequisiteGroups.flat();
@@ -325,8 +357,13 @@ function SpellTree({
                 )}
                 {learned ? (
                   <span aria-label="Gelernt">✓ Gelernt</span>
+                ) : slotCost === null ? (
+                  <span>Nicht erreichbar</span>
                 ) : (
-                  <span>Lernen</span>
+                  <span>
+                    {slotCost} {slotCost === 1 ? "Spellplatz" : "Spellplätze"}
+                    {slotCost > 1 ? " inkl. Voraussetzungen" : ""}
+                  </span>
                 )}
               </span>
             </button>
@@ -365,6 +402,7 @@ export default function TechnomageSpellsPanel({
     initialActionState,
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [reachableOnly, setReachableOnly] = useState(false);
   useActionFeedback(state);
   useActionFeedback(milestoneState);
 
@@ -560,6 +598,19 @@ export default function TechnomageSpellsPanel({
               className="w-full rounded-[8px] border border-lcars-border bg-lcars-surface px-[10px] py-[8px] text-lcars-text placeholder:opacity-60"
             />
           </label>
+          <label className="flex items-center gap-[8px] text-sm">
+            <input
+              type="checkbox"
+              checked={reachableOnly}
+              onChange={(event) => setReachableOnly(event.target.checked)}
+              className="accent-lcars-primary"
+            />
+            Nur mit den freien Spellplätzen erreichbare Spells
+          </label>
+          <p className="text-xs opacity-70">
+            Die Kosten berücksichtigen Spells, die beim Kauf als Voraussetzung
+            automatisch mitgelernt werden.
+          </p>
           <form action={action} className="flex flex-col gap-[10px]">
             <input type="hidden" name="userId" value={userId} />
             <input type="hidden" name="characterId" value={characterId} />
@@ -570,6 +621,8 @@ export default function TechnomageSpellsPanel({
               weakSchools={technomage.weakSchools}
               pending={pending}
               searchQuery={searchQuery}
+              availableSlots={available}
+              reachableOnly={reachableOnly}
             />
             <FormError message={state.error} />
           </form>
