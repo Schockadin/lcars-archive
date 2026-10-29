@@ -1,5 +1,5 @@
 export const BASE_MODULE_ID = "sta2e.core";
-export const BASE_MODULE_VERSION = "1.1.0";
+export const BASE_MODULE_VERSION = "1.2.0";
 
 export const BASE_CHARACTER = {
   name: "",

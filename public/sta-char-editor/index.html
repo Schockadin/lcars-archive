@@ -64,7 +64,8 @@
               <div class="form-grid">
                 <label class="field field-wide"><span><span>Name</span><small>Name</small></span><input name="name" maxlength="100" required autocomplete="off" placeholder="Vor- und Nachname" /></label>
                 <label class="field"><span><span>Species</span><small>Spezies</small></span><input name="species" maxlength="80" list="species-options" autocomplete="off" placeholder="Species / Spezies" /><datalist id="species-options"></datalist></label>
-                <label class="field"><span><span>Profession / Career</span><small>Beruf / Laufbahn</small></span><input name="profession" maxlength="100" list="profession-options" autocomplete="off" placeholder="e.g. Science Officer / Wissenschaftsoffizier" /><datalist id="profession-options"></datalist></label>
+                <label class="field"><span><span>Role</span><small>Rolle / Laufbahn</small></span><select name="profession" id="profession-select"><option value="">Choose a role / Rolle wählen</option></select><small>Roles come from the selected rule modules / Rollen stammen aus den gewählten Regelmodulen.</small></label>
+                <label class="field hidden" id="custom-profession-field"><span><span>Custom role</span><small>Eigene Rolle</small></span><input id="custom-profession" name="customProfession" maxlength="100" autocomplete="off" placeholder="Enter a role / Rolle eingeben" /></label>
                 <label class="field"><span><span>Concept</span><small>Konzept</small></span><input name="concept" maxlength="120" placeholder="Short description / Kurzbeschreibung" /></label>
                 <label class="field"><span><span>Upbringing</span><small>Herkunft</small></span><input name="upbringing" maxlength="120" placeholder="Background / Herkunft und Prägung" /></label>
                 <label class="field"><span><span>Career</span><small>Karriere</small></span><input name="career" maxlength="120" placeholder="Training and career / Ausbildung und Werdegang" /></label>
@@ -107,7 +108,7 @@
         </section>
       </main>
 
-      <footer><span>STA CHARACTER EDITOR <span class="version-label">v0.4.0</span></span><span>Offline first · sync when online / Offline zuerst · Sync bei Verbindung</span></footer>
+      <footer><span>STA CHARACTER EDITOR <span class="version-label">v0.4.1</span></span><span>Offline first · sync when online / Offline zuerst · Sync bei Verbindung</span></footer>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
     <dialog id="catalog-dialog" class="catalog-dialog"><div class="catalog-dialog-content"><div class="section-heading"><div><p class="eyebrow">STA 2E CATALOG</p><h2 id="catalog-title"></h2></div><button id="catalog-close" class="button button-quiet" type="button">Close / Schließen</button></div><div class="catalog-controls"><label class="field"><span><span>Search</span><small>Suche</small></span><input id="catalog-search" type="search" autocomplete="off" /></label><label class="field"><span id="catalog-filter-label"><span>Category</span><small>Kategorie</small></span><select id="catalog-filter"></select></label><label id="eligibility-filter" class="eligibility-filter"><input id="only-eligible" type="checkbox" /><span><span>Only eligible</span><small>Nur erfüllbare Voraussetzungen</small></span></label></div><p id="catalog-count" class="muted"></p><div id="catalog-results" class="catalog-results"></div></div></dialog>

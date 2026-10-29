@@ -2,7 +2,7 @@
   "manifest": {
     "schemaVersion": 1,
     "id": "sta2e.core",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "title": "Star Trek Adventures 2e – Core Module",
     "description": "Core rules and creation methods for STA 2e. / Grundregeln und Erschaffungsmethoden für STA 2e.",
     "titleDe": "Grundmodul"
@@ -118,7 +118,17 @@
       "original": "Klingon"
     }
   ],
-  "professions": [],
+  "professions": [
+    { "id": "command-officer", "label": "Kommandooffizier*in", "original": "Command Officer" },
+    { "id": "conn-officer", "label": "Steuerungsoffizier*in", "original": "Conn Officer" },
+    { "id": "engineering-officer", "label": "Technikoffizier*in", "original": "Engineering Officer" },
+    { "id": "security-officer", "label": "Sicherheitsoffizier*in", "original": "Security Officer" },
+    { "id": "science-officer", "label": "Wissenschaftsoffizier*in", "original": "Science Officer" },
+    { "id": "medical-officer", "label": "Medizinische*r Offizier*in", "original": "Medical Officer" },
+    { "id": "operations-officer", "label": "Operations-Offizier*in", "original": "Operations Officer" },
+    { "id": "captain", "label": "Kapitän*in", "original": "Captain" },
+    { "id": "first-officer", "label": "Erste*r Offizier*in", "original": "First Officer" }
+  ],
   "creationRules": {
     "methods": [
       "points",

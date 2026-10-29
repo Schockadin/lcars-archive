@@ -172,12 +172,71 @@ function updateTotals() {
   summary.classList.toggle("warning", budget.violations.length > 0);
 }
 
-function renderDataLists(customFieldValues = {}) {
+function roleCatalogPacks() {
+  const visibility = form.elements.namedItem("visibility")?.value || "private";
+  if (visibility !== "campaign") return allAvailablePacks();
+  const versions = selectedModuleVersions();
+  const campaigns = new Map();
+  for (const entry of state.modules) {
+    if (entry.scope === "campaign" && entry.active && versions[entry.pack.manifest.id] === entry.pack.manifest.version) {
+      campaigns.set(formatModuleKey(entry.pack), entry.pack);
+    }
+  }
+  for (const entry of state.serverModules) {
+    if (entry.scope === "campaign" && entry.active && versions[entry.pack.manifest.id] === entry.pack.manifest.version) {
+      campaigns.set(formatModuleKey(entry.pack), entry.pack);
+    }
+  }
+  const base = allAvailablePacks().find((pack) => pack.manifest.id === BASE_MODULE_ID);
+  if (base) campaigns.set(formatModuleKey(base), base);
+  return [...campaigns.values()];
+}
+
+function setProfessionValue(profession = "") {
+  const select = byId("profession-select");
+  const customField = byId("custom-profession-field");
+  const customInput = byId("custom-profession");
+  const value = String(profession || "").trim();
+  const option = [...select.options].find((item) => item.value && item.value !== "__custom__" && normalized(item.value) === normalized(value));
+  if (option) {
+    select.value = option.value;
+    customInput.value = "";
+    customField.classList.add("hidden");
+  } else if (value) {
+    select.value = "__custom__";
+    customInput.value = value;
+    customField.classList.remove("hidden");
+  } else {
+    select.value = "";
+    customInput.value = "";
+    customField.classList.add("hidden");
+  }
+}
+
+function renderRoleOptions(currentProfession = "") {
+  const roles = new Map();
+  for (const pack of roleCatalogPacks()) {
+    for (const item of [...(pack.professions || []), ...(pack.classes || [])]) {
+      const english = String(displayLabel(item) || "").trim();
+      const key = normalized(english);
+      if (!key || roles.has(key)) continue;
+      const german = [item.label, item.name, item.labelDe, item.nameDe].find((label) => label && normalized(label) !== key) || "";
+      roles.set(key, { english, german, moduleId: pack.manifest.id, version: pack.manifest.version });
+    }
+  }
+  const select = byId("profession-select");
+  select.innerHTML = `<option value="">Choose a role / Rolle wählen</option>${[...roles.values()].map((role) => `<option value="${escapeHtml(role.english)}" data-module-id="${escapeHtml(role.moduleId)}" data-module-version="${escapeHtml(role.version)}">${escapeHtml(role.english)}${role.german ? ` / ${escapeHtml(role.german)}` : ""}</option>`).join("")}<option value="__custom__">Other role / Andere Rolle</option>`;
+  setProfessionValue(currentProfession);
+}
+
+function renderDataLists(customFieldValues = {}, currentProfession = undefined) {
   const packs = selectedModulePacks();
   const species = packs.flatMap((pack) => pack.species || []);
-  const professions = packs.flatMap((pack) => [...(pack.professions || []), ...(pack.classes || [])]);
   byId("species-options").innerHTML = [...new Set(species.map(displayLabel).filter(Boolean))].map((label) => `<option value="${escapeHtml(label)}"></option>`).join("");
-  byId("profession-options").innerHTML = [...new Set(professions.map(displayLabel).filter(Boolean))].map((label) => `<option value="${escapeHtml(label)}"></option>`).join("");
+  const savedProfession = currentProfession === undefined
+    ? (byId("profession-select").value === "__custom__" ? byId("custom-profession").value : byId("profession-select").value)
+    : currentProfession;
+  renderRoleOptions(savedProfession);
 
   const rules = rulesFromModules(packs);
   const modes = new Set(["points", "ap"]);
@@ -397,7 +456,9 @@ function spellDepth(spellId, spellMap, visited = new Set()) {
 function renderTechnomageSpells() {
   const section = byId("technomage-spells");
   const packs = selectedModulePacks();
-  const module = packs.find((pack) => pack.spells?.length && pack.spellTrees?.length);
+  const profession = normalized(readForm().data.profession);
+  const module = packs.find((pack) => pack.spells?.length && pack.spellTrees?.length &&
+    [...(pack.professions || []), ...(pack.classes || [])].some((item) => normalized(displayLabel(item)) === profession));
   if (!module) { section.classList.add("hidden"); return; }
   section.classList.remove("hidden");
   const spells = module.spells;
@@ -582,7 +643,7 @@ function readForm() {
     data: {
       name: String(data.get("name") || "").trim(),
       species: String(data.get("species") || "").trim(),
-      profession: String(data.get("profession") || "").trim(),
+      profession: String(data.get("profession") === "__custom__" ? data.get("customProfession") : data.get("profession") || "").trim(),
       concept: String(data.get("concept") || "").trim(),
       upbringing: String(data.get("upbringing") || "").trim(),
       career: String(data.get("career") || "").trim(),
@@ -609,7 +670,6 @@ function fillForm(record) {
   const value = (name, fallback = "") => { const field = form.elements.namedItem(name); if (field) field.value = data[name] ?? fallback; };
   value("name");
   value("species");
-  value("profession");
   value("concept");
   value("upbringing");
   value("career");
@@ -619,7 +679,7 @@ function fillForm(record) {
   value("values", (data.values || []).join("\n"));
   value("notes");
   renderPins({ ...(record?.moduleVersions || {}), [BASE_MODULE_ID]: BASE_MODULE_VERSION });
-  renderDataLists(record?.data?.customFields || {});
+  renderDataLists(record?.data?.customFields || {}, data.profession || "");
   renderStatFields(data);
   byId("editor-title").textContent = data.name || (record ? "Charakter bearbeiten" : "Neuer Charakter");
   byId("save-state").textContent = record?.conflict ? "Konflikt prüfen" : (record?.localRevision > record?.syncedLocalRevision ? "Nicht synchronisiert" : "Lokal gespeichert");
@@ -687,7 +747,7 @@ function showEditorNew() {
   const selected = Object.fromEntries(activeModulePacks().map((pack) => [pack.manifest.id, pack.manifest.version]));
   selected[BASE_MODULE_ID] = BASE_MODULE_VERSION;
   renderPins(selected);
-  renderDataLists();
+  renderDataLists({}, data.profession);
   renderStatFields(data);
   void renderCharacters();
 }
@@ -1060,16 +1120,34 @@ function bindEvents() {
   });
   byId("character-form").addEventListener("change", (event) => {
     if (event.target.name === "creationMethod") updateTotals();
+    if (event.target.name === "profession") {
+      const roleOption = event.target.selectedOptions[0];
+      if (event.target.value === "__custom__") {
+        byId("custom-profession-field").classList.remove("hidden");
+        byId("custom-profession").focus();
+        renderTechnomageSpells();
+        return;
+      }
+      byId("custom-profession-field").classList.add("hidden");
+      const current = readForm();
+      const selected = { ...current.moduleVersions };
+      if (roleOption?.dataset.moduleId && roleOption?.dataset.moduleVersion) {
+        selected[roleOption.dataset.moduleId] = roleOption.dataset.moduleVersion;
+      }
+      renderPins(selected);
+      renderDataLists(current.data.customFields, current.data.profession);
+      renderStatFields(current.data);
+    }
     if (event.target.name === "module-pin") {
       const current = readForm();
-      renderDataLists(current.data.customFields);
+      renderDataLists(current.data.customFields, current.data.profession);
       renderStatFields(current.data);
     }
     if (event.target.name === "visibility") {
       const current = readForm();
       const active = state.selectedCharacter?.moduleVersions || Object.fromEntries(activeModulePacks().map((pack) => [pack.manifest.id, pack.manifest.version]));
       renderPins(active);
-      renderDataLists(current.data.customFields);
+      renderDataLists(current.data.customFields, current.data.profession);
       renderStatFields(current.data);
     }
   });
