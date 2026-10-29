@@ -558,6 +558,35 @@ function spellDepth(spellId, spellMap, visited = new Set()) {
   return deps.length ? 1 + Math.max(...deps.map((item) => spellDepth(item.id, spellMap, next))) : 0;
 }
 
+function spellPurchasePlan(spellId, spellMap, knownSpellIds) {
+  const known = new Set(knownSpellIds);
+  const planned = new Set(known);
+  const addSpell = (id, visiting = new Set()) => {
+    if (planned.has(id) || visiting.has(id)) return;
+    const spell = spellMap.get(id);
+    if (!spell) return;
+    const next = new Set(visiting);
+    next.add(id);
+    for (const group of spell.prerequisiteGroups || (spell.prerequisites || []).map((dependency) => [dependency])) {
+      if (group.some((dependency) => planned.has(dependency))) continue;
+      const dependency = group.find((candidate) => spellMap.has(candidate));
+      if (dependency) addSpell(dependency, next);
+    }
+    planned.add(id);
+  };
+  addSpell(spellId);
+  const plannedSpellIds = [...planned];
+  const addedSpellIds = plannedSpellIds.filter((id) => !known.has(id));
+  const prerequisitesMet = addedSpellIds.every((id) => {
+    const spell = spellMap.get(id);
+    return (spell?.prerequisiteGroups || (spell?.prerequisites || []).map((dependency) => [dependency]))
+      .every((group) => group.some((dependency) => planned.has(dependency)));
+  });
+  const target = spellMap.get(spellId);
+  const chaosSpellsRequired = Number((target?.requirements || "").match(/at least\s+(\d+)\s+(?:other\s+)?chaos spells/i)?.[1] || 0);
+  const chaosRequirementMet = chaosSpellsRequired <= plannedSpellIds.length - 1;
+  return { plannedSpellIds, addedSpellIds, slotCost: addedSpellIds.length, prerequisitesMet, chaosSpellsRequired, chaosRequirementMet };
+}
 function renderTechnomageSpells() {
   const section = byId("technomage-spells");
   const packs = selectedModulePacks();
@@ -611,12 +640,34 @@ function renderTechnomageSpells() {
   const usedText = known.size + " / " + cap + " spell slots used · " + (cap - known.size) + " free / " + known.size + " von " + cap + " Spellplätzen belegt · " + (cap - known.size) + " frei.";
   const formulaText = "Capacity / Kapazität: " + slotCalculation.baseSlots + " base / Basis + " + slotCalculation.talentCount + " talent(s) / Talent(e) × " + slotCalculation.bonusPerSource + " + " + slotCalculation.apSteps + " completed 20 AP step(s) / volle 20-AP-Schritte × " + slotCalculation.bonusPerSource + " = " + cap + ". Bonus rounded up per source / Bonus je Quelle aufgerundet.";
   byId("spell-slot-count").textContent = usedText + " " + formulaText;
-  byId("spell-tree").innerHTML = (selectedTree.spellIds || []).map((id) => spellMap.get(id)).filter(Boolean).sort((a, b) => spellDepth(a.id, spellMap) - spellDepth(b.id, spellMap) || a.name.localeCompare(b.name)).map((spell) => {
+  const search = normalized(byId("spell-search").value);
+  const onlyReachable = byId("only-reachable-spells").checked;
+  const orderedSpells = (selectedTree.spellIds || []).map((id) => spellMap.get(id)).filter(Boolean)
+    .sort((a, b) => spellDepth(a.id, spellMap) - spellDepth(b.id, spellMap) || a.name.localeCompare(b.name));
+  const rows = orderedSpells.map((spell) => {
+    const plan = spellPurchasePlan(spell.id, spellMap, known);
+    const learned = known.has(spell.id);
+    const primarySchoolRequirement = /as a primary (?:aptitude|school)/i.test(spell.requirements || "")
+      ? TECHNOMAGE_SCHOOLS.find((school) => (spell.requirements || "").toLowerCase().includes(school.en.toLowerCase()))?.id
+      : null;
+    const schoolsConfigured = Boolean(tech.primarySchool && (tech.weakSchools || []).length === 3);
+    const schoolAllowed = !primarySchoolRequirement || tech.primarySchool === primarySchoolRequirement;
+    const reachable = learned || (schoolsConfigured && schoolAllowed && plan.prerequisitesMet && plan.chaosRequirementMet && plan.plannedSpellIds.length <= cap);
+    const queryText = normalized([spell.name, spell.requirements, spell.school, spell.elementalCategory, spell.effect].filter(Boolean).join(" "));
+    return { spell, plan, learned, reachable, matches: !search || queryText.includes(search) };
+  }).filter((entry) => entry.matches && (!onlyReachable || entry.reachable));
+  const spellRowsHtml = rows.map(({ spell, plan, learned, reachable }) => {
     const prerequisiteText = (spell.prerequisiteGroups || [spell.prerequisites || []]).map((group) => group.map((id) => spellMap.get(id)?.name).filter(Boolean).join(" or ")).filter(Boolean).join(" + ");
-    const schoolRequirement = /as a primary (?:aptitude|school)/i.test(spell.requirements || "") ? TECHNOMAGE_SCHOOLS.find((school) => (spell.requirements || "").toLowerCase().includes(school.en.toLowerCase()))?.id : null;
-    const disabled = !known.has(spell.id) && (!tech.primarySchool || (tech.weakSchools || []).length !== 3 || (schoolRequirement && tech.primarySchool !== schoolRequirement));
-    return `<article class="spell-item ${known.has(spell.id) ? "learned" : ""}" style="margin-left:${spellDepth(spell.id, spellMap) * 12}px"><div><strong>${escapeHtml(spell.name)}</strong><small>${escapeHtml(selectedTree.original || selectedTree.label)} · Tier ${spellDepth(spell.id, spellMap) + 1}</small>${prerequisiteText ? `<small>Prerequisite / Voraussetzung: ${escapeHtml(prerequisiteText)}</small>` : ""}<small>${escapeHtml(spell.requirements || "No listed requirements")}</small></div><button type="button" class="button ${known.has(spell.id) ? "button-quiet" : "button-accent"}" data-spell-action="${known.has(spell.id) ? "forget" : "learn"}" data-spell-id="${escapeHtml(spell.id)}" ${disabled ? "disabled" : ""}>${known.has(spell.id) ? "Learned / Gelernt" : "Learn / Lernen"}</button></article>`;
+    const slotCostText = learned
+      ? "Spell slot cost / Spellslot-Kosten: 1 slot / Platz · already learned / bereits gelernt"
+      : "Spell slot cost / Spellslot-Kosten: 1 slot / Platz · total to learn now incl. missing prerequisites / insgesamt inkl. fehlender Voraussetzungen: " + plan.slotCost;
+    const disabled = !learned && !reachable;
+    const tier = spellDepth(spell.id, spellMap) + 1;
+    const buttonLabel = learned ? "Learned / Gelernt" : "Learn / Lernen";
+    const buttonClass = learned ? "button-quiet" : "button-accent";
+    return '<article class="spell-item ' + (learned ? "learned" : "") + '" style="margin-left:' + (spellDepth(spell.id, spellMap) * 12) + 'px"><div><strong>' + escapeHtml(spell.name) + '</strong><small>' + escapeHtml(selectedTree.original || selectedTree.label) + " · Tier " + tier + '</small><small>' + escapeHtml(slotCostText) + '</small>' + (prerequisiteText ? '<small>Prerequisite / Voraussetzung: ' + escapeHtml(prerequisiteText) + '</small>' : "") + '<small>' + escapeHtml(spell.requirements || "No listed requirements") + '</small></div><button type="button" class="button ' + buttonClass + '" data-spell-action="' + (learned ? "forget" : "learn") + '" data-spell-id="' + escapeHtml(spell.id) + '" ' + (disabled ? "disabled" : "") + '>' + buttonLabel + '</button></article>';
   }).join("");
+  byId("spell-tree").innerHTML = spellRowsHtml || '<p class="empty-note">No spells match these filters / Keine Spells passen zu den Filtern.</p>';
   byId("spell-tree").querySelectorAll("[data-spell-action]").forEach((button) => button.addEventListener("click", () => {
     const id = button.dataset.spellId;
     const current = new Set(state.technomageData?.spells || []);
@@ -625,21 +676,13 @@ function renderTechnomageSpells() {
       if (inUse) { showToast("A learned spell depends on this spell / Ein gelernter Spell benötigt diesen Spell.", "error"); return; }
       current.delete(id);
     } else {
-      const addPrerequisites = (spellId, seen = new Set()) => {
-        if (seen.has(spellId) || current.has(spellId)) return;
-        seen.add(spellId);
-        const spellToAdd = spellMap.get(spellId);
-        for (const group of spellToAdd?.prerequisiteGroups || (spellToAdd?.prerequisites || []).map((id) => [id])) {
-          if (group.some((dependency) => current.has(dependency))) continue;
-          const dependency = group.find((candidate) => spellMap.has(candidate));
-          if (dependency) addPrerequisites(dependency, seen);
-        }
-        current.add(spellId);
-      };
-      const requiredCount = Number((spellMap.get(id)?.requirements || "").match(/at least\s+(\d+)\s+(?:other\s+)?chaos spells/i)?.[1] || 0);
-      addPrerequisites(id);
-      if (requiredCount > current.size - 1) { showToast(`This spell requires at least ${requiredCount} already learned spells / Dieser Spell setzt mindestens ${requiredCount} bereits gelernte Spells voraus.`, "error"); return; }
-      if (current.size > cap) { showToast(`Not enough spell slots; ${current.size - cap} more needed / Nicht genug Spellplätze; ${current.size - cap} fehlen.`, "error"); return; }
+      const plan = spellPurchasePlan(id, spellMap, current);
+      if (!plan.prerequisitesMet) { showToast("A spell prerequisite is unavailable / Eine Spell-Voraussetzung ist nicht verfügbar.", "error"); return; }
+      if (!plan.chaosRequirementMet) { showToast("This spell requires at least " + plan.chaosSpellsRequired + " already learned spells / Dieser Spell setzt mindestens " + plan.chaosSpellsRequired + " bereits gelernte Spells voraus.", "error"); return; }
+      if (plan.plannedSpellIds.length > cap) { showToast("Not enough spell slots; " + (plan.plannedSpellIds.length - cap) + " more needed / Nicht genug Spellplätze; " + (plan.plannedSpellIds.length - cap) + " fehlen.", "error"); return; }
+      state.technomageData = { ...state.technomageData, spells: plan.plannedSpellIds };
+      renderTechnomageSpells();
+      return;
     }
     state.technomageData = { ...state.technomageData, spells: [...current] };
     renderTechnomageSpells();
@@ -1209,6 +1252,8 @@ function bindEvents() {
   byId("catalog-search").addEventListener("input", renderCatalogResults);
   byId("catalog-filter").addEventListener("change", renderCatalogResults);
   byId("only-eligible").addEventListener("change", renderCatalogResults);
+  byId("spell-search").addEventListener("input", renderTechnomageSpells);
+  byId("only-reachable-spells").addEventListener("change", renderTechnomageSpells);
   byId("catalog-results").addEventListener("click", (event) => {
     if (state.readOnly) return;
     const open = event.target.closest("[data-open-catalog-id]");

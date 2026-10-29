@@ -165,6 +165,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },
+      {
+        text: "Die Technomage-Spell-Liste lässt sich durchsuchen und auf aktuell erlernbare Spells einschränken. Slot-Kosten zeigen den Gesamtaufwand einschließlich fehlender Voraussetzungen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
     ],
   },
   {
