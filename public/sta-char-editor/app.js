@@ -1,11 +1,13 @@
 import { getServerModules, pullChanges, publishModule, pushMutations } from "./api.js";
 import { BASE_CHARACTER, BASE_MODULE_ID, BASE_MODULE_VERSION, calculateCreationBudget, displayLabel, formatModuleKey, newCharacter, validateModulePack } from "./domain.js";
-import { allCharacters, allModules, applyRemoteChange, applySyncResult, getCharacter, getOutbox, getSetting, markOutboxInflight, openStore, resetInflight, resolveConflict, saveCharacter, saveModule, setSetting } from "./storage.js";
+import { allCharacters, allModules, applyRemoteChange, applySyncResult, deleteModule, getCharacter, getOutbox, getSetting, markOutboxInflight, openStore, resetInflight, resolveConflict, saveCharacter, saveModule, setSetting } from "./storage.js";
 
 const byId = (id) => document.getElementById(id);
 const form = byId("character-form");
 const toast = byId("toast");
 const state = { selectedId: null, selectedCharacter: null, modules: [], serverModules: [], activeModules: [], canManageModules: false, canManageCharacters: false, canShareCampaign: false, currentUserId: null, syncing: false, toastTimer: null, installPrompt: null, catalogSelections: { talents: [], focuses: [] }, catalogType: null, catalogOpenId: null, spellSchool: "defence" };
+const REMOVED_BUNDLED_MODULES_KEY = "removedBundledModules";
+const embeddedModuleKeys = new Set();
 const attributeFallback = ["control", "daring", "fitness", "insight", "presence", "reason"].map((id) => ({ id, label: id }));
 const disciplineFallback = ["command", "conn", "engineering", "security", "science", "medicine"].map((id) => ({ id, label: id }));
 const DISCIPLINE_LABELS = { command: ["Command", "Kommando"], conn: ["Conn", "Steuerung"], engineering: ["Engineering", "Technik"], security: ["Security", "Sicherheit"], science: ["Science", "Wissenschaft"], medicine: ["Medicine", "Medizin"] };
@@ -431,6 +433,87 @@ function formatTalentEntry(name, selection, customName) {
   return customName && customName.trim() && customName.trim() !== name ? `${customName.trim()} (${core})` : core;
 }
 
+function compareModuleVersions(left, right) {
+  const parse = (version) => {
+    const match = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/.exec(version || "");
+    return match ? { core: match.slice(1, 4).map(Number), prerelease: match[4]?.split(".") || null } : null;
+  };
+  const a = parse(left);
+  const b = parse(right);
+  if (!a || !b) return 0;
+  for (let index = 0; index < 3; index++) {
+    if (a.core[index] !== b.core[index]) return a.core[index] > b.core[index] ? 1 : -1;
+  }
+  if (!a.prerelease || !b.prerelease) return a.prerelease ? -1 : b.prerelease ? 1 : 0;
+  for (let index = 0; index < Math.max(a.prerelease.length, b.prerelease.length); index++) {
+    const leftPart = a.prerelease[index];
+    const rightPart = b.prerelease[index];
+    if (leftPart === undefined || rightPart === undefined) return leftPart === undefined ? -1 : 1;
+    if (leftPart === rightPart) continue;
+    const leftNumber = /^\d+$/.test(leftPart);
+    const rightNumber = /^\d+$/.test(rightPart);
+    if (leftNumber && rightNumber) return Number(leftPart) > Number(rightPart) ? 1 : -1;
+    if (leftNumber !== rightNumber) return leftNumber ? -1 : 1;
+    return leftPart > rightPart ? 1 : -1;
+  }
+  return 0;
+}
+
+function setBilingualButton(button, english, german) {
+  const primary = document.createElement("span");
+  primary.textContent = english;
+  const translation = document.createElement("small");
+  translation.textContent = german;
+  button.replaceChildren(primary, translation);
+}
+
+async function saveModuleLocally(pack, metadata) {
+  const removedKeys = new Set(await getSetting(REMOVED_BUNDLED_MODULES_KEY) || []);
+  removedKeys.delete(formatModuleKey(pack));
+  await setSetting(REMOVED_BUNDLED_MODULES_KEY, [...removedKeys]);
+  await saveModule(pack, metadata);
+}
+
+async function installServerModule(key) {
+  try {
+    if (!navigator.onLine) throw new Error("Offline: Für Modulupdates ist eine Verbindung erforderlich.");
+    await loadServerModules();
+    const entry = state.serverModules.find((item) => formatModuleKey(item.pack) === key);
+    if (!entry) throw new Error("Diese Modulversion ist auf LCARS nicht mehr verfügbar.");
+    const pack = validateModulePack(entry.pack);
+    const previousVersions = localModulesForProfile()
+      .filter((item) => item.pack.manifest.id === pack.manifest.id)
+      .sort((left, right) => compareModuleVersions(left.pack.manifest.version, right.pack.manifest.version));
+    const previous = previousVersions[previousVersions.length - 1];
+    await saveModuleLocally(pack, { scope: entry.scope, active: entry.active, ownerUserId: entry.ownerUserId });
+    await renderModules();
+    const isUpdate = previous && compareModuleVersions(pack.manifest.version, previous.pack.manifest.version) > 0;
+    showToast(isUpdate ? `${pack.manifest.title} v${pack.manifest.version} aktualisiert. Ältere Charaktere behalten ihre Modulversion.` : `Modul ${pack.manifest.title} lokal installiert.`);
+  } catch (error) {
+    showToast(error.status === 401 ? "Bitte melde dich bei LCARS an, um Module abzurufen." : error.message, "error");
+  }
+}
+
+async function removeLocalModule(entry) {
+  if (entry.pack.manifest.id === BASE_MODULE_ID) return;
+  const version = entry.pack.manifest.version;
+  const references = (await allCharacters()).filter((record) => !record.deleted && record.moduleVersions?.[entry.pack.manifest.id] === version);
+  const characterLabel = references.length === 1 ? "gespeicherter Charakter" : "gespeicherte Charaktere";
+  const impact = references.length
+    ? `\n\n${references.length} ${characterLabel} verwenden genau diese Version. Ihre Daten und Versionsverweise bleiben erhalten; offline benötigen sie das Modul erneut.`
+    : "";
+  const message = `Die lokale Kopie von ${entry.pack.manifest.title} v${version} vom Gerät entfernen? Das Modul auf LCARS wird nicht gelöscht.${impact}`;
+  if (!window.confirm(message)) return;
+  await deleteModule(entry.key);
+  if (embeddedModuleKeys.has(entry.key)) {
+    const removedKeys = new Set(await getSetting(REMOVED_BUNDLED_MODULES_KEY) || []);
+    removedKeys.add(entry.key);
+    await setSetting(REMOVED_BUNDLED_MODULES_KEY, [...removedKeys]);
+  }
+  await renderModules();
+  showToast(`Modul ${entry.pack.manifest.title} von diesem Gerät entfernt.`);
+}
+
 function technomageDataFromForm() {
   const known = state.technomageData || {};
   const primary = byId("primary-school")?.value || known.primarySchool || "";
@@ -599,7 +682,7 @@ function selectedModuleVersions() {
   const campaignOnly = form.elements.namedItem("visibility").value === "campaign";
   for (const check of checks) {
     const key = `${check.dataset.moduleId}@${check.dataset.version}`;
-    if (!campaignOnly || campaignPins.has(key)) result[check.dataset.moduleId] = check.dataset.version;
+    if (!campaignOnly || campaignPins.has(key) || check.dataset.missing === "true") result[check.dataset.moduleId] = check.dataset.version;
   }
   if (!result[BASE_MODULE_ID]) result[BASE_MODULE_ID] = BASE_MODULE_VERSION;
   return result;
@@ -620,13 +703,23 @@ function renderPins(selected = {}) {
       visible.set(formatModuleKey(entry.pack), { pack: entry.pack, scope: entry.scope, active: entry.active });
     }
   }
+  for (const [moduleId, version] of Object.entries(selected)) {
+    const key = `${moduleId}@${version}`;
+    if (!visible.has(key)) {
+      visible.set(key, {
+        pack: { manifest: { id: moduleId, version, title: `Missing module / Fehlendes Modul: ${moduleId}` } },
+        scope: "missing",
+        missing: true,
+      });
+    }
+  }
   if (!visible.size && state.modules[0]) visible.set(formatModuleKey(state.modules[0].pack), { pack: state.modules[0].pack, scope: "private" });
-  byId("module-pins").innerHTML = [...visible.values()].map(({ pack, scope }) => {
+  byId("module-pins").innerHTML = [...visible.values()].map(({ pack, scope, missing }) => {
     const id = pack.manifest.id;
     const version = pack.manifest.version;
     const checked = selected[id] === version || (!Object.keys(selected).length && id === BASE_MODULE_ID);
     const active = state.activeModules.some((item) => item.moduleId === id && item.moduleVersion === version);
-    return `<label class="pin-chip"><input type="checkbox" name="module-pin" data-module-id="${escapeHtml(id)}" data-version="${escapeHtml(version)}" ${checked ? "checked" : ""} ${scope === "campaign" && !active && id !== BASE_MODULE_ID ? "disabled" : ""} ${campaignOnly && scope === "private" ? "disabled" : ""}/><span>${escapeHtml(pack.manifest.title)} <small>v${escapeHtml(version)}${active ? " · aktiv" : scope === "private" ? " · privat" : ""}</small></span></label>`;
+    return `<label class="pin-chip"><input type="checkbox" name="module-pin" data-module-id="${escapeHtml(id)}" data-version="${escapeHtml(version)}" data-missing="${missing ? "true" : "false"}" ${checked ? "checked" : ""} ${scope === "campaign" && !active && id !== BASE_MODULE_ID ? "disabled" : ""} ${campaignOnly && scope === "private" ? "disabled" : ""}/><span>${escapeHtml(pack.manifest.title)} <small>v${escapeHtml(version)}${missing ? " · not installed / nicht installiert" : active ? " · aktiv" : scope === "private" ? " · privat" : ""}</small></span></label>`;
   }).join("");
   updateTotals();
 }
@@ -812,11 +905,11 @@ async function renderConflicts(characters) {
 }
 
 async function renderModules() {
+  const currentDraft = readForm();
   state.modules = await allModules();
   const list = byId("module-list");
   list.replaceChildren();
   const serverKeys = new Set(state.serverModules.map((item) => formatModuleKey(item.pack)));
-  const localKeys = new Set(state.modules.map((item) => item.key));
   const entries = new Map();
   for (const entry of localModulesForProfile()) entries.set(entry.key, { ...entry, local: true });
   for (const item of state.serverModules) {
@@ -858,20 +951,33 @@ async function renderModules() {
       const install = document.createElement("button");
       install.className = "button button-accent";
       install.type = "button";
-      install.textContent = "Auf diesem Gerät installieren";
-      install.addEventListener("click", async () => {
-        await saveModule(pack, { scope: entry.scope, active: entry.active, ownerUserId: entry.ownerUserId });
-        await refresh();
-        showToast(`Modul ${pack.manifest.title} installiert.`);
-      });
+      const installedVersions = localModulesForProfile()
+        .filter((local) => local.pack.manifest.id === pack.manifest.id)
+        .map((local) => local.pack.manifest.version);
+      const installedVersion = installedVersions.sort(compareModuleVersions)[installedVersions.length - 1];
+      const updateAvailable = installedVersion && compareModuleVersions(pack.manifest.version, installedVersion) > 0;
+      setBilingualButton(install,
+        updateAvailable ? `Update to v${pack.manifest.version}` : "Install on this device",
+        updateAvailable ? `Auf v${pack.manifest.version} aktualisieren` : "Auf diesem Gerät installieren");
+      install.addEventListener("click", () => void installServerModule(entry.key));
       actions.append(install);
-    } else if (!serverKeys.has(entry.key)) {
-      const upload = document.createElement("button");
-      upload.className = "button button-quiet";
-      upload.type = "button";
-      upload.textContent = "Auf LCARS speichern";
-      upload.addEventListener("click", () => uploadModule(pack));
-      actions.append(upload);
+    } else {
+      if (!serverKeys.has(entry.key)) {
+        const upload = document.createElement("button");
+        upload.className = "button button-quiet";
+        upload.type = "button";
+        upload.textContent = "Auf LCARS speichern";
+        upload.addEventListener("click", () => uploadModule(pack));
+        actions.append(upload);
+      }
+      if (pack.manifest.id !== BASE_MODULE_ID) {
+        const remove = document.createElement("button");
+        remove.className = "button button-quiet";
+        remove.type = "button";
+        setBilingualButton(remove, "Remove from this device", "Von diesem Gerät entfernen");
+        remove.addEventListener("click", () => void removeLocalModule(entry).catch((error) => showToast(error.message, "error")));
+        actions.append(remove);
+      }
     }
     card.append(content, actions);
     list.append(card);
@@ -884,7 +990,8 @@ async function renderModules() {
   }
   byId("publish-scope").disabled = !navigator.onLine;
   byId("publish-activate").disabled = !state.canManageModules;
-  renderDataLists();
+  renderPins(currentDraft.moduleVersions || {});
+  renderDataLists(currentDraft.data.customFields, currentDraft.data.profession);
 }
 
 function downloadJson(value, filename) {
@@ -902,7 +1009,7 @@ async function uploadModule(pack) {
   const activate = Boolean(byId("publish-activate").checked && scope === "campaign");
   try {
     const result = await publishModule(pack, scope, activate);
-    await saveModule(result.module.pack, { scope: result.module.scope, active: result.module.active, ownerUserId: result.module.ownerUserId });
+    await saveModuleLocally(result.module.pack, { scope: result.module.scope, active: result.module.active, ownerUserId: result.module.ownerUserId });
     await loadServerModules();
     await renderModules();
     showToast(activate ? "Modul veröffentlicht und als Kampagnenversion aktiviert." : "Modul auf LCARS gespeichert.");
@@ -1116,7 +1223,7 @@ function bindEvents() {
     if (!file) return;
     try {
       const pack = validateModulePack(JSON.parse(await file.text()));
-      await saveModule(pack, { scope: "private", ownerUserId: state.currentUserId });
+      await saveModuleLocally(pack, { scope: "private", ownerUserId: state.currentUserId });
       await renderModules();
       showToast(`Modul ${pack.manifest.title} lokal installiert.`);
     } catch (error) { showToast(error.message || "Modul konnte nicht gelesen werden.", "error"); }
@@ -1145,6 +1252,11 @@ function bindEvents() {
       renderStatFields(current.data);
     }
     if (event.target.name === "module-pin") {
+      if (event.target.checked) {
+        for (const other of form.querySelectorAll("input[name='module-pin']")) {
+          if (other !== event.target && other.dataset.moduleId === event.target.dataset.moduleId) other.checked = false;
+        }
+      }
       const current = readForm();
       renderDataLists(current.data.customFields, current.data.profession);
       renderStatFields(current.data);
@@ -1203,10 +1315,22 @@ async function init() {
   }
   const base = JSON.parse(await (await fetch("./modules/base-sta2e.json")).text());
   validateModulePack(base);
-  const installed = await allModules();
-  if (!installed.some((entry) => entry.key === formatModuleKey(base))) await saveModule(base, { scope: "campaign", active: true });
   const technomage = validateModulePack(JSON.parse(await (await fetch("./modules/technomage.json")).text()));
-  if (!(await allModules()).some((entry) => entry.key === formatModuleKey(technomage))) await saveModule(technomage, { scope: "private", active: false });
+  const defaultPacks = [
+    { pack: base, metadata: { scope: "campaign", active: true } },
+    { pack: technomage, metadata: { scope: "private", active: false } },
+  ];
+  embeddedModuleKeys.clear();
+  for (const { pack } of defaultPacks) embeddedModuleKeys.add(formatModuleKey(pack));
+  const removedDefaultKeys = new Set(await getSetting(REMOVED_BUNDLED_MODULES_KEY) || []);
+  const installedKeys = new Set((await allModules()).map((entry) => entry.key));
+  for (const { pack, metadata } of defaultPacks) {
+    const key = formatModuleKey(pack);
+    if (!installedKeys.has(key) && !removedDefaultKeys.has(key)) {
+      await saveModule(pack, metadata);
+      installedKeys.add(key);
+    }
+  }
   const cachedActive = await getSetting("activeModules");
   state.activeModules = cachedActive || [{ moduleId: BASE_MODULE_ID, moduleVersion: BASE_MODULE_VERSION }];
   if (navigator.onLine) {

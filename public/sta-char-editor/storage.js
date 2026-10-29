@@ -224,6 +224,14 @@ export async function saveModule(pack, metadata = {}) {
   await done;
 }
 
+export async function deleteModule(key) {
+  const db = await openStore();
+  const tx = db.transaction("modules", "readwrite");
+  const done = transactionDone(tx);
+  tx.objectStore("modules").delete(key);
+  await done;
+}
+
 export async function allModules() {
   const db = await openStore();
   return requestResult(db.transaction("modules").objectStore("modules").getAll());

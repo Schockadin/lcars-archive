@@ -94,6 +94,8 @@ main { flex: 1; }
 .panel-actions { flex-wrap: wrap; justify-content: flex-end; }.panel-actions select { min-height: 38px; padding: 0 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 11px; }
 .publish-check { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 10px; }.publish-check input { accent-color: var(--amber); }
 .module-list { display: grid; gap: 9px; }.module-card { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }.module-card h3 { font-size: 19px; }.module-card p { margin: 5px 0 3px; color: var(--cyan); font-size: 10px; }.module-card small { color: var(--muted); font-size: 10px; }.module-actions { flex-wrap: wrap; justify-content: flex-end; }
+.module-actions .button small { display: block; margin-top: 2px; color: inherit; font-size: 9px; font-weight: 500; opacity: .72; }
+.module-panel .panel-heading .muted small { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; }
 .module-title-translation { display: block; margin-top: 3px; font: 400 10px var(--font-body); }
 .module-help { margin-top: 20px; padding: 17px; border-left: 3px solid var(--cyan); border-radius: 2px 9px 9px 2px; background: #101c29; color: #c8d2df; font-size: 12px; }.module-help p { margin: 6px 0 10px; color: var(--muted); line-height: 1.55; }.module-help a { color: var(--cyan); font-size: 11px; }
 .module-downloads { display: flex; flex-wrap: wrap; gap: 16px; }.custom-fields { margin: 14px 0; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #0e1622; }
