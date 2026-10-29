@@ -1,0 +1,6633 @@
+{
+  "manifest": {
+    "schemaVersion": 1,
+    "id": "sta2e.technomage",
+    "version": "1.0.0",
+    "title": "Technomage",
+    "description": "Technomage career, talents and spell trees. / Technomage-Laufbahn, Talente und Spell-Trees.",
+    "titleDe": "Technomage-Modul"
+  },
+  "classes": [
+    {
+      "id": "technomage",
+      "label": "Technomage",
+      "original": "Technomage"
+    }
+  ],
+  "talents": [
+    {
+      "id": "talent.chrysalis-technomage",
+      "name": "Chrysalis",
+      "nameDe": "",
+      "category": "esoteric",
+      "categoryDe": "Esoterisch",
+      "requirement": "Technomage",
+      "description": "You are a novice Technomage and retain your Chrysalis, a personal device that functions as a holo-emitter, tricorder, and communicator. Your mentor can remotely disable or enable your Technomage abilities."
+    },
+    {
+      "id": "talent.ftl-attunement",
+      "name": "FTL-Attunement",
+      "nameDe": "",
+      "category": "esoteric",
+      "categoryDe": "Esoterisch",
+      "requirement": "Technomage",
+      "description": "You have built contacts among crews and specialists who travel faster than light. As with Well-Informed, you can draw on those contacts and the news they share to ask the gamemaster two questions about an FTL situation or location at the start of a scene."
+    },
+    {
+      "id": "talent.organells",
+      "name": "Organells",
+      "nameDe": "",
+      "category": "augment",
+      "categoryDe": "Augment & Kybernetik",
+      "requirement": "Technomage",
+      "description": "Technomage organelles reinforce your body. This talent functions as a Technomage version of Durability: you gain Protection 2."
+    }
+  ],
+  "spells": [
+    {
+      "id": "armour-lesser",
+      "name": "Armour, Lesser",
+      "school": "defence",
+      "requirements": "None",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 45,
+      "effect": "protection",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "armour",
+      "name": "Armour",
+      "school": "defence",
+      "requirements": "Lesser Armour",
+      "sourceMageryDc": 18,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 45,
+      "effect": "protection",
+      "prerequisites": [
+        "armour-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "armour-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "armour-greater",
+      "name": "Armour, Greater",
+      "school": "defence",
+      "requirements": "Armour",
+      "sourceMageryDc": 22,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 45,
+      "effect": "protection",
+      "prerequisites": [
+        "armour"
+      ],
+      "prerequisiteGroups": [
+        [
+          "armour"
+        ]
+      ]
+    },
+    {
+      "id": "blurry-image",
+      "name": "Blurry Image",
+      "school": "defence",
+      "requirements": "Personal Shield",
+      "sourceMageryDc": 16,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "3 rounds (weak), 5 rounds (standard), 8 rounds (primary)",
+      "elementalCategory": null,
+      "sourcePage": 45,
+      "effect": "concealment",
+      "prerequisites": [
+        "shield-personal"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-personal"
+        ]
+      ]
+    },
+    {
+      "id": "bubble-of-air",
+      "name": "Bubble of Air",
+      "school": "defence",
+      "requirements": "Personal Shield",
+      "sourceMageryDc": 14,
+      "sourceRange": "Medium",
+      "sourceTarget": "One creature, object or location",
+      "sourceDuration": "1 minute (1 round underwater or in a vacuum)",
+      "elementalCategory": null,
+      "sourcePage": 46,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-personal"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-personal"
+        ]
+      ]
+    },
+    {
+      "id": "bubble-of-air-greater",
+      "name": "Bubble of Air, Greater",
+      "school": "defence",
+      "requirements": "Bubble of Air",
+      "sourceMageryDc": 19,
+      "sourceRange": "Medium",
+      "sourceTarget": "One creature, object or location",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 46,
+      "effect": "protection",
+      "prerequisites": [
+        "bubble-of-air"
+      ],
+      "prerequisiteGroups": [
+        [
+          "bubble-of-air"
+        ]
+      ]
+    },
+    {
+      "id": "bubble-of-air-group",
+      "name": "Bubble of Air, Group",
+      "school": "defence",
+      "requirements": "Bubble of Air",
+      "sourceMageryDc": 21,
+      "sourceRange": "Close",
+      "sourceTarget": "One creature, object or location",
+      "sourceDuration": "1 minute (1 round underwater or in a vacuum)",
+      "elementalCategory": null,
+      "sourcePage": 46,
+      "effect": "protection",
+      "prerequisites": [
+        "bubble-of-air"
+      ],
+      "prerequisiteGroups": [
+        [
+          "bubble-of-air"
+        ]
+      ]
+    },
+    {
+      "id": "elemental-resistance-lesser",
+      "name": "Elemental Resistance, Lesser",
+      "school": "defence",
+      "requirements": "Lesser Armour, Create Fire/Ice/Acid/Lightning/ Sound (at least one)",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "Creature touched",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 46,
+      "effect": "protection",
+      "prerequisites": [
+        "create-acid",
+        "create-fire",
+        "create-ice",
+        "create-lightning",
+        "create-sound"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-acid",
+          "create-fire",
+          "create-ice",
+          "create-lightning",
+          "create-sound"
+        ]
+      ]
+    },
+    {
+      "id": "elemental-resistance",
+      "name": "Elemental Resistance",
+      "school": "defence",
+      "requirements": "Lesser Elemental Resistance",
+      "sourceMageryDc": 17,
+      "sourceRange": "Touch",
+      "sourceTarget": "Creature touched",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 47,
+      "effect": "protection",
+      "prerequisites": [
+        "elemental-resistance-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "elemental-resistance-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "elemental-resistance-greater",
+      "name": "Elemental Resistance, Greater",
+      "school": "defence",
+      "requirements": "Elemental Resistance",
+      "sourceMageryDc": 21,
+      "sourceRange": "Touch",
+      "sourceTarget": "Creature touched",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 47,
+      "effect": "protection",
+      "prerequisites": [
+        "elemental-resistance"
+      ],
+      "prerequisiteGroups": [
+        [
+          "elemental-resistance"
+        ]
+      ]
+    },
+    {
+      "id": "force-wall-small",
+      "name": "Force Wall, Small",
+      "school": "defence",
+      "requirements": "Lesser Armour",
+      "sourceMageryDc": 15,
+      "sourceRange": "Close",
+      "sourceTarget": "Two adjacent 5-foot squares",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 47,
+      "effect": "protection",
+      "prerequisites": [
+        "armour-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "armour-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "force-wall-medium",
+      "name": "Force Wall, Medium",
+      "school": "defence",
+      "requirements": "Small Force Wall",
+      "sourceMageryDc": 18,
+      "sourceRange": "Close",
+      "sourceTarget": "Three adjacent 5-foot squares in a straight line",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 47,
+      "effect": "protection",
+      "prerequisites": [
+        "force-wall-small"
+      ],
+      "prerequisiteGroups": [
+        [
+          "force-wall-small"
+        ]
+      ]
+    },
+    {
+      "id": "force-wall-large",
+      "name": "Force Wall, Large",
+      "school": "defence",
+      "requirements": "Medium Force Wall",
+      "sourceMageryDc": 22,
+      "sourceRange": "Close",
+      "sourceTarget": "Four adjacent 5-foot squares in either a straight line or a square",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 47,
+      "effect": "protection",
+      "prerequisites": [
+        "force-wall-medium"
+      ],
+      "prerequisiteGroups": [
+        [
+          "force-wall-medium"
+        ]
+      ]
+    },
+    {
+      "id": "invisibility",
+      "name": "Invisibility",
+      "school": "defence",
+      "requirements": "Greater Personal Shield, Blurry Image",
+      "sourceMageryDc": 24,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 48,
+      "effect": "concealment",
+      "prerequisites": [
+        "shield-personal-greater",
+        "blurry-image"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-personal-greater"
+        ],
+        [
+          "blurry-image"
+        ]
+      ]
+    },
+    {
+      "id": "invisibility-greater",
+      "name": "Invisibility, Greater",
+      "school": "defence",
+      "requirements": "Greater Armour, Invisibility",
+      "sourceMageryDc": 28,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 48,
+      "effect": "concealment",
+      "prerequisites": [
+        "armour-greater",
+        "invisibility"
+      ],
+      "prerequisiteGroups": [
+        [
+          "armour-greater"
+        ],
+        [
+          "invisibility"
+        ]
+      ]
+    },
+    {
+      "id": "invisibility-group",
+      "name": "Invisibility, Group",
+      "school": "defence",
+      "requirements": "Greater Group Shield, Invisibility",
+      "sourceMageryDc": 32,
+      "sourceRange": "Self",
+      "sourceTarget": "See below",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 48,
+      "effect": "concealment",
+      "prerequisites": [
+        "shield-group-greater",
+        "invisibility"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-group-greater"
+        ],
+        [
+          "invisibility"
+        ]
+      ]
+    },
+    {
+      "id": "shield-group-lesser",
+      "name": "Shield, Group, Lesser",
+      "school": "defence",
+      "requirements": "Lesser Personal Shield",
+      "sourceMageryDc": 18,
+      "sourceRange": "5-foot radius centred on self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 48,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-personal-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-personal-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "shield-group",
+      "name": "Shield, Group",
+      "school": "defence",
+      "requirements": "Personal Shield, Lesser Group Shield",
+      "sourceMageryDc": 21,
+      "sourceRange": "5-foot radius centred on self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 48,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-personal",
+        "shield-group-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-personal"
+        ],
+        [
+          "shield-group-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "shield-group-greater",
+      "name": "Shield, Group, Greater",
+      "school": "defence",
+      "requirements": "Greater Personal Shield, Group Shield",
+      "sourceMageryDc": 21,
+      "sourceRange": "5-foot radius centred on self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 49,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-personal-greater",
+        "shield-group"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-personal-greater"
+        ],
+        [
+          "shield-group"
+        ]
+      ]
+    },
+    {
+      "id": "shield-flexible-lesser",
+      "name": "Shield, Flexible, Lesser",
+      "school": "defence",
+      "requirements": "Greater Personal Shield, Defence as a primary aptitude",
+      "sourceMageryDc": 23,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 49,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-personal-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-personal-greater"
+        ]
+      ]
+    },
+    {
+      "id": "shield-flexible",
+      "name": "Shield, Flexible",
+      "school": "defence",
+      "requirements": "Lesser Flexible Shield",
+      "sourceMageryDc": 28,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 49,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-flexible-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-flexible-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "shield-flexible-greater",
+      "name": "Shield, Flexible, Greater",
+      "school": "defence",
+      "requirements": "Flexible Shield",
+      "sourceMageryDc": 32,
+      "sourceRange": "5-foot radius around the caster",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 49,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-flexible"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-flexible"
+        ]
+      ]
+    },
+    {
+      "id": "shield-flexible-total",
+      "name": "Shield, Flexible, Total",
+      "school": "defence",
+      "requirements": "Greater Flexible Shield",
+      "sourceMageryDc": 36,
+      "sourceRange": "10-foot radius around the caster",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 50,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-flexible-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-flexible-greater"
+        ]
+      ]
+    },
+    {
+      "id": "shield-personal-lesser",
+      "name": "Shield, Personal, Lesser",
+      "school": "defence",
+      "requirements": "Lesser Armour",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 50,
+      "effect": "protection",
+      "prerequisites": [
+        "armour-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "armour-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "shield-personal",
+      "name": "Shield, Personal",
+      "school": "defence",
+      "requirements": "Lesser Personal Shield, Armour",
+      "sourceMageryDc": 18,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 50,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-personal-lesser",
+        "armour"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-personal-lesser"
+        ],
+        [
+          "armour"
+        ]
+      ]
+    },
+    {
+      "id": "shield-personal-greater",
+      "name": "Shield, Personal, Greater",
+      "school": "defence",
+      "requirements": "Personal Shield, Greater Armour",
+      "sourceMageryDc": 24,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 50,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-personal",
+        "armour-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-personal"
+        ],
+        [
+          "armour-greater"
+        ]
+      ]
+    },
+    {
+      "id": "shield-vehicular-small",
+      "name": "Shield, Vehicular, Small",
+      "school": "defence",
+      "requirements": "Group Shield",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One vehicle of Huge size or smaller",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 50,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-group"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-group"
+        ]
+      ]
+    },
+    {
+      "id": "shield-vehicular-large",
+      "name": "Shield, Vehicular, Large",
+      "school": "defence",
+      "requirements": "Greater Group Shield, Small Vehicular Shield",
+      "sourceMageryDc": 24,
+      "sourceRange": "Touch",
+      "sourceTarget": "One vehicle of Gargantuan size or smaller",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 51,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-group-greater",
+        "shield-vehicular-small"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-group-greater"
+        ],
+        [
+          "shield-vehicular-small"
+        ]
+      ]
+    },
+    {
+      "id": "shield-vehicular-starship",
+      "name": "Shield, Vehicular, Starship",
+      "school": "defence",
+      "requirements": "Large Vehicular Shield",
+      "sourceMageryDc": 28,
+      "sourceRange": "Touch",
+      "sourceTarget": "One vehicle of Colossal size or smaller",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 51,
+      "effect": "protection",
+      "prerequisites": [
+        "shield-vehicular-large"
+      ],
+      "prerequisiteGroups": [
+        [
+          "shield-vehicular-large"
+        ]
+      ]
+    },
+    {
+      "id": "skin-of-wood",
+      "name": "Skin of Wood",
+      "school": "defence",
+      "requirements": "Minor Elemental Resistance",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 51,
+      "effect": "protection",
+      "prerequisites": [
+        "elemental-resistance-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "elemental-resistance-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "skin-of-bronze",
+      "name": "Skin of Bronze",
+      "school": "defence",
+      "requirements": "Standard Elemental Resistance, Skin of Wood",
+      "sourceMageryDc": 19,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 51,
+      "effect": "protection",
+      "prerequisites": [
+        "elemental-resistance",
+        "skin-of-wood"
+      ],
+      "prerequisiteGroups": [
+        [
+          "elemental-resistance"
+        ],
+        [
+          "skin-of-wood"
+        ]
+      ]
+    },
+    {
+      "id": "skin-of-iron",
+      "name": "Skin of Iron",
+      "school": "defence",
+      "requirements": "Greater Elemental Resistance, Skin of Bronze",
+      "sourceMageryDc": 25,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 51,
+      "effect": "protection",
+      "prerequisites": [
+        "elemental-resistance-greater",
+        "skin-of-bronze"
+      ],
+      "prerequisiteGroups": [
+        [
+          "elemental-resistance-greater"
+        ],
+        [
+          "skin-of-bronze"
+        ]
+      ]
+    },
+    {
+      "id": "skin-of-diamond",
+      "name": "Skin of Diamond",
+      "school": "defence",
+      "requirements": "Skin of Iron",
+      "sourceMageryDc": 30,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 51,
+      "effect": "protection",
+      "prerequisites": [
+        "skin-of-iron"
+      ],
+      "prerequisiteGroups": [
+        [
+          "skin-of-iron"
+        ]
+      ]
+    },
+    {
+      "id": "acid-ball",
+      "name": "Acid Ball",
+      "school": "elements",
+      "requirements": "Acid Blob",
+      "sourceMageryDc": 19,
+      "sourceRange": "Close (Ranged Touch)",
+      "sourceTarget": "1 creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Acid",
+      "sourcePage": 52,
+      "effect": "attack",
+      "prerequisites": [
+        "acid-blob"
+      ],
+      "prerequisiteGroups": [
+        [
+          "acid-blob"
+        ]
+      ]
+    },
+    {
+      "id": "acid-ball-greater",
+      "name": "Acid Ball, Greater",
+      "school": "elements",
+      "requirements": "Acid Ball",
+      "sourceMageryDc": 25,
+      "sourceRange": "Close (Ranged Touch)",
+      "sourceTarget": "1 creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Acid",
+      "sourcePage": 52,
+      "effect": "attack",
+      "prerequisites": [
+        "acid-ball"
+      ],
+      "prerequisiteGroups": [
+        [
+          "acid-ball"
+        ]
+      ]
+    },
+    {
+      "id": "acid-blob",
+      "name": "Acid Blob",
+      "school": "elements",
+      "requirements": "Create Acid",
+      "sourceMageryDc": 17,
+      "sourceRange": "Touch or Close (Ranged Touch)",
+      "sourceTarget": "1 object",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Acid",
+      "sourcePage": 53,
+      "effect": "attack",
+      "prerequisites": [
+        "create-acid"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-acid"
+        ]
+      ]
+    },
+    {
+      "id": "acid-coat",
+      "name": "Acid Coat",
+      "school": "elements",
+      "requirements": "Acid Blob",
+      "sourceMageryDc": 21,
+      "sourceRange": "Touch",
+      "sourceTarget": "1 creature",
+      "sourceDuration": "5 rounds",
+      "elementalCategory": "Acid",
+      "sourcePage": 53,
+      "effect": "attack",
+      "prerequisites": [
+        "acid-blob"
+      ],
+      "prerequisiteGroups": [
+        [
+          "acid-blob"
+        ]
+      ]
+    },
+    {
+      "id": "acid-rain",
+      "name": "Acid Rain",
+      "school": "elements",
+      "requirements": "Greater Acid Ball, Acid Spray",
+      "sourceMageryDc": 33,
+      "sourceRange": "Medium",
+      "sourceTarget": "20-foot radius",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Acid",
+      "sourcePage": 53,
+      "effect": "attack",
+      "prerequisites": [
+        "acid-ball-greater",
+        "acid-spray"
+      ],
+      "prerequisiteGroups": [
+        [
+          "acid-ball-greater"
+        ],
+        [
+          "acid-spray"
+        ]
+      ]
+    },
+    {
+      "id": "acid-spray",
+      "name": "Acid Spray",
+      "school": "elements",
+      "requirements": "Acid Ball",
+      "sourceMageryDc": 26,
+      "sourceRange": "Close",
+      "sourceTarget": "Cone-shaped burst",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Acid",
+      "sourcePage": 53,
+      "effect": "attack",
+      "prerequisites": [
+        "acid-ball"
+      ],
+      "prerequisiteGroups": [
+        [
+          "acid-ball"
+        ]
+      ]
+    },
+    {
+      "id": "blizzard",
+      "name": "Blizzard",
+      "school": "elements",
+      "requirements": "Snowfall",
+      "sourceMageryDc": 30,
+      "sourceRange": "Long",
+      "sourceTarget": "50-foot radius square",
+      "sourceDuration": "1 minute",
+      "elementalCategory": "Cold",
+      "sourcePage": 53,
+      "effect": "attack",
+      "prerequisites": [
+        "snowfall"
+      ],
+      "prerequisiteGroups": [
+        [
+          "snowfall"
+        ]
+      ]
+    },
+    {
+      "id": "control-conflagration",
+      "name": "Control Conflagration",
+      "school": "elements",
+      "requirements": "Control Flame",
+      "sourceMageryDc": 23,
+      "sourceRange": "Close",
+      "sourceTarget": "Up to five 5-foot squares of flames (4 for weak aptitudes, 6 for primaries)",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Fire",
+      "sourcePage": 54,
+      "effect": "manipulation",
+      "prerequisites": [
+        "control-flame"
+      ],
+      "prerequisiteGroups": [
+        [
+          "control-flame"
+        ]
+      ]
+    },
+    {
+      "id": "control-flame",
+      "name": "Control Flame",
+      "school": "elements",
+      "requirements": "Create Fire",
+      "sourceMageryDc": 16,
+      "sourceRange": "Close",
+      "sourceTarget": "One 5-foot square of flames",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Fire",
+      "sourcePage": 54,
+      "effect": "manipulation",
+      "prerequisites": [
+        "create-fire"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-fire"
+        ]
+      ]
+    },
+    {
+      "id": "create-acid",
+      "name": "Create Acid",
+      "school": "elements",
+      "requirements": "None",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "Self (fingertip)",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Acid",
+      "sourcePage": 54,
+      "effect": "manipulation",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "create-fire",
+      "name": "Create Fire",
+      "school": "elements",
+      "requirements": "None",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "Self (hand or fingertip)",
+      "sourceDuration": "1 minute",
+      "elementalCategory": "Fire",
+      "sourcePage": 54,
+      "effect": "manipulation",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "create-ice",
+      "name": "Create Ice",
+      "school": "elements",
+      "requirements": "None",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "Self (hand)",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Cold",
+      "sourcePage": 55,
+      "effect": "manipulation",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "create-lightning",
+      "name": "Create Lightning",
+      "school": "elements",
+      "requirements": "None",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "Self (hand or fingers)",
+      "sourceDuration": "1 minute",
+      "elementalCategory": "Electricity",
+      "sourcePage": 55,
+      "effect": "manipulation",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "create-sound",
+      "name": "Create Sound",
+      "school": "elements",
+      "requirements": "None",
+      "sourceMageryDc": 14,
+      "sourceRange": "Close",
+      "sourceTarget": "Self (mouth)",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Sonic",
+      "sourcePage": 55,
+      "effect": "manipulation",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "deafen",
+      "name": "Deafen",
+      "school": "elements",
+      "requirements": "Create Sound",
+      "sourceMageryDc": 19,
+      "sourceRange": "Close",
+      "sourceTarget": "All creatures within range",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Sonic",
+      "sourcePage": 55,
+      "effect": "manipulation",
+      "prerequisites": [
+        "create-sound"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-sound"
+        ]
+      ]
+    },
+    {
+      "id": "destruction",
+      "name": "Destruction",
+      "school": "elements",
+      "requirements": "At least 15 other chaos spells, Elements as a primary aptitude, at least one level of the Destroyer prestige class",
+      "sourceMageryDc": 24,
+      "sourceRange": "Medium",
+      "sourceTarget": "One five-foot diameter sphere",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "None",
+      "sourcePage": 56,
+      "effect": "attack",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "destruction-greater",
+      "name": "Destruction, Greater",
+      "school": "elements",
+      "requirements": "Destruction, at least 20 chaos spells, at least 5th level in the Destroyer prestige class",
+      "sourceMageryDc": 32,
+      "sourceRange": "Long",
+      "sourceTarget": "One five-foot radius sphere",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "None",
+      "sourcePage": 56,
+      "effect": "attack",
+      "prerequisites": [
+        "destruction"
+      ],
+      "prerequisiteGroups": [
+        [
+          "destruction"
+        ]
+      ]
+    },
+    {
+      "id": "destruction-total",
+      "name": "Destruction, Total",
+      "school": "elements",
+      "requirements": "Greater Destruction, at least 25 chaos spells, 10th level in the Destroyer prestige class",
+      "sourceMageryDc": 40,
+      "sourceRange": "Line of Sight",
+      "sourceTarget": "One ten-foot radius sphere",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "None",
+      "sourcePage": 56,
+      "effect": "attack",
+      "prerequisites": [
+        "destruction-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "destruction-greater"
+        ]
+      ]
+    },
+    {
+      "id": "douse-flame",
+      "name": "Douse Flame",
+      "school": "elements",
+      "requirements": "Control Flame",
+      "sourceMageryDc": 19,
+      "sourceRange": "Long",
+      "sourceTarget": "15-foot radius (weakness 10-foot, primary 20-foot)",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Fire",
+      "sourcePage": 56,
+      "effect": "manipulation",
+      "prerequisites": [
+        "control-flame"
+      ],
+      "prerequisiteGroups": [
+        [
+          "control-flame"
+        ]
+      ]
+    },
+    {
+      "id": "elemental-storm",
+      "name": "Elemental Storm",
+      "school": "elements",
+      "requirements": "Winter Storm, Thunderbolt, Napalm Burst, Elements as a primary school",
+      "sourceMageryDc": 45,
+      "sourceRange": "Line of Sight",
+      "sourceTarget": "100-foot radius sphere",
+      "sourceDuration": "1 minute",
+      "elementalCategory": "All",
+      "sourcePage": 56,
+      "effect": "attack",
+      "prerequisites": [
+        "winter-storm",
+        "thunderbolt",
+        "napalm-burst"
+      ],
+      "prerequisiteGroups": [
+        [
+          "winter-storm"
+        ],
+        [
+          "thunderbolt"
+        ],
+        [
+          "napalm-burst"
+        ]
+      ]
+    },
+    {
+      "id": "fireball",
+      "name": "Fireball",
+      "school": "elements",
+      "requirements": "Control Flame",
+      "sourceMageryDc": 18,
+      "sourceRange": "Close (Ranged Touch)",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Fire",
+      "sourcePage": 57,
+      "effect": "attack",
+      "prerequisites": [
+        "control-flame"
+      ],
+      "prerequisiteGroups": [
+        [
+          "control-flame"
+        ]
+      ]
+    },
+    {
+      "id": "fireball-greater",
+      "name": "Fireball, Greater",
+      "school": "elements",
+      "requirements": "Control Conflagration, Fireball",
+      "sourceMageryDc": 23,
+      "sourceRange": "Close (Ranged Touch)",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Fire",
+      "sourcePage": 57,
+      "effect": "attack",
+      "prerequisites": [
+        "control-conflagration",
+        "fireball"
+      ],
+      "prerequisiteGroups": [
+        [
+          "control-conflagration"
+        ],
+        [
+          "fireball"
+        ]
+      ]
+    },
+    {
+      "id": "fireball-explosive",
+      "name": "Fireball, Explosive",
+      "school": "elements",
+      "requirements": "Greater Fireball",
+      "sourceMageryDc": 25,
+      "sourceRange": "Medium",
+      "sourceTarget": "10-foot radius (weakness 5-foot, primary 15-foot)",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Fire",
+      "sourcePage": 57,
+      "effect": "attack",
+      "prerequisites": [
+        "fireball-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "fireball-greater"
+        ]
+      ]
+    },
+    {
+      "id": "fireball-artillery",
+      "name": "Fireball, Artillery",
+      "school": "elements",
+      "requirements": "Explosive Fireball",
+      "sourceMageryDc": 30,
+      "sourceRange": "Long to line of sight only",
+      "sourceTarget": "10-foot radius (weakness 5-foot, primary 15-foot)",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Fire",
+      "sourcePage": 57,
+      "effect": "attack",
+      "prerequisites": [
+        "fireball-explosive"
+      ],
+      "prerequisiteGroups": [
+        [
+          "fireball-explosive"
+        ]
+      ]
+    },
+    {
+      "id": "freezing-touch",
+      "name": "Freezing Touch",
+      "school": "elements",
+      "requirements": "Ice Bolt",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "1 creature",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Cold",
+      "sourcePage": 58,
+      "effect": "attack",
+      "prerequisites": [
+        "ice-bolt"
+      ],
+      "prerequisiteGroups": [
+        [
+          "ice-bolt"
+        ]
+      ]
+    },
+    {
+      "id": "hailstorm",
+      "name": "Hailstorm",
+      "school": "elements",
+      "requirements": "Snowfall",
+      "sourceMageryDc": 20,
+      "sourceRange": "Long",
+      "sourceTarget": "10-foot radius square",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Cold",
+      "sourcePage": 58,
+      "effect": "attack",
+      "prerequisites": [
+        "snowfall"
+      ],
+      "prerequisiteGroups": [
+        [
+          "snowfall"
+        ]
+      ]
+    },
+    {
+      "id": "ice-bolt",
+      "name": "Ice Bolt",
+      "school": "elements",
+      "requirements": "Create Ice",
+      "sourceMageryDc": 19,
+      "sourceRange": "Medium (Ranged Touch)",
+      "sourceTarget": "1 creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Cold",
+      "sourcePage": 58,
+      "effect": "attack",
+      "prerequisites": [
+        "create-ice"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-ice"
+        ]
+      ]
+    },
+    {
+      "id": "ice-bolt-greater",
+      "name": "Ice Bolt, Greater",
+      "school": "elements",
+      "requirements": "Ice Bolt",
+      "sourceMageryDc": 24,
+      "sourceRange": "Medium (Ranged Touch)",
+      "sourceTarget": "1 creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Cold",
+      "sourcePage": 59,
+      "effect": "attack",
+      "prerequisites": [
+        "ice-bolt"
+      ],
+      "prerequisiteGroups": [
+        [
+          "ice-bolt"
+        ]
+      ]
+    },
+    {
+      "id": "ice-shards",
+      "name": "Ice Shards",
+      "school": "elements",
+      "requirements": "Create Ice",
+      "sourceMageryDc": 25,
+      "sourceRange": "Close",
+      "sourceTarget": "Cone extending from the mage’s hand",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Cold",
+      "sourcePage": 59,
+      "effect": "attack",
+      "prerequisites": [
+        "create-ice"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-ice"
+        ]
+      ]
+    },
+    {
+      "id": "icy-surface",
+      "name": "Icy Surface",
+      "school": "elements",
+      "requirements": "Create Ice",
+      "sourceMageryDc": 17,
+      "sourceRange": "Medium",
+      "sourceTarget": "10-foot radius square",
+      "sourceDuration": "1 minute",
+      "elementalCategory": "Cold",
+      "sourcePage": 59,
+      "effect": "attack",
+      "prerequisites": [
+        "create-ice"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-ice"
+        ]
+      ]
+    },
+    {
+      "id": "icy-item",
+      "name": "Icy Item",
+      "school": "elements",
+      "requirements": "Icy Surface",
+      "sourceMageryDc": 18,
+      "sourceRange": "Medium",
+      "sourceTarget": "One item or object no larger than Medium size",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Cold",
+      "sourcePage": 59,
+      "effect": "attack",
+      "prerequisites": [
+        "icy-surface"
+      ],
+      "prerequisiteGroups": [
+        [
+          "icy-surface"
+        ]
+      ]
+    },
+    {
+      "id": "lightning-bolt",
+      "name": "Lightning Bolt",
+      "school": "elements",
+      "requirements": "Greater Surge",
+      "sourceMageryDc": 21,
+      "sourceRange": "Long",
+      "sourceTarget": "1 creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Electricity",
+      "sourcePage": 59,
+      "effect": "attack",
+      "prerequisites": [
+        "surge-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "surge-greater"
+        ]
+      ]
+    },
+    {
+      "id": "lightning-bolt-chain",
+      "name": "Lightning Bolt, Chain",
+      "school": "elements",
+      "requirements": "Greater Lightning Bolt",
+      "sourceMageryDc": 31,
+      "sourceRange": "Long",
+      "sourceTarget": "Up to 4 creatures (3 for weaknesses, 5 for primaries)",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Electricity",
+      "sourcePage": 60,
+      "effect": "attack",
+      "prerequisites": [
+        "lightning-bolt-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "lightning-bolt-greater"
+        ]
+      ]
+    },
+    {
+      "id": "lightning-bolt-greater",
+      "name": "Lightning Bolt, Greater",
+      "school": "elements",
+      "requirements": "Lightning Bolt",
+      "sourceMageryDc": 26,
+      "sourceRange": "Long",
+      "sourceTarget": "1 creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Electricity",
+      "sourcePage": 60,
+      "effect": "attack",
+      "prerequisites": [
+        "lightning-bolt"
+      ],
+      "prerequisiteGroups": [
+        [
+          "lightning-bolt"
+        ]
+      ]
+    },
+    {
+      "id": "mimic-sound",
+      "name": "Mimic Sound",
+      "school": "elements",
+      "requirements": "Create Sound",
+      "sourceMageryDc": 21,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Sonic",
+      "sourcePage": 60,
+      "effect": "manipulation",
+      "prerequisites": [
+        "create-sound"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-sound"
+        ]
+      ]
+    },
+    {
+      "id": "napalm-burst",
+      "name": "Napalm Burst",
+      "school": "elements",
+      "requirements": "Explosive Fireball, Acid Spray",
+      "sourceMageryDc": 35,
+      "sourceRange": "Close",
+      "sourceTarget": "Cone extending from the mage’s hand",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Fire, Acid",
+      "sourcePage": 60,
+      "effect": "attack",
+      "prerequisites": [
+        "fireball-explosive",
+        "acid-spray"
+      ],
+      "prerequisiteGroups": [
+        [
+          "fireball-explosive"
+        ],
+        [
+          "acid-spray"
+        ]
+      ]
+    },
+    {
+      "id": "paralysing-arc",
+      "name": "Paralysing Arc",
+      "school": "elements",
+      "requirements": "Lightning Bolt",
+      "sourceMageryDc": 25,
+      "sourceRange": "Close (Ranged Touch)",
+      "sourceTarget": "1 creature",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Electricity",
+      "sourcePage": 61,
+      "effect": "attack",
+      "prerequisites": [
+        "lightning-bolt"
+      ],
+      "prerequisiteGroups": [
+        [
+          "lightning-bolt"
+        ]
+      ]
+    },
+    {
+      "id": "power-device",
+      "name": "Power Device",
+      "school": "elements",
+      "requirements": "Create Lightning",
+      "sourceMageryDc": 19,
+      "sourceRange": "Touch",
+      "sourceTarget": "1 object",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": "Electricity",
+      "sourcePage": 61,
+      "effect": "manipulation",
+      "prerequisites": [
+        "create-lightning"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-lightning"
+        ]
+      ]
+    },
+    {
+      "id": "shatterclap",
+      "name": "Shatterclap",
+      "school": "elements",
+      "requirements": "Sound Burst",
+      "sourceMageryDc": 22,
+      "sourceRange": "5 feet",
+      "sourceTarget": "One creature or object",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Sonic",
+      "sourcePage": 61,
+      "effect": "attack",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "silence",
+      "name": "Silence",
+      "school": "elements",
+      "requirements": "Create Sound",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature or object",
+      "sourceDuration": "2 rounds",
+      "elementalCategory": "Sonic",
+      "sourcePage": 61,
+      "effect": "manipulation",
+      "prerequisites": [
+        "create-sound"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-sound"
+        ]
+      ]
+    },
+    {
+      "id": "snowfall",
+      "name": "Snowfall",
+      "school": "elements",
+      "requirements": "Create Ice",
+      "sourceMageryDc": 20,
+      "sourceRange": "Medium",
+      "sourceTarget": "20-foot radius square",
+      "sourceDuration": "3 rounds",
+      "elementalCategory": "Cold",
+      "sourcePage": 62,
+      "effect": "attack",
+      "prerequisites": [
+        "create-ice"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-ice"
+        ]
+      ]
+    },
+    {
+      "id": "sonic-blast",
+      "name": "Sonic Blast",
+      "school": "elements",
+      "requirements": "Sonic Burst",
+      "sourceMageryDc": 24,
+      "sourceRange": "Medium",
+      "sourceTarget": "10-foot radius sphere",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Sonic",
+      "sourcePage": 62,
+      "effect": "attack",
+      "prerequisites": [
+        "sonic-burst"
+      ],
+      "prerequisiteGroups": [
+        [
+          "sonic-burst"
+        ]
+      ]
+    },
+    {
+      "id": "sonic-burst",
+      "name": "Sonic Burst",
+      "school": "elements",
+      "requirements": "Create Sound",
+      "sourceMageryDc": 20,
+      "sourceRange": "Close",
+      "sourceTarget": "5-foot radius sphere",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Sonic",
+      "sourcePage": 62,
+      "effect": "attack",
+      "prerequisites": [
+        "create-sound"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-sound"
+        ]
+      ]
+    },
+    {
+      "id": "sonic-stun",
+      "name": "Sonic Stun",
+      "school": "elements",
+      "requirements": "Sound Burst",
+      "sourceMageryDc": 21,
+      "sourceRange": "Close (Ranged Touch)",
+      "sourceTarget": "1 creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Sonic",
+      "sourcePage": 62,
+      "effect": "attack",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "surge",
+      "name": "Surge",
+      "school": "elements",
+      "requirements": "Create Lightning",
+      "sourceMageryDc": 16,
+      "sourceRange": "Touch",
+      "sourceTarget": "1 creature or object",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Electricity",
+      "sourcePage": 62,
+      "effect": "attack",
+      "prerequisites": [
+        "create-lightning"
+      ],
+      "prerequisiteGroups": [
+        [
+          "create-lightning"
+        ]
+      ]
+    },
+    {
+      "id": "surge-greater",
+      "name": "Surge, Greater",
+      "school": "elements",
+      "requirements": "Surge",
+      "sourceMageryDc": 21,
+      "sourceRange": "Touch",
+      "sourceTarget": "1 creature or object",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Electricity",
+      "sourcePage": 63,
+      "effect": "attack",
+      "prerequisites": [
+        "surge"
+      ],
+      "prerequisiteGroups": [
+        [
+          "surge"
+        ]
+      ]
+    },
+    {
+      "id": "surge-painful",
+      "name": "Surge, Painful",
+      "school": "elements",
+      "requirements": "Surge",
+      "sourceMageryDc": 18,
+      "sourceRange": "Touch",
+      "sourceTarget": "1 creature or object",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Electricity",
+      "sourcePage": 63,
+      "effect": "attack",
+      "prerequisites": [
+        "surge"
+      ],
+      "prerequisiteGroups": [
+        [
+          "surge"
+        ]
+      ]
+    },
+    {
+      "id": "surge-storm",
+      "name": "Surge Storm",
+      "school": "elements",
+      "requirements": "Greater Surge",
+      "sourceMageryDc": 27,
+      "sourceRange": "Long",
+      "sourceTarget": "20-foot radius",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Electricity",
+      "sourcePage": 63,
+      "effect": "attack",
+      "prerequisites": [
+        "surge-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "surge-greater"
+        ]
+      ]
+    },
+    {
+      "id": "thunderbolt",
+      "name": "Thunderbolt",
+      "school": "elements",
+      "requirements": "Greater Lightning Bolt, Sonic Blast, Sonic Stun",
+      "sourceMageryDc": 35,
+      "sourceRange": "Long",
+      "sourceTarget": "1 creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": "Electricity, Sonic",
+      "sourcePage": 63,
+      "effect": "attack",
+      "prerequisites": [
+        "lightning-bolt-greater",
+        "sonic-blast",
+        "sonic-stun"
+      ],
+      "prerequisiteGroups": [
+        [
+          "lightning-bolt-greater"
+        ],
+        [
+          "sonic-blast"
+        ],
+        [
+          "sonic-stun"
+        ]
+      ]
+    },
+    {
+      "id": "ventriloquism",
+      "name": "Ventriloquism",
+      "school": "elements",
+      "requirements": "Mimic Sound",
+      "sourceMageryDc": 25,
+      "sourceRange": "Medium",
+      "sourceTarget": "One square",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Sonic",
+      "sourcePage": 63,
+      "effect": "manipulation",
+      "prerequisites": [
+        "mimic-sound"
+      ],
+      "prerequisiteGroups": [
+        [
+          "mimic-sound"
+        ]
+      ]
+    },
+    {
+      "id": "winter-storm",
+      "name": "Winter Storm",
+      "school": "elements",
+      "requirements": "Blizzard, Surge Storm, Windstorm",
+      "sourceMageryDc": 35,
+      "sourceRange": "Long",
+      "sourceTarget": "50-foot radius sphere",
+      "sourceDuration": "1 minute",
+      "elementalCategory": "Electricity, Cold",
+      "sourcePage": 64,
+      "effect": "attack",
+      "prerequisites": [
+        "blizzard",
+        "surge-storm",
+        "windstorm"
+      ],
+      "prerequisiteGroups": [
+        [
+          "blizzard"
+        ],
+        [
+          "surge-storm"
+        ],
+        [
+          "windstorm"
+        ]
+      ]
+    },
+    {
+      "id": "zone-of-silence",
+      "name": "Zone of Silence",
+      "school": "elements",
+      "requirements": "Silence",
+      "sourceMageryDc": 25,
+      "sourceRange": "Close",
+      "sourceTarget": "20-foot radius sphere",
+      "sourceDuration": "1 round",
+      "elementalCategory": "Sonic",
+      "sourcePage": 64,
+      "effect": "attack",
+      "prerequisites": [
+        "silence"
+      ],
+      "prerequisiteGroups": [
+        [
+          "silence"
+        ]
+      ]
+    },
+    {
+      "id": "conjure-creature-small",
+      "name": "Conjure Creature, Small",
+      "school": "conjuration",
+      "requirements": "Perfect Phantom Image",
+      "sourceMageryDc": 23,
+      "sourceRange": "Close",
+      "sourceTarget": "One unoccupied 5-foot square",
+      "sourceDuration": "3 rounds",
+      "elementalCategory": null,
+      "sourcePage": 64,
+      "effect": "summoning",
+      "prerequisites": [
+        "phantom-image-perfect"
+      ],
+      "prerequisiteGroups": [
+        [
+          "phantom-image-perfect"
+        ]
+      ]
+    },
+    {
+      "id": "conjure-creature-medium",
+      "name": "Conjure Creature, Medium",
+      "school": "conjuration",
+      "requirements": "Conjure Small Creature",
+      "sourceMageryDc": 25,
+      "sourceRange": "Close",
+      "sourceTarget": "One unoccupied 5-foot square",
+      "sourceDuration": "2 rounds",
+      "elementalCategory": null,
+      "sourcePage": 65,
+      "effect": "summoning",
+      "prerequisites": [
+        "conjure-creature-small"
+      ],
+      "prerequisiteGroups": [
+        [
+          "conjure-creature-small"
+        ]
+      ]
+    },
+    {
+      "id": "conjure-creature-large",
+      "name": "Conjure Creature, Large",
+      "school": "conjuration",
+      "requirements": "Conjure Medium Creature",
+      "sourceMageryDc": 28,
+      "sourceRange": "Close",
+      "sourceTarget": "One unoccupied 5-foot square",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 65,
+      "effect": "summoning",
+      "prerequisites": [
+        "conjure-creature-medium"
+      ],
+      "prerequisiteGroups": [
+        [
+          "conjure-creature-medium"
+        ]
+      ]
+    },
+    {
+      "id": "conjure-creature-huge",
+      "name": "Conjure Creature, Huge",
+      "school": "conjuration",
+      "requirements": "Conjure Large Creature",
+      "sourceMageryDc": 32,
+      "sourceRange": "Close",
+      "sourceTarget": "One unoccupied 10-foot square area",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 65,
+      "effect": "summoning",
+      "prerequisites": [
+        "conjure-creature-large"
+      ],
+      "prerequisiteGroups": [
+        [
+          "conjure-creature-large"
+        ]
+      ]
+    },
+    {
+      "id": "conjure-creature-gargantuan",
+      "name": "Conjure Creature, Gargantuan",
+      "school": "conjuration",
+      "requirements": "Conjure Huge Creature",
+      "sourceMageryDc": 36,
+      "sourceRange": "Close",
+      "sourceTarget": "One unoccupied 15-foot square area",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 65,
+      "effect": "summoning",
+      "prerequisites": [
+        "conjure-creature-huge"
+      ],
+      "prerequisiteGroups": [
+        [
+          "conjure-creature-huge"
+        ]
+      ]
+    },
+    {
+      "id": "conjure-creature-colossal",
+      "name": "Conjure Creature, Colossal",
+      "school": "conjuration",
+      "requirements": "Conjure Gargantuan Creature",
+      "sourceMageryDc": 40,
+      "sourceRange": "Close",
+      "sourceTarget": "One unoccupied 20-foot square area",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 66,
+      "effect": "summoning",
+      "prerequisites": [
+        "conjure-creature-gargantuan"
+      ],
+      "prerequisiteGroups": [
+        [
+          "conjure-creature-gargantuan"
+        ]
+      ]
+    },
+    {
+      "id": "conjure-daemon-lesser",
+      "name": "Conjure Daemon, Lesser",
+      "school": "conjuration",
+      "requirements": "Conjure Small Animal, Power Device",
+      "sourceMageryDc": 22,
+      "sourceRange": "Touch",
+      "sourceTarget": "One computer",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 66,
+      "effect": "summoning",
+      "prerequisites": [
+        "conjure-creature-small",
+        "power-device"
+      ],
+      "prerequisiteGroups": [
+        [
+          "conjure-creature-small"
+        ],
+        [
+          "power-device"
+        ]
+      ]
+    },
+    {
+      "id": "conjure-daemon",
+      "name": "Conjure Daemon",
+      "school": "conjuration",
+      "requirements": "Conjure Lesser Daemon, Conjure Medium Creature, Conjuration as a standard aptitude",
+      "sourceMageryDc": 27,
+      "sourceRange": "Touch",
+      "sourceTarget": "One computer",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 66,
+      "effect": "summoning",
+      "prerequisites": [
+        "conjure-daemon-lesser",
+        "conjure-creature-medium"
+      ],
+      "prerequisiteGroups": [
+        [
+          "conjure-daemon-lesser"
+        ],
+        [
+          "conjure-creature-medium"
+        ]
+      ]
+    },
+    {
+      "id": "conjure-daemon-greater",
+      "name": "Conjure Daemon, Greater",
+      "school": "conjuration",
+      "requirements": "Conjure Daemon, Conjure Large Creature, Conjuration as a primary aptitude",
+      "sourceMageryDc": 33,
+      "sourceRange": "Touch",
+      "sourceTarget": "One computer",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 67,
+      "effect": "summoning",
+      "prerequisites": [
+        "conjure-daemon",
+        "conjure-creature-large"
+      ],
+      "prerequisiteGroups": [
+        [
+          "conjure-daemon"
+        ],
+        [
+          "conjure-creature-large"
+        ]
+      ]
+    },
+    {
+      "id": "conjure-daemon-monitoring",
+      "name": "Conjure Daemon, Monitoring",
+      "school": "conjuration",
+      "requirements": "Conjure Lesser Daemon, Message",
+      "sourceMageryDc": 25,
+      "sourceRange": "Touch",
+      "sourceTarget": "One computer",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 67,
+      "effect": "summoning",
+      "prerequisites": [
+        "conjure-daemon-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "conjure-daemon-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "creation-minor",
+      "name": "Creation, Minor",
+      "school": "conjuration",
+      "requirements": "Minor Repairs, Conjure Small Animal",
+      "sourceMageryDc": 34,
+      "sourceRange": "Touch",
+      "sourceTarget": "Object touched",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 67,
+      "effect": "creation",
+      "prerequisites": [
+        "repairs-minor",
+        "conjure-creature-small"
+      ],
+      "prerequisiteGroups": [
+        [
+          "repairs-minor"
+        ],
+        [
+          "conjure-creature-small"
+        ]
+      ]
+    },
+    {
+      "id": "creation-major",
+      "name": "Creation, Major",
+      "school": "conjuration",
+      "requirements": "Major Repairs, Minor Creation",
+      "sourceMageryDc": 42,
+      "sourceRange": "Touch",
+      "sourceTarget": "Object touched",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 68,
+      "effect": "creation",
+      "prerequisites": [
+        "repairs-major",
+        "creation-minor"
+      ],
+      "prerequisiteGroups": [
+        [
+          "repairs-major"
+        ],
+        [
+          "creation-minor"
+        ]
+      ]
+    },
+    {
+      "id": "darkness",
+      "name": "Darkness",
+      "school": "conjuration",
+      "requirements": "Bright Light",
+      "sourceMageryDc": 19,
+      "sourceRange": "Touch",
+      "sourceTarget": "One object",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 68,
+      "effect": "utility",
+      "prerequisites": [
+        "light-bright"
+      ],
+      "prerequisiteGroups": [
+        [
+          "light-bright"
+        ]
+      ]
+    },
+    {
+      "id": "daylight",
+      "name": "Daylight",
+      "school": "conjuration",
+      "requirements": "Bright Light",
+      "sourceMageryDc": 21,
+      "sourceRange": "Touch",
+      "sourceTarget": "One object",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 68,
+      "effect": "utility",
+      "prerequisites": [
+        "light-bright"
+      ],
+      "prerequisiteGroups": [
+        [
+          "light-bright"
+        ]
+      ]
+    },
+    {
+      "id": "dimensional-pocket",
+      "name": "Dimensional Pocket",
+      "school": "conjuration",
+      "requirements": "Minor Creation, Displacement",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One container",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 68,
+      "effect": "utility",
+      "prerequisites": [
+        "creation-minor",
+        "displacement"
+      ],
+      "prerequisiteGroups": [
+        [
+          "creation-minor"
+        ],
+        [
+          "displacement"
+        ]
+      ]
+    },
+    {
+      "id": "disguise",
+      "name": "Disguise",
+      "school": "conjuration",
+      "requirements": "Greater Phantom Image",
+      "sourceMageryDc": 23,
+      "sourceRange": "Touch",
+      "sourceTarget": "Creature or object touched",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 68,
+      "effect": "illusion",
+      "prerequisites": [
+        "phantom-image-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "phantom-image-greater"
+        ]
+      ]
+    },
+    {
+      "id": "disguise-area",
+      "name": "Disguise, Area",
+      "school": "conjuration",
+      "requirements": "Greater Mass Disguise",
+      "sourceMageryDc": 38,
+      "sourceRange": "Close",
+      "sourceTarget": "30-foot radius sphere",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 69,
+      "effect": "illusion",
+      "prerequisites": [
+        "disguise-mass-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "disguise-mass-greater"
+        ]
+      ]
+    },
+    {
+      "id": "disguise-greater",
+      "name": "Disguise, Greater",
+      "school": "conjuration",
+      "requirements": "Disguise, Mimic Sound",
+      "sourceMageryDc": 29,
+      "sourceRange": "Touch",
+      "sourceTarget": "Creature or object touched",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 69,
+      "effect": "illusion",
+      "prerequisites": [
+        "disguise",
+        "mimic-sound"
+      ],
+      "prerequisiteGroups": [
+        [
+          "disguise"
+        ],
+        [
+          "mimic-sound"
+        ]
+      ]
+    },
+    {
+      "id": "disguise-mass",
+      "name": "Disguise, Mass",
+      "school": "conjuration",
+      "requirements": "Disguise",
+      "sourceMageryDc": 26,
+      "sourceRange": "Self",
+      "sourceTarget": "10-foot radius sphere around the caster",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 69,
+      "effect": "illusion",
+      "prerequisites": [
+        "disguise"
+      ],
+      "prerequisiteGroups": [
+        [
+          "disguise"
+        ]
+      ]
+    },
+    {
+      "id": "disguise-mass-greater",
+      "name": "Disguise, Mass, Greater",
+      "school": "conjuration",
+      "requirements": "Greater Disguise, Mass Disguise",
+      "sourceMageryDc": 32,
+      "sourceRange": "Self",
+      "sourceTarget": "15-foot radius sphere around the caster",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 69,
+      "effect": "illusion",
+      "prerequisites": [
+        "disguise-greater",
+        "disguise-mass"
+      ],
+      "prerequisiteGroups": [
+        [
+          "disguise-greater"
+        ],
+        [
+          "disguise-mass"
+        ]
+      ]
+    },
+    {
+      "id": "displacement",
+      "name": "Displacement",
+      "school": "conjuration",
+      "requirements": "Disguise, Duplicate Image",
+      "sourceMageryDc": 25,
+      "sourceRange": "Touch",
+      "sourceTarget": "Creature or object touched",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 69,
+      "effect": "illusion",
+      "prerequisites": [
+        "disguise",
+        "duplicate-image"
+      ],
+      "prerequisiteGroups": [
+        [
+          "disguise"
+        ],
+        [
+          "duplicate-image"
+        ]
+      ]
+    },
+    {
+      "id": "duplicate-image",
+      "name": "Duplicate Image",
+      "school": "conjuration",
+      "requirements": "Greater Phantom Image",
+      "sourceMageryDc": 22,
+      "sourceRange": "Touch",
+      "sourceTarget": "Creature or object touched",
+      "sourceDuration": "3 rounds",
+      "elementalCategory": null,
+      "sourcePage": 70,
+      "effect": "utility",
+      "prerequisites": [
+        "phantom-image-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "phantom-image-greater"
+        ]
+      ]
+    },
+    {
+      "id": "fearful-visage",
+      "name": "Fearful Visage",
+      "school": "conjuration",
+      "requirements": "Disguise",
+      "sourceMageryDc": 19,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 70,
+      "effect": "illusion",
+      "prerequisites": [
+        "disguise"
+      ],
+      "prerequisiteGroups": [
+        [
+          "disguise"
+        ]
+      ]
+    },
+    {
+      "id": "flare",
+      "name": "Flare",
+      "school": "conjuration",
+      "requirements": "None",
+      "sourceMageryDc": 14,
+      "sourceRange": "Medium",
+      "sourceTarget": "One square",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 70,
+      "effect": "utility",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "homunculus",
+      "name": "Homunculus",
+      "school": "conjuration",
+      "requirements": "Duplicate Image, Conjure Small Creature",
+      "sourceMageryDc": 30,
+      "sourceRange": "Touch",
+      "sourceTarget": "Creature or object touched",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 71,
+      "effect": "summoning",
+      "prerequisites": [
+        "duplicate-image",
+        "conjure-creature-small"
+      ],
+      "prerequisiteGroups": [
+        [
+          "duplicate-image"
+        ],
+        [
+          "conjure-creature-small"
+        ]
+      ]
+    },
+    {
+      "id": "light",
+      "name": "Light",
+      "school": "conjuration",
+      "requirements": "Flare",
+      "sourceMageryDc": 16,
+      "sourceRange": "Touch",
+      "sourceTarget": "One object",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 71,
+      "effect": "utility",
+      "prerequisites": [
+        "flare"
+      ],
+      "prerequisiteGroups": [
+        [
+          "flare"
+        ]
+      ]
+    },
+    {
+      "id": "light-blinding",
+      "name": "Light, Blinding",
+      "school": "conjuration",
+      "requirements": "Bright Light",
+      "sourceMageryDc": 18,
+      "sourceRange": "Close",
+      "sourceTarget": "One point in space",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 71,
+      "effect": "utility",
+      "prerequisites": [
+        "light-bright"
+      ],
+      "prerequisiteGroups": [
+        [
+          "light-bright"
+        ]
+      ]
+    },
+    {
+      "id": "light-bright",
+      "name": "Light, Bright",
+      "school": "conjuration",
+      "requirements": "Flare",
+      "sourceMageryDc": 18,
+      "sourceRange": "Touch",
+      "sourceTarget": "One object",
+      "sourceDuration": "5 minutes",
+      "elementalCategory": null,
+      "sourcePage": 71,
+      "effect": "utility",
+      "prerequisites": [
+        "flare"
+      ],
+      "prerequisiteGroups": [
+        [
+          "flare"
+        ]
+      ]
+    },
+    {
+      "id": "light-dazzling",
+      "name": "Light, Dazzling",
+      "school": "conjuration",
+      "requirements": "Bright Light",
+      "sourceMageryDc": 21,
+      "sourceRange": "Close",
+      "sourceTarget": "One point in space",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 71,
+      "effect": "utility",
+      "prerequisites": [
+        "light-bright"
+      ],
+      "prerequisiteGroups": [
+        [
+          "light-bright"
+        ]
+      ]
+    },
+    {
+      "id": "light-hypnotising",
+      "name": "Light, Hypnotising",
+      "school": "conjuration",
+      "requirements": "Dazzling Light",
+      "sourceMageryDc": 23,
+      "sourceRange": "5 feet",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 72,
+      "effect": "utility",
+      "prerequisites": [
+        "light-dazzling"
+      ],
+      "prerequisiteGroups": [
+        [
+          "light-dazzling"
+        ]
+      ]
+    },
+    {
+      "id": "mage-ear",
+      "name": "Mage Ear",
+      "school": "conjuration",
+      "requirements": "Phantom Image, Sharp Ears",
+      "sourceMageryDc": 16,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 72,
+      "effect": "utility",
+      "prerequisites": [
+        "phantom-image",
+        "sharp-ears"
+      ],
+      "prerequisiteGroups": [
+        [
+          "phantom-image"
+        ],
+        [
+          "sharp-ears"
+        ]
+      ]
+    },
+    {
+      "id": "mage-eye",
+      "name": "Mage Eye",
+      "school": "conjuration",
+      "requirements": "Phantom Image, Sharp Eyes",
+      "sourceMageryDc": 16,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 72,
+      "effect": "utility",
+      "prerequisites": [
+        "phantom-image",
+        "sharp-eyes"
+      ],
+      "prerequisiteGroups": [
+        [
+          "phantom-image"
+        ],
+        [
+          "sharp-eyes"
+        ]
+      ]
+    },
+    {
+      "id": "mage-head",
+      "name": "Mage Head",
+      "school": "conjuration",
+      "requirements": "Mage Eye, Mage Ear",
+      "sourceMageryDc": 20,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 72,
+      "effect": "utility",
+      "prerequisites": [
+        "mage-eye",
+        "mage-ear"
+      ],
+      "prerequisiteGroups": [
+        [
+          "mage-eye"
+        ],
+        [
+          "mage-ear"
+        ]
+      ]
+    },
+    {
+      "id": "missile",
+      "name": "Missile",
+      "school": "conjuration",
+      "requirements": "Minor Creation",
+      "sourceMageryDc": 20,
+      "sourceRange": "Medium (Ranged Touch)",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 73,
+      "effect": "attack",
+      "prerequisites": [
+        "creation-minor"
+      ],
+      "prerequisiteGroups": [
+        [
+          "creation-minor"
+        ]
+      ]
+    },
+    {
+      "id": "missile-greater",
+      "name": "Missile, Greater",
+      "school": "conjuration",
+      "requirements": "Missile",
+      "sourceMageryDc": 25,
+      "sourceRange": "Medium (Ranged Touch)",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 73,
+      "effect": "attack",
+      "prerequisites": [
+        "missile"
+      ],
+      "prerequisiteGroups": [
+        [
+          "missile"
+        ]
+      ]
+    },
+    {
+      "id": "missile-killer",
+      "name": "Missile, Killer",
+      "school": "conjuration",
+      "requirements": "Greater",
+      "sourceMageryDc": null,
+      "sourceRange": "Medium (Ranged Touch)",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 73,
+      "effect": "attack",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "missile-swarm",
+      "name": "Missile Swarm",
+      "school": "conjuration",
+      "requirements": "Greater Missile",
+      "sourceMageryDc": 28,
+      "sourceRange": "Medium (Ranged Touch)",
+      "sourceTarget": "10-foot radius sphere",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 73,
+      "effect": "attack",
+      "prerequisites": [
+        "missile-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "missile-greater"
+        ]
+      ]
+    },
+    {
+      "id": "phantom-image",
+      "name": "Phantom Image",
+      "school": "conjuration",
+      "requirements": "Light",
+      "sourceMageryDc": 15,
+      "sourceRange": "Close",
+      "sourceTarget": "One 5-foot square",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 73,
+      "effect": "illusion",
+      "prerequisites": [
+        "light"
+      ],
+      "prerequisiteGroups": [
+        [
+          "light"
+        ]
+      ]
+    },
+    {
+      "id": "phantom-image-greater",
+      "name": "Phantom Image, Greater",
+      "school": "conjuration",
+      "requirements": "Phantom Image, Bright Light",
+      "sourceMageryDc": 18,
+      "sourceRange": "Medium",
+      "sourceTarget": "5-foot radius cube",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 74,
+      "effect": "illusion",
+      "prerequisites": [
+        "phantom-image",
+        "light-bright"
+      ],
+      "prerequisiteGroups": [
+        [
+          "phantom-image"
+        ],
+        [
+          "light-bright"
+        ]
+      ]
+    },
+    {
+      "id": "phantom-image-perfect",
+      "name": "Phantom Image, Perfect",
+      "school": "conjuration",
+      "requirements": "Greater Phantom Image, Ventriloquism",
+      "sourceMageryDc": 21,
+      "sourceRange": "Medium",
+      "sourceTarget": "10-foot radius cube",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 74,
+      "effect": "illusion",
+      "prerequisites": [
+        "phantom-image-greater",
+        "ventriloquism"
+      ],
+      "prerequisiteGroups": [
+        [
+          "phantom-image-greater"
+        ],
+        [
+          "ventriloquism"
+        ]
+      ]
+    },
+    {
+      "id": "repairs-minor",
+      "name": "Repairs, Minor",
+      "school": "conjuration",
+      "requirements": "Phantom Image",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "Object touched",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 74,
+      "effect": "creation",
+      "prerequisites": [
+        "phantom-image"
+      ],
+      "prerequisiteGroups": [
+        [
+          "phantom-image"
+        ]
+      ]
+    },
+    {
+      "id": "repairs-major",
+      "name": "Repairs, Major",
+      "school": "conjuration",
+      "requirements": "Minor Repairs",
+      "sourceMageryDc": 25,
+      "sourceRange": "Touch",
+      "sourceTarget": "Object touched",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 74,
+      "effect": "creation",
+      "prerequisites": [
+        "repairs-minor"
+      ],
+      "prerequisiteGroups": [
+        [
+          "repairs-minor"
+        ]
+      ]
+    },
+    {
+      "id": "suggestion",
+      "name": "Suggestion",
+      "school": "conjuration",
+      "requirements": "Hypnotising Light",
+      "sourceMageryDc": 25,
+      "sourceRange": "5 feet",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 75,
+      "effect": "illusion",
+      "prerequisites": [
+        "light-hypnotising"
+      ],
+      "prerequisiteGroups": [
+        [
+          "light-hypnotising"
+        ]
+      ]
+    },
+    {
+      "id": "will-o-wisp",
+      "name": "Will-O-Wisp",
+      "school": "conjuration",
+      "requirements": "Light",
+      "sourceMageryDc": 20,
+      "sourceRange": "Medium",
+      "sourceTarget": "One point in space",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 75,
+      "effect": "illusion",
+      "prerequisites": [
+        "light"
+      ],
+      "prerequisiteGroups": [
+        [
+          "light"
+        ]
+      ]
+    },
+    {
+      "id": "attract",
+      "name": "Attract",
+      "school": "movement",
+      "requirements": "Push",
+      "sourceMageryDc": 19,
+      "sourceRange": "Close",
+      "sourceTarget": "One object",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 75,
+      "effect": "movement",
+      "prerequisites": [
+        "push"
+      ],
+      "prerequisiteGroups": [
+        [
+          "push"
+        ]
+      ]
+    },
+    {
+      "id": "balance",
+      "name": "Balance",
+      "school": "movement",
+      "requirements": "Lighten Object",
+      "sourceMageryDc": 15,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 76,
+      "effect": "movement",
+      "prerequisites": [
+        "lighten-object"
+      ],
+      "prerequisiteGroups": [
+        [
+          "lighten-object"
+        ]
+      ]
+    },
+    {
+      "id": "blink",
+      "name": "Blink",
+      "school": "movement",
+      "requirements": "Slow Time",
+      "sourceMageryDc": 30,
+      "sourceRange": "Close",
+      "sourceTarget": "Self",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 76,
+      "effect": "movement",
+      "prerequisites": [
+        "slow-time"
+      ],
+      "prerequisiteGroups": [
+        [
+          "slow-time"
+        ]
+      ]
+    },
+    {
+      "id": "burst-of-speed",
+      "name": "Burst of Speed",
+      "school": "movement",
+      "requirements": "Balance",
+      "sourceMageryDc": 18,
+      "sourceRange": "Self",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 76,
+      "effect": "movement",
+      "prerequisites": [
+        "balance"
+      ],
+      "prerequisiteGroups": [
+        [
+          "balance"
+        ]
+      ]
+    },
+    {
+      "id": "centre-gravity",
+      "name": "Centre Gravity",
+      "school": "movement",
+      "requirements": "Greater Lighten Object",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 76,
+      "effect": "movement",
+      "prerequisites": [
+        "lighten-object-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "lighten-object-greater"
+        ]
+      ]
+    },
+    {
+      "id": "centre-gravity-mass",
+      "name": "Centre Gravity, Mass",
+      "school": "movement",
+      "requirements": "Centre Gravity",
+      "sourceMageryDc": 25,
+      "sourceRange": "Self",
+      "sourceTarget": "15-foot radius sphere around the caster",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 76,
+      "effect": "movement",
+      "prerequisites": [
+        "centre-gravity"
+      ],
+      "prerequisiteGroups": [
+        [
+          "centre-gravity"
+        ]
+      ]
+    },
+    {
+      "id": "cone-of-gravity",
+      "name": "Cone of Gravity",
+      "school": "movement",
+      "requirements": "Gravitic Bolt",
+      "sourceMageryDc": 25,
+      "sourceRange": "Close",
+      "sourceTarget": "Cone extending away from the mage",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 76,
+      "effect": "movement",
+      "prerequisites": [
+        "gravitic-bolt"
+      ],
+      "prerequisiteGroups": [
+        [
+          "gravitic-bolt"
+        ]
+      ]
+    },
+    {
+      "id": "control-wind",
+      "name": "Control Wind",
+      "school": "movement",
+      "requirements": "None",
+      "sourceMageryDc": 15,
+      "sourceRange": "Self",
+      "sourceTarget": "30-foot radius sphere",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 77,
+      "effect": "movement",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "floating-box",
+      "name": "Floating Box",
+      "school": "movement",
+      "requirements": "Floating Sphere, Personal Shield",
+      "sourceMageryDc": 21,
+      "sourceRange": "Touch",
+      "sourceTarget": "One five-foot square",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 77,
+      "effect": "movement",
+      "prerequisites": [
+        "floating-sphere",
+        "shield-personal"
+      ],
+      "prerequisiteGroups": [
+        [
+          "floating-sphere"
+        ],
+        [
+          "shield-personal"
+        ]
+      ]
+    },
+    {
+      "id": "floating-disc",
+      "name": "Floating Disc",
+      "school": "movement",
+      "requirements": "None",
+      "sourceMageryDc": 13,
+      "sourceRange": "Touch",
+      "sourceTarget": "One point in space",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 77,
+      "effect": "movement",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "floating-sphere",
+      "name": "Floating Sphere",
+      "school": "movement",
+      "requirements": "Floating Disc, Lesser Personal Shield",
+      "sourceMageryDc": 17,
+      "sourceRange": "Touch",
+      "sourceTarget": "One five-foot square",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 77,
+      "effect": "movement",
+      "prerequisites": [
+        "floating-disc",
+        "shield-personal-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "floating-disc"
+        ],
+        [
+          "shield-personal-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "flying-platform",
+      "name": "Flying Platform",
+      "school": "movement",
+      "requirements": "Levitation Platform",
+      "sourceMageryDc": 28,
+      "sourceRange": "Close",
+      "sourceTarget": "One five-foot square",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 78,
+      "effect": "movement",
+      "prerequisites": [
+        "levitation-platform"
+      ],
+      "prerequisiteGroups": [
+        [
+          "levitation-platform"
+        ]
+      ]
+    },
+    {
+      "id": "flying-platform-fast",
+      "name": "Flying Platform, Fast",
+      "school": "movement",
+      "requirements": "Flying Platform",
+      "sourceMageryDc": 32,
+      "sourceRange": "Close",
+      "sourceTarget": "One five-foot square",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 78,
+      "effect": "movement",
+      "prerequisites": [
+        "flying-platform"
+      ],
+      "prerequisiteGroups": [
+        [
+          "flying-platform"
+        ]
+      ]
+    },
+    {
+      "id": "flying-platform-large",
+      "name": "Flying Platform, Large",
+      "school": "movement",
+      "requirements": "Flying Platform",
+      "sourceMageryDc": 35,
+      "sourceRange": "Close",
+      "sourceTarget": "One ten-foot square",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 78,
+      "effect": "movement",
+      "prerequisites": [
+        "flying-platform"
+      ],
+      "prerequisiteGroups": [
+        [
+          "flying-platform"
+        ]
+      ]
+    },
+    {
+      "id": "flying-platform-manoeuvrable",
+      "name": "Flying Platform, Manoeuvrable",
+      "school": "movement",
+      "requirements": "Flying Platform",
+      "sourceMageryDc": 32,
+      "sourceRange": "Close",
+      "sourceTarget": "One five-foot square",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 78,
+      "effect": "movement",
+      "prerequisites": [
+        "flying-platform"
+      ],
+      "prerequisiteGroups": [
+        [
+          "flying-platform"
+        ]
+      ]
+    },
+    {
+      "id": "flying-vehicle",
+      "name": "Flying Vehicle",
+      "school": "movement",
+      "requirements": "Large Flying Platform, Fast Flying Platform, Manoeuvrable Flying Platform, Greater Phantom Image",
+      "sourceMageryDc": 40,
+      "sourceRange": "Close",
+      "sourceTarget": "One ten-foot by twenty-foot area",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 78,
+      "effect": "movement",
+      "prerequisites": [
+        "flying-platform-large",
+        "flying-platform-manoeuvrable",
+        "flying-platform",
+        "phantom-image-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "flying-platform-large"
+        ],
+        [
+          "flying-platform-manoeuvrable"
+        ],
+        [
+          "flying-platform"
+        ],
+        [
+          "phantom-image-greater"
+        ]
+      ]
+    },
+    {
+      "id": "friction",
+      "name": "Friction",
+      "school": "movement",
+      "requirements": "Gravity Platform",
+      "sourceMageryDc": 20,
+      "sourceRange": "Close (Ranged Touch)",
+      "sourceTarget": "One creature or vehicle",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 79,
+      "effect": "movement",
+      "prerequisites": [
+        "gravity-platform"
+      ],
+      "prerequisiteGroups": [
+        [
+          "gravity-platform"
+        ]
+      ]
+    },
+    {
+      "id": "gravitic-bolt",
+      "name": "Gravitic Bolt",
+      "school": "movement",
+      "requirements": "Knockback, Floating Disc",
+      "sourceMageryDc": 20,
+      "sourceRange": "Close (Ranged Touch)",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 79,
+      "effect": "movement",
+      "prerequisites": [
+        "knockback",
+        "floating-disc"
+      ],
+      "prerequisiteGroups": [
+        [
+          "knockback"
+        ],
+        [
+          "floating-disc"
+        ]
+      ]
+    },
+    {
+      "id": "gravity-platform",
+      "name": "Gravity Platform",
+      "school": "movement",
+      "requirements": "Centre Gravity",
+      "sourceMageryDc": 22,
+      "sourceRange": "Close",
+      "sourceTarget": "One surface of up to 5 feet in diameter",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 79,
+      "effect": "movement",
+      "prerequisites": [
+        "centre-gravity"
+      ],
+      "prerequisiteGroups": [
+        [
+          "centre-gravity"
+        ]
+      ]
+    },
+    {
+      "id": "halt",
+      "name": "Halt",
+      "school": "movement",
+      "requirements": "Friction",
+      "sourceMageryDc": 24,
+      "sourceRange": "Close",
+      "sourceTarget": "One vehicle",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 79,
+      "effect": "movement",
+      "prerequisites": [
+        "friction"
+      ],
+      "prerequisiteGroups": [
+        [
+          "friction"
+        ]
+      ]
+    },
+    {
+      "id": "hold-in-place",
+      "name": "Hold In Place",
+      "school": "movement",
+      "requirements": "Halt, Cone of Gravity",
+      "sourceMageryDc": 26,
+      "sourceRange": "Close (Ranged Touch)",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 79,
+      "effect": "movement",
+      "prerequisites": [
+        "halt",
+        "cone-of-gravity"
+      ],
+      "prerequisiteGroups": [
+        [
+          "halt"
+        ],
+        [
+          "cone-of-gravity"
+        ]
+      ]
+    },
+    {
+      "id": "knockback",
+      "name": "Knockback",
+      "school": "movement",
+      "requirements": "Push",
+      "sourceMageryDc": 18,
+      "sourceRange": "Medium",
+      "sourceTarget": "One creature or object",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 80,
+      "effect": "movement",
+      "prerequisites": [
+        "push"
+      ],
+      "prerequisiteGroups": [
+        [
+          "push"
+        ]
+      ]
+    },
+    {
+      "id": "levitation-platform",
+      "name": "Levitation Platform",
+      "school": "movement",
+      "requirements": "Gravity Platform, Walk on Water",
+      "sourceMageryDc": 23,
+      "sourceRange": "Close",
+      "sourceTarget": "One five-foot square",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 80,
+      "effect": "movement",
+      "prerequisites": [
+        "gravity-platform",
+        "walk-on-water"
+      ],
+      "prerequisiteGroups": [
+        [
+          "gravity-platform"
+        ],
+        [
+          "walk-on-water"
+        ]
+      ]
+    },
+    {
+      "id": "lighten-object",
+      "name": "Lighten Object",
+      "school": "movement",
+      "requirements": "None",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature or object",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 81,
+      "effect": "movement",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "lighten-object-greater",
+      "name": "Lighten Object, Greater",
+      "school": "movement",
+      "requirements": "Lighten Object",
+      "sourceMageryDc": 18,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature or object",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 81,
+      "effect": "movement",
+      "prerequisites": [
+        "lighten-object"
+      ],
+      "prerequisiteGroups": [
+        [
+          "lighten-object"
+        ]
+      ]
+    },
+    {
+      "id": "mage-boat",
+      "name": "Mage Boat",
+      "school": "movement",
+      "requirements": "Mage Mount, Walk on Water",
+      "sourceMageryDc": 27,
+      "sourceRange": "Close",
+      "sourceTarget": "One 10-foot by 20-foot area",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 81,
+      "effect": "movement",
+      "prerequisites": [
+        "mage-mount",
+        "walk-on-water"
+      ],
+      "prerequisiteGroups": [
+        [
+          "mage-mount"
+        ],
+        [
+          "walk-on-water"
+        ]
+      ]
+    },
+    {
+      "id": "mage-mount",
+      "name": "Mage Mount",
+      "school": "movement",
+      "requirements": "Gravity Platform, Greater Phantom Image",
+      "sourceMageryDc": 24,
+      "sourceRange": "Close",
+      "sourceTarget": "One five-foot square",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 81,
+      "effect": "movement",
+      "prerequisites": [
+        "gravity-platform",
+        "phantom-image-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "gravity-platform"
+        ],
+        [
+          "phantom-image-greater"
+        ]
+      ]
+    },
+    {
+      "id": "push",
+      "name": "Push",
+      "school": "movement",
+      "requirements": "None",
+      "sourceMageryDc": 13,
+      "sourceRange": "Medium",
+      "sourceTarget": "One creature or object",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 81,
+      "effect": "movement",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "quickness",
+      "name": "Quickness",
+      "school": "movement",
+      "requirements": "Rapid Movement",
+      "sourceMageryDc": 25,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 82,
+      "effect": "movement",
+      "prerequisites": [
+        "rapid-movement"
+      ],
+      "prerequisiteGroups": [
+        [
+          "rapid-movement"
+        ]
+      ]
+    },
+    {
+      "id": "quickness-mass",
+      "name": "Quickness, Mass",
+      "school": "movement",
+      "requirements": "Quickness",
+      "sourceMageryDc": 32,
+      "sourceRange": "Close",
+      "sourceTarget": "15-foot radius sphere",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 82,
+      "effect": "movement",
+      "prerequisites": [
+        "quickness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "quickness"
+        ]
+      ]
+    },
+    {
+      "id": "rapid-movement",
+      "name": "Rapid Movement",
+      "school": "movement",
+      "requirements": "Burst of Speed",
+      "sourceMageryDc": 22,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature or vehicle",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 82,
+      "effect": "movement",
+      "prerequisites": [
+        "burst-of-speed"
+      ],
+      "prerequisiteGroups": [
+        [
+          "burst-of-speed"
+        ]
+      ]
+    },
+    {
+      "id": "slow-time",
+      "name": "Slow Time",
+      "school": "movement",
+      "requirements": "Mass Quickness, Hold in Place, Greater Telekinesis",
+      "sourceMageryDc": 26,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 82,
+      "effect": "movement",
+      "prerequisites": [
+        "quickness-mass",
+        "hold-in-place",
+        "telekinesis-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "quickness-mass"
+        ],
+        [
+          "hold-in-place"
+        ],
+        [
+          "telekinesis-greater"
+        ]
+      ]
+    },
+    {
+      "id": "slowfall",
+      "name": "Slowfall",
+      "school": "movement",
+      "requirements": "Weightlessness",
+      "sourceMageryDc": 18,
+      "sourceRange": "Close",
+      "sourceTarget": "One creature or object",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 82,
+      "effect": "movement",
+      "prerequisites": [
+        "weightlessness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "weightlessness"
+        ]
+      ]
+    },
+    {
+      "id": "slowfall-mass",
+      "name": "Slowfall, Mass",
+      "school": "movement",
+      "requirements": "Slowfall",
+      "sourceMageryDc": 23,
+      "sourceRange": "Self",
+      "sourceTarget": "20-foot radius around the caster",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 83,
+      "effect": "movement",
+      "prerequisites": [
+        "slowfall"
+      ],
+      "prerequisiteGroups": [
+        [
+          "slowfall"
+        ]
+      ]
+    },
+    {
+      "id": "sluggishness",
+      "name": "Sluggishness",
+      "school": "movement",
+      "requirements": "Rapid Movement, Friction",
+      "sourceMageryDc": 25,
+      "sourceRange": "Close (Ranged Touch)",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 83,
+      "effect": "movement",
+      "prerequisites": [
+        "rapid-movement",
+        "friction"
+      ],
+      "prerequisiteGroups": [
+        [
+          "rapid-movement"
+        ],
+        [
+          "friction"
+        ]
+      ]
+    },
+    {
+      "id": "sluggishness-mass",
+      "name": "Sluggishness, Mass",
+      "school": "movement",
+      "requirements": "Sluggishness",
+      "sourceMageryDc": 32,
+      "sourceRange": "Close",
+      "sourceTarget": "15-foot radius sphere",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 83,
+      "effect": "movement",
+      "prerequisites": [
+        "sluggishness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "sluggishness"
+        ]
+      ]
+    },
+    {
+      "id": "stop-time",
+      "name": "Stop Time",
+      "school": "movement",
+      "requirements": "Slow Time",
+      "sourceMageryDc": 40,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "See text",
+      "elementalCategory": null,
+      "sourcePage": 83,
+      "effect": "movement",
+      "prerequisites": [
+        "slow-time"
+      ],
+      "prerequisiteGroups": [
+        [
+          "slow-time"
+        ]
+      ]
+    },
+    {
+      "id": "telekinesis",
+      "name": "Telekinesis",
+      "school": "movement",
+      "requirements": "Attract",
+      "sourceMageryDc": 23,
+      "sourceRange": "Close",
+      "sourceTarget": "One object",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 83,
+      "effect": "movement",
+      "prerequisites": [
+        "attract"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attract"
+        ]
+      ]
+    },
+    {
+      "id": "telekinesis-greater",
+      "name": "Telekinesis, Greater",
+      "school": "movement",
+      "requirements": "Telekinesis",
+      "sourceMageryDc": 27,
+      "sourceRange": "Close",
+      "sourceTarget": "One object",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 84,
+      "effect": "movement",
+      "prerequisites": [
+        "telekinesis"
+      ],
+      "prerequisiteGroups": [
+        [
+          "telekinesis"
+        ]
+      ]
+    },
+    {
+      "id": "teleport",
+      "name": "Teleport",
+      "school": "movement",
+      "requirements": "Blink, Flying Platform, Weight of Gravity, Movement as a primary aptitude",
+      "sourceMageryDc": 38,
+      "sourceRange": "Close",
+      "sourceTarget": "Self",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 84,
+      "effect": "movement",
+      "prerequisites": [
+        "blink",
+        "flying-platform",
+        "weight-of-gravity"
+      ],
+      "prerequisiteGroups": [
+        [
+          "blink"
+        ],
+        [
+          "flying-platform"
+        ],
+        [
+          "weight-of-gravity"
+        ]
+      ]
+    },
+    {
+      "id": "teleport-greater",
+      "name": "Teleport, Greater",
+      "school": "movement",
+      "requirements": "Teleport",
+      "sourceMageryDc": 46,
+      "sourceRange": "Line of Sight",
+      "sourceTarget": "Self",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 84,
+      "effect": "movement",
+      "prerequisites": [
+        "teleport"
+      ],
+      "prerequisiteGroups": [
+        [
+          "teleport"
+        ]
+      ]
+    },
+    {
+      "id": "tread-lightly",
+      "name": "Tread Lightly",
+      "school": "movement",
+      "requirements": "Lighten Object",
+      "sourceMageryDc": 12,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature or vehicle",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 84,
+      "effect": "movement",
+      "prerequisites": [
+        "lighten-object"
+      ],
+      "prerequisiteGroups": [
+        [
+          "lighten-object"
+        ]
+      ]
+    },
+    {
+      "id": "walk-on-walls",
+      "name": "Walk on Walls",
+      "school": "movement",
+      "requirements": "Gravity Platform",
+      "sourceMageryDc": 26,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 84,
+      "effect": "movement",
+      "prerequisites": [
+        "gravity-platform"
+      ],
+      "prerequisiteGroups": [
+        [
+          "gravity-platform"
+        ]
+      ]
+    },
+    {
+      "id": "walk-on-water",
+      "name": "Walk on Water",
+      "school": "movement",
+      "requirements": "Gravity Platform",
+      "sourceMageryDc": 17,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature or vehicle",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 84,
+      "effect": "movement",
+      "prerequisites": [
+        "gravity-platform"
+      ],
+      "prerequisiteGroups": [
+        [
+          "gravity-platform"
+        ]
+      ]
+    },
+    {
+      "id": "wall-of-gravity",
+      "name": "Wall of Gravity",
+      "school": "movement",
+      "requirements": "Cone of Gravity",
+      "sourceMageryDc": 28,
+      "sourceRange": "Medium",
+      "sourceTarget": "Straight line of five 5-foot squares",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 85,
+      "effect": "movement",
+      "prerequisites": [
+        "cone-of-gravity"
+      ],
+      "prerequisiteGroups": [
+        [
+          "cone-of-gravity"
+        ]
+      ]
+    },
+    {
+      "id": "weight-of-gravity",
+      "name": "Weight of Gravity",
+      "school": "movement",
+      "requirements": "Wall of Gravity",
+      "sourceMageryDc": 35,
+      "sourceRange": "Close",
+      "sourceTarget": "20-foot radius sphere",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 85,
+      "effect": "movement",
+      "prerequisites": [
+        "wall-of-gravity"
+      ],
+      "prerequisiteGroups": [
+        [
+          "wall-of-gravity"
+        ]
+      ]
+    },
+    {
+      "id": "weightlessness",
+      "name": "Weightlessness",
+      "school": "movement",
+      "requirements": "Greater Lighten Object",
+      "sourceMageryDc": 23,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature or object",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 85,
+      "effect": "movement",
+      "prerequisites": [
+        "lighten-object-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "lighten-object-greater"
+        ]
+      ]
+    },
+    {
+      "id": "wind-gust",
+      "name": "Wind Gust",
+      "school": "movement",
+      "requirements": "Control Wind",
+      "sourceMageryDc": 17,
+      "sourceRange": "Medium",
+      "sourceTarget": "Hemispherical area facing away from the mage",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 85,
+      "effect": "movement",
+      "prerequisites": [
+        "control-wind"
+      ],
+      "prerequisiteGroups": [
+        [
+          "control-wind"
+        ]
+      ]
+    },
+    {
+      "id": "windstorm",
+      "name": "Windstorm",
+      "school": "movement",
+      "requirements": "Wind Gust",
+      "sourceMageryDc": 25,
+      "sourceRange": "Long",
+      "sourceTarget": "30-foot radius sphere",
+      "sourceDuration": "1 round",
+      "elementalCategory": null,
+      "sourcePage": 86,
+      "effect": "movement",
+      "prerequisites": [
+        "wind-gust"
+      ],
+      "prerequisiteGroups": [
+        [
+          "wind-gust"
+        ]
+      ]
+    },
+    {
+      "id": "clear-mind",
+      "name": "Clear Mind",
+      "school": "healing",
+      "requirements": "Remove Fear",
+      "sourceMageryDc": 21,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 87,
+      "effect": "healing",
+      "prerequisites": [
+        "remove-fear"
+      ],
+      "prerequisiteGroups": [
+        [
+          "remove-fear"
+        ]
+      ]
+    },
+    {
+      "id": "cure-blindness",
+      "name": "Cure Blindness",
+      "school": "healing",
+      "requirements": "Cure Deafness",
+      "sourceMageryDc": 25,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 87,
+      "effect": "healing",
+      "prerequisites": [
+        "cure-deafness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "cure-deafness"
+        ]
+      ]
+    },
+    {
+      "id": "cure-deafness",
+      "name": "Cure Deafness",
+      "school": "healing",
+      "requirements": "Moderate Healing, Restore Vitality",
+      "sourceMageryDc": 24,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 87,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-moderate",
+        "restore-vitality"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-moderate"
+        ],
+        [
+          "restore-vitality"
+        ]
+      ]
+    },
+    {
+      "id": "cure-disease",
+      "name": "Cure Disease",
+      "school": "healing",
+      "requirements": "Cure Poison, Greater Healing",
+      "sourceMageryDc": 33,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 87,
+      "effect": "healing",
+      "prerequisites": [
+        "cure-poison",
+        "healing-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "cure-poison"
+        ],
+        [
+          "healing-greater"
+        ]
+      ]
+    },
+    {
+      "id": "cure-poison",
+      "name": "Cure Poison",
+      "school": "healing",
+      "requirements": "Cure Blindness",
+      "sourceMageryDc": 28,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 87,
+      "effect": "healing",
+      "prerequisites": [
+        "cure-blindness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "cure-blindness"
+        ]
+      ]
+    },
+    {
+      "id": "cure-radiation",
+      "name": "Cure Radiation",
+      "school": "healing",
+      "requirements": "Cure Disease",
+      "sourceMageryDc": 35,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 87,
+      "effect": "healing",
+      "prerequisites": [
+        "cure-disease"
+      ],
+      "prerequisiteGroups": [
+        [
+          "cure-disease"
+        ]
+      ]
+    },
+    {
+      "id": "extend-life",
+      "name": "Extend Life",
+      "school": "healing",
+      "requirements": "Raise Dead",
+      "sourceMageryDc": 40,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "Ongoing",
+      "elementalCategory": null,
+      "sourcePage": 88,
+      "effect": "healing",
+      "prerequisites": [
+        "raise-dead"
+      ],
+      "prerequisiteGroups": [
+        [
+          "raise-dead"
+        ]
+      ]
+    },
+    {
+      "id": "healing-minor",
+      "name": "Healing, Minor",
+      "school": "healing",
+      "requirements": "Stabilise",
+      "sourceMageryDc": 15,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 88,
+      "effect": "healing",
+      "prerequisites": [
+        "stabilise"
+      ],
+      "prerequisiteGroups": [
+        [
+          "stabilise"
+        ]
+      ]
+    },
+    {
+      "id": "healing-lesser",
+      "name": "Healing, Lesser",
+      "school": "healing",
+      "requirements": "Minor Healing",
+      "sourceMageryDc": 19,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 88,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-minor"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-minor"
+        ]
+      ]
+    },
+    {
+      "id": "healing-lesser-mass",
+      "name": "Healing, Lesser, Mass",
+      "school": "healing",
+      "requirements": "Lesser Healing",
+      "sourceMageryDc": 25,
+      "sourceRange": "5 feet",
+      "sourceTarget": "Up to 8 creatures",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 88,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "healing-moderate",
+      "name": "Healing, Moderate",
+      "school": "healing",
+      "requirements": "Lesser Healing",
+      "sourceMageryDc": 23,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 88,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "healing-moderate-mass",
+      "name": "Healing, Moderate, Mass",
+      "school": "healing",
+      "requirements": "Moderate Healing",
+      "sourceMageryDc": 30,
+      "sourceRange": "5 feet",
+      "sourceTarget": "Up to 8 creatures",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 88,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-moderate"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-moderate"
+        ]
+      ]
+    },
+    {
+      "id": "healing-greater",
+      "name": "Healing, Greater",
+      "school": "healing",
+      "requirements": "Moderate Healing",
+      "sourceMageryDc": 27,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 89,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-moderate"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-moderate"
+        ]
+      ]
+    },
+    {
+      "id": "healing-greater-mass",
+      "name": "Healing, Greater, Mass",
+      "school": "healing",
+      "requirements": "Greater Healing",
+      "sourceMageryDc": 35,
+      "sourceRange": "5 feet",
+      "sourceTarget": "Up to 8 creatures",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 89,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-greater"
+        ]
+      ]
+    },
+    {
+      "id": "healing-major",
+      "name": "Healing, Major",
+      "school": "healing",
+      "requirements": "Greater Healing",
+      "sourceMageryDc": 31,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 89,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-greater"
+        ]
+      ]
+    },
+    {
+      "id": "healing-total",
+      "name": "Healing, Total",
+      "school": "healing",
+      "requirements": "Major Healing, Healing school as a primary aptitude",
+      "sourceMageryDc": 35,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 89,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-major"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-major"
+        ]
+      ]
+    },
+    {
+      "id": "loan-life",
+      "name": "Loan Life",
+      "school": "healing",
+      "requirements": "Remove Fatigue, Lesser Healing",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 89,
+      "effect": "healing",
+      "prerequisites": [
+        "remove-fatigue",
+        "healing-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "remove-fatigue"
+        ],
+        [
+          "healing-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "monitor-lifesigns",
+      "name": "Monitor Lifesigns",
+      "school": "healing",
+      "requirements": "Lesser Healing",
+      "sourceMageryDc": 15,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 89,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "monitor-lifesigns-mass",
+      "name": "Monitor Lifesigns, Mass",
+      "school": "healing",
+      "requirements": "Monitor Lifesigns, Mass Lesser Healing",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "Up to 6 creatures (5 for weak aptitudes, 8 for primaries)",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 90,
+      "effect": "healing",
+      "prerequisites": [
+        "monitor-lifesigns",
+        "healing-lesser-mass"
+      ],
+      "prerequisiteGroups": [
+        [
+          "monitor-lifesigns"
+        ],
+        [
+          "healing-lesser-mass"
+        ]
+      ]
+    },
+    {
+      "id": "raise-dead",
+      "name": "Raise Dead",
+      "school": "healing",
+      "requirements": "Total Healing, Healing school as a primary aptitude",
+      "sourceMageryDc": 40,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Ongoing",
+      "elementalCategory": null,
+      "sourcePage": 90,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-total"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-total"
+        ]
+      ]
+    },
+    {
+      "id": "regeneration",
+      "name": "Regeneration",
+      "school": "healing",
+      "requirements": "Cure Radiation, Major Healing, Healing school as a primary aptitude",
+      "sourceMageryDc": 35,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Varies",
+      "elementalCategory": null,
+      "sourcePage": 90,
+      "effect": "healing",
+      "prerequisites": [
+        "cure-radiation",
+        "healing-major"
+      ],
+      "prerequisiteGroups": [
+        [
+          "cure-radiation"
+        ],
+        [
+          "healing-major"
+        ]
+      ]
+    },
+    {
+      "id": "regeneration-greater",
+      "name": "Regeneration, Greater",
+      "school": "healing",
+      "requirements": "Regeneration, Total Healing",
+      "sourceMageryDc": 45,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 day",
+      "elementalCategory": null,
+      "sourcePage": 91,
+      "effect": "healing",
+      "prerequisites": [
+        "regeneration",
+        "healing-total"
+      ],
+      "prerequisiteGroups": [
+        [
+          "regeneration"
+        ],
+        [
+          "healing-total"
+        ]
+      ]
+    },
+    {
+      "id": "remove-nausea",
+      "name": "Remove Nausea",
+      "school": "healing",
+      "requirements": "Stabilise",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 91,
+      "effect": "healing",
+      "prerequisites": [
+        "stabilise"
+      ],
+      "prerequisiteGroups": [
+        [
+          "stabilise"
+        ]
+      ]
+    },
+    {
+      "id": "remove-fear",
+      "name": "Remove Fear",
+      "school": "healing",
+      "requirements": "Minor Healing, Remove Nausea",
+      "sourceMageryDc": 17,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 91,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-minor",
+        "remove-nausea"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-minor"
+        ],
+        [
+          "remove-nausea"
+        ]
+      ]
+    },
+    {
+      "id": "remove-fatigue",
+      "name": "Remove Fatigue",
+      "school": "healing",
+      "requirements": "Lesser Healing, Remove Fear",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 91,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-lesser",
+        "remove-fear"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-lesser"
+        ],
+        [
+          "remove-fear"
+        ]
+      ]
+    },
+    {
+      "id": "restore-ability",
+      "name": "Restore Ability",
+      "school": "healing",
+      "requirements": "Restore Vitality",
+      "sourceMageryDc": 26,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 92,
+      "effect": "healing",
+      "prerequisites": [
+        "restore-vitality"
+      ],
+      "prerequisiteGroups": [
+        [
+          "restore-vitality"
+        ]
+      ]
+    },
+    {
+      "id": "restore-consciousness",
+      "name": "Restore Consciousness",
+      "school": "healing",
+      "requirements": "Moderate Healing, Remove Fatigue",
+      "sourceMageryDc": 21,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 92,
+      "effect": "healing",
+      "prerequisites": [
+        "healing-moderate",
+        "remove-fatigue"
+      ],
+      "prerequisiteGroups": [
+        [
+          "healing-moderate"
+        ],
+        [
+          "remove-fatigue"
+        ]
+      ]
+    },
+    {
+      "id": "restore-vitality",
+      "name": "Restore Vitality",
+      "school": "healing",
+      "requirements": "Restore Consciousness",
+      "sourceMageryDc": 23,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 92,
+      "effect": "healing",
+      "prerequisites": [
+        "restore-consciousness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "restore-consciousness"
+        ]
+      ]
+    },
+    {
+      "id": "stabilise",
+      "name": "Stabilise",
+      "school": "healing",
+      "requirements": "None",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 92,
+      "effect": "healing",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "acrobat",
+      "name": "Acrobat",
+      "school": "enhancement",
+      "requirements": "Alertness",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 92,
+      "effect": "enhancement",
+      "prerequisites": [
+        "alertness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "alertness"
+        ]
+      ]
+    },
+    {
+      "id": "alertness",
+      "name": "Alertness",
+      "school": "enhancement",
+      "requirements": "Skilfulness",
+      "sourceMageryDc": 16,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 93,
+      "effect": "enhancement",
+      "prerequisites": [
+        "skilfulness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "skilfulness"
+        ]
+      ]
+    },
+    {
+      "id": "altered-breath",
+      "name": "Altered Breath",
+      "school": "enhancement",
+      "requirements": "Swimming",
+      "sourceMageryDc": 23,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 93,
+      "effect": "enhancement",
+      "prerequisites": [
+        "swimming"
+      ],
+      "prerequisiteGroups": [
+        [
+          "swimming"
+        ]
+      ]
+    },
+    {
+      "id": "altered-breath-greater",
+      "name": "Altered Breath, Greater",
+      "school": "enhancement",
+      "requirements": "Altered Breath",
+      "sourceMageryDc": 27,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 93,
+      "effect": "enhancement",
+      "prerequisites": [
+        "altered-breath"
+      ],
+      "prerequisiteGroups": [
+        [
+          "altered-breath"
+        ]
+      ]
+    },
+    {
+      "id": "appeal",
+      "name": "Appeal",
+      "school": "enhancement",
+      "requirements": "Improved Reflexes",
+      "sourceMageryDc": 24,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 93,
+      "effect": "enhancement",
+      "prerequisites": [
+        "improved-reflexes"
+      ],
+      "prerequisiteGroups": [
+        [
+          "improved-reflexes"
+        ]
+      ]
+    },
+    {
+      "id": "appeal-mass",
+      "name": "Appeal, Mass",
+      "school": "enhancement",
+      "requirements": "Appeal",
+      "sourceMageryDc": 29,
+      "sourceRange": "Close",
+      "sourceTarget": "Any creatures within range",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 93,
+      "effect": "enhancement",
+      "prerequisites": [
+        "appeal"
+      ],
+      "prerequisiteGroups": [
+        [
+          "appeal"
+        ]
+      ]
+    },
+    {
+      "id": "clarity",
+      "name": "Clarity",
+      "school": "enhancement",
+      "requirements": "Improved Will",
+      "sourceMageryDc": 24,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 93,
+      "effect": "enhancement",
+      "prerequisites": [
+        "improved-will"
+      ],
+      "prerequisiteGroups": [
+        [
+          "improved-will"
+        ]
+      ]
+    },
+    {
+      "id": "clarity-mass",
+      "name": "Clarity, Mass",
+      "school": "enhancement",
+      "requirements": "Clarity",
+      "sourceMageryDc": 29,
+      "sourceRange": "Close",
+      "sourceTarget": "Any creatures within range",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 94,
+      "effect": "enhancement",
+      "prerequisites": [
+        "clarity"
+      ],
+      "prerequisiteGroups": [
+        [
+          "clarity"
+        ]
+      ]
+    },
+    {
+      "id": "contortionist",
+      "name": "Contortionist",
+      "school": "enhancement",
+      "requirements": "Alertness",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 94,
+      "effect": "enhancement",
+      "prerequisites": [
+        "alertness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "alertness"
+        ]
+      ]
+    },
+    {
+      "id": "danger-sense",
+      "name": "Danger Sense",
+      "school": "enhancement",
+      "requirements": "Detect Lie, Falsehood",
+      "sourceMageryDc": 18,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 94,
+      "effect": "enhancement",
+      "prerequisites": [
+        "detect-lie",
+        "falsehood"
+      ],
+      "prerequisiteGroups": [
+        [
+          "detect-lie"
+        ],
+        [
+          "falsehood"
+        ]
+      ]
+    },
+    {
+      "id": "darkvision",
+      "name": "Darkvision",
+      "school": "enhancement",
+      "requirements": "Sharp Eyes",
+      "sourceMageryDc": 21,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 94,
+      "effect": "perception",
+      "prerequisites": [
+        "sharp-eyes"
+      ],
+      "prerequisiteGroups": [
+        [
+          "sharp-eyes"
+        ]
+      ]
+    },
+    {
+      "id": "darkvision-mass",
+      "name": "Darkvision, Mass",
+      "school": "enhancement",
+      "requirements": "Darkvision",
+      "sourceMageryDc": 25,
+      "sourceRange": "Close",
+      "sourceTarget": "Any creatures within range",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 94,
+      "effect": "perception",
+      "prerequisites": [
+        "darkvision"
+      ],
+      "prerequisiteGroups": [
+        [
+          "darkvision"
+        ]
+      ]
+    },
+    {
+      "id": "detect-communication",
+      "name": "Detect Communication",
+      "school": "enhancement",
+      "requirements": "Determine Direction",
+      "sourceMageryDc": 25,
+      "sourceRange": "Long",
+      "sourceTarget": "Self",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 94,
+      "effect": "perception",
+      "prerequisites": [
+        "determine-direction"
+      ],
+      "prerequisiteGroups": [
+        [
+          "determine-direction"
+        ]
+      ]
+    },
+    {
+      "id": "detect-lie",
+      "name": "Detect Lie",
+      "school": "enhancement",
+      "requirements": "Alertness",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 95,
+      "effect": "perception",
+      "prerequisites": [
+        "alertness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "alertness"
+        ]
+      ]
+    },
+    {
+      "id": "detect-metal",
+      "name": "Detect Metal",
+      "school": "enhancement",
+      "requirements": "Determine Direction",
+      "sourceMageryDc": 25,
+      "sourceRange": "Long",
+      "sourceTarget": "Self",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 95,
+      "effect": "perception",
+      "prerequisites": [
+        "determine-direction"
+      ],
+      "prerequisiteGroups": [
+        [
+          "determine-direction"
+        ]
+      ]
+    },
+    {
+      "id": "detect-thoughts",
+      "name": "Detect Thoughts",
+      "school": "enhancement",
+      "requirements": "Detect Communication",
+      "sourceMageryDc": 31,
+      "sourceRange": "Close",
+      "sourceTarget": "Self",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 95,
+      "effect": "perception",
+      "prerequisites": [
+        "detect-communication"
+      ],
+      "prerequisiteGroups": [
+        [
+          "detect-communication"
+        ]
+      ]
+    },
+    {
+      "id": "determine-direction",
+      "name": "Determine Direction",
+      "school": "enhancement",
+      "requirements": "Danger Sense",
+      "sourceMageryDc": 21,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 95,
+      "effect": "perception",
+      "prerequisites": [
+        "danger-sense"
+      ],
+      "prerequisiteGroups": [
+        [
+          "danger-sense"
+        ]
+      ]
+    },
+    {
+      "id": "divination",
+      "name": "Divination",
+      "school": "enhancement",
+      "requirements": "Meeting, Insight, Clarity, Appeal, Enhancement as a primary aptitude",
+      "sourceMageryDc": 35,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 95,
+      "effect": "perception",
+      "prerequisites": [
+        "meeting",
+        "insight",
+        "clarity",
+        "appeal"
+      ],
+      "prerequisiteGroups": [
+        [
+          "meeting"
+        ],
+        [
+          "insight"
+        ],
+        [
+          "clarity"
+        ],
+        [
+          "appeal"
+        ]
+      ]
+    },
+    {
+      "id": "dreamspeech",
+      "name": "Dreamspeech",
+      "school": "enhancement",
+      "requirements": "Far Speech, Darkvision",
+      "sourceMageryDc": 24,
+      "sourceRange": "Long",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 96,
+      "effect": "enhancement",
+      "prerequisites": [
+        "far-speech",
+        "darkvision"
+      ],
+      "prerequisiteGroups": [
+        [
+          "far-speech"
+        ],
+        [
+          "darkvision"
+        ]
+      ]
+    },
+    {
+      "id": "falsehood",
+      "name": "Falsehood",
+      "school": "enhancement",
+      "requirements": "Alertness",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 96,
+      "effect": "enhancement",
+      "prerequisites": [
+        "alertness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "alertness"
+        ]
+      ]
+    },
+    {
+      "id": "far-speech",
+      "name": "Far Speech",
+      "school": "enhancement",
+      "requirements": "Voice",
+      "sourceMageryDc": 21,
+      "sourceRange": "Line of Sight",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 96,
+      "effect": "enhancement",
+      "prerequisites": [
+        "voice"
+      ],
+      "prerequisiteGroups": [
+        [
+          "voice"
+        ]
+      ]
+    },
+    {
+      "id": "hardiness",
+      "name": "Hardiness",
+      "school": "enhancement",
+      "requirements": "Improved Fortitude",
+      "sourceMageryDc": 24,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 96,
+      "effect": "enhancement",
+      "prerequisites": [
+        "improved-fortitude"
+      ],
+      "prerequisiteGroups": [
+        [
+          "improved-fortitude"
+        ]
+      ]
+    },
+    {
+      "id": "hardiness-mass",
+      "name": "Hardiness, Mass",
+      "school": "enhancement",
+      "requirements": "Hardiness",
+      "sourceMageryDc": 29,
+      "sourceRange": "Close",
+      "sourceTarget": "Any creatures within range",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 97,
+      "effect": "enhancement",
+      "prerequisites": [
+        "hardiness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "hardiness"
+        ]
+      ]
+    },
+    {
+      "id": "improved-fortitude",
+      "name": "Improved Fortitude",
+      "school": "enhancement",
+      "requirements": "Greater Luck",
+      "sourceMageryDc": 17,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 97,
+      "effect": "enhancement",
+      "prerequisites": [
+        "luck-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "luck-greater"
+        ]
+      ]
+    },
+    {
+      "id": "improved-reflexes",
+      "name": "Improved Reflexes",
+      "school": "enhancement",
+      "requirements": "Greater Luck",
+      "sourceMageryDc": 17,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 97,
+      "effect": "enhancement",
+      "prerequisites": [
+        "luck-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "luck-greater"
+        ]
+      ]
+    },
+    {
+      "id": "improved-will",
+      "name": "Improved Will",
+      "school": "enhancement",
+      "requirements": "Greater Luck",
+      "sourceMageryDc": 17,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 97,
+      "effect": "enhancement",
+      "prerequisites": [
+        "luck-greater"
+      ],
+      "prerequisiteGroups": [
+        [
+          "luck-greater"
+        ]
+      ]
+    },
+    {
+      "id": "insight",
+      "name": "Insight",
+      "school": "enhancement",
+      "requirements": "Improved Will",
+      "sourceMageryDc": 24,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 97,
+      "effect": "perception",
+      "prerequisites": [
+        "improved-will"
+      ],
+      "prerequisiteGroups": [
+        [
+          "improved-will"
+        ]
+      ]
+    },
+    {
+      "id": "insight-mass",
+      "name": "Insight, Mass",
+      "school": "enhancement",
+      "requirements": "Insight",
+      "sourceMageryDc": 29,
+      "sourceRange": "Close",
+      "sourceTarget": "Any creatures within range",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 97,
+      "effect": "perception",
+      "prerequisites": [
+        "insight"
+      ],
+      "prerequisiteGroups": [
+        [
+          "insight"
+        ]
+      ]
+    },
+    {
+      "id": "leaping",
+      "name": "Leaping",
+      "school": "enhancement",
+      "requirements": "Alertness",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 97,
+      "effect": "enhancement",
+      "prerequisites": [
+        "alertness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "alertness"
+        ]
+      ]
+    },
+    {
+      "id": "luck",
+      "name": "Luck",
+      "school": "enhancement",
+      "requirements": "None",
+      "sourceMageryDc": 14,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 98,
+      "effect": "enhancement",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "luck-greater",
+      "name": "Luck, Greater",
+      "school": "enhancement",
+      "requirements": "Luck",
+      "sourceMageryDc": 16,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 98,
+      "effect": "enhancement",
+      "prerequisites": [
+        "luck"
+      ],
+      "prerequisiteGroups": [
+        [
+          "luck"
+        ]
+      ]
+    },
+    {
+      "id": "meeting",
+      "name": "Meeting",
+      "school": "enhancement",
+      "requirements": "Dreamspeech",
+      "sourceMageryDc": 25,
+      "sourceRange": "Line of Sight",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 98,
+      "effect": "enhancement",
+      "prerequisites": [
+        "dreamspeech"
+      ],
+      "prerequisiteGroups": [
+        [
+          "dreamspeech"
+        ]
+      ]
+    },
+    {
+      "id": "might",
+      "name": "Might",
+      "school": "enhancement",
+      "requirements": "Improved Fortitude",
+      "sourceMageryDc": 24,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 98,
+      "effect": "enhancement",
+      "prerequisites": [
+        "improved-fortitude"
+      ],
+      "prerequisiteGroups": [
+        [
+          "improved-fortitude"
+        ]
+      ]
+    },
+    {
+      "id": "might-mass",
+      "name": "Might, Mass",
+      "school": "enhancement",
+      "requirements": "Might",
+      "sourceMageryDc": 29,
+      "sourceRange": "Close",
+      "sourceTarget": "Any creatures within range",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 98,
+      "effect": "enhancement",
+      "prerequisites": [
+        "might"
+      ],
+      "prerequisiteGroups": [
+        [
+          "might"
+        ]
+      ]
+    },
+    {
+      "id": "nimble-fingers",
+      "name": "Nimble Fingers",
+      "school": "enhancement",
+      "requirements": "Alertness",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 98,
+      "effect": "enhancement",
+      "prerequisites": [
+        "alertness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "alertness"
+        ]
+      ]
+    },
+    {
+      "id": "nimbleness",
+      "name": "Nimbleness",
+      "school": "enhancement",
+      "requirements": "Improved Reflexes",
+      "sourceMageryDc": 24,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 98,
+      "effect": "enhancement",
+      "prerequisites": [
+        "improved-reflexes"
+      ],
+      "prerequisiteGroups": [
+        [
+          "improved-reflexes"
+        ]
+      ]
+    },
+    {
+      "id": "nimbleness-mass",
+      "name": "Nimbleness, Mass",
+      "school": "enhancement",
+      "requirements": "Nimbleness",
+      "sourceMageryDc": 29,
+      "sourceRange": "Close",
+      "sourceTarget": "Any creatures within range",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 99,
+      "effect": "enhancement",
+      "prerequisites": [
+        "nimbleness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "nimbleness"
+        ]
+      ]
+    },
+    {
+      "id": "observation",
+      "name": "Observation",
+      "school": "enhancement",
+      "requirements": "Alertness",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 99,
+      "effect": "perception",
+      "prerequisites": [
+        "alertness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "alertness"
+        ]
+      ]
+    },
+    {
+      "id": "oration",
+      "name": "Oration",
+      "school": "enhancement",
+      "requirements": "Voice",
+      "sourceMageryDc": 24,
+      "sourceRange": "Close",
+      "sourceTarget": "Self",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 99,
+      "effect": "enhancement",
+      "prerequisites": [
+        "voice"
+      ],
+      "prerequisiteGroups": [
+        [
+          "voice"
+        ]
+      ]
+    },
+    {
+      "id": "oration-greater",
+      "name": "Oration, Greater",
+      "school": "enhancement",
+      "requirements": "Oration",
+      "sourceMageryDc": 28,
+      "sourceRange": "All creatures within hearing range",
+      "sourceTarget": "Self",
+      "sourceDuration": "Instantaneous",
+      "elementalCategory": null,
+      "sourcePage": 99,
+      "effect": "enhancement",
+      "prerequisites": [
+        "oration"
+      ],
+      "prerequisiteGroups": [
+        [
+          "oration"
+        ]
+      ]
+    },
+    {
+      "id": "preparedness",
+      "name": "Preparedness",
+      "school": "enhancement",
+      "requirements": "Observation",
+      "sourceMageryDc": 22,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 99,
+      "effect": "enhancement",
+      "prerequisites": [
+        "observation"
+      ],
+      "prerequisiteGroups": [
+        [
+          "observation"
+        ]
+      ]
+    },
+    {
+      "id": "prescience",
+      "name": "Prescience",
+      "school": "enhancement",
+      "requirements": "Skilfulness, Preparedness",
+      "sourceMageryDc": 21,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 99,
+      "effect": "perception",
+      "prerequisites": [
+        "skilfulness",
+        "preparedness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "skilfulness"
+        ],
+        [
+          "preparedness"
+        ]
+      ]
+    },
+    {
+      "id": "prescience-greater",
+      "name": "Prescience, Greater",
+      "school": "enhancement",
+      "requirements": "Prescience",
+      "sourceMageryDc": 24,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 100,
+      "effect": "perception",
+      "prerequisites": [
+        "prescience"
+      ],
+      "prerequisiteGroups": [
+        [
+          "prescience"
+        ]
+      ]
+    },
+    {
+      "id": "prescience-mass",
+      "name": "Prescience, Mass",
+      "school": "enhancement",
+      "requirements": "Prescience",
+      "sourceMageryDc": 25,
+      "sourceRange": "Close",
+      "sourceTarget": "Any creatures in range",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 100,
+      "effect": "perception",
+      "prerequisites": [
+        "prescience"
+      ],
+      "prerequisiteGroups": [
+        [
+          "prescience"
+        ]
+      ]
+    },
+    {
+      "id": "prescience-mass-greater",
+      "name": "Prescience, Mass, Greater",
+      "school": "enhancement",
+      "requirements": "Mass Prescience, Greater Prescience",
+      "sourceMageryDc": 30,
+      "sourceRange": "Close",
+      "sourceTarget": "Any creatures in range",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 100,
+      "effect": "perception",
+      "prerequisites": [
+        "prescience-greater",
+        "prescience"
+      ],
+      "prerequisiteGroups": [
+        [
+          "prescience-greater"
+        ],
+        [
+          "prescience"
+        ]
+      ]
+    },
+    {
+      "id": "prowess-lesser",
+      "name": "Prowess, Lesser",
+      "school": "enhancement",
+      "requirements": "Skilfulness",
+      "sourceMageryDc": 18,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 100,
+      "effect": "enhancement",
+      "prerequisites": [
+        "skilfulness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "skilfulness"
+        ]
+      ]
+    },
+    {
+      "id": "prowess",
+      "name": "Prowess",
+      "school": "enhancement",
+      "requirements": "Lesser Prowess",
+      "sourceMageryDc": 22,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 100,
+      "effect": "enhancement",
+      "prerequisites": [
+        "prowess-lesser"
+      ],
+      "prerequisiteGroups": [
+        [
+          "prowess-lesser"
+        ]
+      ]
+    },
+    {
+      "id": "prowess-greater",
+      "name": "Prowess, Greater",
+      "school": "enhancement",
+      "requirements": "Prowess",
+      "sourceMageryDc": 26,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 100,
+      "effect": "enhancement",
+      "prerequisites": [
+        "prowess"
+      ],
+      "prerequisiteGroups": [
+        [
+          "prowess"
+        ]
+      ]
+    },
+    {
+      "id": "scan-terrain",
+      "name": "Scan Terrain",
+      "school": "enhancement",
+      "requirements": "Observation",
+      "sourceMageryDc": 21,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 100,
+      "effect": "perception",
+      "prerequisites": [
+        "observation"
+      ],
+      "prerequisiteGroups": [
+        [
+          "observation"
+        ]
+      ]
+    },
+    {
+      "id": "sharp-ears",
+      "name": "Sharp Ears",
+      "school": "enhancement",
+      "requirements": "Alertness",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 101,
+      "effect": "perception",
+      "prerequisites": [
+        "alertness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "alertness"
+        ]
+      ]
+    },
+    {
+      "id": "sharp-eyes",
+      "name": "Sharp Eyes",
+      "school": "enhancement",
+      "requirements": "Alertness",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 101,
+      "effect": "perception",
+      "prerequisites": [
+        "alertness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "alertness"
+        ]
+      ]
+    },
+    {
+      "id": "skilfulness",
+      "name": "Skilfulness",
+      "school": "enhancement",
+      "requirements": "None",
+      "sourceMageryDc": 13,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 101,
+      "effect": "enhancement",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "spyspot",
+      "name": "Spyspot",
+      "school": "enhancement",
+      "requirements": "Observation, Sharp Eyes, Sharp Ears",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One point in space",
+      "sourceDuration": "1 hour",
+      "elementalCategory": null,
+      "sourcePage": 101,
+      "effect": "perception",
+      "prerequisites": [
+        "observation",
+        "sharp-eyes",
+        "sharp-ears"
+      ],
+      "prerequisiteGroups": [
+        [
+          "observation"
+        ],
+        [
+          "sharp-eyes"
+        ],
+        [
+          "sharp-ears"
+        ]
+      ]
+    },
+    {
+      "id": "streetwise",
+      "name": "Streetwise",
+      "school": "enhancement",
+      "requirements": "Voice",
+      "sourceMageryDc": 21,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 101,
+      "effect": "enhancement",
+      "prerequisites": [
+        "voice"
+      ],
+      "prerequisiteGroups": [
+        [
+          "voice"
+        ]
+      ]
+    },
+    {
+      "id": "sustenance",
+      "name": "Sustenance",
+      "school": "enhancement",
+      "requirements": "Fortitude, Altered Breath",
+      "sourceMageryDc": 25,
+      "sourceRange": "Self",
+      "sourceTarget": "Self",
+      "sourceDuration": "1 day",
+      "elementalCategory": null,
+      "sourcePage": 102,
+      "effect": "enhancement",
+      "prerequisites": [
+        "altered-breath"
+      ],
+      "prerequisiteGroups": [
+        [
+          "altered-breath"
+        ]
+      ]
+    },
+    {
+      "id": "swimming",
+      "name": "Swimming",
+      "school": "enhancement",
+      "requirements": "Alertness",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 102,
+      "effect": "enhancement",
+      "prerequisites": [
+        "alertness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "alertness"
+        ]
+      ]
+    },
+    {
+      "id": "translation",
+      "name": "Translation",
+      "school": "enhancement",
+      "requirements": "Meeting",
+      "sourceMageryDc": 22,
+      "sourceRange": "Medium",
+      "sourceTarget": "One creature",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 102,
+      "effect": "enhancement",
+      "prerequisites": [
+        "meeting"
+      ],
+      "prerequisiteGroups": [
+        [
+          "meeting"
+        ]
+      ]
+    },
+    {
+      "id": "translation-mass",
+      "name": "Translation, Mass",
+      "school": "enhancement",
+      "requirements": "Translation",
+      "sourceMageryDc": 25,
+      "sourceRange": "Medium",
+      "sourceTarget": "Any selected creatures within range",
+      "sourceDuration": "10 minutes",
+      "elementalCategory": null,
+      "sourcePage": 102,
+      "effect": "enhancement",
+      "prerequisites": [
+        "translation"
+      ],
+      "prerequisiteGroups": [
+        [
+          "translation"
+        ]
+      ]
+    },
+    {
+      "id": "voice",
+      "name": "Voice",
+      "school": "enhancement",
+      "requirements": "Alertness",
+      "sourceMageryDc": 20,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 102,
+      "effect": "enhancement",
+      "prerequisites": [
+        "alertness"
+      ],
+      "prerequisiteGroups": [
+        [
+          "alertness"
+        ]
+      ]
+    },
+    {
+      "id": "writing",
+      "name": "Writing",
+      "school": "enhancement",
+      "requirements": "Nimble Fingers",
+      "sourceMageryDc": 22,
+      "sourceRange": "Touch",
+      "sourceTarget": "One creature",
+      "sourceDuration": "1 minute",
+      "elementalCategory": null,
+      "sourcePage": 103,
+      "effect": "enhancement",
+      "prerequisites": [
+        "nimble-fingers"
+      ],
+      "prerequisiteGroups": [
+        [
+          "nimble-fingers"
+        ]
+      ]
+    },
+    {
+      "id": "attune-to-all",
+      "name": "Attune to All",
+      "school": "creation",
+      "requirements": "Greater Infusion, Attune to Race",
+      "sourceMageryDc": 27,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 106,
+      "effect": "crafting",
+      "prerequisites": [
+        "infusion-greater",
+        "attune-to-race"
+      ],
+      "prerequisiteGroups": [
+        [
+          "infusion-greater"
+        ],
+        [
+          "attune-to-race"
+        ]
+      ]
+    },
+    {
+      "id": "attune-to-group",
+      "name": "Attune to Group",
+      "school": "creation",
+      "requirements": "Attune to Individual",
+      "sourceMageryDc": 22,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 106,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-individual"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-individual"
+        ]
+      ]
+    },
+    {
+      "id": "attune-to-individual",
+      "name": "Attune to Individual",
+      "school": "creation",
+      "requirements": "Attune to Self",
+      "sourceMageryDc": 18,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 106,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-self"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-self"
+        ]
+      ]
+    },
+    {
+      "id": "attune-to-race",
+      "name": "Attune to Race",
+      "school": "creation",
+      "requirements": "Attune to Group",
+      "sourceMageryDc": 24,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 106,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-group"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-group"
+        ]
+      ]
+    },
+    {
+      "id": "attune-to-self",
+      "name": "Attune to Self",
+      "school": "creation",
+      "requirements": "Infusion",
+      "sourceMageryDc": 10,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 107,
+      "effect": "crafting",
+      "prerequisites": [
+        "infusion"
+      ],
+      "prerequisiteGroups": [
+        [
+          "infusion"
+        ]
+      ]
+    },
+    {
+      "id": "enhancement-automatic-function",
+      "name": "Enhancement, Automatic Function",
+      "school": "creation",
+      "requirements": "Free Action Enhancement, Deactivation Switch Enhancement",
+      "sourceMageryDc": 23,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 107,
+      "effect": "crafting",
+      "prerequisites": [
+        "enhancement-deactivation-switch"
+      ],
+      "prerequisiteGroups": [
+        [
+          "enhancement-deactivation-switch"
+        ]
+      ]
+    },
+    {
+      "id": "enhancement-deactivation-switch",
+      "name": "Enhancement, Deactivation Switch",
+      "school": "creation",
+      "requirements": "Attune to Individual",
+      "sourceMageryDc": 16,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 107,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-individual"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-individual"
+        ]
+      ]
+    },
+    {
+      "id": "enhancement-dust-size",
+      "name": "Enhancement, Dust Size",
+      "school": "creation",
+      "requirements": "Attune to Group",
+      "sourceMageryDc": 14,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 107,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-group"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-group"
+        ]
+      ]
+    },
+    {
+      "id": "enhancement-enlarged-battery",
+      "name": "Enhancement, Enlarged Battery",
+      "school": "creation",
+      "requirements": "Attune to All, Will Powering",
+      "sourceMageryDc": 25,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 107,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-all",
+        "powering-will"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-all"
+        ],
+        [
+          "powering-will"
+        ]
+      ]
+    },
+    {
+      "id": "enhancement-free-action-activation",
+      "name": "Enhancement, Free Action Activation",
+      "school": "creation",
+      "requirements": "Attune to Self",
+      "sourceMageryDc": 18,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 107,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-self"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-self"
+        ]
+      ]
+    },
+    {
+      "id": "enhancement-hidden-power",
+      "name": "Enhancement, Hidden Power",
+      "school": "creation",
+      "requirements": "Free Action Activation Enhancement",
+      "sourceMageryDc": 20,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 108,
+      "effect": "crafting",
+      "prerequisites": [
+        "enhancement-free-action-activation"
+      ],
+      "prerequisiteGroups": [
+        [
+          "enhancement-free-action-activation"
+        ]
+      ]
+    },
+    {
+      "id": "enhancement-individual-control",
+      "name": "Enhancement, Individual Control",
+      "school": "creation",
+      "requirements": "Attune to Self",
+      "sourceMageryDc": 22,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 108,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-self"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-self"
+        ]
+      ]
+    },
+    {
+      "id": "enhancement-self-destruct-switch",
+      "name": "Enhancement, Self-Destruct Switch",
+      "school": "creation",
+      "requirements": "Deactivation Switch Enhancement",
+      "sourceMageryDc": 24,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 108,
+      "effect": "crafting",
+      "prerequisites": [
+        "enhancement-deactivation-switch"
+      ],
+      "prerequisiteGroups": [
+        [
+          "enhancement-deactivation-switch"
+        ]
+      ]
+    },
+    {
+      "id": "enhancement-single-use",
+      "name": "Enhancement, Single Use",
+      "school": "creation",
+      "requirements": "Self-Destruct Switch Enhancement",
+      "sourceMageryDc": 20,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 108,
+      "effect": "crafting",
+      "prerequisites": [
+        "enhancement-self-destruct-switch"
+      ],
+      "prerequisiteGroups": [
+        [
+          "enhancement-self-destruct-switch"
+        ]
+      ]
+    },
+    {
+      "id": "imbue",
+      "name": "Imbue",
+      "school": "creation",
+      "requirements": "Imbue Elixir",
+      "sourceMageryDc": 24,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 108,
+      "effect": "crafting",
+      "prerequisites": [
+        "imbue-elixir"
+      ],
+      "prerequisiteGroups": [
+        [
+          "imbue-elixir"
+        ]
+      ]
+    },
+    {
+      "id": "imbue-elixir",
+      "name": "Imbue Elixir",
+      "school": "creation",
+      "requirements": "Attune to Self, Mage Powering",
+      "sourceMageryDc": 20,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 109,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-self",
+        "powering-mage"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-self"
+        ],
+        [
+          "powering-mage"
+        ]
+      ]
+    },
+    {
+      "id": "infusion",
+      "name": "Infusion",
+      "school": "creation",
+      "requirements": "None",
+      "sourceMageryDc": 15,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 110,
+      "effect": "crafting",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "infusion-greater",
+      "name": "Infusion, Greater",
+      "school": "creation",
+      "requirements": "None",
+      "sourceMageryDc": 22,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 110,
+      "effect": "crafting",
+      "prerequisites": [],
+      "prerequisiteGroups": []
+    },
+    {
+      "id": "powering-mage",
+      "name": "Powering, Mage",
+      "school": "creation",
+      "requirements": "Attune to Self",
+      "sourceMageryDc": 12,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 110,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-self"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-self"
+        ]
+      ]
+    },
+    {
+      "id": "powering-self",
+      "name": "Powering, Self",
+      "school": "creation",
+      "requirements": "Attune to Group, Will Powering",
+      "sourceMageryDc": 28,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 110,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-group",
+        "powering-will"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-group"
+        ],
+        [
+          "powering-will"
+        ]
+      ]
+    },
+    {
+      "id": "powering-self-greater",
+      "name": "Powering, Self, Greater",
+      "school": "creation",
+      "requirements": "Self Powering",
+      "sourceMageryDc": 32,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 110,
+      "effect": "crafting",
+      "prerequisites": [
+        "powering-self"
+      ],
+      "prerequisiteGroups": [
+        [
+          "powering-self"
+        ]
+      ]
+    },
+    {
+      "id": "powering-will",
+      "name": "Powering, Will",
+      "school": "creation",
+      "requirements": "Attune to Individual, Mage Powering",
+      "sourceMageryDc": 20,
+      "sourceRange": null,
+      "sourceTarget": null,
+      "sourceDuration": null,
+      "elementalCategory": null,
+      "sourcePage": 110,
+      "effect": "crafting",
+      "prerequisites": [
+        "attune-to-individual",
+        "powering-mage"
+      ],
+      "prerequisiteGroups": [
+        [
+          "attune-to-individual"
+        ],
+        [
+          "powering-mage"
+        ]
+      ]
+    }
+  ],
+  "spellTrees": [
+    {
+      "id": "defence",
+      "label": "Abwehr",
+      "original": "Defence",
+      "spellIds": [
+        "armour-lesser",
+        "armour",
+        "armour-greater",
+        "blurry-image",
+        "bubble-of-air",
+        "bubble-of-air-greater",
+        "bubble-of-air-group",
+        "elemental-resistance-lesser",
+        "elemental-resistance",
+        "elemental-resistance-greater",
+        "force-wall-small",
+        "force-wall-medium",
+        "force-wall-large",
+        "invisibility",
+        "invisibility-greater",
+        "invisibility-group",
+        "shield-group-lesser",
+        "shield-group",
+        "shield-group-greater",
+        "shield-flexible-lesser",
+        "shield-flexible",
+        "shield-flexible-greater",
+        "shield-flexible-total",
+        "shield-personal-lesser",
+        "shield-personal",
+        "shield-personal-greater",
+        "shield-vehicular-small",
+        "shield-vehicular-large",
+        "shield-vehicular-starship",
+        "skin-of-wood",
+        "skin-of-bronze",
+        "skin-of-iron",
+        "skin-of-diamond"
+      ]
+    },
+    {
+      "id": "elements",
+      "label": "Elemente",
+      "original": "Elements",
+      "spellIds": [
+        "acid-ball",
+        "acid-ball-greater",
+        "acid-blob",
+        "acid-coat",
+        "acid-rain",
+        "acid-spray",
+        "blizzard",
+        "control-conflagration",
+        "control-flame",
+        "create-acid",
+        "create-fire",
+        "create-ice",
+        "create-lightning",
+        "create-sound",
+        "deafen",
+        "destruction",
+        "destruction-greater",
+        "destruction-total",
+        "douse-flame",
+        "elemental-storm",
+        "fireball",
+        "fireball-greater",
+        "fireball-explosive",
+        "fireball-artillery",
+        "freezing-touch",
+        "hailstorm",
+        "ice-bolt",
+        "ice-bolt-greater",
+        "ice-shards",
+        "icy-surface",
+        "icy-item",
+        "lightning-bolt",
+        "lightning-bolt-chain",
+        "lightning-bolt-greater",
+        "mimic-sound",
+        "napalm-burst",
+        "paralysing-arc",
+        "power-device",
+        "shatterclap",
+        "silence",
+        "snowfall",
+        "sonic-blast",
+        "sonic-burst",
+        "sonic-stun",
+        "surge",
+        "surge-greater",
+        "surge-painful",
+        "surge-storm",
+        "thunderbolt",
+        "ventriloquism",
+        "winter-storm",
+        "zone-of-silence"
+      ]
+    },
+    {
+      "id": "conjuration",
+      "label": "Beschwörung",
+      "original": "Conjuration",
+      "spellIds": [
+        "conjure-creature-small",
+        "conjure-creature-medium",
+        "conjure-creature-large",
+        "conjure-creature-huge",
+        "conjure-creature-gargantuan",
+        "conjure-creature-colossal",
+        "conjure-daemon-lesser",
+        "conjure-daemon",
+        "conjure-daemon-greater",
+        "conjure-daemon-monitoring",
+        "creation-minor",
+        "creation-major",
+        "darkness",
+        "daylight",
+        "dimensional-pocket",
+        "disguise",
+        "disguise-area",
+        "disguise-greater",
+        "disguise-mass",
+        "disguise-mass-greater",
+        "displacement",
+        "duplicate-image",
+        "fearful-visage",
+        "flare",
+        "homunculus",
+        "light",
+        "light-blinding",
+        "light-bright",
+        "light-dazzling",
+        "light-hypnotising",
+        "mage-ear",
+        "mage-eye",
+        "mage-head",
+        "missile",
+        "missile-greater",
+        "missile-killer",
+        "missile-swarm",
+        "phantom-image",
+        "phantom-image-greater",
+        "phantom-image-perfect",
+        "repairs-minor",
+        "repairs-major",
+        "suggestion",
+        "will-o-wisp"
+      ]
+    },
+    {
+      "id": "movement",
+      "label": "Bewegung",
+      "original": "Movement",
+      "spellIds": [
+        "attract",
+        "balance",
+        "blink",
+        "burst-of-speed",
+        "centre-gravity",
+        "centre-gravity-mass",
+        "cone-of-gravity",
+        "control-wind",
+        "floating-box",
+        "floating-disc",
+        "floating-sphere",
+        "flying-platform",
+        "flying-platform-fast",
+        "flying-platform-large",
+        "flying-platform-manoeuvrable",
+        "flying-vehicle",
+        "friction",
+        "gravitic-bolt",
+        "gravity-platform",
+        "halt",
+        "hold-in-place",
+        "knockback",
+        "levitation-platform",
+        "lighten-object",
+        "lighten-object-greater",
+        "mage-boat",
+        "mage-mount",
+        "push",
+        "quickness",
+        "quickness-mass",
+        "rapid-movement",
+        "slow-time",
+        "slowfall",
+        "slowfall-mass",
+        "sluggishness",
+        "sluggishness-mass",
+        "stop-time",
+        "telekinesis",
+        "telekinesis-greater",
+        "teleport",
+        "teleport-greater",
+        "tread-lightly",
+        "walk-on-walls",
+        "walk-on-water",
+        "wall-of-gravity",
+        "weight-of-gravity",
+        "weightlessness",
+        "wind-gust",
+        "windstorm"
+      ]
+    },
+    {
+      "id": "healing",
+      "label": "Heilung",
+      "original": "Healing",
+      "spellIds": [
+        "clear-mind",
+        "cure-blindness",
+        "cure-deafness",
+        "cure-disease",
+        "cure-poison",
+        "cure-radiation",
+        "extend-life",
+        "healing-minor",
+        "healing-lesser",
+        "healing-lesser-mass",
+        "healing-moderate",
+        "healing-moderate-mass",
+        "healing-greater",
+        "healing-greater-mass",
+        "healing-major",
+        "healing-total",
+        "loan-life",
+        "monitor-lifesigns",
+        "monitor-lifesigns-mass",
+        "raise-dead",
+        "regeneration",
+        "regeneration-greater",
+        "remove-nausea",
+        "remove-fear",
+        "remove-fatigue",
+        "restore-ability",
+        "restore-consciousness",
+        "restore-vitality",
+        "stabilise"
+      ]
+    },
+    {
+      "id": "enhancement",
+      "label": "Verstärkung",
+      "original": "Enhancement",
+      "spellIds": [
+        "acrobat",
+        "alertness",
+        "altered-breath",
+        "altered-breath-greater",
+        "appeal",
+        "appeal-mass",
+        "clarity",
+        "clarity-mass",
+        "contortionist",
+        "danger-sense",
+        "darkvision",
+        "darkvision-mass",
+        "detect-communication",
+        "detect-lie",
+        "detect-metal",
+        "detect-thoughts",
+        "determine-direction",
+        "divination",
+        "dreamspeech",
+        "falsehood",
+        "far-speech",
+        "hardiness",
+        "hardiness-mass",
+        "improved-fortitude",
+        "improved-reflexes",
+        "improved-will",
+        "insight",
+        "insight-mass",
+        "leaping",
+        "luck",
+        "luck-greater",
+        "meeting",
+        "might",
+        "might-mass",
+        "nimble-fingers",
+        "nimbleness",
+        "nimbleness-mass",
+        "observation",
+        "oration",
+        "oration-greater",
+        "preparedness",
+        "prescience",
+        "prescience-greater",
+        "prescience-mass",
+        "prescience-mass-greater",
+        "prowess-lesser",
+        "prowess",
+        "prowess-greater",
+        "scan-terrain",
+        "sharp-ears",
+        "sharp-eyes",
+        "skilfulness",
+        "spyspot",
+        "streetwise",
+        "sustenance",
+        "swimming",
+        "translation",
+        "translation-mass",
+        "voice",
+        "writing"
+      ]
+    },
+    {
+      "id": "creation",
+      "label": "Erschaffung",
+      "original": "Creation",
+      "spellIds": [
+        "attune-to-all",
+        "attune-to-group",
+        "attune-to-individual",
+        "attune-to-race",
+        "attune-to-self",
+        "enhancement-automatic-function",
+        "enhancement-deactivation-switch",
+        "enhancement-dust-size",
+        "enhancement-enlarged-battery",
+        "enhancement-free-action-activation",
+        "enhancement-hidden-power",
+        "enhancement-individual-control",
+        "enhancement-self-destruct-switch",
+        "enhancement-single-use",
+        "imbue",
+        "imbue-elixir",
+        "infusion",
+        "infusion-greater",
+        "powering-mage",
+        "powering-self",
+        "powering-self-greater",
+        "powering-will"
+      ]
+    }
+  ]
+}

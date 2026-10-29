@@ -147,6 +147,27 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.4",
+    title: "Offline-Charaktereditor und Regelmodule",
+    items: [
+      {
+        text: "Der Charaktereditor lässt sich als App installieren und offline nutzen. Entwürfe bleiben lokal und werden bei Verbindung optional mit LCARS synchronisiert.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Talente und Schwerpunkte lassen sich aus den STA-2e-Katalogen auswählen; Voraussetzungen, Kategorien und besondere Talent-Auswahlen werden direkt angezeigt.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Das Technomage-Modul ergänzt Talente und 289 Spells in sieben Spell-Trees. Im AP-Modus zeigen Eigenschafts- und Fertigkeitsfelder ihre AP-Kosten.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+    ],
+  },
+  {
     version: "2.3",
     title: "Chronologie für Notizen und Dateien",
     items: [

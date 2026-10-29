@@ -1,5 +1,5 @@
 export const BASE_MODULE_ID = "sta2e.core";
-export const BASE_MODULE_VERSION = "1.0.0";
+export const BASE_MODULE_VERSION = "1.1.0";
 
 export const BASE_CHARACTER = {
   name: "",
@@ -66,15 +66,15 @@ export function validateModulePack(value) {
     }
   };
   visit(value);
-  for (const listName of ["attributes", "disciplines", "species", "professions", "classes"]) {
+  for (const listName of ["attributes", "disciplines", "species", "professions", "classes", "talents", "focuses", "spells", "spellTrees"]) {
     if (value[listName] !== undefined && (!Array.isArray(value[listName]) || value[listName].length > 300)) {
       throw new Error(`Ungültige Liste „${listName}“.`);
     }
     if (Array.isArray(value[listName]) && value[listName].some((item) => {
       if (typeof item === "string") return item.length > 120;
       if (!item || typeof item !== "object" || Array.isArray(item)) return true;
-      return typeof item.id !== "string" || !/^[a-z0-9][a-z0-9._-]{0,79}$/i.test(item.id) ||
-        [item.label, item.name].some((label) => label !== undefined && (typeof label !== "string" || label.length > 120));
+      return typeof item.id !== "string" || !/^[a-z0-9][a-z0-9._-]{0,119}$/i.test(item.id) ||
+        [item.label, item.name, item.original, item.nameDe, item.labelDe, item.description, item.requirement].some((label) => label !== undefined && label !== null && (typeof label !== "string" || label.length > 4000));
     })) throw new Error(`Ungültiger Eintrag in „${listName}“.`);
   }
   if (value.characterFields !== undefined) {
@@ -124,7 +124,7 @@ export function validateModulePack(value) {
 }
 
 export function displayLabel(item) {
-  return item?.label || item?.name || item?.id || "";
+  return item?.original || item?.name || item?.label || item?.id || "";
 }
 
 export function formatModuleKey(pack) {

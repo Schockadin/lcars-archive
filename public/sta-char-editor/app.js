@@ -5,9 +5,26 @@ import { allCharacters, allModules, applyRemoteChange, applySyncResult, getChara
 const byId = (id) => document.getElementById(id);
 const form = byId("character-form");
 const toast = byId("toast");
-const state = { selectedId: null, selectedCharacter: null, modules: [], serverModules: [], activeModules: [], canManageModules: false, canManageCharacters: false, canShareCampaign: false, currentUserId: null, syncing: false, toastTimer: null, installPrompt: null };
+const state = { selectedId: null, selectedCharacter: null, modules: [], serverModules: [], activeModules: [], canManageModules: false, canManageCharacters: false, canShareCampaign: false, currentUserId: null, syncing: false, toastTimer: null, installPrompt: null, catalogSelections: { talents: [], focuses: [] }, catalogType: null, catalogOpenId: null, spellSchool: "defence" };
 const attributeFallback = ["control", "daring", "fitness", "insight", "presence", "reason"].map((id) => ({ id, label: id }));
 const disciplineFallback = ["command", "conn", "engineering", "security", "science", "medicine"].map((id) => ({ id, label: id }));
+const DISCIPLINE_LABELS = { command: ["Command", "Kommando"], conn: ["Conn", "Steuerung"], engineering: ["Engineering", "Technik"], security: ["Security", "Sicherheit"], science: ["Science", "Wissenschaft"], medicine: ["Medicine", "Medizin"] };
+const ATTRIBUTE_LABELS = { control: ["Control", "Kontrolle"], daring: ["Daring", "Wagemut"], fitness: ["Fitness", "Fitness"], insight: ["Insight", "Einsicht"], presence: ["Presence", "Präsenz"], reason: ["Reason", "Verstand"] };
+const TALENT_CATEGORIES = ["general", "species", "augment", "esoteric", "command", "conn", "engineering", "security", "science", "medicine"];
+const TALENT_CATEGORY_LABELS = { general: "Allgemein", species: "Spezies & Kultur", augment: "Augment & Kybernetik", esoteric: "Esoterisch", command: "Kommando", conn: "Steuerung", engineering: "Technik", security: "Sicherheit", science: "Wissenschaft", medicine: "Medizin" };
+const TALENT_CATEGORY_EN = { general: "General", species: "Species & Culture", augment: "Augment & Cybernetic", esoteric: "Esoteric", command: "Command", conn: "Conn", engineering: "Engineering", security: "Security", science: "Science", medicine: "Medicine" };
+const TECHNOMAGE_SCHOOLS = [{ id: "defence", en: "Defence", de: "Abwehr" }, { id: "elements", en: "Elements", de: "Elemente" }, { id: "conjuration", en: "Conjuration", de: "Beschwörung" }, { id: "movement", en: "Movement", de: "Bewegung" }, { id: "healing", en: "Healing", de: "Heilung" }, { id: "enhancement", en: "Enhancement", de: "Verstärkung" }, { id: "creation", en: "Creation", de: "Erschaffung" }];
+const TECHNOMAGE_STATE_KEY = "sta2e.technomage.spell-state";
+
+function setTheme(theme) {
+  const value = theme === "light" ? "light" : "dark";
+  document.documentElement.dataset.theme = value;
+  try { localStorage.setItem("sta-char-editor-theme", value); } catch { /* Theme still applies for this session. */ }
+  const toggle = byId("theme-toggle");
+  toggle.textContent = value === "light" ? "Dark theme / Dunkles Thema" : "Light theme / Helles Thema";
+  toggle.setAttribute("aria-pressed", String(value === "light"));
+  document.querySelector("meta[name='theme-color']")?.setAttribute("content", value === "light" ? "#f3f6fa" : "#090d17");
+}
 
 function showToast(message, kind = "") {
   toast.textContent = message;
@@ -25,9 +42,9 @@ function setConnection(text, tone = "") {
 function activeModulePacks() {
   const activeKeys = new Set(state.activeModules.map((item) => `${item.moduleId}@${item.moduleVersion}`));
   const stored = localModulesForProfile().map((entry) => entry.pack);
-  const active = stored.filter((pack) => activeKeys.has(formatModuleKey(pack)));
+  const active = stored.filter((pack) => activeKeys.has(formatModuleKey(pack)) && (pack.manifest.id !== BASE_MODULE_ID || pack.manifest.version === BASE_MODULE_VERSION));
   if (!active.some((pack) => pack.manifest.id === BASE_MODULE_ID)) {
-    const base = stored.find((pack) => pack.manifest.id === BASE_MODULE_ID) || localModulesForProfile()[0]?.pack;
+    const base = stored.find((pack) => pack.manifest.id === BASE_MODULE_ID && pack.manifest.version === BASE_MODULE_VERSION) || stored.find((pack) => pack.manifest.id === BASE_MODULE_ID) || localModulesForProfile()[0]?.pack;
     if (base) active.unshift(base);
   }
   return active;
@@ -76,7 +93,7 @@ function fieldsFromModules(name, fallback) {
     for (const item of pack[name] || []) {
       if (!item?.id || seen.has(item.id)) continue;
       seen.add(item.id);
-      result.push({ id: String(item.id), label: displayLabel(item) });
+      result.push({ id: String(item.id), label: item.label || item.name || item.id, original: item.original || displayLabel(item) });
     }
   }
   return result.length ? result : fallback;
@@ -100,7 +117,13 @@ function showPanel(name) {
 
 function numericInput(item, group, value, minimum, maximum) {
   const initial = Number.isInteger(value) ? value : minimum;
-  return `<label class="numeric-field"><span>${escapeHtml(item.label)}</span><input type="number" min="${minimum}" max="${maximum}" step="1" name="${group}.${escapeHtml(item.id)}" value="${initial}" inputmode="numeric" aria-label="${escapeHtml(item.label)}" /></label>`;
+  const [english, german] = group === "attributes" ? (ATTRIBUTE_LABELS[item.id] || [item.original || item.label, item.label]) : (DISCIPLINE_LABELS[item.id] || [item.original || item.label, item.label]);
+  return `<label class="numeric-field"><span><span class="label-primary">${escapeHtml(english)}</span><small class="label-secondary" data-stat-cost="${group}.${escapeHtml(item.id)}">${escapeHtml(german)}</small></span><input type="number" min="${minimum}" max="${maximum}" step="1" name="${group}.${escapeHtml(item.id)}" value="${initial}" inputmode="numeric" aria-label="${escapeHtml(english)} / ${escapeHtml(german)}" /></label>`;
+}
+
+function statApCost(group, value, minimum, apPerStep) {
+  if (group === "attributes") return Math.max(0, (value - minimum) * (value - minimum + 1) / 2) * apPerStep;
+  return Math.max(0, (value * (value + 1) - minimum * (minimum + 1)) / 2) * apPerStep;
 }
 
 function renderStatFields(data = BASE_CHARACTER) {
@@ -127,6 +150,13 @@ function updateTotals() {
   const method = form.elements.namedItem("creationMethod")?.value || rules.defaultMethod || "points";
   const budget = calculateCreationBudget(readForm().data, method, rules);
   const pointBudget = method === "points";
+  const apPerStep = Number(rules.ap?.apPerStep ?? 10);
+  for (const input of form.querySelectorAll("input[name^='attributes.'], input[name^='disciplines.']")) {
+    const [group, id] = input.name.split(".");
+    const minimum = Number(rules.limits?.[group]?.minimum ?? (group === "attributes" ? 7 : 1));
+    const node = form.querySelector(`[data-stat-cost="${group}.${id}"]`);
+    if (node) node.textContent = pointBudget ? `${input.value} points / Punkte` : `${statApCost(group, Number(input.value) || minimum, minimum, apPerStep)} AP`;
+  }
   byId("attribute-budget").textContent = pointBudget
     ? `${budget.attributeCost}/${budget.attributeBudget} Punkte · ${budget.attributeRemaining} übrig`
     : `AP ${budget.attributeCost}/${budget.attributeBudget} · ${budget.attributeRemaining} übrig`;
@@ -160,10 +190,287 @@ function renderDataLists(customFieldValues = {}) {
   if (!modes.size) modes.add("points");
   const select = byId("creation-method");
   const current = select.value;
-  select.innerHTML = [...modes].map((mode) => `<option value="${mode}">${mode === "ap" ? "AP" : "Punkte"}</option>`).join("");
+  select.innerHTML = [...modes].map((mode) => `<option value="${mode}">${mode === "ap" ? "Advancement Points (AP) / Abenteuerpunkte (AP)" : "Points / Punkte"}</option>`).join("");
   select.value = modes.has(current) ? current : (rules.defaultMethod || [...modes][0]);
   renderCustomFields(packs, customFieldValues);
+  renderCatalogSelections();
+  renderTechnomageSpells();
   updateTotals();
+}
+
+function catalogItems(type) {
+  if (type === "focuses") {
+    const grouped = new Map();
+    for (const item of selectedModulePacks().flatMap((pack) => pack.focuses || [])) {
+      const key = normalized(item.name);
+      const entry = grouped.get(key) || { ...item, disciplines: [] };
+      if (!entry.disciplines.includes(item.discipline)) entry.disciplines.push(item.discipline);
+      grouped.set(key, entry);
+    }
+    return [...grouped.values()];
+  }
+  const seen = new Set();
+  const merged = new Map();
+  for (const item of selectedModulePacks().flatMap((pack) => pack[type] || [])) {
+    const key = String(item.name || "").toLowerCase();
+    if (key) merged.set(key, item);
+  }
+  return [...merged.values()];
+}
+
+function normalized(value) { return String(value || "").trim().toLowerCase().replace(/\s+/g, " "); }
+
+const SELECTION_RULES = { Bold: "department", Cautious: "department", Collaboration: "department", "Augmented Ability": "attribute", "Dedicated Focus X": "focus" };
+const DEPARTMENT_POOL = new Set(["bold", "cautious", "collaboration"]);
+
+function parseTalentEntry(entry) {
+  let text = String(entry || "").trim();
+  const wrapped = text.match(/^(.*?) \((.*)\)$/);
+  if (wrapped && wrapped[1] && (wrapped[2].includes(" (") || catalogItems("talents").some((item) => normalized(item.name) === normalized(wrapped[2])))) text = wrapped[2];
+  const selected = text.match(/^(.+?) \(([^()]*)\)$/);
+  if (selected && SELECTION_RULES[selected[1]]) return { original: selected[1], selection: selected[2], label: entry };
+  return { original: text, selection: "", label: entry };
+}
+
+function talentSelectionKind(name) { return SELECTION_RULES[name] || null; }
+
+function talentSelectionOptions(name, taken) {
+  const kind = talentSelectionKind(name);
+  if (!kind) return [];
+  const options = kind === "department" ? Object.values(DISCIPLINE_LABELS).map(([english]) => english)
+    : kind === "attribute" ? Object.values(ATTRIBUTE_LABELS).map(([english]) => english)
+      : [...new Set(state.catalogSelections.focuses.map((focus) => focus.trim()).filter(Boolean))];
+  const used = new Set(taken.flatMap((entry) => {
+    const parsed = parseTalentEntry(entry);
+    const sharesPool = kind === "department" && DEPARTMENT_POOL.has(parsed.original.toLowerCase());
+    return parsed.selection && (sharesPool || normalized(parsed.original) === normalized(name)) ? [normalized(parsed.selection)] : [];
+  }));
+  return options.filter((option) => !used.has(normalized(option)));
+}
+
+function requirementStatus(requirement) {
+  if (!requirement) return "met";
+  const data = readForm().data;
+  const branches = requirement.split(/\s+or\s+/i);
+  const check = (clause) => {
+    const anyDepartment = clause.trim().match(/^department\s+(\d+)\+?$/i);
+    if (anyDepartment) return Object.values(data.disciplines).some((value) => Number(value) >= Number(anyDepartment[1])) ? "met" : "unmet";
+    const numeric = clause.trim().match(/^([A-Za-z ]+?)\s+(\d+)\+?$/);
+    if (numeric) {
+      const key = Object.entries({ ...ATTRIBUTE_LABELS, ...DISCIPLINE_LABELS }).find(([, [en]]) => normalized(en) === normalized(numeric[1]))?.[0];
+      const group = ATTRIBUTE_LABELS[key] ? data.attributes : data.disciplines;
+      return key ? ((Number(group[key]) || 0) >= Number(numeric[2]) ? "met" : "unmet") : "unknown";
+    }
+    const speciesAliases = { aenar: "aenar", andorian: "andorian", andorianer: "andorian", andorianerin: "andorian", bajoran: "bajoran", bajoraner: "bajoran", bajoranerin: "bajoran", betazoid: "betazoid", betazoide: "betazoid", betazoidin: "betazoid", cardassian: "cardassian", cardassianer: "cardassian", kardassianer: "cardassian", denobulan: "denobulan", denobulaner: "denobulan", ferengi: "ferengi", human: "human", mensch: "human", menschin: "human", terraner: "human", klingon: "klingon", klingone: "klingon", klingonin: "klingon", orion: "orion", orioner: "orion", orionerin: "orion", orionin: "orion", romulan: "romulan", romulaner: "romulan", tellarite: "tellarite", tellarit: "tellarite", trill: "trill", vulcan: "vulcan", vulkanier: "vulcan", vulkanierin: "vulcan" };
+    const findSpecies = (value) => normalized(value).split(/[^a-zäöüß]+/).map((word) => speciesAliases[word]).find(Boolean) || null;
+    const wanted = findSpecies(clause);
+    if (wanted) {
+      const own = data.species ? findSpecies(data.species) : null;
+      return !own ? "unknown" : own === wanted ? "met" : "unmet";
+    }
+    return data.talents.some((entry) => normalized(parseTalentEntry(entry).original) === normalized(clause)) ? "met" : "unknown";
+  };
+  const results = branches.map((branch) => branch.split(/\s*(?:,|&|\s+and\s+)\s*/i).map(check));
+  if (results.some((conditions) => conditions.every((status) => status === "met"))) return "met";
+  if (results.some((conditions) => conditions.every((status) => status !== "unmet"))) return "unknown";
+  return "unmet";
+}
+
+function renderCatalogSelections() {
+  for (const type of ["talents", "focuses"]) {
+    const container = byId(type === "talents" ? "talent-selections" : "focus-selections");
+    if (!container) continue;
+    container.replaceChildren();
+    const selected = state.catalogSelections[type] || [];
+    if (!selected.length) {
+      const empty = document.createElement("small");
+      empty.className = "selection-empty";
+      empty.textContent = type === "talents" ? "No talents selected / Noch keine Talente gewählt" : "No focuses selected / Noch keine Schwerpunkte gewählt";
+      container.append(empty);
+    }
+    selected.forEach((entry, index) => {
+      const chip = document.createElement("div");
+      chip.className = "selection-chip";
+      const label = document.createElement("span");
+      label.textContent = entry;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "×";
+      remove.className = "selection-remove";
+      remove.setAttribute("aria-label", `Remove ${entry} / ${entry} entfernen`);
+      remove.addEventListener("click", () => {
+        state.catalogSelections[type] = selected.filter((_, itemIndex) => itemIndex !== index);
+        renderCatalogSelections();
+        updateTotals();
+      });
+      chip.append(label, remove);
+      container.append(chip);
+    });
+  }
+}
+
+function openCatalog(type) {
+  state.catalogType = type;
+  state.catalogOpenId = null;
+  const isTalent = type === "talents";
+  byId("catalog-title").textContent = isTalent ? "Talents / Talente" : "Focuses / Schwerpunkte";
+  byId("catalog-filter-label").innerHTML = isTalent ? "<span>Category</span><small>Kategorie</small>" : "<span>Discipline</span><small>Disziplin</small>";
+  byId("eligibility-filter").classList.toggle("hidden", !isTalent);
+  byId("only-eligible").checked = false;
+  byId("catalog-search").value = "";
+  const filter = byId("catalog-filter");
+  const choices = isTalent ? [...new Set([...TALENT_CATEGORIES, ...catalogItems("talents").map((item) => item.category).filter(Boolean)])].map((key) => [key, `${TALENT_CATEGORY_EN[key] || key} / ${TALENT_CATEGORY_LABELS[key] || key}`]) : Object.entries(DISCIPLINE_LABELS).map(([key, [en, de]]) => [key, `${en} / ${de}`]);
+  filter.innerHTML = `<option value="">All / Alle</option>${choices.map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join("")}`;
+  renderCatalogResults();
+  byId("catalog-dialog").showModal();
+  byId("catalog-search").focus();
+}
+
+function renderCatalogResults() {
+  const type = state.catalogType;
+  if (!type) return;
+  const talent = type === "talents";
+  const query = normalized(byId("catalog-search").value);
+  const filter = byId("catalog-filter").value;
+  const onlyEligible = byId("only-eligible").checked;
+  const taken = state.catalogSelections.talents;
+  const takenNames = new Set(taken.map((entry) => normalized(parseTalentEntry(entry).original)));
+  const focusTaken = new Set(state.catalogSelections.focuses.map(normalized));
+  const rows = catalogItems(type).filter((item) => {
+    if (talent && filter && item.category !== filter) return false;
+    if (!talent && filter && !(item.disciplines || [item.discipline]).includes(filter)) return false;
+    if (talent) {
+      const kind = talentSelectionKind(item.name);
+      if (kind ? talentSelectionOptions(item.name, taken).length === 0 : takenNames.has(normalized(item.name))) return false;
+      if (onlyEligible && requirementStatus(item.requirement) === "unmet") return false;
+      return !query || `${item.name} ${item.requirement || ""} ${item.description || ""}`.toLowerCase().includes(query);
+    }
+    return !focusTaken.has(normalized(item.name)) && (!query || item.name.toLowerCase().includes(query));
+  });
+  byId("catalog-count").textContent = `${rows.length} ${talent ? "talents / Talente" : "focuses / Schwerpunkte"}`;
+  byId("catalog-results").innerHTML = rows.map((item) => {
+    const id = String(item.id);
+    if (!talent) {
+      const discipline = (item.disciplines || [item.discipline]).map((key) => DISCIPLINE_LABELS[key] || [key, key]);
+      return `<article class="catalog-item"><div class="catalog-item-title"><strong>${escapeHtml(item.name)}</strong>${item.nameDe ? `<small>${escapeHtml(item.nameDe)}</small>` : ""}<small>${escapeHtml(discipline.map(([en, de]) => `${en} / ${de}`).join(" · "))}</small></div><button type="button" class="button button-quiet" data-add-catalog-id="${escapeHtml(id)}">Add / Hinzufügen</button></article>`;
+    }
+    const categoryDe = item.categoryDe || TALENT_CATEGORY_LABELS[item.category] || item.category;
+    const categoryEn = TALENT_CATEGORY_EN[item.category] || item.category;
+    const status = requirementStatus(item.requirement);
+    const statusText = status === "met" ? "Eligible / Erfüllt" : status === "unmet" ? "Requirement not met / Voraussetzung nicht erfüllt" : "Requirement unclear / Voraussetzung nicht eindeutig";
+    const opened = state.catalogOpenId === id;
+    const options = talentSelectionOptions(item.name, taken);
+    const kind = talentSelectionKind(item.name);
+    const selectLabel = kind === "department" ? "Department / Disziplin" : kind === "attribute" ? "Attribute / Eigenschaft" : "Focus / Schwerpunkt";
+    return `<article class="catalog-item ${opened ? "expanded" : ""}"><button type="button" class="catalog-item-heading" data-open-catalog-id="${escapeHtml(id)}"><span><strong>${escapeHtml(item.name)}</strong>${item.nameDe ? `<small>${escapeHtml(item.nameDe)}</small>` : ""}</span><small>${escapeHtml(categoryEn)} / ${escapeHtml(categoryDe)} · ${escapeHtml(statusText)}</small></button>${item.requirement ? `<p class="catalog-requirement"><b>Requirement / Voraussetzung:</b> ${escapeHtml(item.requirement)}</p>` : ""}${opened ? `<div class="catalog-details"><p>${escapeHtml(item.description || "")}</p><div class="catalog-pick-fields">${kind ? `<label class="field"><span><span>${selectLabel}</span><small>Auswahl</small></span><select data-selection-option><option value="">Choose / Bitte wählen</option>${options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}${DISCIPLINE_LABELS[option.toLowerCase()] ? ` / ${escapeHtml(DISCIPLINE_LABELS[option.toLowerCase()][1])}` : ATTRIBUTE_LABELS[option.toLowerCase()] ? ` / ${escapeHtml(ATTRIBUTE_LABELS[option.toLowerCase()][1])}` : ""}</option>`).join("")}</select></label>` : ""}<label class="field"><span><span>Custom name (optional)</span><small>Eigener Name (optional)</small></span><input type="text" maxlength="120" data-custom-name placeholder="${escapeHtml(item.name)}" /></label><button type="button" class="button button-accent" data-add-catalog-id="${escapeHtml(id)}">Add talent / Talent übernehmen</button></div></div>` : ""}</article>`;
+  }).join("") || `<p class="empty-note">No catalog entry matches / Kein Eintrag passt zur Suche.</p>`;
+}
+
+function formatTalentEntry(name, selection, customName) {
+  const core = selection ? `${name} (${selection})` : name;
+  return customName && customName.trim() && customName.trim() !== name ? `${customName.trim()} (${core})` : core;
+}
+
+function technomageDataFromForm() {
+  const known = state.technomageData || {};
+  const primary = byId("primary-school")?.value || known.primarySchool || "";
+  const weak = [...(byId("weak-schools")?.querySelectorAll("select") || [])].map((select) => select.value).filter(Boolean);
+  return {
+    primarySchool: primary,
+    weakSchools: weak.length ? weak : (known.weakSchools || []),
+    experience: byId("spell-experience")?.value || known.experience || "novice",
+    spells: known.spells || [],
+  };
+}
+
+function spellSlotTotal(experience) { return experience === "veteran" ? 30 : experience === "experienced" ? 15 : 5; }
+
+function spellDepth(spellId, spellMap, visited = new Set()) {
+  if (visited.has(spellId)) return 0;
+  const spell = spellMap.get(spellId);
+  if (!spell) return 0;
+  const next = new Set(visited); next.add(spellId);
+  const deps = (spell.prerequisiteGroups || [spell.prerequisites || []]).flat().map((id) => spellMap.get(id)).filter((item) => item?.school === spell.school);
+  return deps.length ? 1 + Math.max(...deps.map((item) => spellDepth(item.id, spellMap, next))) : 0;
+}
+
+function renderTechnomageSpells() {
+  const section = byId("technomage-spells");
+  const packs = selectedModulePacks();
+  const module = packs.find((pack) => pack.spells?.length && pack.spellTrees?.length);
+  if (!module) { section.classList.add("hidden"); return; }
+  section.classList.remove("hidden");
+  const spells = module.spells;
+  const spellMap = new Map(spells.map((spell) => [spell.id, spell]));
+  const tech = state.technomageData || { primarySchool: "", weakSchools: [], experience: "novice", spells: [] };
+  const primary = byId("primary-school");
+  primary.innerHTML = `<option value="">Choose / Bitte wählen</option>${module.spellTrees.map((tree) => `<option value="${escapeHtml(tree.id)}">${escapeHtml(tree.original || tree.label)} / ${escapeHtml(tree.label)}</option>`).join("")}`;
+  primary.value = tech.primarySchool || "";
+  const weakHost = byId("weak-schools");
+  weakHost.innerHTML = [0, 1, 2].map((index) => `<label class="field"><span><span>Weak School ${index + 1}</span><small>Schwache Schule ${index + 1}</small></span><select data-weak-school><option value="">Choose / Bitte wählen</option>${module.spellTrees.map((tree) => `<option value="${escapeHtml(tree.id)}">${escapeHtml(tree.original || tree.label)} / ${escapeHtml(tree.label)}</option>`).join("")}</select></label>`).join("");
+  const weakSelects = [...weakHost.querySelectorAll("select")];
+  weakSelects.forEach((select, index) => {
+    select.value = tech.weakSchools?.[index] || "";
+    select.addEventListener("change", () => {
+      const values = weakSelects.map((node) => node.value);
+      if (values.filter(Boolean).length !== new Set(values.filter(Boolean)).size || values.includes(primary.value)) {
+        select.value = ""; showToast("Primary and weak schools must be different / Schulen dürfen sich nicht überschneiden.", "error"); return;
+      }
+      state.technomageData = { ...state.technomageData, primarySchool: primary.value, weakSchools: values.filter(Boolean) };
+      renderTechnomageSpells();
+    });
+  });
+  const experience = byId("spell-experience");
+  experience.value = tech.experience || "novice";
+  primary.onchange = () => {
+    if (weakSelects.some((select) => select.value === primary.value)) {
+      showToast("Primary and weak schools must be different / Schulen dürfen sich nicht überschneiden.", "error"); primary.value = tech.primarySchool || ""; return;
+    }
+    state.technomageData = { ...state.technomageData, primarySchool: primary.value };
+    renderTechnomageSpells();
+  };
+  experience.onchange = () => { state.technomageData = { ...state.technomageData, experience: experience.value }; renderTechnomageSpells(); };
+  const tabs = byId("spell-school-tabs");
+  tabs.innerHTML = module.spellTrees.map((tree) => `<button type="button" class="spell-school-tab ${tree.id === state.spellSchool ? "active" : ""}" data-spell-school="${escapeHtml(tree.id)}"><span>${escapeHtml(tree.original || tree.label)}</span><small>${escapeHtml(tree.label)}</small></button>`).join("");
+  const selectedTree = module.spellTrees.find((tree) => tree.id === state.spellSchool) || module.spellTrees[0];
+  state.spellSchool = selectedTree.id;
+  const known = new Set(tech.spells || []);
+  const cap = spellSlotTotal(tech.experience);
+  byId("spell-slot-count").textContent = `${known.size} / ${cap} spell slots used · ${cap - known.size} free / ${known.size} von ${cap} Spellplätzen belegt · ${cap - known.size} frei`;
+  byId("spell-tree").innerHTML = (selectedTree.spellIds || []).map((id) => spellMap.get(id)).filter(Boolean).sort((a, b) => spellDepth(a.id, spellMap) - spellDepth(b.id, spellMap) || a.name.localeCompare(b.name)).map((spell) => {
+    const prerequisiteText = (spell.prerequisiteGroups || [spell.prerequisites || []]).map((group) => group.map((id) => spellMap.get(id)?.name).filter(Boolean).join(" or ")).filter(Boolean).join(" + ");
+    const schoolRequirement = /as a primary (?:aptitude|school)/i.test(spell.requirements || "") ? TECHNOMAGE_SCHOOLS.find((school) => (spell.requirements || "").toLowerCase().includes(school.en.toLowerCase()))?.id : null;
+    const disabled = !known.has(spell.id) && (!tech.primarySchool || (tech.weakSchools || []).length !== 3 || (schoolRequirement && tech.primarySchool !== schoolRequirement));
+    return `<article class="spell-item ${known.has(spell.id) ? "learned" : ""}" style="margin-left:${spellDepth(spell.id, spellMap) * 12}px"><div><strong>${escapeHtml(spell.name)}</strong><small>${escapeHtml(selectedTree.original || selectedTree.label)} · Tier ${spellDepth(spell.id, spellMap) + 1}</small>${prerequisiteText ? `<small>Prerequisite / Voraussetzung: ${escapeHtml(prerequisiteText)}</small>` : ""}<small>${escapeHtml(spell.requirements || "No listed requirements")}</small></div><button type="button" class="button ${known.has(spell.id) ? "button-quiet" : "button-accent"}" data-spell-action="${known.has(spell.id) ? "forget" : "learn"}" data-spell-id="${escapeHtml(spell.id)}" ${disabled ? "disabled" : ""}>${known.has(spell.id) ? "Learned / Gelernt" : "Learn / Lernen"}</button></article>`;
+  }).join("");
+  byId("spell-tree").querySelectorAll("[data-spell-action]").forEach((button) => button.addEventListener("click", () => {
+    const id = button.dataset.spellId;
+    const current = new Set(state.technomageData?.spells || []);
+    if (button.dataset.spellAction === "forget") {
+      const inUse = [...current].some((otherId) => (spellMap.get(otherId)?.prerequisiteGroups || []).some((group) => group.includes(id) && !group.some((option) => option !== id && current.has(option))));
+      if (inUse) { showToast("A learned spell depends on this spell / Ein gelernter Spell benötigt diesen Spell.", "error"); return; }
+      current.delete(id);
+    } else {
+      const addPrerequisites = (spellId, seen = new Set()) => {
+        if (seen.has(spellId) || current.has(spellId)) return;
+        seen.add(spellId);
+        const spellToAdd = spellMap.get(spellId);
+        for (const group of spellToAdd?.prerequisiteGroups || (spellToAdd?.prerequisites || []).map((id) => [id])) {
+          if (group.some((dependency) => current.has(dependency))) continue;
+          const dependency = group.find((candidate) => spellMap.has(candidate));
+          if (dependency) addPrerequisites(dependency, seen);
+        }
+        current.add(spellId);
+      };
+      const requiredCount = Number((spellMap.get(id)?.requirements || "").match(/at least\s+(\d+)\s+(?:other\s+)?chaos spells/i)?.[1] || 0);
+      addPrerequisites(id);
+      if (requiredCount > current.size - 1) { showToast(`This spell requires at least ${requiredCount} already learned spells / Dieser Spell setzt mindestens ${requiredCount} bereits gelernte Spells voraus.`, "error"); return; }
+      if (current.size > cap) { showToast(`Not enough spell slots; ${current.size - cap} more needed / Nicht genug Spellplätze; ${current.size - cap} fehlen.`, "error"); return; }
+    }
+    state.technomageData = { ...state.technomageData, spells: [...current] };
+    renderTechnomageSpells();
+  }));
+  tabs.querySelectorAll("[data-spell-school]").forEach((button) => button.addEventListener("click", () => { state.spellSchool = button.dataset.spellSchool; renderTechnomageSpells(); }));
 }
 
 function renderCustomFields(packs = selectedModulePacks(), savedValues = {}) {
@@ -179,7 +486,7 @@ function renderCustomFields(packs = selectedModulePacks(), savedValues = {}) {
       const label = document.createElement("label");
       label.className = definition.type === "multiline" ? "field field-wide" : "field";
       const caption = document.createElement("span");
-      caption.textContent = definition.label;
+      caption.innerHTML = `<span>${escapeHtml(definition.original || definition.label)}</span><small>${escapeHtml(definition.labelDe || definition.label || "")}</small>`;
       label.append(caption);
       let input;
       const savedValue = String(savedValues[key] ?? "");
@@ -193,7 +500,7 @@ function renderCustomFields(packs = selectedModulePacks(), savedValues = {}) {
           const normalized = typeof option === "string" ? { value: option, label: option } : option;
           const node = document.createElement("option");
           node.value = normalized.value;
-          node.textContent = normalized.label;
+          node.textContent = normalized.labelDe ? `${normalized.label} / ${normalized.labelDe}` : normalized.label;
           input.append(node);
         }
         if (savedValue && ![...input.options].some((option) => option.value === savedValue)) {
@@ -236,6 +543,7 @@ function renderPins(selected = {}) {
   const visible = new Map();
   for (const pack of activeModulePacks()) visible.set(formatModuleKey(pack), { pack, scope: "campaign" });
   for (const entry of localModulesForProfile()) {
+    if (entry.pack.manifest.id === BASE_MODULE_ID && entry.pack.manifest.version !== BASE_MODULE_VERSION) continue;
     if (entry.scope === "private" || Object.entries(selected).some(([id, version]) => id === entry.pack.manifest.id && version === entry.pack.manifest.version)) {
       visible.set(formatModuleKey(entry.pack), { pack: entry.pack, scope: entry.scope });
     }
@@ -263,6 +571,12 @@ function readForm() {
   for (const input of form.querySelectorAll("input[name^='attributes.']")) attrs[input.name.slice("attributes.".length)] = Math.max(0, Math.min(15, Number.parseInt(input.value, 10) || 0));
   for (const input of form.querySelectorAll("input[name^='disciplines.']")) disciplines[input.name.slice("disciplines.".length)] = Math.max(0, Math.min(15, Number.parseInt(input.value, 10) || 0));
   const lines = (value) => String(value || "").split(/\r?\n/).map((item) => item.trim()).filter(Boolean).slice(0, 100);
+  const customFields = {
+    ...(state.selectedCharacter?.data?.customFields || {}),
+    ...Object.fromEntries([...form.querySelectorAll("[name^='customFields.']")]
+      .map((field) => [field.name.slice("customFields.".length), String(field.value).trim().slice(0, 2000)])),
+  };
+  customFields[TECHNOMAGE_STATE_KEY] = JSON.stringify(technomageDataFromForm()).slice(0, 2000);
   return {
     visibility: data.get("visibility") === "campaign" ? "campaign" : "private",
     data: {
@@ -277,13 +591,9 @@ function readForm() {
       attributes: attrs,
       disciplines,
       values: lines(data.get("values")),
-      talents: lines(data.get("talents")),
-      focuses: lines(data.get("focuses")),
-      customFields: {
-        ...(state.selectedCharacter?.data?.customFields || {}),
-        ...Object.fromEntries([...form.querySelectorAll("[name^='customFields.']")]
-          .map((field) => [field.name.slice("customFields.".length), String(field.value).trim().slice(0, 2000)])),
-      },
+      talents: [...state.catalogSelections.talents],
+      focuses: [...state.catalogSelections.focuses],
+      customFields,
       notes: String(data.get("notes") || "").trim(),
     },
     moduleVersions: selectedModuleVersions(),
@@ -292,6 +602,10 @@ function readForm() {
 
 function fillForm(record) {
   const data = record?.data || newCharacter();
+  state.catalogSelections = { talents: [...(data.talents || [])], focuses: [...(data.focuses || [])] };
+  let savedTech = null;
+  try { savedTech = JSON.parse(data.customFields?.[TECHNOMAGE_STATE_KEY] || "null"); } catch { savedTech = null; }
+  state.technomageData = structuredClone(savedTech || { primarySchool: "", weakSchools: [], experience: "novice", spells: [] });
   const value = (name, fallback = "") => { const field = form.elements.namedItem(name); if (field) field.value = data[name] ?? fallback; };
   value("name");
   value("species");
@@ -303,16 +617,16 @@ function fillForm(record) {
   value("creationMethod", "points");
   value("visibility", record?.visibility || "private");
   value("values", (data.values || []).join("\n"));
-  value("talents", (data.talents || []).join("\n"));
-  value("focuses", (data.focuses || []).join("\n"));
   value("notes");
-  renderPins(record?.moduleVersions || { [BASE_MODULE_ID]: BASE_MODULE_VERSION });
+  renderPins({ ...(record?.moduleVersions || {}), [BASE_MODULE_ID]: BASE_MODULE_VERSION });
   renderDataLists(record?.data?.customFields || {});
   renderStatFields(data);
   byId("editor-title").textContent = data.name || (record ? "Charakter bearbeiten" : "Neuer Charakter");
   byId("save-state").textContent = record?.conflict ? "Konflikt prüfen" : (record?.localRevision > record?.syncedLocalRevision ? "Nicht synchronisiert" : "Lokal gespeichert");
   const readOnly = Boolean(record?.visibility === "campaign" && record.ownerUserId && record.ownerUserId !== state.currentUserId && !state.canManageCharacters);
   form.querySelectorAll("input, select, textarea").forEach((field) => { field.disabled = readOnly; });
+  form.querySelectorAll("button").forEach((button) => { button.disabled = readOnly; });
+  state.readOnly = readOnly;
   byId("save-character").disabled = readOnly;
   form.querySelector(".form-footnote").textContent = readOnly
     ? "Dieser Kampagnencharakter ist schreibgeschützt. Besitzer oder Spielleitung können ihn bearbeiten."
@@ -368,8 +682,10 @@ function showEditorNew() {
   byId("editor-title").textContent = "Neuer Charakter";
   byId("save-state").textContent = "Entwurf";
   const data = newCharacter();
+  state.catalogSelections = { talents: [], focuses: [] };
+  state.technomageData = { primarySchool: "", weakSchools: [], experience: "novice", spells: [] };
   const selected = Object.fromEntries(activeModulePacks().map((pack) => [pack.manifest.id, pack.manifest.version]));
-  selected[BASE_MODULE_ID] ||= BASE_MODULE_VERSION;
+  selected[BASE_MODULE_ID] = BASE_MODULE_VERSION;
   renderPins(selected);
   renderDataLists();
   renderStatFields(data);
@@ -452,6 +768,12 @@ async function renderModules() {
     const content = document.createElement("div");
     const title = document.createElement("h3");
     title.textContent = pack.manifest.title;
+    if (pack.manifest.titleDe) {
+      const titleDe = document.createElement("small");
+      titleDe.className = "module-title-translation";
+      titleDe.textContent = pack.manifest.titleDe;
+      title.append(titleDe);
+    }
     const details = document.createElement("p");
     details.textContent = `${pack.manifest.id} · v${pack.manifest.version} · ${entry.scope === "campaign" ? "Kampagne" : "privat"}${entry.active ? " · aktiv" : ""}`;
     const description = document.createElement("small");
@@ -684,6 +1006,34 @@ function bindEvents() {
   byId("new-character").addEventListener("click", showEditorNew);
   byId("character-search").addEventListener("input", () => void renderCharacters());
   byId("sync-button").addEventListener("click", () => void syncNow());
+  byId("theme-toggle").addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light"));
+  document.querySelectorAll("[data-catalog]").forEach((button) => button.addEventListener("click", () => openCatalog(button.dataset.catalog)));
+  byId("catalog-close").addEventListener("click", () => byId("catalog-dialog").close());
+  byId("catalog-search").addEventListener("input", renderCatalogResults);
+  byId("catalog-filter").addEventListener("change", renderCatalogResults);
+  byId("only-eligible").addEventListener("change", renderCatalogResults);
+  byId("catalog-results").addEventListener("click", (event) => {
+    if (state.readOnly) return;
+    const open = event.target.closest("[data-open-catalog-id]");
+    if (open) { state.catalogOpenId = state.catalogOpenId === open.dataset.openCatalogId ? null : open.dataset.openCatalogId; renderCatalogResults(); return; }
+    const add = event.target.closest("[data-add-catalog-id]");
+    if (!add) return;
+    const item = catalogItems(state.catalogType).find((entry) => String(entry.id) === add.dataset.addCatalogId);
+    if (!item) return;
+    if (state.catalogType === "focuses") {
+      if (!state.catalogSelections.focuses.some((name) => normalized(name) === normalized(item.name))) state.catalogSelections.focuses.push(item.name);
+    } else {
+      const card = add.closest(".catalog-item");
+      const selection = card.querySelector("[data-selection-option]")?.value || "";
+      const kind = talentSelectionKind(item.name);
+      if (kind && !selection) { showToast("Choose the talent option first / Bitte zuerst die Talent-Auswahl festlegen.", "error"); return; }
+      const customName = card.querySelector("[data-custom-name]")?.value || "";
+      state.catalogSelections.talents.push(formatTalentEntry(item.name, selection, customName));
+    }
+    renderCatalogSelections();
+    updateTotals();
+    renderCatalogResults();
+  });
   byId("check-modules").addEventListener("click", async () => {
     try {
       await loadServerModules();
@@ -755,6 +1105,9 @@ function bindEvents() {
 }
 
 async function init() {
+  let savedTheme = "dark";
+  try { savedTheme = localStorage.getItem("sta-char-editor-theme") || "dark"; } catch { /* Theme storage is optional. */ }
+  setTheme(savedTheme);
   bindEvents();
   await openStore();
   const profileRights = await getSetting("profileRights");
@@ -768,6 +1121,8 @@ async function init() {
   validateModulePack(base);
   const installed = await allModules();
   if (!installed.some((entry) => entry.key === formatModuleKey(base))) await saveModule(base, { scope: "campaign", active: true });
+  const technomage = validateModulePack(JSON.parse(await (await fetch("./modules/technomage.json")).text()));
+  if (!(await allModules()).some((entry) => entry.key === formatModuleKey(technomage))) await saveModule(technomage, { scope: "private", active: false });
   const cachedActive = await getSetting("activeModules");
   state.activeModules = cachedActive || [{ moduleId: BASE_MODULE_ID, moduleVersion: BASE_MODULE_VERSION }];
   if (navigator.onLine) {

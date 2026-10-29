@@ -20,6 +20,7 @@
         </a>
         <div class="topbar-actions">
           <span id="connection-status" class="status-pill" role="status">Lokaler Speicher</span>
+          <button id="theme-toggle" class="button button-quiet" type="button" aria-pressed="false">Light theme</button>
           <button id="sync-button" class="button button-quiet" type="button">Jetzt synchronisieren</button>
           <button id="install-button" class="button button-quiet hidden" type="button">App installieren</button>
           <button id="app-update-button" class="button button-accent hidden" type="button">App aktualisieren</button>
@@ -29,16 +30,16 @@
       <div class="intro-bar">
         <div>
           <p class="eyebrow">PERSONAL RECORD</p>
-          <h1>Charaktere</h1>
-          <p class="muted">Deine Änderungen werden auf diesem Gerät gespeichert und später mit LCARS abgeglichen.</p>
+          <h1>Characters <small>Charaktere</small></h1>
+          <p class="muted">Your changes stay on this device and sync with LCARS later / Deine Änderungen bleiben auf diesem Gerät und werden später mit LCARS abgeglichen.</p>
         </div>
         <div class="intro-meta"><span id="sync-detail">Offline bereit</span><span id="module-summary">STA 2e Grundmodul</span></div>
       </div>
 
       <nav class="tabs" aria-label="Bereiche">
-        <button class="tab active" data-panel="characters" type="button">Charaktere <span id="character-count" class="tab-count">0</span></button>
-        <button class="tab" data-panel="modules" type="button">Module <span id="module-count" class="tab-count">1</span></button>
-        <button class="tab" data-panel="conflicts" type="button">Konflikte <span id="conflict-count" class="tab-count">0</span></button>
+        <button class="tab active" data-panel="characters" type="button"><span>Characters <small>Charaktere</small></span> <span id="character-count" class="tab-count">0</span></button>
+        <button class="tab" data-panel="modules" type="button"><span>Modules <small>Module</small></span> <span id="module-count" class="tab-count">1</span></button>
+        <button class="tab" data-panel="conflicts" type="button"><span>Conflicts <small>Konflikte</small></span> <span id="conflict-count" class="tab-count">0</span></button>
       </nav>
 
       <main>
@@ -61,32 +62,33 @@
               </div>
 
               <div class="form-grid">
-                <label class="field field-wide"><span>Name</span><input name="name" maxlength="100" required autocomplete="off" placeholder="Vor- und Nachname" /></label>
-                <label class="field"><span>Spezies</span><input name="species" maxlength="80" list="species-options" autocomplete="off" placeholder="Spezies" /><datalist id="species-options"></datalist></label>
-                <label class="field"><span>Beruf / Laufbahn</span><input name="profession" maxlength="100" list="profession-options" autocomplete="off" placeholder="z. B. Wissenschaftsoffizier" /><datalist id="profession-options"></datalist></label>
-                <label class="field"><span>Konzept</span><input name="concept" maxlength="120" placeholder="Kurzbeschreibung" /></label>
-                <label class="field"><span>Herkunft</span><input name="upbringing" maxlength="120" placeholder="Herkunft und Prägung" /></label>
-                <label class="field"><span>Karriere</span><input name="career" maxlength="120" placeholder="Ausbildung und Werdegang" /></label>
-                <label class="field"><span>Rang</span><input name="rank" maxlength="80" placeholder="Rang oder Status" /></label>
+                <label class="field field-wide"><span><span>Name</span><small>Name</small></span><input name="name" maxlength="100" required autocomplete="off" placeholder="Vor- und Nachname" /></label>
+                <label class="field"><span><span>Species</span><small>Spezies</small></span><input name="species" maxlength="80" list="species-options" autocomplete="off" placeholder="Species / Spezies" /><datalist id="species-options"></datalist></label>
+                <label class="field"><span><span>Profession / Career</span><small>Beruf / Laufbahn</small></span><input name="profession" maxlength="100" list="profession-options" autocomplete="off" placeholder="e.g. Science Officer / Wissenschaftsoffizier" /><datalist id="profession-options"></datalist></label>
+                <label class="field"><span><span>Concept</span><small>Konzept</small></span><input name="concept" maxlength="120" placeholder="Short description / Kurzbeschreibung" /></label>
+                <label class="field"><span><span>Upbringing</span><small>Herkunft</small></span><input name="upbringing" maxlength="120" placeholder="Background / Herkunft und Prägung" /></label>
+                <label class="field"><span><span>Career</span><small>Karriere</small></span><input name="career" maxlength="120" placeholder="Training and career / Ausbildung und Werdegang" /></label>
+                <label class="field"><span><span>Rank</span><small>Rang</small></span><input name="rank" maxlength="80" placeholder="Rank or status / Rang oder Status" /></label>
                 <div id="custom-fields" class="form-grid field-wide custom-fields"></div>
-                <label class="field"><span>Freigabe</span><select name="visibility"><option value="private">Privat</option><option value="campaign">Kampagne</option></select><small>Geteilte Charaktere sind für angemeldete Kampagnenmitglieder sichtbar.</small></label>
-                <label class="field"><span>Erschaffungsmodus</span><select name="creationMethod" id="creation-method"><option value="points">Punkte</option><option value="ap">AP</option></select><small>Der aktive Regelmodul-Satz bestimmt die verfügbaren Modi.</small></label>
+                <label class="field"><span><span>Visibility</span><small>Freigabe</small></span><select name="visibility"><option value="private">Private / Privat</option><option value="campaign">Campaign / Kampagne</option></select><small>Shared characters are visible to campaign members / Geteilte Charaktere sind für angemeldete Kampagnenmitglieder sichtbar.</small></label>
+                <label class="field"><span><span>Creation Method</span><small>Erschaffungsmethode</small></span><select name="creationMethod" id="creation-method"><option value="points">Points / Punkte</option><option value="ap">Advancement Points (AP) / Abenteuerpunkte (AP)</option></select><small>The active rules modules determine available methods / Der aktive Regelmodul-Satz bestimmt die verfügbaren Modi.</small></label>
               </div>
 
               <div class="module-pins-wrap"><div class="section-heading"><div><p class="eyebrow">REGELSTAND</p><h3>Verwendete Module</h3></div><span class="muted small">Versionen bleiben am Charakter fixiert.</span></div><div id="module-pins" class="module-pins"></div></div>
 
               <div class="stats-grid">
-                <section class="stat-card"><div class="section-heading"><div><p class="eyebrow">ATTRIBUTE</p><h3>Eigenschaften</h3></div><div class="stat-indicators"><span class="stat-total" id="attribute-total">42</span><small id="attribute-budget" class="stat-budget">Budget 56</small></div></div><div id="attribute-fields" class="numeric-fields"></div></section>
-                <section class="stat-card"><div class="section-heading"><div><p class="eyebrow">DISZIPLINEN</p><h3>Fertigkeiten</h3></div><div class="stat-indicators"><span class="stat-total" id="discipline-total">6</span><small id="discipline-budget" class="stat-budget">Budget 16</small></div></div><div id="discipline-fields" class="numeric-fields"></div></section>
+                <section class="stat-card"><div class="section-heading"><div><p class="eyebrow">ATTRIBUTES</p><h3>Eigenschaften</h3></div><div class="stat-indicators"><span class="stat-total" id="attribute-total">42</span><small id="attribute-budget" class="stat-budget">Budget 56</small></div></div><div id="attribute-fields" class="numeric-fields"></div></section>
+                <section class="stat-card"><div class="section-heading"><div><p class="eyebrow">DISCIPLINES</p><h3>Fertigkeiten</h3></div><div class="stat-indicators"><span class="stat-total" id="discipline-total">6</span><small id="discipline-budget" class="stat-budget">Budget 16</small></div></div><div id="discipline-fields" class="numeric-fields"></div></section>
               </div>
               <div id="rule-summary" class="rule-summary" role="status"></div>
 
               <div class="form-grid text-grid">
-                <label class="field"><span>Werte <small>ein Eintrag pro Zeile</small></span><textarea name="values" rows="4" maxlength="2000" placeholder="Ich halte mein Wort.&#10;Wissen ist der beste Schutz."></textarea></label>
-                <label class="field"><span>Talente <small>ein Eintrag pro Zeile</small></span><textarea name="talents" rows="4" maxlength="2000" placeholder="Talent oder Spezialisierung"></textarea></label>
-                <label class="field"><span>Schwerpunkte <small>ein Eintrag pro Zeile</small></span><textarea name="focuses" rows="3" maxlength="2000" placeholder="Schwerpunkt oder Spezialisierung"></textarea></label>
-                <label class="field field-wide"><span>Notizen</span><textarea name="notes" rows="4" maxlength="10000" placeholder="Hintergrund, Ausrüstung, offene Fragen …"></textarea></label>
+                <label class="field"><span><span>Values</span><small>Werte</small></span><textarea name="values" rows="4" maxlength="2000" placeholder="I keep my word. / Ich halte mein Wort."></textarea></label>
+                <section class="field catalog-field"><span><span>Talents</span><small>Talente</small></span><div id="talent-selections" class="selection-list"></div><button class="button button-quiet catalog-open" data-catalog="talents" type="button">Choose talent / Talent wählen</button></section>
+                <section class="field catalog-field"><span><span>Focuses</span><small>Schwerpunkte</small></span><div id="focus-selections" class="selection-list"></div><button class="button button-quiet catalog-open" data-catalog="focuses" type="button">Choose focus / Schwerpunkt wählen</button></section>
+                <label class="field field-wide"><span><span>Notes</span><small>Notizen</small></span><textarea name="notes" rows="4" maxlength="10000" placeholder="Background, equipment, open questions / Hintergrund, Ausrüstung, offene Fragen …"></textarea></label>
               </div>
+              <section id="technomage-spells" class="spell-section hidden" aria-labelledby="technomage-heading"><div class="section-heading"><div><p class="eyebrow">TECHNOMAGE MODULE</p><h3 id="technomage-heading">Spells & Spell Trees</h3><small>Spells und Zauberbäume</small></div><label class="field spell-experience"><span><span>Experience</span><small>Erfahrung</small></span><select id="spell-experience"><option value="novice">Novice / Neuling</option><option value="experienced">Experienced / Erfahren</option><option value="veteran">Veteran / Veteran</option></select></label></div><div class="spell-setup"><label class="field"><span><span>Primary School</span><small>Primärschule</small></span><select id="primary-school"></select></label><div id="weak-schools" class="weak-schools"></div></div><div id="spell-school-tabs" class="spell-school-tabs"></div><p id="spell-slot-count" class="muted"></p><div id="spell-tree" class="spell-tree"></div></section>
               <p class="form-footnote">Privat gespeicherte Bögen gehören zu deinem LCARS-Konto. Kampagnenbögen kann die Spielleitung bearbeiten.</p>
             </form>
           </section>
@@ -95,7 +97,7 @@
         <section id="panel-modules" class="panel module-panel" aria-labelledby="modules-title">
           <div class="panel-heading"><div><p class="eyebrow">DECLARATIVE DATA PACKS</p><h2 id="modules-title">Regelmodule</h2><p class="muted">Module sind versionierte JSON-Daten. Sie können zusätzliche Spezies, Laufbahnen und Erschaffungsmodi bereitstellen, führen aber keinen Code aus.</p></div><div class="panel-actions"><select id="publish-scope" aria-label="Ablageort für importierte Module"><option value="private">Privat auf LCARS</option><option value="campaign">Für die Kampagne</option></select><label class="publish-check"><input id="publish-activate" type="checkbox" />Aktivieren</label><button id="check-modules" class="button button-quiet" type="button">Online nach Updates suchen</button><button id="import-module" class="button button-accent" type="button">Modul importieren</button><input id="module-file" type="file" accept="application/json,.json" hidden /></div></div>
           <div id="module-list" class="module-list"></div>
-          <div class="module-help"><strong>Modulformat</strong><p>Jedes Paket enthält ein Manifest mit ID, Version und Schema-Version. Module können Spezies, Klassen/Laufbahnen, zusätzliche Charakterfelder und Erschaffungsregeln deklarieren. Die Kampagnenleitung kann freigegebene Versionen aktivieren; private Charaktere dürfen zusätzlich lokale oder persönliche Module verwenden.</p><div class="module-downloads"><a href="./modules/base-sta2e.json" download>STA 2e Grundmodul herunterladen</a><a href="./modules/example-technomage.json" download>Technomage-Beispielmodul herunterladen</a></div></div>
+          <div class="module-help"><strong>Module</strong><small class="block">Regelmodule</small><p>Versioned JSON packs add species, careers, talents, focuses and creation rules. They work offline once installed / Versionierte JSON-Pakete ergänzen Spezies, Laufbahnen, Talente, Schwerpunkte und Erschaffungsregeln. Installierte Module funktionieren offline.</p><div class="module-downloads"><a href="./modules/base-sta2e.json" download>Download Core STA 2e / Grundmodul herunterladen</a><a href="./modules/technomage.json" download>Download Technomage module / Technomage-Modul herunterladen</a></div></div>
         </section>
 
         <section id="panel-conflicts" class="panel conflict-panel" aria-labelledby="conflicts-title">
@@ -105,9 +107,10 @@
         </section>
       </main>
 
-      <footer><span>STA CHARACTER EDITOR <span class="version-label">v0.3.1</span></span><span>Offline zuerst · Synchronisierung bei Verbindung</span></footer>
+      <footer><span>STA CHARACTER EDITOR <span class="version-label">v0.4.0</span></span><span>Offline first · sync when online / Offline zuerst · Sync bei Verbindung</span></footer>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
+    <dialog id="catalog-dialog" class="catalog-dialog"><div class="catalog-dialog-content"><div class="section-heading"><div><p class="eyebrow">STA 2E CATALOG</p><h2 id="catalog-title"></h2></div><button id="catalog-close" class="button button-quiet" type="button">Close / Schließen</button></div><div class="catalog-controls"><label class="field"><span><span>Search</span><small>Suche</small></span><input id="catalog-search" type="search" autocomplete="off" /></label><label class="field"><span id="catalog-filter-label"><span>Category</span><small>Kategorie</small></span><select id="catalog-filter"></select></label><label id="eligibility-filter" class="eligibility-filter"><input id="only-eligible" type="checkbox" /><span><span>Only eligible</span><small>Nur erfüllbare Voraussetzungen</small></span></label></div><p id="catalog-count" class="muted"></p><div id="catalog-results" class="catalog-results"></div></div></dialog>
     <script type="module" src="./app.js"></script>
   </body>
 </html>

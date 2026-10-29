@@ -1,4 +1,4 @@
-const VERSION = "sta-char-editor-v0.3.1";
+const VERSION = "sta-char-editor-v0.4.0";
 const SHELL = `${VERSION}-shell`;
 const APP_FILES = [
   "./",
@@ -13,7 +13,7 @@ const APP_FILES = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./modules/base-sta2e.json",
-  "./modules/example-technomage.json",
+  "./modules/technomage.json",
 ];
 
 self.addEventListener("install", (event) => {
