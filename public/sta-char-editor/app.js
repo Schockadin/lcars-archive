@@ -5,7 +5,7 @@ import { allCharacters, allModules, applyRemoteChange, applySyncResult, deleteMo
 const byId = (id) => document.getElementById(id);
 const form = byId("character-form");
 const toast = byId("toast");
-const state = { selectedId: null, selectedCharacter: null, modules: [], serverModules: [], activeModules: [], canManageModules: false, canManageCharacters: false, canShareCampaign: false, currentUserId: null, syncing: false, toastTimer: null, installPrompt: null, catalogSelections: { talents: [], focuses: [] }, catalogType: null, catalogOpenId: null, spellSchool: "defence" };
+const state = { selectedId: null, selectedCharacter: null, modules: [], serverModules: [], activeModules: [], canManageModules: false, canManageCharacters: false, canShareCampaign: false, currentUserId: null, syncing: false, toastTimer: null, installPrompt: null, catalogSelections: { talents: [], focuses: [] }, catalogType: null, catalogOpenId: null, spellSchool: "defence", gameState: { stress: 0, determination: 1 }, roll: { focuses: [], talents: [], difficulty: 1, freeDice: 0, complicationBonus: 0 } };
 const REMOVED_BUNDLED_MODULES_KEY = "removedBundledModules";
 const embeddedModuleKeys = new Set();
 const attributeFallback = ["control", "daring", "fitness", "insight", "presence", "reason"].map((id) => ({ id, label: id }));
@@ -18,6 +18,7 @@ const TALENT_CATEGORY_EN = { general: "General", species: "Species & Culture", a
 const TECHNOMAGE_SCHOOLS = [{ id: "defence", en: "Defence", de: "Abwehr" }, { id: "elements", en: "Elements", de: "Elemente" }, { id: "conjuration", en: "Conjuration", de: "Beschwörung" }, { id: "movement", en: "Movement", de: "Bewegung" }, { id: "healing", en: "Healing", de: "Heilung" }, { id: "enhancement", en: "Enhancement", de: "Verstärkung" }, { id: "creation", en: "Creation", de: "Erschaffung" }];
 const DEFAULT_TECHNOMAGE_SLOT_RULES = { baseSlots: 5, reasonAttribute: "reason", reasonBaseline: 7, bonusBase: 2.5, talentBonusIds: ["talent.organells", "talent.chrysalis-technomage", "talent.ftl-attunement"], advancementApStep: 20, rounding: "ceil" };
 const TECHNOMAGE_STATE_KEY = "sta2e.technomage.spell-state";
+const GAME_STATE_KEY = "sta2e.play-state";
 
 function setTheme(theme) {
   const value = theme === "light" ? "light" : "dark";
@@ -822,6 +823,7 @@ function readForm() {
       .map((field) => [field.name.slice("customFields.".length), String(field.value).trim().slice(0, 2000)])),
   };
   customFields[TECHNOMAGE_STATE_KEY] = JSON.stringify(technomageDataFromForm()).slice(0, 2000);
+  customFields[GAME_STATE_KEY] = JSON.stringify(state.gameState);
   return {
     visibility: data.get("visibility") === "campaign" ? "campaign" : "private",
     data: {
@@ -850,6 +852,14 @@ function fillForm(record) {
   byId("spell-search").value = "";
   byId("only-reachable-spells").checked = false;
   state.catalogSelections = { talents: [...(data.talents || [])], focuses: [...(data.focuses || [])] };
+  try {
+    const savedGameState = JSON.parse(data.customFields?.[GAME_STATE_KEY] || "null");
+    state.gameState = {
+      stress: Math.max(0, Number.parseInt(savedGameState?.stress, 10) || 0),
+      determination: Math.max(0, Math.min(3, Number.parseInt(savedGameState?.determination, 10) || 0)),
+    };
+  } catch { state.gameState = { stress: 0, determination: 1 }; }
+  if (!data.customFields?.[GAME_STATE_KEY]) state.gameState = { stress: 0, determination: 1 };
   let savedTech = null;
   try { savedTech = JSON.parse(data.customFields?.[TECHNOMAGE_STATE_KEY] || "null"); } catch { savedTech = null; }
   state.technomageData = structuredClone(savedTech || { primarySchool: "", weakSchools: [], advancementAP: 0, spells: [] });
@@ -929,6 +939,8 @@ function showEditorNew() {
   byId("save-state").textContent = "Entwurf";
   const data = newCharacter();
   state.catalogSelections = { talents: [], focuses: [] };
+  state.gameState = { stress: 0, determination: 1 };
+  state.roll = { focuses: [], talents: [], difficulty: 1, freeDice: 0, complicationBonus: 0 };
   state.technomageData = { primarySchool: "", weakSchools: [], advancementAP: 0, spells: [] };
   const selected = Object.fromEntries(activeModulePacks().map((pack) => [pack.manifest.id, pack.manifest.version]));
   selected[BASE_MODULE_ID] = BASE_MODULE_VERSION;
@@ -1245,6 +1257,229 @@ function setUpdateAvailable(registration) {
   byId("app-update-button").onclick = () => registration.waiting?.postMessage("SKIP_WAITING");
 }
 
+function talentRecord(entry) {
+  const parsed = parseTalentEntry(entry);
+  const catalog = catalogItems("talents").find((item) => normalized(item.name) === normalized(parsed.original));
+  return { ...parsed, catalog };
+}
+
+function maximumStress(data) {
+  const fitness = Number(data.attributes?.fitness) || 0;
+  const command = Number(data.disciplines?.command) || 0;
+  const moduleBonus = Number(data.customFields?.stressBonus) || 0;
+  const talentBonus = (data.talents || []).reduce((sum, entry) => {
+    const { original, catalog } = talentRecord(entry);
+    if (!catalog) return sum;
+    if (normalized(original) === "tough") return sum + 2;
+    if (normalized(original) === "resolute") return sum + command;
+    const fixed = catalog.description?.match(/maximum stress (?:is )?increased by (\d+)/i);
+    return sum + (fixed ? Number(fixed[1]) : 0);
+  }, 0);
+  return Math.min(30, Math.max(0, fitness + moduleBonus + talentBonus));
+}
+
+function translatedField(item, group) {
+  const labels = group === "attributes" ? ATTRIBUTE_LABELS : DISCIPLINE_LABELS;
+  return labels[item.id] || [item.original || item.label || item.id, item.label || item.id];
+}
+
+function previewStatSection(title, german, fields, values, group) {
+  const rows = fields.map((item) => {
+    const [english, local] = translatedField(item, group);
+    return `<div class="preview-stat-row"><span><strong>${escapeHtml(english)}</strong><small>${escapeHtml(local)}</small></span><b>${escapeHtml(values[item.id] ?? "—")}</b></div>`;
+  }).join("");
+  return `<section class="preview-section"><h3>${escapeHtml(title)} <small>${escapeHtml(german)}</small></h3><div class="preview-stat-grid">${rows}</div></section>`;
+}
+
+function previewList(title, german, entries, emptyText = "—") {
+  const items = entries.length
+    ? `<ul>${entries.map((entry) => {
+      const primary = typeof entry === "string" ? entry : entry.primary;
+      const secondary = typeof entry === "string" ? "" : entry.secondary;
+      return `<li><span>${escapeHtml(primary)}</span>${secondary ? `<small class="preview-list-translation">${escapeHtml(secondary)}</small>` : ""}</li>`;
+    }).join("")}</ul>`
+    : `<p class="preview-empty">${escapeHtml(emptyText)}</p>`;
+  return `<section class="preview-section"><h3>${escapeHtml(title)} <small>${escapeHtml(german)}</small></h3>${items}</section>`;
+}
+
+function previewIdentityField(label, german, value) {
+  return `<div class="preview-identity-field"><small>${escapeHtml(label)} · ${escapeHtml(german)}</small><strong>${escapeHtml(value || "—")}</strong></div>`;
+}
+
+function renderCharacterPreview() {
+  const { data } = readForm();
+  const maxStress = maximumStress(data);
+  state.gameState.stress = Math.min(Math.max(0, state.gameState.stress), maxStress);
+  state.gameState.determination = Math.max(0, Math.min(3, state.gameState.determination));
+  const values = Array.isArray(data.values) ? data.values : [];
+  const selectedTalents = (data.talents || []).map((entry) => talentRecord(entry));
+  const packs = selectedModulePacks();
+  const versions = selectedModuleVersions();
+  const customFields = Object.entries(data.customFields || {}).filter(([key]) => ![TECHNOMAGE_STATE_KEY, GAME_STATE_KEY].includes(key));
+  const techPack = packs.find((pack) => pack.spells?.length && pack.spellTrees?.length && [...(pack.professions || []), ...(pack.classes || [])].some((item) => normalized(displayLabel(item)) === normalized(data.profession)));
+  let techData = { primarySchool: "", weakSchools: [], advancementAP: 0, spells: [] };
+  try { techData = JSON.parse(data.customFields?.[TECHNOMAGE_STATE_KEY] || "null") || techData; } catch { /* Ignore malformed optional module state. */ }
+  const spellMap = new Map((techPack?.spells || []).map((spell) => [spell.id, spell]));
+  const knownSpells = (techData.spells || []).map((id) => {
+    const spell = spellMap.get(id);
+    return spell ? { primary: spell.name, secondary: spell.nameDe || "" } : id;
+  });
+  const spellSlots = techPack ? calculateTechnomageSpellSlots(techPack, data.attributes?.[techPack.spellSlotRules?.reasonAttribute || "reason"], data.talents || [], techData.advancementAP) : null;
+  const schoolName = (id) => {
+    const tree = techPack?.spellTrees?.find((item) => item.id === id);
+    return tree ? `${tree.original || tree.label} / ${tree.label}` : id;
+  };
+  const talentSections = selectedTalents.map(({ original, selection, catalog }) => {
+    const name = selection ? `${original} (${selection})` : original;
+    return `<article class="preview-talent"><strong>${escapeHtml(name)}</strong>${catalog?.requirement ? `<small>Requirement / Voraussetzung: ${escapeHtml(catalog.requirement)}</small>` : ""}<p>${escapeHtml(catalog?.description || "No catalog description / Keine Katalogbeschreibung.")}</p></article>`;
+  }).join("");
+  const moduleNames = Object.entries(versions).map(([id, version]) => {
+    const pack = packs.find((item) => item.manifest.id === id && item.manifest.version === version);
+    return { primary: `${pack?.manifest.title || id} · v${version}`, secondary: pack?.manifest.titleDe || "" };
+  });
+  const focusNames = (data.focuses || []).map((name) => {
+    const focus = catalogItems("focuses").find((item) => normalized(item.name) === normalized(name));
+    return { primary: name, secondary: focus?.nameDe || "" };
+  });
+  const talentNames = (data.talents || []).map((entry) => {
+    const { original, selection, catalog } = talentRecord(entry);
+    return { primary: selection ? `${original} (${selection})` : original, secondary: catalog?.nameDe || "" };
+  });
+  const identity = [
+    previewIdentityField("Species", "Spezies", data.species),
+    previewIdentityField("Role", "Rolle", data.profession),
+    previewIdentityField("Concept", "Konzept", data.concept),
+    previewIdentityField("Upbringing", "Herkunft", data.upbringing),
+    previewIdentityField("Career", "Werdegang", data.career),
+    previewIdentityField("Rank", "Rang", data.rank),
+    previewIdentityField("Creation method", "Erschaffungsmethode", data.creationMethod === "ap" ? "Advancement Points (AP) / Abenteuerpunkte" : "Points / Punkte"),
+  ].join("");
+  const disabledTrack = state.readOnly ? "disabled" : "";
+  const stressBoxes = Array.from({ length: maxStress }, (_, index) => `<button type="button" class="track-box ${index < state.gameState.stress ? "checked" : ""}" data-game-track="stress" data-track-value="${index + 1}" aria-label="Set Stress to ${index + 1}" title="Stress ${index + 1}" ${disabledTrack}></button>`).join("");
+  const determinationBoxes = Array.from({ length: 3 }, (_, index) => `<button type="button" class="track-box determination-box ${index < state.gameState.determination ? "checked" : ""}" data-game-track="determination" data-track-value="${index + 1}" aria-label="Set Determination to ${index + 1}" title="Determination ${index + 1}" ${disabledTrack}></button>`).join("");
+  byId("preview-character-name").textContent = data.name || "Character sheet / Charakterbogen";
+  byId("character-preview-content").innerHTML = `
+    <article class="preview-page">
+      <header class="preview-sheet-heading"><span>STAR TREK ADVENTURES · PERSONNEL FILE</span><h1>${escapeHtml(data.name || "Unnamed character / Unbenannter Charakter")}</h1><p>${escapeHtml([data.species, data.rank, data.profession].filter(Boolean).join(" · ") || "Character record / Personenakte")}</p></header>
+      <section class="preview-section"><h3>Identity <small>Stammdaten</small></h3><div class="preview-identity-grid">${identity}</div></section>
+      ${previewStatSection("Attributes", "Eigenschaften", fieldsFromModules("attributes", attributeFallback), data.attributes || {}, "attributes")}
+      ${previewStatSection("Departments", "Fertigkeiten", fieldsFromModules("disciplines", disciplineFallback), data.disciplines || {}, "disciplines")}
+      <section class="preview-section preview-tracks"><h3>In play <small>Im Spiel</small></h3><div class="preview-track-row"><span><strong>Stress</strong><small>Belastung · ${state.gameState.stress} / ${maxStress}</small></span><div class="preview-track">${stressBoxes || "<small>Kein Fitness-Wert</small>"}</div></div><div class="preview-track-row"><span><strong>Determination</strong><small>Entschlossenheit · ${state.gameState.determination} / 3</small></span><div class="preview-track">${determinationBoxes}</div></div></section>
+      ${previewList("Values", "Werte", values)}
+      ${previewList("Focuses", "Schwerpunkte", focusNames)}
+      ${previewList("Talents", "Talente", talentNames)}
+      ${techPack ? `<section class="preview-section"><h3>Technomage <small>Spell-Übersicht</small></h3><div class="preview-identity-grid">${previewIdentityField("Primary school", "Primärschule", schoolName(techData.primarySchool))}${previewIdentityField("Weak schools", "Schwache Schulen", (techData.weakSchools || []).map(schoolName).join(", "))}${previewIdentityField("Advancement AP", "Erhaltene AP", techData.advancementAP || 0)}</div><div class="preview-stat-row"><span><strong>Spell slots available</strong><small>Verfügbare Spellplätze</small></span><b>${Math.max(0, spellSlots.total - knownSpells.length)} / ${spellSlots.total}</b></div>${previewList("Known spells", "Gelernte Spells", knownSpells)}</section>` : ""}
+      ${customFields.length ? `<section class="preview-section"><h3>Additional fields <small>Zusatzfelder</small></h3><div class="preview-identity-grid">${customFields.map(([key, value]) => previewIdentityField(key, "Modul", typeof value === "string" ? value : JSON.stringify(value))).join("")}</div></section>` : ""}
+      ${previewList("Rule modules", "Regelmodule", moduleNames)}
+      ${data.notes ? `<section class="preview-section preview-notes"><h3>Notes <small>Notizen</small></h3><p>${escapeHtml(data.notes)}</p></section>` : ""}
+      ${selectedTalents.length ? `<section class="preview-section preview-talent-sheet"><h3>Talent reference <small>Talent-Referenz</small></h3>${talentSections}</section>` : ""}
+    </article>`;
+  renderGameAssistant(data);
+  byId("character-preview-content").querySelectorAll("[data-game-track]").forEach((button) => button.addEventListener("click", () => {
+    if (state.readOnly) return;
+    const track = button.dataset.gameTrack;
+    const value = Number(button.dataset.trackValue) || 0;
+    state.gameState[track] = value === state.gameState[track] ? value - 1 : value;
+    state.gameState[track] = Math.max(0, track === "determination" ? Math.min(3, state.gameState[track]) : Math.min(maxStress, state.gameState[track]));
+    void persistGameState();
+    renderCharacterPreview();
+  }));
+}
+
+function renderGameAssistant(data) {
+  const attributeSelect = byId("roll-attribute");
+  const disciplineSelect = byId("roll-discipline");
+  const attributes = fieldsFromModules("attributes", attributeFallback);
+  const disciplines = fieldsFromModules("disciplines", disciplineFallback);
+  attributeSelect.innerHTML = attributes.map((item) => {
+    const [english, german] = translatedField(item, "attributes");
+    return `<option value="${escapeHtml(item.id)}">${escapeHtml(english)} / ${escapeHtml(german)}</option>`;
+  }).join("");
+  disciplineSelect.innerHTML = disciplines.map((item) => {
+    const [english, german] = translatedField(item, "disciplines");
+    return `<option value="${escapeHtml(item.id)}">${escapeHtml(english)} / ${escapeHtml(german)}</option>`;
+  }).join("");
+  if (!attributes.some((item) => item.id === state.roll.attribute)) state.roll.attribute = attributes[0]?.id || "control";
+  if (!disciplines.some((item) => item.id === state.roll.discipline)) state.roll.discipline = disciplines[0]?.id || "command";
+  attributeSelect.value = state.roll.attribute;
+  disciplineSelect.value = state.roll.discipline;
+  byId("roll-difficulty").value = String(state.roll.difficulty ?? 1);
+  byId("roll-free-dice").value = String(state.roll.freeDice ?? 0);
+  byId("roll-complication-bonus").value = String(state.roll.complicationBonus ?? 0);
+
+  const focusCatalog = catalogItems("focuses");
+  const focusEntries = (data.focuses || []).map((name) => {
+    const item = focusCatalog.find((candidate) => normalized(candidate.name) === normalized(name));
+    const scope = item?.disciplines || (item?.discipline ? [item.discipline] : []);
+    return { name, item, suggested: scope.includes(state.roll.discipline) };
+  }).sort((left, right) => Number(right.suggested) - Number(left.suggested));
+  const availableFocuses = focusEntries.map((entry) => entry.name);
+  state.roll.focuses = state.roll.focuses.filter((name) => availableFocuses.includes(name));
+  byId("roll-focus-options").innerHTML = focusEntries.length ? focusEntries.map(({ name, item, suggested }) => `<label class="roll-option"><input type="checkbox" data-roll-focus value="${escapeHtml(name)}" ${state.roll.focuses.includes(name) ? "checked" : ""}/><span><strong>${escapeHtml(name)}</strong>${item?.nameDe ? `<small>${escapeHtml(item.nameDe)}</small>` : ""}${item ? `<small>${escapeHtml((item.disciplines || [item.discipline]).filter(Boolean).map((id) => DISCIPLINE_LABELS[id]?.[0] || id).join(", "))}${suggested ? " · Suggested / passend" : ""}</small>` : "<small>Custom focus / Eigener Schwerpunkt</small>"}</span></label>`).join("") : '<p class="preview-empty">No Focus selected. / Kein Schwerpunkt gewählt.</p>';
+  const talentEntries = (data.talents || []).map((entry) => ({ entry, ...talentRecord(entry) }));
+  const availableTalents = talentEntries.map(({ entry }) => entry);
+  state.roll.talents = state.roll.talents.filter((entry) => availableTalents.includes(entry));
+  byId("roll-talent-options").innerHTML = talentEntries.length ? talentEntries.map(({ entry, label, catalog }) => `<label class="roll-option"><input type="checkbox" data-roll-talent value="${escapeHtml(entry)}" ${state.roll.talents.includes(entry) ? "checked" : ""}/><span><strong>${escapeHtml(label)}</strong>${catalog?.description ? `<small>${escapeHtml(catalog.description)}</small>` : "<small>Custom talent / Eigenes Talent</small>"}</span></label>`).join("") : '<p class="preview-empty">No talents selected. / Keine Talente gewählt.</p>';
+  updateRollResult(data, talentEntries);
+}
+
+function updateRollResult(data = readForm().data, talentEntries = (data.talents || []).map((entry) => ({ entry, ...talentRecord(entry) }))) {
+  const selectedTalentEntries = talentEntries.filter(({ entry }) => state.roll.talents.includes(entry));
+  const discipline = Number(data.disciplines?.[state.roll.discipline]) || 0;
+  const target = (Number(data.attributes?.[state.roll.attribute]) || 0) + discipline;
+  const fixedComplicationBonus = selectedTalentEntries.reduce((sum, { original, selection, catalog }) => {
+    if (!catalog) return sum;
+    const description = catalog.description || "";
+    if (normalized(original) === "augmented ability" && normalized(selection) === normalized(ATTRIBUTE_LABELS[state.roll.attribute]?.[0] || state.roll.attribute)) return sum + 2;
+    if (/by\s+1\s*,\s*2\s*,?\s*or\s*3|for each|per\s+(?:point|momentum)/i.test(description)) return sum;
+    const match = description.match(/(?:increase(?:s|d)?|increasing)\s+(?:the\s+)?complication range(?:\s+of [^.]{0,50})?\s+by\s+(\d+)/i) || description.match(/complication range.{0,50}increase(?:s)? by (\d+)/i);
+    return sum + Number(match?.[1] || 0);
+  }, 0);
+  const bonusInput = Math.max(0, Math.min(19, Number.parseInt(byId("roll-complication-bonus").value, 10) || 0));
+  const complicationRange = Math.max(1, Math.min(20, 1 + fixedComplicationBonus + bonusInput));
+  const compText = complicationRange === 1 ? "20" : `${21 - complicationRange}–20`;
+  const detectedFreeDice = selectedTalentEntries.filter(({ catalog }) => catalog && (/\bfirst\b[^.]{0,180}\bfree\b/i.test(catalog.description || "") || /\bfree\b[^.]{0,100}\bd20\b/i.test(catalog.description || ""))).length;
+  const manualFreeDice = Math.max(0, Math.min(3, Number.parseInt(byId("roll-free-dice").value, 10) || 0));
+  const freeDice = Math.min(3, detectedFreeDice + manualFreeDice);
+  const difficulty = Math.max(0, Math.min(5, Number.parseInt(byId("roll-difficulty").value, 10) || 0));
+  const dicePool = difficulty === 0 ? 0 : 2 + freeDice;
+  const rerollEffects = selectedTalentEntries.flatMap(({ label, catalog }) => {
+    const description = catalog?.description || "";
+    if (!/re-?roll/i.test(description)) return [];
+    if (/reroll (?:your |the )?dice pool|re-roll (?:your |the )?dice pool|reroll (?:all )?(?:of )?your dice|re-roll (?:all )?(?:of )?your dice/i.test(description)) return [`${label}: dice pool`];
+    if (/any number of dice/i.test(description)) return [`${label}: any number of dice`];
+    const count = description.match(/(?:re-?roll)\s+(?:a\s+)?(?:single|one|1)\s+(?:d20|die)|(?:re-?roll)\s+1d20/i);
+    return count ? [`${label}: 1 d20`] : [`${label}: see condition`];
+  });
+  const individualRerolls = rerollEffects.filter((effect) => effect.endsWith(": 1 d20")).length;
+  const wholePoolRerolls = rerollEffects.filter((effect) => /dice pool|any number/.test(effect)).length;
+  const availablePoolRerolls = wholePoolRerolls + state.gameState.determination;
+  const remainingPurchasableDice = difficulty === 0 ? 0 : Math.max(0, 3 - freeDice);
+  const focusText = `${state.roll.focuses.length ? `<li>With an applicable Focus, a roll of 1–${discipline} scores two successes. / Mit passendem Schwerpunkt zählt ein Wurf von 1–${discipline} als zwei Erfolge.</li>` : ""}<li>A natural 1 scores two successes. / Eine natürliche 1 zählt als zwei Erfolge.</li>`;
+  const bonusLines = selectedTalentEntries.map(({ label, original, selection, catalog }) => {
+    const description = catalog?.description || "Custom talent; no catalog rule text. / Eigenes Talent ohne Regeltext im Katalog.";
+    const augmented = normalized(original) === "augmented ability" && normalized(selection) === normalized(ATTRIBUTE_LABELS[state.roll.attribute]?.[0] || state.roll.attribute);
+    return `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(description)}${augmented ? " · +1 automatic success / automatischer Erfolg" : ""}</li>`;
+  });
+  if (state.gameState.determination > 0) bonusLines.push(`<li><strong>Determination / Entschlossenheit (${state.gameState.determination}):</strong> If a Value supports the task, spend 1 to set one die to 1 or reroll the whole dice pool. / Wenn ein Wert die Handlung stützt: 1 Punkt ausgeben, um einen Würfel auf 1 zu setzen oder den ganzen Würfelpool erneut zu würfeln.</li>`);
+  const selectedFocusNames = state.roll.focuses.length ? `<p class="roll-applied-focus"><strong>Focus applied / Schwerpunkt angewendet:</strong> ${escapeHtml(state.roll.focuses.join(", "))}</p>` : "";
+  const difficultyNote = difficulty === 0 ? "Difficulty 0 succeeds automatically; no roll is required. / Schwierigkeit 0 gelingt automatisch; ein Wurf ist nicht erforderlich." : "";
+  byId("roll-result").innerHTML = `<div class="roll-result-heading"><span>Roll summary <small>Wurf-Übersicht</small></span><b>${dicePool} d20</b></div>${difficultyNote ? `<p class="roll-applied-focus">${difficultyNote}</p>` : ""}<div class="roll-result-grid"><div><small>Target Number · Zielwert</small><strong>${target}</strong><span>${escapeHtml(ATTRIBUTE_LABELS[state.roll.attribute]?.[0] || state.roll.attribute)} ${Number(data.attributes?.[state.roll.attribute]) || 0} + ${escapeHtml(DISCIPLINE_LABELS[state.roll.discipline]?.[0] || state.roll.discipline)} ${discipline}</span></div><div><small>Difficulty · Schwierigkeit</small><strong>${difficulty}</strong><span>Successes required / Benötigte Erfolge</span></div><div><small>Complication Range · Komplikationsbereich</small><strong>${compText}</strong><span>${complicationRange} result${complicationRange === 1 ? "" : "s"} on d20 / Ergebnisse auf W20</span></div><div><small>Free bonus dice · Kostenlose Zusatzwürfel</small><strong>${freeDice} / 3</strong><span>${difficulty === 0 ? "No roll required / Kein Wurf nötig" : `2 base + free dice = ${dicePool} d20 / Grundpool + freie Würfel`}</span></div><div><small>Rerolls available · Wiederholungen verfügbar</small><strong>${individualRerolls} + ${availablePoolRerolls}</strong><span>Individual d20 + whole-pool options / Einzelwürfel + Würfelpool</span></div><div><small>Additional dice available · Weitere mögliche Würfel</small><strong>${remainingPurchasableDice}</strong><span>Up to five d20 total / Höchstens fünf W20 insgesamt</span></div></div>${selectedFocusNames}<ul class="roll-focus-effect">${focusText}</ul><section class="roll-other-bonuses"><h4>Other applicable bonuses <small>Weitere anwendbare Boni</small></h4>${bonusLines.length ? `<ul>${bonusLines.join("")}</ul>` : '<p class="preview-empty">No other selected bonuses. / Keine weiteren ausgewählten Boni.</p>'}${rerollEffects.length ? `<p><strong>Talent reroll conditions / Talent-Wiederholungen:</strong> ${escapeHtml(rerollEffects.join(" · "))}</p>` : ""}</section>`;
+}
+
+async function persistGameState() {
+  if (!state.selectedCharacter || state.readOnly) return;
+  try {
+    const record = await saveCharacter(state.selectedCharacter, readForm(), state.currentUserId);
+    state.selectedCharacter = record;
+    byId("save-state").textContent = "Nicht synchronisiert";
+    await renderCharacters();
+    if (navigator.onLine) void syncNow();
+  } catch (error) {
+    showToast(`Spielstand konnte nicht gespeichert werden: ${error.message}`, "error");
+  }
+}
+
 async function registerPwa() {
   if (!("serviceWorker" in navigator)) return;
   try {
@@ -1264,6 +1499,23 @@ async function registerPwa() {
 function bindEvents() {
   document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => showPanel(tab.dataset.panel)));
   byId("new-character").addEventListener("click", showEditorNew);
+  byId("open-character-preview").addEventListener("click", () => {
+    renderCharacterPreview();
+    byId("character-preview-dialog").showModal();
+  });
+  byId("close-character-preview").addEventListener("click", () => byId("character-preview-dialog").close());
+  byId("print-character-preview").addEventListener("click", () => window.print());
+  byId("game-assistant").addEventListener("change", (event) => {
+    state.roll.attribute = byId("roll-attribute").value;
+    state.roll.discipline = byId("roll-discipline").value;
+    state.roll.difficulty = Number(byId("roll-difficulty").value) || 0;
+    state.roll.freeDice = Number(byId("roll-free-dice").value) || 0;
+    state.roll.complicationBonus = Number(byId("roll-complication-bonus").value) || 0;
+    state.roll.focuses = [...byId("roll-focus-options").querySelectorAll("[data-roll-focus]:checked")].map((input) => input.value);
+    state.roll.talents = [...byId("roll-talent-options").querySelectorAll("[data-roll-talent]:checked")].map((input) => input.value);
+    if (["roll-attribute", "roll-discipline"].includes(event.target.id)) renderGameAssistant(readForm().data);
+    else updateRollResult(readForm().data);
+  });
   byId("character-search").addEventListener("input", () => void renderCharacters());
   byId("sync-button").addEventListener("click", () => void syncNow());
   byId("theme-toggle").addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light"));

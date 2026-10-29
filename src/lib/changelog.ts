@@ -180,6 +180,16 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },
+      {
+        text: "Die Charaktervorschau listet den vollständigen Editorbogen samt Modulwerten und druckt ihn offline als PDF. Stress und Entschlossenheit lassen sich direkt im Bogen fortschreiben.",
+        category: "export",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Der Wurf-Assistent berechnet Zielwert, Schwierigkeit, Würfelpool und Komplikationsbereich. Passende Schwerpunkte und situativ anwendbare Talente lassen sich auswählen; freie Würfel, Wiederholungen und Boni werden zusammengefasst.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
     ],
   },
   {
