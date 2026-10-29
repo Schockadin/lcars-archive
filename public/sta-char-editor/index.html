@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#090d17" />
+    <meta name="description" content="Offlinefähiger, modularer Charaktereditor für Star Trek Adventures 2e." />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>STA Character Editor</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="Zum Charaktereditor">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span><strong>STA</strong><small>CHARACTER EDITOR</small></span>
+        </a>
+        <div class="topbar-actions">
+          <span id="connection-status" class="status-pill" role="status">Lokaler Speicher</span>
+          <button id="theme-toggle" class="button button-quiet" type="button" aria-pressed="false">Light theme</button>
+          <button id="sync-button" class="button button-quiet" type="button">Jetzt synchronisieren</button>
+          <button id="install-button" class="button button-quiet hidden" type="button">App installieren</button>
+          <button id="app-update-button" class="button button-accent hidden" type="button">App aktualisieren</button>
+        </div>
+      </header>
+
+      <div class="intro-bar">
+        <div>
+          <p class="eyebrow">PERSONAL RECORD</p>
+          <h1>Characters <small>Charaktere</small></h1>
+          <p class="muted">Your changes stay on this device and sync with LCARS later / Deine Änderungen bleiben auf diesem Gerät und werden später mit LCARS abgeglichen.</p>
+        </div>
+        <div class="intro-meta"><span id="sync-detail">Offline bereit</span><span id="module-summary">STA 2e Grundmodul</span></div>
+      </div>
+
+      <nav class="tabs" aria-label="Bereiche">
+        <button class="tab active" data-panel="characters" type="button"><span>Characters <small>Charaktere</small></span> <span id="character-count" class="tab-count">0</span></button>
+        <button class="tab" data-panel="modules" type="button"><span>Modules <small>Module</small></span> <span id="module-count" class="tab-count">1</span></button>
+        <button class="tab" data-panel="conflicts" type="button"><span>Conflicts <small>Konflikte</small></span> <span id="conflict-count" class="tab-count">0</span></button>
+      </nav>
+
+      <main>
+        <section id="panel-characters" class="panel active" aria-labelledby="character-list-title">
+          <aside class="character-rail">
+            <div class="rail-heading">
+              <div><p class="eyebrow">PERSONENREGISTER</p><h2 id="character-list-title">Meine Charaktere</h2></div>
+              <button id="new-character" class="icon-button" type="button" aria-label="Neuen Charakter anlegen" title="Neuer Charakter">＋</button>
+            </div>
+            <label class="search-box"><span aria-hidden="true">⌕</span><input id="character-search" type="search" placeholder="Charakter suchen" aria-label="Charakter suchen" /></label>
+            <div id="character-list" class="character-list"></div>
+            <p id="empty-list" class="empty-note">Noch keine Charaktere angelegt.</p>
+          </aside>
+
+          <section class="editor-area" aria-label="Charakter bearbeiten">
+            <form id="character-form" class="character-form">
+              <div class="form-heading">
+                <div><p class="eyebrow">CHARAKTERBOGEN</p><h2 id="editor-title">Neuer Charakter</h2></div>
+                <div class="form-heading-actions"><span id="save-state" class="save-state">Entwurf</span><button id="open-character-preview" class="button button-quiet" type="button">Character sheet / Vorschau</button><button id="save-character" class="button button-accent" type="submit">Speichern</button></div>
+              </div>
+
+              <div class="form-grid">
+                <label class="field field-wide"><span><span>Name</span><small>Name</small></span><input name="name" maxlength="100" required autocomplete="off" placeholder="Vor- und Nachname" /></label>
+                <label class="field"><span><span>Species</span><small>Spezies</small></span><input name="species" maxlength="80" list="species-options" autocomplete="off" placeholder="Species / Spezies" /><datalist id="species-options"></datalist></label>
+                <label class="field"><span><span>Role</span><small>Rolle / Laufbahn</small></span><select name="profession" id="profession-select"><option value="">Choose a role / Rolle wählen</option></select><small>Roles come from the selected rule modules / Rollen stammen aus den gewählten Regelmodulen.</small></label>
+                <label class="field hidden" id="custom-profession-field"><span><span>Custom role</span><small>Eigene Rolle</small></span><input id="custom-profession" name="customProfession" maxlength="100" autocomplete="off" placeholder="Enter a role / Rolle eingeben" /></label>
+                <label class="field"><span><span>Concept</span><small>Konzept</small></span><input name="concept" maxlength="120" placeholder="Short description / Kurzbeschreibung" /></label>
+                <label class="field"><span><span>Upbringing</span><small>Herkunft</small></span><input name="upbringing" maxlength="120" placeholder="Background / Herkunft und Prägung" /></label>
+                <label class="field"><span><span>Career</span><small>Karriere</small></span><input name="career" maxlength="120" placeholder="Training and career / Ausbildung und Werdegang" /></label>
+                <label class="field"><span><span>Rank</span><small>Rang</small></span><input name="rank" maxlength="80" placeholder="Rank or status / Rang oder Status" /></label>
+                <div id="custom-fields" class="form-grid field-wide custom-fields"></div>
+                <label class="field"><span><span>Visibility</span><small>Freigabe</small></span><select name="visibility"><option value="private">Private / Privat</option><option value="campaign">Campaign / Kampagne</option></select><small>Shared characters are visible to campaign members / Geteilte Charaktere sind für angemeldete Kampagnenmitglieder sichtbar.</small></label>
+                <label class="field"><span><span>Creation Method</span><small>Erschaffungsmethode</small></span><select name="creationMethod" id="creation-method"><option value="points">Points / Punkte</option><option value="ap">Advancement Points (AP) / Abenteuerpunkte (AP)</option></select><small>The active rules modules determine available methods / Der aktive Regelmodul-Satz bestimmt die verfügbaren Modi.</small></label>
+              </div>
+
+              <div class="module-pins-wrap"><div class="section-heading"><div><p class="eyebrow">REGELSTAND</p><h3>Verwendete Module</h3></div><span class="muted small">Versionen bleiben am Charakter fixiert.</span></div><div id="module-pins" class="module-pins"></div></div>
+
+              <div class="stats-grid">
+                <section class="stat-card"><div class="section-heading"><div><p class="eyebrow">ATTRIBUTES</p><h3>Eigenschaften</h3></div><div class="stat-indicators"><span class="stat-total" id="attribute-total">42</span><small id="attribute-budget" class="stat-budget">Budget 56</small></div></div><div id="attribute-fields" class="numeric-fields"></div></section>
+                <section class="stat-card"><div class="section-heading"><div><p class="eyebrow">DISCIPLINES</p><h3>Fertigkeiten</h3></div><div class="stat-indicators"><span class="stat-total" id="discipline-total">6</span><small id="discipline-budget" class="stat-budget">Budget 16</small></div></div><div id="discipline-fields" class="numeric-fields"></div></section>
+              </div>
+              <div id="rule-summary" class="rule-summary" role="status"></div>
+
+              <div class="form-grid text-grid">
+                <label class="field"><span><span>Values</span><small>Werte</small></span><textarea name="values" rows="4" maxlength="2000" placeholder="I keep my word. / Ich halte mein Wort."></textarea></label>
+                <section class="field catalog-field"><span><span>Talents</span><small>Talente</small></span><div id="talent-selections" class="selection-list"></div><button class="button button-quiet catalog-open" data-catalog="talents" type="button">Choose talent / Talent wählen</button></section>
+                <section class="field catalog-field"><span><span>Focuses</span><small>Schwerpunkte</small></span><div id="focus-selections" class="selection-list"></div><button class="button button-quiet catalog-open" data-catalog="focuses" type="button">Choose focus / Schwerpunkt wählen</button></section>
+                <label class="field field-wide"><span><span>Notes</span><small>Notizen</small></span><textarea name="notes" rows="4" maxlength="10000" placeholder="Background, equipment, open questions / Hintergrund, Ausrüstung, offene Fragen …"></textarea></label>
+              </div>
+              <section id="technomage-spells" class="spell-section hidden" aria-labelledby="technomage-heading">
+                <div class="section-heading"><div><p class="eyebrow">TECHNOMAGE MODULE</p><h3 id="technomage-heading">Spells & Spell Trees</h3><small>Spells und Zauberbäume</small></div></div>
+                <div class="spell-setup">
+                  <label class="field"><span><span>Primary School</span><small>Primärschule</small></span><select id="primary-school"></select></label>
+                  <label class="field"><span><span>Advancement AP since creation</span><small>Erhaltene AP seit der Erschaffung</small></span><input id="technomage-advancement-ap" type="number" min="0" max="100000" step="1" value="0" inputmode="numeric" /><small>Each complete 20 AP adds spell slots / Je volle 20 AP kommen Spellplätze hinzu.</small></label>
+                  <div id="weak-schools" class="weak-schools"></div>
+                </div>
+                <div id="spell-school-tabs" class="spell-school-tabs"></div><div id="spell-slot-count" class="spell-slot-summary" aria-live="polite"></div>
+                <div class="spell-list-controls">
+                  <label class="field"><span><span>Search spells in this school</span><small>Spells in dieser Schule suchen</small></span><input id="spell-search" type="search" autocomplete="off" /></label>
+                  <label class="eligibility-filter"><input id="only-reachable-spells" type="checkbox" /><span><span>Only reachable spells</span><small>Nur aktuell erlernbare Spells</small></span></label>
+                </div>
+                <div id="spell-tree" class="spell-tree"></div>
+              </section>
+              <p class="form-footnote">Privat gespeicherte Bögen gehören zu deinem LCARS-Konto. Kampagnenbögen kann die Spielleitung bearbeiten.</p>
+            </form>
+          </section>
+        </section>
+
+        <section id="panel-modules" class="panel module-panel" aria-labelledby="modules-title">
+          <div class="panel-heading"><div><p class="eyebrow">DECLARATIVE DATA PACKS</p><h2 id="modules-title">Regelmodule</h2><p class="muted">Modules are versioned JSON packs for species, roles and creation rules. Updates install a newer local version; saved characters keep their selected version. Removing a module deletes only this device's copy.<small class="block">Module sind versionierte JSON-Pakete für Spezies, Rollen und Erschaffungsregeln. Aktualisierungen installieren eine neuere lokale Version; Charaktere behalten ihre gewählte Version. Beim Entfernen wird nur die Kopie auf diesem Gerät gelöscht.</small></p></div><div class="panel-actions"><select id="publish-scope" aria-label="Ablageort für importierte Module"><option value="private">Privat auf LCARS</option><option value="campaign">Für die Kampagne</option></select><label class="publish-check"><input id="publish-activate" type="checkbox" />Aktivieren</label><button id="check-modules" class="button button-quiet" type="button">Online nach Updates suchen</button><button id="import-module" class="button button-accent" type="button">Modul importieren</button><input id="module-file" type="file" accept="application/json,.json" hidden /></div></div>
+          <div id="module-list" class="module-list"></div>
+          <div class="module-help"><strong>Module</strong><small class="block">Regelmodule</small><p>Versioned JSON packs add species, careers, talents, focuses and creation rules. They work offline once installed / Versionierte JSON-Pakete ergänzen Spezies, Laufbahnen, Talente, Schwerpunkte und Erschaffungsregeln. Installierte Module funktionieren offline.</p><div class="module-downloads"><a href="./modules/base-sta2e.json" download>Download Core STA 2e / Grundmodul herunterladen</a><a href="./modules/technomage.json" download>Download Technomage module / Technomage-Modul herunterladen</a></div></div>
+        </section>
+
+        <section id="panel-conflicts" class="panel conflict-panel" aria-labelledby="conflicts-title">
+          <div class="panel-heading"><div><p class="eyebrow">SYNC REVIEW</p><h2 id="conflicts-title">Synchronisationskonflikte</h2><p class="muted">Beide Fassungen bleiben erhalten, bis du entscheidest, welche weiterverwendet wird.</p></div></div>
+          <div id="conflict-list" class="conflict-list"></div>
+          <p id="no-conflicts" class="empty-note">Keine offenen Konflikte.</p>
+        </section>
+      </main>
+
+      <footer><span>STA CHARACTER EDITOR <span class="version-label">v0.4.5</span></span><span>Offline first · sync when online / Offline zuerst · Sync bei Verbindung</span></footer>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+    <dialog id="catalog-dialog" class="catalog-dialog"><div class="catalog-dialog-content"><div class="section-heading"><div><p class="eyebrow">STA 2E CATALOG</p><h2 id="catalog-title"></h2></div><button id="catalog-close" class="button button-quiet" type="button">Close / Schließen</button></div><div class="catalog-controls"><label class="field"><span><span>Search</span><small>Suche</small></span><input id="catalog-search" type="search" autocomplete="off" /></label><label class="field"><span id="catalog-filter-label"><span>Category</span><small>Kategorie</small></span><select id="catalog-filter"></select></label><label id="eligibility-filter" class="eligibility-filter"><input id="only-eligible" type="checkbox" /><span><span>Only eligible</span><small>Nur erfüllbare Voraussetzungen</small></span></label></div><p id="catalog-count" class="muted"></p><div id="catalog-results" class="catalog-results"></div></div></dialog>
+    <dialog id="character-preview-dialog" class="preview-dialog" aria-labelledby="preview-character-name">
+      <div class="preview-dialog-content">
+        <div class="preview-toolbar"><div><p class="eyebrow">PERSONNEL FILE · CHARACTER SHEET</p><h2 id="preview-character-name">Character sheet / Charakterbogen</h2></div><div class="preview-toolbar-actions"><button id="print-character-preview" class="button button-accent" type="button">Save as PDF / Als PDF speichern</button><button id="close-character-preview" class="button button-quiet" type="button">Close / Schließen</button></div></div>
+        <div id="character-preview-content" class="character-preview-content"></div>
+        <section id="game-assistant" class="game-assistant" aria-labelledby="game-assistant-title">
+          <div class="section-heading"><div><p class="eyebrow">AT THE TABLE</p><h2 id="game-assistant-title">Task assistant <small>Wurf-Assistent</small></h2><p class="muted">Wähle, was für diesen Wurf passt. Talentbedingungen bleiben eine Entscheidung am Spieltisch.</p></div></div>
+          <div class="roll-controls">
+            <label class="field"><span><span>Attribute</span><small>Eigenschaft</small></span><select id="roll-attribute"></select></label>
+            <label class="field"><span><span>Department</span><small>Fertigkeit</small></span><select id="roll-discipline"></select></label>
+            <label class="field"><span><span>Difficulty</span><small>Schwierigkeit</small></span><select id="roll-difficulty"><option value="0">0</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label>
+            <label class="field"><span><span>Additional free d20s</span><small>Weitere freie Würfel</small></span><input id="roll-free-dice" type="number" min="0" max="3" value="0" inputmode="numeric" /></label>
+            <label class="field"><span><span>Complication range bonus</span><small>Bonus auf den Komplikationsbereich</small></span><input id="roll-complication-bonus" type="number" min="0" max="19" value="0" inputmode="numeric" /></label>
+          </div>
+          <section class="roll-choice-section"><h3>Applicable Focuses <small>Anwendbare Schwerpunkte</small></h3><p class="roll-choice-note">The listed Department is a catalog hint; a Focus applies when it fits the task. / Die Katalog-Disziplin ist ein Hinweis; ein Schwerpunkt gilt, wenn er zur Handlung passt.</p><div id="roll-focus-options" class="roll-options"></div></section>
+          <section class="roll-choice-section"><h3>Applicable Talents <small>Anwendbare Talente</small></h3><div id="roll-talent-options" class="roll-options"></div></section>
+          <div id="roll-result" class="roll-result" aria-live="polite"></div>
+        </section>
+      </div>
+    </dialog>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

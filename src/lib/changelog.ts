@@ -147,6 +147,52 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.4",
+    title: "Offline-Charaktereditor und Regelmodule",
+    items: [
+      {
+        text: "Der Charaktereditor lässt sich als App installieren und offline nutzen. Entwürfe bleiben lokal und werden bei Verbindung optional mit LCARS synchronisiert.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Talente und Schwerpunkte lassen sich aus den STA-2e-Katalogen auswählen; Voraussetzungen, Kategorien und besondere Talent-Auswahlen werden direkt angezeigt.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Das Technomage-Modul ergänzt Talente und 289 Spells in sieben Spell-Trees. Im AP-Modus zeigen Eigenschafts- und Fertigkeitsfelder ihre AP-Kosten.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Die Technomage-Spell-Liste lässt sich durchsuchen und auf aktuell erlernbare Spells einschränken. Slot-Kosten zeigen den Gesamtaufwand einschließlich fehlender Voraussetzungen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Die verbleibenden Spellplätze sind direkt sichtbar; Spell-Suche und Erreichbarkeitsfilter starten beim Öffnen eines Charakters ohne aktive Filter.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Der Erreichbarkeitsfilter zeigt nur noch erreichbare, noch nicht gelernte Spells.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Die Charaktervorschau listet den vollständigen Editorbogen samt Modulwerten und druckt ihn offline als PDF. Stress und Entschlossenheit lassen sich direkt im Bogen fortschreiben.",
+        category: "export",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Der Wurf-Assistent berechnet Zielwert, Schwierigkeit, Würfelpool und Komplikationsbereich. Passende Schwerpunkte und situativ anwendbare Talente lassen sich auswählen; freie Würfel, Wiederholungen und Boni werden zusammengefasst.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+    ],
+  },
+  {
     version: "2.3",
     title: "Chronologie für Notizen und Dateien",
     items: [

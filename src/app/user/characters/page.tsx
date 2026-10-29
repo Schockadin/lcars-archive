@@ -95,6 +95,9 @@ export default async function UserCharactersPage() {
                   Gast-Accounts können keine Charaktere anlegen.
                 </p>
               )}
+              <Link href="/sta-char-editor/" className="lcars-pill-btn max-sm:self-stretch">
+                Standalone Editor · Offline
+              </Link>
             </div>
           </section>
 
