@@ -587,6 +587,7 @@ function spellPurchasePlan(spellId, spellMap, knownSpellIds) {
   const chaosRequirementMet = chaosSpellsRequired <= plannedSpellIds.length - 1;
   return { plannedSpellIds, addedSpellIds, slotCost: addedSpellIds.length, prerequisitesMet, chaosSpellsRequired, chaosRequirementMet };
 }
+
 function renderTechnomageSpells() {
   const section = byId("technomage-spells");
   const packs = selectedModulePacks();
@@ -637,9 +638,19 @@ function renderTechnomageSpells() {
   const known = new Set(tech.spells || []);
   const slotCalculation = calculateTechnomageSpellSlots(module, readForm().data.attributes[module.spellSlotRules?.reasonAttribute || "reason"], state.catalogSelections.talents, tech.advancementAP);
   const cap = slotCalculation.total;
-  const usedText = known.size + " / " + cap + " spell slots used · " + (cap - known.size) + " free / " + known.size + " von " + cap + " Spellplätzen belegt · " + (cap - known.size) + " frei.";
+  const availableSlots = Math.max(0, cap - known.size);
   const formulaText = "Capacity / Kapazität: " + slotCalculation.baseSlots + " base / Basis + " + slotCalculation.talentCount + " talent(s) / Talent(e) × " + slotCalculation.bonusPerSource + " + " + slotCalculation.apSteps + " completed 20 AP step(s) / volle 20-AP-Schritte × " + slotCalculation.bonusPerSource + " = " + cap + ". Bonus rounded up per source / Bonus je Quelle aufgerundet.";
-  byId("spell-slot-count").textContent = usedText + " " + formulaText;
+  const slotSummary = byId("spell-slot-count");
+  slotSummary.replaceChildren();
+  const availableLabel = document.createElement("strong");
+  availableLabel.textContent = "Available spell slots: " + availableSlots + " / " + cap;
+  const availableTranslation = document.createElement("small");
+  availableTranslation.textContent = "Verfügbare Spellplätze: " + availableSlots + " von " + cap;
+  const usedLabel = document.createElement("small");
+  usedLabel.textContent = "Used / Belegt: " + known.size + " spell slots / Spellplätze";
+  const formulaLabel = document.createElement("small");
+  formulaLabel.textContent = formulaText;
+  slotSummary.append(availableLabel, availableTranslation, usedLabel, formulaLabel);
   const search = normalized(byId("spell-search").value);
   const onlyReachable = byId("only-reachable-spells").checked;
   const orderedSpells = (selectedTree.spellIds || []).map((id) => spellMap.get(id)).filter(Boolean)
@@ -667,7 +678,14 @@ function renderTechnomageSpells() {
     const buttonClass = learned ? "button-quiet" : "button-accent";
     return '<article class="spell-item ' + (learned ? "learned" : "") + '" style="margin-left:' + (spellDepth(spell.id, spellMap) * 12) + 'px"><div><strong>' + escapeHtml(spell.name) + '</strong><small>' + escapeHtml(selectedTree.original || selectedTree.label) + " · Tier " + tier + '</small><small>' + escapeHtml(slotCostText) + '</small>' + (prerequisiteText ? '<small>Prerequisite / Voraussetzung: ' + escapeHtml(prerequisiteText) + '</small>' : "") + '<small>' + escapeHtml(spell.requirements || "No listed requirements") + '</small></div><button type="button" class="button ' + buttonClass + '" data-spell-action="' + (learned ? "forget" : "learn") + '" data-spell-id="' + escapeHtml(spell.id) + '" ' + (disabled ? "disabled" : "") + '>' + buttonLabel + '</button></article>';
   }).join("");
-  byId("spell-tree").innerHTML = spellRowsHtml || '<p class="empty-note">No spells match these filters / Keine Spells passen zu den Filtern.</p>';
+  byId("spell-tree").innerHTML = spellRowsHtml || '<div class="empty-note"><p>' + (onlyReachable
+    ? "No spells are currently reachable. Choose all four schools or turn off the reachability filter. / Aktuell ist kein Spell erreichbar. Wähle alle vier Schulen oder deaktiviere den Erreichbarkeitsfilter."
+    : "No spells match this search. / Keine Spells passen zu dieser Suche.") + '</p><button type="button" class="button button-quiet" data-clear-spell-filters>Show all spells / Alle Spells anzeigen</button></div>';
+  byId("spell-tree").querySelector("[data-clear-spell-filters]")?.addEventListener("click", () => {
+    byId("spell-search").value = "";
+    byId("only-reachable-spells").checked = false;
+    renderTechnomageSpells();
+  });
   byId("spell-tree").querySelectorAll("[data-spell-action]").forEach((button) => button.addEventListener("click", () => {
     const id = button.dataset.spellId;
     const current = new Set(state.technomageData?.spells || []);
@@ -829,6 +847,8 @@ function readForm() {
 
 function fillForm(record) {
   const data = record?.data || newCharacter();
+  byId("spell-search").value = "";
+  byId("only-reachable-spells").checked = false;
   state.catalogSelections = { talents: [...(data.talents || [])], focuses: [...(data.focuses || [])] };
   let savedTech = null;
   try { savedTech = JSON.parse(data.customFields?.[TECHNOMAGE_STATE_KEY] || "null"); } catch { savedTech = null; }

@@ -96,7 +96,7 @@
                   <label class="field"><span><span>Advancement AP since creation</span><small>Erhaltene AP seit der Erschaffung</small></span><input id="technomage-advancement-ap" type="number" min="0" max="100000" step="1" value="0" inputmode="numeric" /><small>Each complete 20 AP adds spell slots / Je volle 20 AP kommen Spellplätze hinzu.</small></label>
                   <div id="weak-schools" class="weak-schools"></div>
                 </div>
-                <div id="spell-school-tabs" class="spell-school-tabs"></div><p id="spell-slot-count" class="muted"></p>
+                <div id="spell-school-tabs" class="spell-school-tabs"></div><div id="spell-slot-count" class="spell-slot-summary" aria-live="polite"></div>
                 <div class="spell-list-controls">
                   <label class="field"><span><span>Search spells in this school</span><small>Spells in dieser Schule suchen</small></span><input id="spell-search" type="search" autocomplete="off" /></label>
                   <label class="eligibility-filter"><input id="only-reachable-spells" type="checkbox" /><span><span>Only reachable spells</span><small>Nur aktuell erlernbare Spells</small></span></label>
@@ -121,7 +121,7 @@
         </section>
       </main>
 
-      <footer><span>STA CHARACTER EDITOR <span class="version-label">v0.4.2</span></span><span>Offline first · sync when online / Offline zuerst · Sync bei Verbindung</span></footer>
+      <footer><span>STA CHARACTER EDITOR <span class="version-label">v0.4.3</span></span><span>Offline first · sync when online / Offline zuerst · Sync bei Verbindung</span></footer>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
     <dialog id="catalog-dialog" class="catalog-dialog"><div class="catalog-dialog-content"><div class="section-heading"><div><p class="eyebrow">STA 2E CATALOG</p><h2 id="catalog-title"></h2></div><button id="catalog-close" class="button button-quiet" type="button">Close / Schließen</button></div><div class="catalog-controls"><label class="field"><span><span>Search</span><small>Suche</small></span><input id="catalog-search" type="search" autocomplete="off" /></label><label class="field"><span id="catalog-filter-label"><span>Category</span><small>Kategorie</small></span><select id="catalog-filter"></select></label><label id="eligibility-filter" class="eligibility-filter"><input id="only-eligible" type="checkbox" /><span><span>Only eligible</span><small>Nur erfüllbare Voraussetzungen</small></span></label></div><p id="catalog-count" class="muted"></p><div id="catalog-results" class="catalog-results"></div></div></dialog>

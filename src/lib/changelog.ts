@@ -170,6 +170,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },
+      {
+        text: "Die verbleibenden Spellplätze sind direkt sichtbar; Spell-Suche und Erreichbarkeitsfilter starten beim Öffnen eines Charakters ohne aktive Filter.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
     ],
   },
   {

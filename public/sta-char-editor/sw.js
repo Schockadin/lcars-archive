@@ -1,4 +1,4 @@
-const VERSION = "sta-char-editor-v0.4.2";
+const VERSION = "sta-char-editor-v0.4.3";
 const SHELL = `${VERSION}-shell`;
 const APP_FILES = [
   "./",
