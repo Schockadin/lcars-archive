@@ -117,6 +117,36 @@ describe("Technomage spell catalog", () => {
     ).toContain("3 Kampfrunden");
   });
 
+  it("keeps mandatory prerequisites alongside alternative prerequisite groups", () => {
+    const groups = spellPrerequisiteGroups("elemental-resistance-lesser");
+    expect(groups).toEqual([
+      ["armour-lesser"],
+      [
+        "create-acid",
+        "create-fire",
+        "create-ice",
+        "create-lightning",
+        "create-sound",
+      ],
+    ]);
+
+    const plan = createSpellPurchasePlan({
+      spellId: "elemental-resistance-lesser",
+      knownSpellIds: [],
+      slotTotal: 20,
+      primarySchool: "defence",
+      weakSchools: [...schools],
+    });
+
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(plan.spellIds).toContain("armour-lesser");
+    expect(plan.spellIds).toContain("elemental-resistance-lesser");
+    expect(plan.spellIds.some((id) =>
+      ["create-acid", "create-fire", "create-ice", "create-lightning", "create-sound"].includes(id)
+    )).toBe(true);
+  });
+
   it("auto-learns local and foreign-school prerequisites", () => {
     const plan = createSpellPurchasePlan({
       spellId: "skin-of-wood",

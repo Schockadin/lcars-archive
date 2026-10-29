@@ -4054,6 +4054,7 @@ const EXTRA_REQUIREMENT_ALIASES: Record<string, string> = {
 
 const ANY_OF_REQUIREMENTS: Record<string, string[][]> = {
   "elemental-resistance-lesser": [
+    ["armour-lesser"],
     [
       "create-acid",
       "create-fire",
