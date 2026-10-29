@@ -666,7 +666,7 @@ function renderTechnomageSpells() {
     const reachable = learned || (schoolsConfigured && schoolAllowed && plan.prerequisitesMet && plan.chaosRequirementMet && plan.plannedSpellIds.length <= cap);
     const queryText = normalized([spell.name, spell.requirements, spell.school, spell.elementalCategory, spell.effect].filter(Boolean).join(" "));
     return { spell, plan, learned, reachable, matches: !search || queryText.includes(search) };
-  }).filter((entry) => entry.matches && (!onlyReachable || entry.reachable));
+  }).filter((entry) => entry.matches && (!onlyReachable || (entry.reachable && !entry.learned)));
   const spellRowsHtml = rows.map(({ spell, plan, learned, reachable }) => {
     const prerequisiteText = (spell.prerequisiteGroups || [spell.prerequisites || []]).map((group) => group.map((id) => spellMap.get(id)?.name).filter(Boolean).join(" or ")).filter(Boolean).join(" + ");
     const slotCostText = learned
@@ -679,7 +679,7 @@ function renderTechnomageSpells() {
     return '<article class="spell-item ' + (learned ? "learned" : "") + '" style="margin-left:' + (spellDepth(spell.id, spellMap) * 12) + 'px"><div><strong>' + escapeHtml(spell.name) + '</strong><small>' + escapeHtml(selectedTree.original || selectedTree.label) + " · Tier " + tier + '</small><small>' + escapeHtml(slotCostText) + '</small>' + (prerequisiteText ? '<small>Prerequisite / Voraussetzung: ' + escapeHtml(prerequisiteText) + '</small>' : "") + '<small>' + escapeHtml(spell.requirements || "No listed requirements") + '</small></div><button type="button" class="button ' + buttonClass + '" data-spell-action="' + (learned ? "forget" : "learn") + '" data-spell-id="' + escapeHtml(spell.id) + '" ' + (disabled ? "disabled" : "") + '>' + buttonLabel + '</button></article>';
   }).join("");
   byId("spell-tree").innerHTML = spellRowsHtml || '<div class="empty-note"><p>' + (onlyReachable
-    ? "No spells are currently reachable. Choose all four schools or turn off the reachability filter. / Aktuell ist kein Spell erreichbar. Wähle alle vier Schulen oder deaktiviere den Erreichbarkeitsfilter."
+    ? "No unlearned spells are currently reachable. Choose all four schools or turn off the reachability filter. / Aktuell ist kein ungelernter Spell erreichbar. Wähle alle vier Schulen oder deaktiviere den Erreichbarkeitsfilter."
     : "No spells match this search. / Keine Spells passen zu dieser Suche.") + '</p><button type="button" class="button button-quiet" data-clear-spell-filters>Show all spells / Alle Spells anzeigen</button></div>';
   byId("spell-tree").querySelector("[data-clear-spell-filters]")?.addEventListener("click", () => {
     byId("spell-search").value = "";

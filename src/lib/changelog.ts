@@ -175,6 +175,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },
+      {
+        text: "Der Erreichbarkeitsfilter zeigt nur noch erreichbare, noch nicht gelernte Spells.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
     ],
   },
   {
