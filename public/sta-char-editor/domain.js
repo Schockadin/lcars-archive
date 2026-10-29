@@ -98,6 +98,10 @@ export function validateModulePack(value) {
   if (methods !== undefined && (!Array.isArray(methods) || methods.some((method) => !["points", "ap"].includes(method)))) {
     throw new Error("creationRules.methods unterstützt nur points und ap.");
   }
+  if (value.spellSlotRules !== undefined && (!value.spellSlotRules || typeof value.spellSlotRules !== "object" || Array.isArray(value.spellSlotRules) ||
+    Object.entries(value.spellSlotRules).some(([experience, amount]) => !["novice", "experienced", "veteran"].includes(experience) || !Number.isInteger(amount) || amount < 0 || amount > 300))) {
+    throw new Error("spellSlotRules muss ganze Spellplatz-Zahlen für novice, experienced oder veteran enthalten.");
+  }
   for (const ruleset of [value.creationRules?.points, value.creationRules?.ap]) {
     if (ruleset === undefined) continue;
     if (!ruleset || typeof ruleset !== "object" || Array.isArray(ruleset)) throw new Error("Ungültige Erschaffungsregeln.");

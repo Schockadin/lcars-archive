@@ -14,6 +14,7 @@ const TALENT_CATEGORIES = ["general", "species", "augment", "esoteric", "command
 const TALENT_CATEGORY_LABELS = { general: "Allgemein", species: "Spezies & Kultur", augment: "Augment & Kybernetik", esoteric: "Esoterisch", command: "Kommando", conn: "Steuerung", engineering: "Technik", security: "Sicherheit", science: "Wissenschaft", medicine: "Medizin" };
 const TALENT_CATEGORY_EN = { general: "General", species: "Species & Culture", augment: "Augment & Cybernetic", esoteric: "Esoteric", command: "Command", conn: "Conn", engineering: "Engineering", security: "Security", science: "Science", medicine: "Medicine" };
 const TECHNOMAGE_SCHOOLS = [{ id: "defence", en: "Defence", de: "Abwehr" }, { id: "elements", en: "Elements", de: "Elemente" }, { id: "conjuration", en: "Conjuration", de: "Beschwörung" }, { id: "movement", en: "Movement", de: "Bewegung" }, { id: "healing", en: "Healing", de: "Heilung" }, { id: "enhancement", en: "Enhancement", de: "Verstärkung" }, { id: "creation", en: "Creation", de: "Erschaffung" }];
+const LEGACY_TECHNOMAGE_SPELL_SLOTS = { novice: 5, experienced: 15, veteran: 30 };
 const TECHNOMAGE_STATE_KEY = "sta2e.technomage.spell-state";
 
 function setTheme(theme) {
@@ -442,7 +443,12 @@ function technomageDataFromForm() {
   };
 }
 
-function spellSlotTotal(experience) { return experience === "veteran" ? 30 : experience === "experienced" ? 15 : 5; }
+function spellSlotTotal(module, experience) {
+  const configured = module.spellSlotRules?.[experience];
+  return Number.isInteger(configured) && configured >= 0
+    ? configured
+    : LEGACY_TECHNOMAGE_SPELL_SLOTS[experience] ?? LEGACY_TECHNOMAGE_SPELL_SLOTS.novice;
+}
 
 function spellDepth(spellId, spellMap, visited = new Set()) {
   if (visited.has(spellId)) return 0;
@@ -496,7 +502,7 @@ function renderTechnomageSpells() {
   const selectedTree = module.spellTrees.find((tree) => tree.id === state.spellSchool) || module.spellTrees[0];
   state.spellSchool = selectedTree.id;
   const known = new Set(tech.spells || []);
-  const cap = spellSlotTotal(tech.experience);
+  const cap = spellSlotTotal(module, tech.experience);
   byId("spell-slot-count").textContent = `${known.size} / ${cap} spell slots used · ${cap - known.size} free / ${known.size} von ${cap} Spellplätzen belegt · ${cap - known.size} frei`;
   byId("spell-tree").innerHTML = (selectedTree.spellIds || []).map((id) => spellMap.get(id)).filter(Boolean).sort((a, b) => spellDepth(a.id, spellMap) - spellDepth(b.id, spellMap) || a.name.localeCompare(b.name)).map((spell) => {
     const prerequisiteText = (spell.prerequisiteGroups || [spell.prerequisites || []]).map((group) => group.map((id) => spellMap.get(id)?.name).filter(Boolean).join(" or ")).filter(Boolean).join(" + ");

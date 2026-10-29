@@ -24,6 +24,7 @@ export interface StaEditorModulePack {
     title: string;
     description?: string;
   };
+  spellSlotRules?: Partial<Record<"novice" | "experienced" | "veteran", number>>;
   [key: string]: unknown;
 }
 
@@ -122,6 +123,10 @@ export function validateStaEditorModulePack(value: unknown): StaEditorModulePack
   if (typeof manifest.title !== "string" || !manifest.title.trim() || manifest.title.length > 120) return null;
   if (manifest.description !== undefined && (typeof manifest.description !== "string" || manifest.description.length > 1000)) return null;
   if (Buffer.byteLength(JSON.stringify(value), "utf8") > 1_000_000) return null;
+  if (value.spellSlotRules !== undefined && (!isRecord(value.spellSlotRules) ||
+      Object.entries(value.spellSlotRules).some(([experience, amount]) =>
+        !["novice", "experienced", "veteran"].includes(experience) ||
+        typeof amount !== "number" || !Number.isInteger(amount) || amount < 0 || amount > 300))) return null;
   for (const key of ["attributes", "disciplines", "species", "professions", "classes"]) {
     if (!validateEntries(value[key])) return null;
   }

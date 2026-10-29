@@ -2,10 +2,15 @@
   "manifest": {
     "schemaVersion": 1,
     "id": "sta2e.technomage",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "title": "Technomage",
     "description": "Technomage career, talents and spell trees. / Technomage-Laufbahn, Talente und Spell-Trees.",
     "titleDe": "Technomage-Modul"
+  },
+  "spellSlotRules": {
+    "novice": 5,
+    "experienced": 15,
+    "veteran": 30
   },
   "classes": [
     {
