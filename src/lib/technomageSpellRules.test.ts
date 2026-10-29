@@ -167,12 +167,12 @@ describe("Technomage spell catalog", () => {
       ]),
     );
     expect(plan.spellIds.at(-1)).toBe("skin-of-wood");
-    expect(spellPrerequisiteGroups("elemental-resistance-lesser")).toHaveLength(
-      1,
+    const elementalResistanceGroups = spellPrerequisiteGroups(
+      "elemental-resistance-lesser",
     );
-    expect(
-      spellPrerequisiteGroups("elemental-resistance-lesser")[0],
-    ).toContain("create-fire");
+    expect(elementalResistanceGroups).toHaveLength(2);
+    expect(elementalResistanceGroups[0]).toEqual(["armour-lesser"]);
+    expect(elementalResistanceGroups[1]).toContain("create-fire");
   });
 
   it("reports the purchase cost including prerequisites and its slot threshold", () => {

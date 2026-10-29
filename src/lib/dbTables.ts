@@ -265,6 +265,7 @@ export const DB_TABLE_COLUMNS = {
     "session_default_week_parity",
     "session_default_time",
     "session_default_location",
+    "technomage_spell_rules",
   ],
   campaign_rules: [
     "id",

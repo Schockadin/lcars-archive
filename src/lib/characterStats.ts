@@ -316,7 +316,7 @@ function normalizeTechnomage(value: unknown): TechnomageCharacterData {
   return {
     primarySchool,
     weakSchools,
-    spells: normalizeList(source.spells),
+    spells: [...new Set(normalizeList(source.spells))],
     slotProgress: {
       creationReason: normalizeNumber(progressSource.creationReason, 7, 12),
       organellesReason: normalizeNumber(progressSource.organellesReason, 7, 12),
