@@ -12,7 +12,10 @@ import type {
   CharacterExperience,
   CharacterStats,
   PendingAdvancement,
+  TechnomageCharacterData,
+  TechnomageSchool,
 } from "@/types/characterStats";
+import { TECHNOMAGE_SCHOOL_IDS } from "@/types/characterStats";
 
 // Labels: deutsches Label plus der englische Begriff des offiziellen Bogens —
 // die Spielrunde nutzt beides gemischt (siehe Beispielbogen). Das Formular
@@ -170,6 +173,17 @@ export const EMPTY_CHARACTER_STATS: CharacterStats = {
   pendingAdvancements: [],
   pronouns: null,
   characterRole: null,
+  technomage: {
+    primarySchool: null,
+    weakSchools: [],
+    spells: [],
+    slotProgress: {
+      creationReason: null,
+      organellesReason: null,
+      ftlAttunementReason: null,
+      apMilestones: [],
+    },
+  },
   assignment: null,
   environment: null,
   upbringing: null,
@@ -275,6 +289,43 @@ function normalizeList(value: unknown): string[] {
     .filter(Boolean);
 }
 
+function normalizeTechnomage(value: unknown): TechnomageCharacterData {
+  const source = asRecord(value);
+  const primarySchool =
+    typeof source.primarySchool === "string" &&
+    (TECHNOMAGE_SCHOOL_IDS as readonly string[]).includes(source.primarySchool)
+      ? (source.primarySchool as TechnomageSchool)
+      : null;
+  const weakSchools = [
+    ...new Set(
+      normalizeList(source.weakSchools).filter(
+        (school): school is TechnomageSchool =>
+          (TECHNOMAGE_SCHOOL_IDS as readonly string[]).includes(school) &&
+          school !== primarySchool,
+      ),
+    ),
+  ].slice(0, 3);
+
+  const progressSource = asRecord(source.slotProgress);
+  const apMilestones = Array.isArray(progressSource.apMilestones)
+    ? progressSource.apMilestones
+        .map((value) => normalizeNumber(value, 7, 12))
+        .filter((value): value is number => value !== null)
+    : [];
+
+  return {
+    primarySchool,
+    weakSchools,
+    spells: [...new Set(normalizeList(source.spells))],
+    slotProgress: {
+      creationReason: normalizeNumber(progressSource.creationReason, 7, 12),
+      organellesReason: normalizeNumber(progressSource.organellesReason, 7, 12),
+      ftlAttunementReason: normalizeNumber(progressSource.ftlAttunementReason, 7, 12),
+      apMilestones,
+    },
+  };
+}
+
 // Tolerante Normalisierung beliebiger jsonb-Daten auf die vollständige
 // CharacterStats-Form: fehlende/kaputte Felder werden zu null bzw. [], nie zu
 // undefined — die Anzeige und das Formular können sich so auf jedes Feld
@@ -314,6 +365,8 @@ export function parseCharacterStats(raw: unknown): CharacterStats {
         ? source.experience
         : null,
   };
+
+  stats.technomage = normalizeTechnomage(source.technomage);
 
   for (const field of TEXT_FIELDS) {
     stats[field.key] = normalizeText(source[field.key]);

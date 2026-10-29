@@ -29,6 +29,37 @@ export interface CharacterDepartments {
 // englische Schlüssel, angezeigt das deutsche Label (siehe EXPERIENCE_OPTIONS).
 export type CharacterExperience = "novice" | "experienced" | "veteran";
 
+export const TECHNOMAGE_SCHOOL_IDS = [
+  "defence",
+  "elements",
+  "conjuration",
+  "movement",
+  "healing",
+  "enhancement",
+  "creation",
+] as const;
+
+export type TechnomageSchool = (typeof TECHNOMAGE_SCHOOL_IDS)[number];
+
+export interface TechnomageSlotProgress {
+  // Verstand-Wert bei Festschreiben der Erschaffung.
+  creationReason: number | null;
+  // Verstand-Werte beim Erwerb der jeweiligen Meilensteine.
+  organellesReason: number | null;
+  ftlAttunementReason: number | null;
+  // Ein Eintrag je erreichter 20-AP-Schwelle, älteste zuerst.
+  apMilestones: number[];
+}
+
+export interface TechnomageCharacterData {
+  // Erstwahl der techno-magischen Schulen. Die Konfiguration wird nach dem
+  // Speichern gesperrt; spells enthält die IDs der gelernten Katalogeinträge.
+  primarySchool: TechnomageSchool | null;
+  weakSchools: TechnomageSchool[];
+  spells: string[];
+  slotProgress: TechnomageSlotProgress;
+}
+
 // Eine Steigerung, die beim erneuten Öffnen der Erschaffung zurückgenommen
 // wurde (siehe src/lib/creationReset.ts). Die Werte sind dabei auf den Stand
 // vor der Steigerung zurückgefallen und die AP wieder gutgeschrieben — die
@@ -66,6 +97,7 @@ export interface CharacterStats {
   // ── Kopf der Personalakte ────────────────────────────────────────
   pronouns: string | null;
   characterRole: string | null;
+  technomage: TechnomageCharacterData;
   assignment: string | null;
   environment: string | null;
   upbringing: string | null;

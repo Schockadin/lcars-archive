@@ -211,6 +211,55 @@ export async function getAllCharactersForAdmin(): Promise<Character[]> {
   return rows.map((row) => parseCharacter(row));
 }
 
+// Vollständige Technomage-Werte für die nur nach requireGM erreichbare
+// Übersicht auf /gm/characters. Die Charakterliste bleibt weiterhin schlank;
+// nur diese GM-Ansicht lädt die gewählten Schulen, Spells und Aptitudes.
+export interface GmTechnomageCharacterSummary {
+  id: number;
+  name: string;
+  playerId: number | null;
+  stats: CharacterStats;
+}
+
+export async function getTechnomageCharactersForGm(): Promise<
+  GmTechnomageCharacterSummary[]
+> {
+  "use cache";
+  cacheTag(cacheTags.characters);
+  cacheLife("max");
+  const rows = await sql<
+    {
+      id: number;
+      name: string;
+      player_id: number | null;
+      stats: unknown;
+    }[]
+  >`
+      SELECT c.id, c.name, c.player_id, c.metadata -> 'stats' AS stats
+      FROM characters c
+      WHERE c.deleted_at IS NULL AND c.is_draft = false
+        AND NOT EXISTS (
+          SELECT 1 FROM character_npc_conversions conversion
+          WHERE conversion.character_id = c.id
+        )
+        AND regexp_replace(
+          lower(COALESCE(c.metadata #>> '{stats,characterRole}', '')),
+          '[^a-z]',
+          '',
+          'g'
+        ) LIKE '%technomage%'
+      ORDER BY c.name ASC
+    `;
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    playerId: row.player_id,
+    stats: parseCharacterStats(
+      typeof row.stats === "string" ? JSON.parse(row.stats) : row.stats,
+    ),
+  }));
+}
+
 // Erschaffungs-Stand aller Charaktere für die Verwaltung der Spielleitung
 // (/gm/characters, Abschnitt „Erschaffung").
 //
@@ -1107,11 +1156,60 @@ export async function updateOwnCharacterStats(
 ): Promise<{ slug: string; name: string } | null> {
   const rows = await sql<{ slug: string; name: string }[]>`
     UPDATE characters
-    SET metadata = metadata || ${sql.json({ stats } as ReturnType<typeof JSON.parse>)},
+    SET metadata = COALESCE(metadata, '{}'::jsonb) ||
+          jsonb_build_object(
+            'stats',
+            ${sql.json(stats as ReturnType<typeof JSON.parse>)} ||
+              jsonb_build_object(
+                'technomage',
+                COALESCE(
+                  metadata #> '{stats,technomage}',
+                  ${sql.json(stats.technomage as ReturnType<typeof JSON.parse>)}
+                )
+              )
+          ),
         updated_at = NOW()
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
     RETURNING slug, name
   `;
+  return rows[0] ?? null;
+}
+
+// Aktualisiert nur den Techno-Magie-Teilbaum. Der Vergleich mit dem gelesenen
+// Stand verhindert, dass zwei gleichzeitige Spell-Käufe einander überschreiben;
+// jsonb-Merge bewahrt parallel gespeicherte Charakterwerte.
+export async function updateOwnCharacterTechnomage(
+  userId: number,
+  characterId: number,
+  expected: CharacterStats["technomage"],
+  next: CharacterStats["technomage"],
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`UPDATE characters
+    SET metadata = COALESCE(metadata, '{}'::jsonb) ||
+          jsonb_build_object(
+            'stats',
+            COALESCE(metadata -> 'stats', '{}'::jsonb) ||
+              jsonb_build_object('technomage', ${sql.json(next as ReturnType<typeof JSON.parse>)})
+          ),
+        updated_at = NOW()
+    WHERE id = ${characterId}
+      AND player_id = ${userId}
+      AND deleted_at IS NULL
+      AND COALESCE(metadata #>> '{stats,technomage,primarySchool}', '') =
+          ${expected.primarySchool ?? ''}
+      AND COALESCE(metadata #> '{stats,technomage,weakSchools}', '[]'::jsonb) =
+          ${sql.json(expected.weakSchools as ReturnType<typeof JSON.parse>)}
+      AND COALESCE(metadata #> '{stats,technomage,spells}', '[]'::jsonb) =
+          ${sql.json(expected.spells as ReturnType<typeof JSON.parse>)}
+      AND COALESCE(metadata #>> '{stats,technomage,slotProgress,creationReason}', '') =
+          ${expected.slotProgress.creationReason?.toString() ?? ''}
+      AND COALESCE(metadata #>> '{stats,technomage,slotProgress,organellesReason}', '') =
+          ${expected.slotProgress.organellesReason?.toString() ?? ''}
+      AND COALESCE(metadata #>> '{stats,technomage,slotProgress,ftlAttunementReason}', '') =
+          ${expected.slotProgress.ftlAttunementReason?.toString() ?? ''}
+      AND COALESCE(metadata #> '{stats,technomage,slotProgress,apMilestones}', '[]'::jsonb) =
+          ${sql.json(expected.slotProgress.apMilestones as ReturnType<typeof JSON.parse>)}
+    RETURNING slug`;
   return rows[0] ?? null;
 }
 

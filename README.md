@@ -23,6 +23,11 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   wählen je ein noch freies Departement; Augmented Ability wählt ein Attribut,
   Dedicated Focus X einen vorhandenen Schwerpunkt und setzt ein Departement
   auf mindestens 4 voraus.
+- **Techno-Magie für Technomages** — wählt eine Primärschule und drei schwache Schulen,
+  lernt Spells aus allen sieben Schulen und sieht Slotkosten samt automatisch
+  erworbenen Voraussetzungen. Suche und Erreichbarkeitsfilter helfen bei der
+  Auswahl; die Spielleitung kann Slotregeln anpassen und gewählte Spells und
+  Aptitudes einsehen.
 - **Missionen & Mission-Logs** — Logbucheinträge sind Charakteren und Missionen zugeordnet
   und chronologisch nach Session-Nummer sortiert.
 - **Nutzerkonten & granulares Rechtesystem (RBAC)** — die Autorisierung läuft über

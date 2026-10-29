@@ -147,6 +147,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.4",
+    title: "Techno-Magie für Technomages",
+    items: [
+      {
+        text: "Technomages lernen Spells aus sieben Schulen, sehen die Slotkosten inklusive Voraussetzungen und filtern nach aktuell erreichbaren Spells. Spell-Erklärungen stehen auf dem Charakterbogen; Spellplätze wachsen bei Erschaffung, Organellen, FTL-Attunement und konfigurierbaren AP-Schwellen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Die Spielleitung sieht gewählte Schulen, Aptitudes und Spells der Technomages und passt Startslots, Verstand-Modifikator sowie AP-Schwellen an.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+    ],
+  },
+  {
     version: "2.3",
     title: "Chronologie für Notizen und Dateien",
     items: [

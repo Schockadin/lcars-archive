@@ -9,6 +9,14 @@ import {
   setAdvancementRules,
   resetAdvancementRules,
 } from "@/lib/advancementSettings";
+import {
+  TECHNOMAGE_SPELL_SLOT_RULE_FIELDS,
+  validateTechnomageSpellSlotRules,
+} from "@/lib/technomageSpellSlotRules";
+import {
+  resetTechnomageSpellSlotRules,
+  setTechnomageSpellSlotRules,
+} from "@/lib/technomageSpellSlotSettings";
 
 export interface RulesFormState {
   error?: string;
@@ -57,4 +65,38 @@ export async function resetRulesAction(
   await revalidatePathAndNotify("/user/characters", "layout");
 
   return { success: "Regelwerk auf die Standardwerte zurückgesetzt." };
+}
+
+export async function saveTechnomageSpellSlotRulesAction(
+  _state: RulesFormState,
+  formData: FormData,
+): Promise<RulesFormState> {
+  await requireGM();
+
+  const raw: Record<string, string> = {};
+  for (const field of TECHNOMAGE_SPELL_SLOT_RULE_FIELDS) {
+    raw[field.key] = String(formData.get(field.key) ?? "");
+  }
+  const parsed = validateTechnomageSpellSlotRules(raw);
+  if (!parsed.ok) return { error: parsed.error };
+
+  await setTechnomageSpellSlotRules(parsed.value);
+  await revalidatePathAndNotify("/gm/ap");
+  await revalidatePathAndNotify("/user/characters", "layout");
+  await revalidatePathAndNotify("/characters", "layout");
+
+  return { success: "Technomage-Slotregeln gespeichert." };
+}
+
+export async function resetTechnomageSpellSlotRulesAction(
+  _state: RulesFormState,
+): Promise<RulesFormState> {
+  await requireGM();
+  await resetTechnomageSpellSlotRules();
+
+  await revalidatePathAndNotify("/gm/ap");
+  await revalidatePathAndNotify("/user/characters", "layout");
+  await revalidatePathAndNotify("/characters", "layout");
+
+  return { success: "Technomage-Slotregeln auf Standardwerte zurückgesetzt." };
 }

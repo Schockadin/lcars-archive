@@ -271,6 +271,15 @@ export function GmCharactersGuide() {
           genannt.
         </p>
       </GuideSection>
+
+      <GuideSection title="Charaktere · Technomage-Übersicht">
+        <p>
+          Im Bereich <strong>„Spells &amp; Aptitudes“</strong> siehst du für
+          Technomage-Charaktere die gewählten Schulen, gelernte Spells,
+          Schwerpunkte und Talente. So lassen sich die Auswahlen der Runde
+          zentral nachschlagen.
+        </p>
+      </GuideSection>
     </GuideBody>
   );
 }
@@ -340,6 +349,15 @@ export function GmApGuide() {
           bleiben unberührt, nur was künftig gesteigert wird, rechnet mit den
           neuen Zahlen. Die Bögen übernehmen die neuen Werte sofort — auch die
           Anzeige „was kostet die nächste Steigerung“.
+        </p>
+        <p>
+          Unter <strong>„Technomage-Spellslots“</strong> passt du die
+          Startslots, den Verstand-Basiswert und -Modifikator, Boni für
+          Organellen und FTL-Attunement sowie AP-Schwelle und Slotgewinn an.
+          Erreichte AP-Meilensteine behalten bei einer späteren
+          Verstand-Steigerung den zuvor gespeicherten Wert; neu erreichte
+          Meilensteine verwenden den dann aktuellen Wert. Die Regeln lassen sich
+          auf Standards zurücksetzen.
         </p>
       </GuideSection>
     </GuideBody>

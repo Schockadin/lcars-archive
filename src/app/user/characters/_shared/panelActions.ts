@@ -329,6 +329,9 @@ export async function saveCharacterStatsAction(
   }
 
   stats.creationLocked = current.stats.creationLocked;
+  // Das Spell-Panel speichert seinen Teilbaum separat. Ein gleichzeitig
+  // offenes Werte-Formular darf diese Änderungen nicht zurücksetzen.
+  stats.technomage = current.stats.technomage;
   // Wie creationLocked kommt auch die Notiz zurückgenommener Steigerungen nie
   // aus dem Formular — sie entsteht beim Zurücksetzen der Erschaffung durch
   // die Spielleitung und wird beim Abschließen abgearbeitet.

@@ -18,11 +18,14 @@ import {
 import { hasCompleteCreationValues } from "@/lib/characterStats";
 import { creationBudget, creationCarryOver } from "@/lib/advancement";
 import type { CharacterStats } from "@/types/characterStats";
+import type { TechnomageSpellSlotRules } from "@/lib/technomageSpellSlotRules";
 import type { AdvancementRules } from "@/lib/advancement";
 import type { ApAccount } from "@/lib/apReasons";
 import type { Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
 import CharacterPanel from "./CharacterPanel";
+import TechnomageSpellsPanel from "./TechnomageSpellsPanel";
+import { isTechnomageRole } from "@/lib/technomageSpellCatalog";
 
 const initialState: CharacterPanelState = {};
 const initialAdvancementState: AdvancementActionResult = {};
@@ -38,6 +41,7 @@ export default function CharacterValuesPanel({
   savedStats,
   account,
   rules,
+  slotRules,
   talents,
   focuses,
 }: {
@@ -47,6 +51,7 @@ export default function CharacterValuesPanel({
   savedStats: CharacterStats;
   account: ApAccount;
   rules: AdvancementRules;
+  slotRules: TechnomageSpellSlotRules;
   talents: Talent[];
   focuses: Focus[];
 }) {
@@ -78,7 +83,8 @@ export default function CharacterValuesPanel({
   const savedComplete = hasCompleteCreationValues(savedStats);
 
   return (
-    <CharacterPanel en="Values" de="Werte">
+    <>
+      <CharacterPanel en="Values" de="Werte">
       <div className="stat-editor-body">
         <form action={saveAction} className="flex flex-col gap-[12px]">
           <input type="hidden" name="userId" value={userId} />
@@ -182,6 +188,16 @@ export default function CharacterValuesPanel({
           </FormSuccess>
         )}
       </div>
-    </CharacterPanel>
+      </CharacterPanel>
+      {isTechnomageRole(savedStats.characterRole) && (
+        <TechnomageSpellsPanel
+          userId={userId}
+          characterId={characterId}
+          stats={savedStats}
+          earnedAp={account.earned}
+          slotRules={slotRules}
+        />
+      )}
+    </>
   );
 }

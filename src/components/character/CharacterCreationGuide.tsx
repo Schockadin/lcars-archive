@@ -95,6 +95,19 @@ export default function CharacterCreationGuide() {
           sich aus Fitness und dem Bonus aus Talenten.
         </p>
         <p>
+          Ist die gespeicherte Rolle <strong>Technomage</strong>, erscheint auf
+          der eigenen Charakterseite zusätzlich der Abschnitt{" "}
+          <strong>„Spells“</strong>. Dort legst du einmalig eine Primärschule
+          und drei schwache Schulen fest. Die Schul-Karussells zeigen die
+          Spellbäume; beim Hover erscheinen Fluff, STA-2e-Erklärung und fremde
+          Voraussetzungen. Die Slotkosten zählen Voraussetzungen mit, die beim
+          Kauf automatisch gelernt werden. Suche und Checkbox filtern die
+          Liste; die freien und gesamten Spellplätze bleiben sichtbar. Slots
+          wachsen bei Erschaffung, Organellen, FTL-Attunement und den
+          konfigurierten AP-Schwellen. Auf dem Charakterbogen und im PDF stehen
+          gelernte Spells mit Erklärung.
+        </p>
+        <p>
           Für die Zahlen gelten die <strong>Regeln der Runde</strong>: Attribute
           liegen zwischen 7 und 12, davon darf höchstens eines auf 12 und zwei
           dürfen auf 11 stehen; Disziplinen liegen zwischen 1 und 5, höchstens

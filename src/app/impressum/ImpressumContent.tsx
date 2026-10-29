@@ -58,6 +58,14 @@ export default function ImpressumContent() {
           Verarbeitung dieser Angaben stehen in der{" "}
           <a href="/datenschutz">Datenschutzerklärung</a>.
         </p>
+        <p>
+          Die Plattform verwaltet außerdem Charakterwerte und Talente. Bei
+          Technomage-Charakteren können Spieler:innen Schulen und Spells
+          festlegen; die Spielleitung kann die Slotregeln einstellen und die
+          gespeicherten Auswahlen einsehen. Der Charakterbogen und sein PDF
+          zeigen die gelernten Spells mit einer Umsetzung für Star Trek
+          Adventures (2. Edition).
+        </p>
 
         <h2>Haftung für Inhalte</h2>
         <p>

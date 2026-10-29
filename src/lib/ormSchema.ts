@@ -95,6 +95,7 @@ export const campaignSettings = pgTable("campaign_settings", {
     .notNull()
     .default("David"),
   advancementRules: existingJsonb("advancement_rules"),
+  technomageSpellRules: existingJsonb("technomage_spell_rules"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

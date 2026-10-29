@@ -1521,3 +1521,8 @@ CREATE INDEX IF NOT EXISTS idx_content_embeddings_rbac
 UPDATE roles SET permissions = array_remove(permissions, 'content.view_gm')
 WHERE 'content.view_gm' = ANY(permissions);
 
+-- campaign_settings: konfigurierbare Spellslot-Regeln für Technomages
+-- (NULL = DEFAULT_TECHNOMAGE_SPELL_SLOT_RULES in
+-- src/lib/technomageSpellSlotRules.ts).
+ALTER TABLE campaign_settings
+  ADD COLUMN IF NOT EXISTS technomage_spell_rules JSONB;
