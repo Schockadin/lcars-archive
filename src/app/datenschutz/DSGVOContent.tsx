@@ -120,8 +120,13 @@ export default function DSGVOContent({ year }: { year: number }) {
           Zum Charakter einer Person gehören neben der Akte auch ihre{" "}
           <strong>Charakterwerte</strong> (Attribute, Disziplinen, Talente,
           Schwerpunkte und die weiteren Angaben des Bogens; dazu zählen auch
-          gewählte Departements, Attribute oder Schwerpunkte einzelner Talente)
-          sowie ein{" "}
+          gewählte Departements, Attribute oder Schwerpunkte einzelner Talente).
+          Bei Technomage-Charakteren gehören dazu die gewählte Primärschule,
+          schwache Schulen, gelernte Spells und die für Slot-Meilensteine
+          gespeicherten Verstand-Werte bei Erschaffung, Organellen,
+          FTL-Attunement und AP-Schwellen. Diese Angaben werden mit dem
+          Charakterbogen nach den jeweiligen Zugriffsregeln angezeigt. Hinzu
+          kommt ein{" "}
           <strong>Erfahrungspunkte-Konto</strong>. Dieses Konto ist ein
           Buchungsjournal: Jede Gutschrift und jede Steigerung wird dauerhaft
           mit Betrag, Grund, Zeitpunkt und dem Account festgehalten, der sie
