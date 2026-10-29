@@ -89,7 +89,15 @@
                 <section class="field catalog-field"><span><span>Focuses</span><small>Schwerpunkte</small></span><div id="focus-selections" class="selection-list"></div><button class="button button-quiet catalog-open" data-catalog="focuses" type="button">Choose focus / Schwerpunkt wählen</button></section>
                 <label class="field field-wide"><span><span>Notes</span><small>Notizen</small></span><textarea name="notes" rows="4" maxlength="10000" placeholder="Background, equipment, open questions / Hintergrund, Ausrüstung, offene Fragen …"></textarea></label>
               </div>
-              <section id="technomage-spells" class="spell-section hidden" aria-labelledby="technomage-heading"><div class="section-heading"><div><p class="eyebrow">TECHNOMAGE MODULE</p><h3 id="technomage-heading">Spells & Spell Trees</h3><small>Spells und Zauberbäume</small></div><label class="field spell-experience"><span><span>Experience</span><small>Erfahrung</small></span><select id="spell-experience"><option value="novice">Novice / Neuling</option><option value="experienced">Experienced / Erfahren</option><option value="veteran">Veteran / Veteran</option></select></label></div><div class="spell-setup"><label class="field"><span><span>Primary School</span><small>Primärschule</small></span><select id="primary-school"></select></label><div id="weak-schools" class="weak-schools"></div></div><div id="spell-school-tabs" class="spell-school-tabs"></div><p id="spell-slot-count" class="muted"></p><div id="spell-tree" class="spell-tree"></div></section>
+                            <section id="technomage-spells" class="spell-section hidden" aria-labelledby="technomage-heading">
+                <div class="section-heading"><div><p class="eyebrow">TECHNOMAGE MODULE</p><h3 id="technomage-heading">Spells & Spell Trees</h3><small>Spells und Zauberbäume</small></div></div>
+                <div class="spell-setup">
+                  <label class="field"><span><span>Primary School</span><small>Primärschule</small></span><select id="primary-school"></select></label>
+                  <label class="field"><span><span>Advancement AP since creation</span><small>Erhaltene AP seit der Erschaffung</small></span><input id="technomage-advancement-ap" type="number" min="0" max="100000" step="1" value="0" inputmode="numeric" /><small>Each complete 20 AP adds spell slots / Je volle 20 AP kommen Spellplätze hinzu.</small></label>
+                  <div id="weak-schools" class="weak-schools"></div>
+                </div>
+                <div id="spell-school-tabs" class="spell-school-tabs"></div><p id="spell-slot-count" class="muted"></p><div id="spell-tree" class="spell-tree"></div>
+              </section>
               <p class="form-footnote">Privat gespeicherte Bögen gehören zu deinem LCARS-Konto. Kampagnenbögen kann die Spielleitung bearbeiten.</p>
             </form>
           </section>

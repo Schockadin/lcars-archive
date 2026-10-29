@@ -16,7 +16,7 @@ const TALENT_CATEGORIES = ["general", "species", "augment", "esoteric", "command
 const TALENT_CATEGORY_LABELS = { general: "Allgemein", species: "Spezies & Kultur", augment: "Augment & Kybernetik", esoteric: "Esoterisch", command: "Kommando", conn: "Steuerung", engineering: "Technik", security: "Sicherheit", science: "Wissenschaft", medicine: "Medizin" };
 const TALENT_CATEGORY_EN = { general: "General", species: "Species & Culture", augment: "Augment & Cybernetic", esoteric: "Esoteric", command: "Command", conn: "Conn", engineering: "Engineering", security: "Security", science: "Science", medicine: "Medicine" };
 const TECHNOMAGE_SCHOOLS = [{ id: "defence", en: "Defence", de: "Abwehr" }, { id: "elements", en: "Elements", de: "Elemente" }, { id: "conjuration", en: "Conjuration", de: "Beschwörung" }, { id: "movement", en: "Movement", de: "Bewegung" }, { id: "healing", en: "Healing", de: "Heilung" }, { id: "enhancement", en: "Enhancement", de: "Verstärkung" }, { id: "creation", en: "Creation", de: "Erschaffung" }];
-const LEGACY_TECHNOMAGE_SPELL_SLOTS = { novice: 5, experienced: 15, veteran: 30 };
+const DEFAULT_TECHNOMAGE_SLOT_RULES = { baseSlots: 5, reasonAttribute: "reason", reasonBaseline: 7, bonusBase: 2.5, talentBonusIds: ["talent.organells", "talent.chrysalis-technomage", "talent.ftl-attunement"], advancementApStep: 20, rounding: "ceil" };
 const TECHNOMAGE_STATE_KEY = "sta2e.technomage.spell-state";
 
 function setTheme(theme) {
@@ -364,6 +364,7 @@ function renderCatalogSelections() {
         state.catalogSelections[type] = selected.filter((_, itemIndex) => itemIndex !== index);
         renderCatalogSelections();
         updateTotals();
+        if (type === "talents") renderTechnomageSpells();
       });
       chip.append(label, remove);
       container.append(chip);
@@ -518,19 +519,34 @@ function technomageDataFromForm() {
   const known = state.technomageData || {};
   const primary = byId("primary-school")?.value || known.primarySchool || "";
   const weak = [...(byId("weak-schools")?.querySelectorAll("select") || [])].map((select) => select.value).filter(Boolean);
+  const advancementAP = Number.parseInt(byId("technomage-advancement-ap")?.value ?? known.advancementAP ?? 0, 10);
   return {
     primarySchool: primary,
     weakSchools: weak.length ? weak : (known.weakSchools || []),
-    experience: byId("spell-experience")?.value || known.experience || "novice",
+    advancementAP: Math.max(0, Math.min(100000, Number.isFinite(advancementAP) ? advancementAP : 0)),
     spells: known.spells || [],
   };
 }
 
-function spellSlotTotal(module, experience) {
-  const configured = module.spellSlotRules?.[experience];
-  return Number.isInteger(configured) && configured >= 0
-    ? configured
-    : LEGACY_TECHNOMAGE_SPELL_SLOTS[experience] ?? LEGACY_TECHNOMAGE_SPELL_SLOTS.novice;
+function calculateTechnomageSpellSlots(module, reason, selectedTalentEntries, advancementAP) {
+  const declared = module.spellSlotRules;
+  const rules = declared && Number.isInteger(declared.baseSlots) && Array.isArray(declared.talentBonusIds)
+    ? declared
+    : DEFAULT_TECHNOMAGE_SLOT_RULES;
+  const reasonValue = Number.isFinite(Number(reason)) ? Number(reason) : rules.reasonBaseline;
+  const bonusPerSource = Math.ceil(rules.bonusBase + (reasonValue - rules.reasonBaseline));
+  const configuredTalentNames = new Set((module.talents || [])
+    .filter((talent) => rules.talentBonusIds.includes(talent.id))
+    .map((talent) => normalized(talent.name || talent.original || talent.label))
+    .filter(Boolean));
+  const selectedTalentNames = new Set((selectedTalentEntries || [])
+    .map((entry) => normalized(parseTalentEntry(entry).original))
+    .filter(Boolean));
+  const talentCount = [...configuredTalentNames].filter((name) => selectedTalentNames.has(name)).length;
+  const ap = Math.max(0, Number.parseInt(advancementAP, 10) || 0);
+  const apSteps = Math.floor(ap / rules.advancementApStep);
+  const total = Math.max(0, rules.baseSlots + (talentCount + apSteps) * bonusPerSource);
+  return { total, baseSlots: rules.baseSlots, bonusPerSource, talentCount, apSteps };
 }
 
 function spellDepth(spellId, spellMap, visited = new Set()) {
@@ -552,7 +568,7 @@ function renderTechnomageSpells() {
   section.classList.remove("hidden");
   const spells = module.spells;
   const spellMap = new Map(spells.map((spell) => [spell.id, spell]));
-  const tech = state.technomageData || { primarySchool: "", weakSchools: [], experience: "novice", spells: [] };
+  const tech = state.technomageData || { primarySchool: "", weakSchools: [], advancementAP: 0, spells: [] };
   const primary = byId("primary-school");
   primary.innerHTML = `<option value="">Choose / Bitte wählen</option>${module.spellTrees.map((tree) => `<option value="${escapeHtml(tree.id)}">${escapeHtml(tree.original || tree.label)} / ${escapeHtml(tree.label)}</option>`).join("")}`;
   primary.value = tech.primarySchool || "";
@@ -570,8 +586,6 @@ function renderTechnomageSpells() {
       renderTechnomageSpells();
     });
   });
-  const experience = byId("spell-experience");
-  experience.value = tech.experience || "novice";
   primary.onchange = () => {
     if (weakSelects.some((select) => select.value === primary.value)) {
       showToast("Primary and weak schools must be different / Schulen dürfen sich nicht überschneiden.", "error"); primary.value = tech.primarySchool || ""; return;
@@ -579,14 +593,24 @@ function renderTechnomageSpells() {
     state.technomageData = { ...state.technomageData, primarySchool: primary.value };
     renderTechnomageSpells();
   };
-  experience.onchange = () => { state.technomageData = { ...state.technomageData, experience: experience.value }; renderTechnomageSpells(); };
+  const advancementInput = byId("technomage-advancement-ap");
+  advancementInput.value = String(tech.advancementAP ?? 0);
+  advancementInput.onchange = () => {
+    const advancementAP = Math.max(0, Math.min(100000, Number.parseInt(advancementInput.value, 10) || 0));
+    advancementInput.value = String(advancementAP);
+    state.technomageData = { ...state.technomageData, advancementAP };
+    renderTechnomageSpells();
+  };
   const tabs = byId("spell-school-tabs");
   tabs.innerHTML = module.spellTrees.map((tree) => `<button type="button" class="spell-school-tab ${tree.id === state.spellSchool ? "active" : ""}" data-spell-school="${escapeHtml(tree.id)}"><span>${escapeHtml(tree.original || tree.label)}</span><small>${escapeHtml(tree.label)}</small></button>`).join("");
   const selectedTree = module.spellTrees.find((tree) => tree.id === state.spellSchool) || module.spellTrees[0];
   state.spellSchool = selectedTree.id;
   const known = new Set(tech.spells || []);
-  const cap = spellSlotTotal(module, tech.experience);
-  byId("spell-slot-count").textContent = `${known.size} / ${cap} spell slots used · ${cap - known.size} free / ${known.size} von ${cap} Spellplätzen belegt · ${cap - known.size} frei`;
+  const slotCalculation = calculateTechnomageSpellSlots(module, readForm().data.attributes[module.spellSlotRules?.reasonAttribute || "reason"], state.catalogSelections.talents, tech.advancementAP);
+  const cap = slotCalculation.total;
+  const usedText = known.size + " / " + cap + " spell slots used · " + (cap - known.size) + " free / " + known.size + " von " + cap + " Spellplätzen belegt · " + (cap - known.size) + " frei.";
+  const formulaText = "Capacity / Kapazität: " + slotCalculation.baseSlots + " base / Basis + " + slotCalculation.talentCount + " talent(s) / Talent(e) × " + slotCalculation.bonusPerSource + " + " + slotCalculation.apSteps + " completed 20 AP step(s) / volle 20-AP-Schritte × " + slotCalculation.bonusPerSource + " = " + cap + ". Bonus rounded up per source / Bonus je Quelle aufgerundet.";
+  byId("spell-slot-count").textContent = usedText + " " + formulaText;
   byId("spell-tree").innerHTML = (selectedTree.spellIds || []).map((id) => spellMap.get(id)).filter(Boolean).sort((a, b) => spellDepth(a.id, spellMap) - spellDepth(b.id, spellMap) || a.name.localeCompare(b.name)).map((spell) => {
     const prerequisiteText = (spell.prerequisiteGroups || [spell.prerequisites || []]).map((group) => group.map((id) => spellMap.get(id)?.name).filter(Boolean).join(" or ")).filter(Boolean).join(" + ");
     const schoolRequirement = /as a primary (?:aptitude|school)/i.test(spell.requirements || "") ? TECHNOMAGE_SCHOOLS.find((school) => (spell.requirements || "").toLowerCase().includes(school.en.toLowerCase()))?.id : null;
@@ -765,7 +789,7 @@ function fillForm(record) {
   state.catalogSelections = { talents: [...(data.talents || [])], focuses: [...(data.focuses || [])] };
   let savedTech = null;
   try { savedTech = JSON.parse(data.customFields?.[TECHNOMAGE_STATE_KEY] || "null"); } catch { savedTech = null; }
-  state.technomageData = structuredClone(savedTech || { primarySchool: "", weakSchools: [], experience: "novice", spells: [] });
+  state.technomageData = structuredClone(savedTech || { primarySchool: "", weakSchools: [], advancementAP: 0, spells: [] });
   const value = (name, fallback = "") => { const field = form.elements.namedItem(name); if (field) field.value = data[name] ?? fallback; };
   value("name");
   value("species");
@@ -842,7 +866,7 @@ function showEditorNew() {
   byId("save-state").textContent = "Entwurf";
   const data = newCharacter();
   state.catalogSelections = { talents: [], focuses: [] };
-  state.technomageData = { primarySchool: "", weakSchools: [], experience: "novice", spells: [] };
+  state.technomageData = { primarySchool: "", weakSchools: [], advancementAP: 0, spells: [] };
   const selected = Object.fromEntries(activeModulePacks().map((pack) => [pack.manifest.id, pack.manifest.version]));
   selected[BASE_MODULE_ID] = BASE_MODULE_VERSION;
   renderPins(selected);
@@ -1205,6 +1229,7 @@ function bindEvents() {
     }
     renderCatalogSelections();
     updateTotals();
+    renderTechnomageSpells();
     renderCatalogResults();
   });
   byId("check-modules").addEventListener("click", async () => {
@@ -1233,6 +1258,7 @@ function bindEvents() {
   });
   byId("character-form").addEventListener("change", (event) => {
     if (event.target.name === "creationMethod") updateTotals();
+    if (event.target.name === "attributes.reason") renderTechnomageSpells();
     if (event.target.name === "profession") {
       const roleOption = event.target.selectedOptions[0];
       if (event.target.value === "__custom__") {

@@ -98,9 +98,19 @@ export function validateModulePack(value) {
   if (methods !== undefined && (!Array.isArray(methods) || methods.some((method) => !["points", "ap"].includes(method)))) {
     throw new Error("creationRules.methods unterstützt nur points und ap.");
   }
-  if (value.spellSlotRules !== undefined && (!value.spellSlotRules || typeof value.spellSlotRules !== "object" || Array.isArray(value.spellSlotRules) ||
-    Object.entries(value.spellSlotRules).some(([experience, amount]) => !["novice", "experienced", "veteran"].includes(experience) || !Number.isInteger(amount) || amount < 0 || amount > 300))) {
-    throw new Error("spellSlotRules muss ganze Spellplatz-Zahlen für novice, experienced oder veteran enthalten.");
+  if (value.spellSlotRules !== undefined) {
+    const rules = value.spellSlotRules;
+    const legacy = rules && typeof rules === "object" && !Array.isArray(rules) &&
+      Object.entries(rules).every(([experience, amount]) => ["novice", "experienced", "veteran"].includes(experience) && Number.isInteger(amount) && amount >= 0 && amount <= 300);
+    const formula = rules && typeof rules === "object" && !Array.isArray(rules) &&
+      Number.isInteger(rules.baseSlots) && rules.baseSlots >= 0 && rules.baseSlots <= 300 &&
+      typeof rules.reasonAttribute === "string" && /^[a-z0-9][a-z0-9._-]{0,79}$/i.test(rules.reasonAttribute) &&
+      Number.isInteger(rules.reasonBaseline) && rules.reasonBaseline >= 0 && rules.reasonBaseline <= 15 &&
+      typeof rules.bonusBase === "number" && Number.isFinite(rules.bonusBase) && rules.bonusBase >= 0 && rules.bonusBase <= 100 &&
+      Array.isArray(rules.talentBonusIds) && rules.talentBonusIds.length <= 20 && rules.talentBonusIds.every((id) => typeof id === "string" && /^[a-z0-9][a-z0-9._-]{0,119}$/i.test(id)) &&
+      Number.isInteger(rules.advancementApStep) && rules.advancementApStep >= 1 && rules.advancementApStep <= 100000 &&
+      rules.rounding === "ceil";
+    if (!legacy && !formula) throw new Error("spellSlotRules müssen gültige Legacy-Werte oder eine vollständige Basis-/Reason-/Talent-/AP-Formel enthalten.");
   }
   for (const ruleset of [value.creationRules?.points, value.creationRules?.ap]) {
     if (ruleset === undefined) continue;

@@ -165,8 +165,8 @@ footer { display: flex; justify-content: space-between; gap: 14px; padding: 17px
 .spell-section { display: grid; gap: 12px; margin: 22px 0; padding: 16px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
 .spell-section .section-heading > div { display: grid; gap: 4px; }
 .spell-section .section-heading > div > small { color: var(--muted); font-size: 10px; }
-.spell-experience { min-width: 180px; }
-.spell-setup { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+.spell-setup { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.spell-setup > #weak-schools { grid-column: 1 / -1; }
 .weak-schools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .spell-school-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 3px; }
 .spell-school-tab { display: grid; min-width: 112px; gap: 2px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-raised); color: var(--text); text-align: left; }

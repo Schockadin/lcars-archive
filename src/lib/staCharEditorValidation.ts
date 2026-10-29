@@ -24,7 +24,15 @@ export interface StaEditorModulePack {
     title: string;
     description?: string;
   };
-  spellSlotRules?: Partial<Record<"novice" | "experienced" | "veteran", number>>;
+  spellSlotRules?: Partial<Record<"novice" | "experienced" | "veteran", number>> | {
+    baseSlots: number;
+    reasonAttribute: string;
+    reasonBaseline: number;
+    bonusBase: number;
+    talentBonusIds: string[];
+    advancementApStep: number;
+    rounding: "ceil";
+  };
   [key: string]: unknown;
 }
 
@@ -102,6 +110,24 @@ function checkDeclarativeOnly(value: unknown, depth = 0): boolean {
   return true;
 }
 
+function validSpellSlotRules(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const entries = Object.entries(value);
+  const legacy = entries.every(([experience, amount]) =>
+    ["novice", "experienced", "veteran"].includes(experience) &&
+    typeof amount === "number" && Number.isInteger(amount) && amount >= 0 && amount <= 300);
+  if (legacy) return true;
+  const allowed = new Set(["baseSlots", "reasonAttribute", "reasonBaseline", "bonusBase", "talentBonusIds", "advancementApStep", "rounding"]);
+  return entries.every(([key]) => allowed.has(key)) &&
+    typeof value.baseSlots === "number" && Number.isInteger(value.baseSlots) && value.baseSlots >= 0 && value.baseSlots <= 300 &&
+    typeof value.reasonAttribute === "string" && /^[a-z0-9][a-z0-9._-]{0,79}$/i.test(value.reasonAttribute) &&
+    typeof value.reasonBaseline === "number" && Number.isInteger(value.reasonBaseline) && value.reasonBaseline >= 0 && value.reasonBaseline <= 15 &&
+    typeof value.bonusBase === "number" && Number.isFinite(value.bonusBase) && value.bonusBase >= 0 && value.bonusBase <= 100 &&
+    Array.isArray(value.talentBonusIds) && value.talentBonusIds.length <= 20 && value.talentBonusIds.every((id) => typeof id === "string" && /^[a-z0-9][a-z0-9._-]{0,119}$/i.test(id)) &&
+    typeof value.advancementApStep === "number" && Number.isInteger(value.advancementApStep) && value.advancementApStep >= 1 && value.advancementApStep <= 100000 &&
+    value.rounding === "ceil";
+}
+
 function validateEntries(value: unknown): boolean {
   if (value === undefined) return true;
   if (!Array.isArray(value) || value.length > 300) return false;
@@ -123,10 +149,7 @@ export function validateStaEditorModulePack(value: unknown): StaEditorModulePack
   if (typeof manifest.title !== "string" || !manifest.title.trim() || manifest.title.length > 120) return null;
   if (manifest.description !== undefined && (typeof manifest.description !== "string" || manifest.description.length > 1000)) return null;
   if (Buffer.byteLength(JSON.stringify(value), "utf8") > 1_000_000) return null;
-  if (value.spellSlotRules !== undefined && (!isRecord(value.spellSlotRules) ||
-      Object.entries(value.spellSlotRules).some(([experience, amount]) =>
-        !["novice", "experienced", "veteran"].includes(experience) ||
-        typeof amount !== "number" || !Number.isInteger(amount) || amount < 0 || amount > 300))) return null;
+  if (value.spellSlotRules !== undefined && !validSpellSlotRules(value.spellSlotRules)) return null;
   for (const key of ["attributes", "disciplines", "species", "professions", "classes"]) {
     if (!validateEntries(value[key])) return null;
   }
