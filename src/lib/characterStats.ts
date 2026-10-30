@@ -177,12 +177,9 @@ export const EMPTY_CHARACTER_STATS: CharacterStats = {
     primarySchool: null,
     weakSchools: [],
     spells: [],
-    slotProgress: {
-      creationReason: null,
-      organellesReason: null,
-      ftlAttunementReason: null,
-      apMilestones: [],
-    },
+    powerPointsCurrent: null,
+    powerPointsMaximumAtLastUpdate: null,
+    powerPointsRecoveryProgress: null,
   },
   assignment: null,
   environment: null,
@@ -247,6 +244,13 @@ function normalizeNumber(
   return num;
 }
 
+function normalizeProgress(value: unknown): number | null {
+  const num = typeof value === "string" ? Number(value.trim()) : value;
+  return typeof num === "number" && Number.isFinite(num) && num >= 0 && num < 1
+    ? num
+    : null;
+}
+
 // Zurückgenommene Steigerungen (siehe PendingAdvancement). Wie überall hier
 // tolerant: was nicht die erwartete Form hat, fliegt raus statt kaputt
 // weitergereicht zu werden — die Liste steuert später echte Buchungen.
@@ -306,23 +310,19 @@ function normalizeTechnomage(value: unknown): TechnomageCharacterData {
     ),
   ].slice(0, 3);
 
-  const progressSource = asRecord(source.slotProgress);
-  const apMilestones = Array.isArray(progressSource.apMilestones)
-    ? progressSource.apMilestones
-        .map((value) => normalizeNumber(value, 7, 12))
-        .filter((value): value is number => value !== null)
-    : [];
-
   return {
     primarySchool,
     weakSchools,
     spells: [...new Set(normalizeList(source.spells))],
-    slotProgress: {
-      creationReason: normalizeNumber(progressSource.creationReason, 7, 12),
-      organellesReason: normalizeNumber(progressSource.organellesReason, 7, 12),
-      ftlAttunementReason: normalizeNumber(progressSource.ftlAttunementReason, 7, 12),
-      apMilestones,
-    },
+    powerPointsCurrent: normalizeNumber(source.powerPointsCurrent, 0, 9999),
+    powerPointsMaximumAtLastUpdate: normalizeNumber(
+      source.powerPointsMaximumAtLastUpdate,
+      0,
+      9999,
+    ),
+    powerPointsRecoveryProgress: normalizeProgress(
+      source.powerPointsRecoveryProgress,
+    ),
   };
 }
 

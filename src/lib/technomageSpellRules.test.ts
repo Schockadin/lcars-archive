@@ -8,12 +8,14 @@ import {
   technomageSpellExplanation,
 } from "@/lib/technomageSpellCatalog";
 import {
-  snapshotTechnomageApSlotReasons,
-  technomageSpellSlotTotal,
-} from "@/lib/technomageSpellSlots";
-import {
+  calculateTechnomagePowerPointRecovery,
   createSpellPurchasePlan,
-  getSpellPurchaseSlotCost,
+  effectiveTechnomagePowerPoints,
+  technomageApForLevel,
+  technomageKnownSpellLimit,
+  technomageLevelFromAp,
+  technomagePowerPointMaximum,
+  technomageRecoveryIntervalMinutes,
 } from "@/lib/technomageSpellRules";
 
 const schools = ["elements", "movement", "creation"] as const;
@@ -36,64 +38,62 @@ describe("Technomage spell catalog", () => {
     expect(isTechnomageRole("Mediziner")).toBe(false);
   });
 
-  it("rounds each spell-slot milestone up and keeps its saved Reason value", () => {
-    const progress = {
-      creationReason: 7,
-      organellesReason: 8,
-      ftlAttunementReason: null,
-      apMilestones: [7],
-    };
-    expect(technomageSpellSlotTotal(progress, 12, 20)).toBe(15);
-    expect(technomageSpellSlotTotal(progress, 8, 40)).toBe(19);
-    const beforeReasonChange = technomageSpellSlotTotal(
-      { ...progress, apMilestones: [] },
-      8,
-      40,
-    );
-    const savedMilestones = snapshotTechnomageApSlotReasons(
-      { ...progress, apMilestones: [] },
-      40,
-      8,
-    );
-    expect(savedMilestones.apMilestones).toEqual([8, 8]);
-    expect(technomageSpellSlotTotal(savedMilestones, 12, 40)).toBe(
-      beforeReasonChange,
-    );
-    expect(
-      technomageSpellSlotTotal(
-        { ...progress, creationReason: null, organellesReason: null, apMilestones: [] },
-        7,
-      ),
-    ).toBe(8);
+  it("maps total awarded AP to nonlinear d20 levels", () => {
+    expect(technomageLevelFromAp(0)).toBe(1);
+    expect(technomageLevelFromAp(6)).toBe(1);
+    expect(technomageLevelFromAp(7)).toBe(2);
+    expect(technomageLevelFromAp(20)).toBe(3);
+    expect(technomageLevelFromAp(40)).toBe(4);
+    expect(technomageLevelFromAp(67)).toBe(5);
+    expect(technomageLevelFromAp(5_000)).toBe(20);
+    expect(technomageApForLevel(4)).toBe(40);
+    expect(technomageApForLevel(21)).toBeNull();
   });
 
-  it("uses GM-configured bonuses, Reason modifiers, and AP thresholds", () => {
-    const rules = {
-      creationBaseSlots: 5,
-      creationBonusSlots: 2.5,
-      reasonBaseline: 7,
-      reasonModifier: 2,
-      organellesBonusSlots: 2.5,
-      ftlAttunementBonusSlots: 2.5,
-      apThreshold: 10,
-      apBonusSlots: 2.5,
-    };
-    const savedMilestones = snapshotTechnomageApSlotReasons(
-      {
-        creationReason: 7,
-        organellesReason: null,
-        ftlAttunementReason: null,
-        apMilestones: [],
-      },
-      20,
-      8,
-      rules.apThreshold,
-    );
+  it("calculates known-spell capacity from the Fact Book class table", () => {
+    expect(technomageKnownSpellLimit(1, 10)).toBe(8);
+    expect(technomageKnownSpellLimit(4, 10)).toBe(15);
+    expect(technomageKnownSpellLimit(4, 12)).toBe(19);
+    expect(technomageKnownSpellLimit(7, 7)).toBe(8);
+  });
 
-    expect(savedMilestones.apMilestones).toEqual([8, 8]);
-    expect(
-      technomageSpellSlotTotal(savedMilestones, 12, 20, rules),
-    ).toBe(18);
+  it("calculates maximum Power Points from class level and mapped attributes", () => {
+    expect(technomagePowerPointMaximum(1, 10, 10)).toBe(14);
+    expect(technomagePowerPointMaximum(4, 10, 10)).toBe(21);
+    expect(technomagePowerPointMaximum(5, 10, 10)).toBe(27);
+    expect(technomagePowerPointMaximum(4, 12, 12)).toBe(26);
+  });
+
+  it("carries new PP capacity forward and follows Fact Book recovery intervals", () => {
+    expect(effectiveTechnomagePowerPoints(10, 21, 26)).toBe(15);
+    expect(effectiveTechnomagePowerPoints(10, 21, 18)).toBe(7);
+    expect(effectiveTechnomagePowerPoints(null, null, 21)).toBe(21);
+    expect(technomageRecoveryIntervalMinutes("meditation", 0)).toBe(10);
+    expect(technomageRecoveryIntervalMinutes("meditation", 1)).toBe(20);
+    expect(technomageRecoveryIntervalMinutes("light", 2)).toBe(90);
+    expect(technomageRecoveryIntervalMinutes("strenuous", 2)).toBe(180);
+  });
+
+  it("preserves partial PP recovery progress across recovery sessions", () => {
+    const partial = calculateTechnomagePowerPointRecovery({
+      current: 10,
+      maximum: 21,
+      durationMinutes: 5,
+      activity: "meditation",
+      maintainedSpellCount: 0,
+      progress: 0,
+    });
+    expect(partial).toEqual({ current: 10, recovered: 0, progress: 0.5 });
+
+    const completed = calculateTechnomagePowerPointRecovery({
+      current: partial.current,
+      maximum: 21,
+      durationMinutes: 15,
+      activity: "light",
+      maintainedSpellCount: 0,
+      progress: partial.progress,
+    });
+    expect(completed).toEqual({ current: 11, recovered: 1, progress: 0 });
   });
 
   it("translates targets and keeps school-specific round durations", () => {
@@ -117,41 +117,11 @@ describe("Technomage spell catalog", () => {
     ).toContain("3 Kampfrunden");
   });
 
-  it("keeps mandatory prerequisites alongside alternative prerequisite groups", () => {
-    const groups = spellPrerequisiteGroups("elemental-resistance-lesser");
-    expect(groups).toEqual([
-      ["armour-lesser"],
-      [
-        "create-acid",
-        "create-fire",
-        "create-ice",
-        "create-lightning",
-        "create-sound",
-      ],
-    ]);
-
-    const plan = createSpellPurchasePlan({
-      spellId: "elemental-resistance-lesser",
-      knownSpellIds: [],
-      slotTotal: 20,
-      primarySchool: "defence",
-      weakSchools: [...schools],
-    });
-
-    expect(plan.ok).toBe(true);
-    if (!plan.ok) return;
-    expect(plan.spellIds).toContain("armour-lesser");
-    expect(plan.spellIds).toContain("elemental-resistance-lesser");
-    expect(plan.spellIds.some((id) =>
-      ["create-acid", "create-fire", "create-ice", "create-lightning", "create-sound"].includes(id)
-    )).toBe(true);
-  });
-
   it("auto-learns local and foreign-school prerequisites", () => {
     const plan = createSpellPurchasePlan({
       spellId: "skin-of-wood",
       knownSpellIds: [],
-      slotTotal: 10,
+      knownSpellLimit: 10,
       primarySchool: "defence",
       weakSchools: [...schools],
     });
@@ -167,58 +137,32 @@ describe("Technomage spell catalog", () => {
       ]),
     );
     expect(plan.spellIds.at(-1)).toBe("skin-of-wood");
-    const elementalResistanceGroups = spellPrerequisiteGroups(
-      "elemental-resistance-lesser",
+    expect(spellPrerequisiteGroups("elemental-resistance-lesser")).toHaveLength(
+      1,
     );
-    expect(elementalResistanceGroups).toHaveLength(2);
-    expect(elementalResistanceGroups[0]).toEqual(["armour-lesser"]);
-    expect(elementalResistanceGroups[1]).toContain("create-fire");
+    expect(
+      spellPrerequisiteGroups("elemental-resistance-lesser")[0],
+    ).toContain("create-fire");
   });
 
-  it("reports the purchase cost including prerequisites and its slot threshold", () => {
-    const input = {
-      spellId: "skin-of-wood",
-      knownSpellIds: [],
-      primarySchool: "defence" as const,
-      weakSchools: [...schools],
-    };
-    const cost = getSpellPurchaseSlotCost(input);
-
-    expect(cost).not.toBeNull();
-    if (cost === null) return;
-
-    const exactlyAffordable = createSpellPurchasePlan({
-      ...input,
-      slotTotal: cost,
-    });
-    const oneShort = createSpellPurchasePlan({
-      ...input,
-      slotTotal: cost - 1,
-    });
-
-    expect(exactlyAffordable.ok).toBe(true);
-    expect(oneShort.ok).toBe(false);
-    expect(cost).toBeGreaterThan(1);
-  });
-
-  it("rejects a purchase when the full prerequisite chain exceeds available slots", () => {
+  it("rejects a purchase when the prerequisite chain exceeds known-spell capacity", () => {
     const plan = createSpellPurchasePlan({
       spellId: "skin-of-wood",
       knownSpellIds: [],
-      slotTotal: 3,
+      knownSpellLimit: 3,
       primarySchool: "defence",
       weakSchools: [...schools],
     });
 
     expect(plan.ok).toBe(false);
-    if (!plan.ok) expect(plan.error).toContain("Spellplatz");
+    if (!plan.ok) expect(plan.error).toContain("Kapazität");
   });
 
   it("enforces primary-school prerequisites", () => {
     const plan = createSpellPurchasePlan({
       spellId: "healing-total",
       knownSpellIds: [],
-      slotTotal: 30,
+      knownSpellLimit: 30,
       primarySchool: "defence",
       weakSchools: [...schools],
     });

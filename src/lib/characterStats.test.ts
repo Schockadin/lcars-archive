@@ -66,6 +66,9 @@ describe("parseCharacterStats", () => {
         primarySchool: "defence",
         weakSchools: ["elements", "elements", "invalid", "movement", "defence", "creation"],
         spells: ["personal-shield", "personal-shield", "  fireball  ", 42],
+        powerPointsCurrent: 7,
+        powerPointsMaximumAtLastUpdate: 14,
+        powerPointsRecoveryProgress: 0.25,
       },
     });
 
@@ -73,12 +76,9 @@ describe("parseCharacterStats", () => {
       primarySchool: "defence",
       weakSchools: ["elements", "movement", "creation"],
       spells: ["personal-shield", "fireball"],
-      slotProgress: {
-        creationReason: null,
-        organellesReason: null,
-        ftlAttunementReason: null,
-        apMilestones: [],
-      },
+      powerPointsCurrent: 7,
+      powerPointsMaximumAtLastUpdate: 14,
+      powerPointsRecoveryProgress: 0.25,
     });
   });
 

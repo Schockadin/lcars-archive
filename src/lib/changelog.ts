@@ -147,6 +147,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.5",
+    title: "D20-Fortschritt für Technomages",
+    items: [
+      {
+        text: "Technomage-Stufe, Spelllimit und Power-Point-Maximum folgen jetzt der nichtlinearen Klassenprogression des Fact Books. 40 erhaltene AP entsprechen Stufe 4; ausgegebene AP senken die Stufe nicht. Power Points lassen sich ausgeben und nach den Fact-Book-Zeiten regenerieren.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Die Spielleitung sieht auf der AP-Seite die vollständige Umrechnung der D20-Stufen in AP.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+    ],
+  },
+  {
     version: "2.4",
     title: "Techno-Magie für Technomages",
     items: [

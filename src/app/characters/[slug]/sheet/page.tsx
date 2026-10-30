@@ -23,7 +23,6 @@ import {
 import { listTalents } from "@/lib/talents";
 import { listCampaignRules } from "@/lib/campaignRules";
 import { getApAccount } from "@/lib/characterAp";
-import { getTechnomageSpellSlotRules } from "@/lib/technomageSpellSlotSettings";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
 import CharacterSheetPreview from "@/components/character/CharacterSheetPreview";
@@ -71,11 +70,10 @@ export default async function CharacterSheetPage({ params }: Props) {
   // Blatt 2 braucht den Talent-Katalog (der Regeltext steht nicht am
   // Charakter) und die Hausregeln der Runde — dieselben Quellen wie im
   // PDF-Export.
-  const [talents, campaignRules, account, technomageSpellSlotRules] = await Promise.all([
+  const [talents, campaignRules, account] = await Promise.all([
     listTalents(),
     listCampaignRules(),
     getApAccount(sheet.id),
-    getTechnomageSpellSlotRules(),
   ]);
   const bioHtml = await addStoredContentLinkPreviews(character.bio ?? "");
 
@@ -114,7 +112,6 @@ export default async function CharacterSheetPage({ params }: Props) {
             portraitCrop: sheet.portraitCrop,
             stats: sheet.stats,
             earnedAp: account.earned,
-            technomageSpellSlotRules,
             // characters.bio hält bereits das gerenderte, bereinigte HTML
             // (siehe updateOwnCharacterBio) — dieselbe Quelle wie die
             // Charakterseite.

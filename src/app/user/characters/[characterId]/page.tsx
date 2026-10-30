@@ -5,7 +5,6 @@ import { verifySession } from "@/lib/dal";
 import { getOwnCharacterForEdit, getOwnCharacterStats } from "@/lib/characters";
 import { getApAccount } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
-import { getTechnomageSpellSlotRules } from "@/lib/technomageSpellSlotSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
 import { listCampaignRules } from "@/lib/campaignRules";
@@ -62,7 +61,6 @@ export default async function OwnCharacterPage({ params }: Props) {
   const [
     account,
     rules,
-    slotRules,
     talents,
     focuses,
     campaignRules,
@@ -72,7 +70,6 @@ export default async function OwnCharacterPage({ params }: Props) {
   ] = await Promise.all([
     getApAccount(sheet.id),
     getAdvancementRules(),
-    getTechnomageSpellSlotRules(),
     listTalents(),
     listFocuses(),
     listCampaignRules(),
@@ -122,7 +119,6 @@ export default async function OwnCharacterPage({ params }: Props) {
                   portraitCrop: sheet.portraitCrop,
                   stats: sheet.stats,
                   earnedAp: account.earned,
-                  technomageSpellSlotRules: slotRules,
                   bioHtml: character.bioHtml,
                   talents,
                   campaignRules,
@@ -156,7 +152,6 @@ export default async function OwnCharacterPage({ params }: Props) {
               savedStats={sheet.stats}
               account={account}
               rules={rules}
-              slotRules={slotRules}
               talents={talents}
               focuses={focuses}
             />

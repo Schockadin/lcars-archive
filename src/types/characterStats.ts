@@ -41,23 +41,20 @@ export const TECHNOMAGE_SCHOOL_IDS = [
 
 export type TechnomageSchool = (typeof TECHNOMAGE_SCHOOL_IDS)[number];
 
-export interface TechnomageSlotProgress {
-  // Verstand-Wert bei Festschreiben der Erschaffung.
-  creationReason: number | null;
-  // Verstand-Werte beim Erwerb der jeweiligen Meilensteine.
-  organellesReason: number | null;
-  ftlAttunementReason: number | null;
-  // Ein Eintrag je erreichter 20-AP-Schwelle, älteste zuerst.
-  apMilestones: number[];
-}
-
 export interface TechnomageCharacterData {
   // Erstwahl der techno-magischen Schulen. Die Konfiguration wird nach dem
   // Speichern gesperrt; spells enthält die IDs der gelernten Katalogeinträge.
   primarySchool: TechnomageSchool | null;
   weakSchools: TechnomageSchool[];
   spells: string[];
-  slotProgress: TechnomageSlotProgress;
+  // Null bedeutet: Das PP-Konto wurde noch nicht geführt und startet beim
+  // aktuellen Maximum. Beim ersten Buchen wird auch der damalige Maximalwert
+  // gespeichert, damit spätere Stufen-/Attributszuwächse die Reserve erhöhen.
+  powerPointsCurrent: number | null;
+  powerPointsMaximumAtLastUpdate: number | null;
+  // Anteil des nächsten PP, der durch noch nicht abgeschlossene
+  // Regenerationsintervalle bereits erreicht wurde (0 bis kleiner 1).
+  powerPointsRecoveryProgress: number | null;
 }
 
 // Eine Steigerung, die beim erneuten Öffnen der Erschaffung zurückgenommen

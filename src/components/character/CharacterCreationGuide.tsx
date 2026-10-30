@@ -102,10 +102,13 @@ export default function CharacterCreationGuide() {
           Spellbäume; beim Hover erscheinen Fluff, STA-2e-Erklärung und fremde
           Voraussetzungen. Die Slotkosten zählen Voraussetzungen mit, die beim
           Kauf automatisch gelernt werden. Suche und Checkbox filtern die
-          Liste; die freien und gesamten Spellplätze bleiben sichtbar. Slots
-          wachsen bei Erschaffung, Organellen, FTL-Attunement und den
-          konfigurierten AP-Schwellen. Auf dem Charakterbogen und im PDF stehen
-          gelernte Spells mit Erklärung.
+          Liste. Stufe, Spelllimit und PP-Maximum folgen der D20-
+          Klassenprogression aus dem Fact Book: 150 XP entsprechen einem AP,
+          deshalb sind 40 AP Stufe 4. Ausgegebene AP senken die Stufe nicht.
+          Power Points lassen sich beim Wirken ausgeben und nach den
+          Regenerationszeiten des Fact Books zurückgewinnen. Auf dem
+          Charakterbogen und im PDF stehen gelernte Spells mit Erklärung sowie
+          Stufe und PP-Kontostand.
         </p>
         <p>
           Für die Zahlen gelten die <strong>Regeln der Runde</strong>: Attribute

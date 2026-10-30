@@ -66,7 +66,6 @@ import {
   type Talent,
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
-import type { TechnomageSpellSlotRules } from "@/lib/technomageSpellSlotRules";
 import {
   DEFAULT_CROP,
   pdfCropBox,
@@ -81,8 +80,13 @@ import {
   technomageSchoolLabel,
   technomageSpellExplanation,
   technomageSpellFluff,
-  technomageSpellSlotTotal,
 } from "@/lib/technomageSpellCatalog";
+import {
+  effectiveTechnomagePowerPoints,
+  technomageKnownSpellLimit,
+  technomageLevelFromAp,
+  technomagePowerPointMaximum,
+} from "@/lib/technomageSpellRules";
 
 const PT_PER_PX = 0.75;
 const PAGE_WIDTH = 816 * PT_PER_PX;
@@ -383,12 +387,10 @@ export interface CharacterSheetPdfInput {
   // Der auf dem Original gewählte Ausschnitt (siehe src/lib/portraitCrop.ts).
   portraitCrop?: PortraitCrop | null;
   stats: CharacterStats;
-  // Insgesamt erhaltene AP für Technomage-Spellslot-Meilensteine.
-  earnedAp?: number;
-  technomageSpellSlotRules?: TechnomageSpellSlotRules;
+  earnedAp: number;
   // Katalog für den Spickzettel — der Regeltext steht nicht am Charakter.
   talents: Talent[];
-  // Hausregeln der Runde (gepflegt unter /gm/campaign); leer = kein Abschnitt.
+  // Hausregeln der Runde (gepflegt unter /gm/rules); leer = kein Abschnitt.
   campaignRules: CampaignRule[];
   // Biografie als Markdown-Quelltext (characters.source_md). @react-pdf kennt
   // kein HTML, das gerenderte bio-Feld nützt hier also nichts — die einfachen
@@ -617,14 +619,22 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
   const learnedSpells = input.stats.technomage.spells
     .map(getTechnomageSpell)
     .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
-  const totalSpellSlots = technomageSpellSlotTotal(
-    input.stats.technomage.slotProgress,
+  const technomageLevel = technomageLevelFromAp(input.earnedAp);
+  const knownSpellCount = new Set(input.stats.technomage.spells).size;
+  const knownSpellLimit = technomageKnownSpellLimit(
+    technomageLevel,
     input.stats.attributes.reason,
-    input.earnedAp ?? 0,
-    input.technomageSpellSlotRules,
   );
-  const spellSlots =
-    totalSpellSlots - new Set(input.stats.technomage.spells).size;
+  const powerPointMaximum = technomagePowerPointMaximum(
+    technomageLevel,
+    input.stats.attributes.fitness,
+    input.stats.attributes.presence,
+  );
+  const currentPowerPoints = effectiveTechnomagePowerPoints(
+    input.stats.technomage.powerPointsCurrent,
+    input.stats.technomage.powerPointsMaximumAtLastUpdate,
+    powerPointMaximum,
+  );
 
   return (
     <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.cheatPage}>
@@ -676,8 +686,8 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
         <>
           <Text style={styles.cheatSection}>SPELLS · TECHNO-MAGIE</Text>
           <Text style={styles.cheatIntro}>
-            Spellplätze: {Math.max(0, spellSlots)} /{" "}
-            {totalSpellSlots} frei
+            Techno-Mage-Stufe {technomageLevel} · Bekannte Spells: {knownSpellCount} /{" "}
+            {knownSpellLimit} · Power Points: {currentPowerPoints} / {powerPointMaximum}
           </Text>
           {learnedSpells.map((spell) => (
             <View key={spell.id} style={styles.cheatItem} wrap={false}>
@@ -845,7 +855,8 @@ export async function renderCharacterSheetPdf(
       creator="Neo-Archiv"
     >
       <SheetPage input={input} />
-      {(input.stats.talents.length > 0 || isTechnomageRole(input.stats.characterRole)) && (
+      {(input.stats.talents.length > 0 ||
+        isTechnomageRole(input.stats.characterRole)) && (
         <CheatSheetPage input={input} />
       )}
       <RulesPage input={input} />
@@ -862,9 +873,10 @@ export async function renderCharacterSheetPdf(
     return renderToBuffer(
       <Document title={`Charakterbogen ${input.name}`}>
         <SheetPage input={{ ...input, portrait: null }} />
-        {(input.stats.talents.length > 0 || isTechnomageRole(input.stats.characterRole)) && (
-        <CheatSheetPage input={input} />
-      )}
+        {(input.stats.talents.length > 0 ||
+          isTechnomageRole(input.stats.characterRole)) && (
+          <CheatSheetPage input={input} />
+        )}
         <RulesPage input={input} />
         <BiographyPage input={input} />
       </Document>,

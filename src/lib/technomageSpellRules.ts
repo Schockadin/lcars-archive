@@ -6,10 +6,131 @@ import {
   spellPrerequisiteGroups,
 } from "@/lib/technomageSpellCatalog";
 
+// XP-Schwellen des d20-Systems, umgerechnet mit 150 XP je AP. So liegt die
+// Schwelle zu Stufe 4 bei 40 AP und die Abstände wachsen danach wie im d20.
+const D20_XP_THRESHOLDS = [
+  0, 1_000, 3_000, 6_000, 10_000, 15_000, 21_000, 28_000, 36_000, 45_000,
+  55_000, 66_000, 78_000, 91_000, 105_000, 120_000, 136_000, 153_000,
+  171_000, 190_000,
+] as const;
+
+export const TECHNOMAGE_AP_THRESHOLDS = D20_XP_THRESHOLDS.map((xp) =>
+  Math.ceil(xp / 150),
+);
+
+export function technomageLevelFromAp(earnedAp: number): number {
+  const ap = Number.isFinite(earnedAp) ? Math.max(0, Math.floor(earnedAp)) : 0;
+  let level = 1;
+  for (let index = 1; index < TECHNOMAGE_AP_THRESHOLDS.length; index += 1) {
+    if (ap < TECHNOMAGE_AP_THRESHOLDS[index]) break;
+    level = index + 1;
+  }
+  return level;
+}
+
+export function technomageApForLevel(level: number): number | null {
+  if (!Number.isInteger(level) || level < 1 || level > 20) return null;
+  return TECHNOMAGE_AP_THRESHOLDS[level - 1];
+}
+
+// Reason/Verstand übernimmt die Rolle von Intelligenz, Fitness die von
+// Konstitution und Präsenz die von Charisma. Fehlende STA-Werte zählen neutral.
+export function technomageAbilityModifier(score: number | null): number {
+  return score === null || !Number.isFinite(score)
+    ? 0
+    : Math.floor((score - 10) / 2);
+}
+
+function expectedDie(sides: number): number {
+  return (sides + 1) / 2;
+}
+
+const SPELL_LEVELS_WITHOUT_D4 = new Set([7, 10, 13, 16, 19, 20]);
+const SPELL_LEVELS_WITHOUT_CHARISMA_D4 = new Set([5, 10, 15, 20]);
+
+// Das Fact Book gibt neue Spells und PP als Würfelwürfe an. Die Runde würfelt
+// nicht beim Stufenaufstieg, daher werden Erwartungswerte kumuliert und erst
+// am Ende gerundet. Das vermeidet sprunghafte Werte bei erneutem Laden.
+export function technomageKnownSpellLimit(
+  level: number,
+  reason: number | null,
+): number {
+  const boundedLevel = Math.max(1, Math.min(20, Math.floor(level)));
+  const modifier = technomageAbilityModifier(reason);
+  let total = 5 + expectedDie(4) + modifier;
+  for (let gainedAt = 2; gainedAt <= boundedLevel; gainedAt += 1) {
+    total += SPELL_LEVELS_WITHOUT_D4.has(gainedAt)
+      ? Math.max(0, modifier)
+      : expectedDie(4) + modifier;
+  }
+  return Math.max(0, Math.round(total));
+}
+
+export function technomagePowerPointMaximum(
+  level: number,
+  fitness: number | null,
+  presence: number | null,
+): number {
+  const boundedLevel = Math.max(1, Math.min(20, Math.floor(level)));
+  const constitution = technomageAbilityModifier(fitness);
+  const charisma = technomageAbilityModifier(presence);
+  let total = 10 + expectedDie(6) + constitution + charisma;
+  for (let gainedAt = 2; gainedAt <= boundedLevel; gainedAt += 1) {
+    total += expectedDie(4) + charisma;
+    if (SPELL_LEVELS_WITHOUT_CHARISMA_D4.has(gainedAt)) total += 3;
+  }
+  return Math.max(0, Math.round(total));
+}
+
+export function effectiveTechnomagePowerPoints(
+  current: number | null,
+  maximumAtLastUpdate: number | null,
+  currentMaximum: number,
+): number {
+  if (current === null) return currentMaximum;
+  const adjusted =
+    currentMaximum - (maximumAtLastUpdate ?? currentMaximum) + current;
+  return Math.max(0, Math.min(currentMaximum, adjusted));
+}
+
+export function technomageRecoveryIntervalMinutes(
+  activity: "meditation" | "light" | "strenuous",
+  maintainedSpellCount: number,
+): number {
+  const interval = activity === "meditation" ? 10 : activity === "light" ? 30 : 60;
+  return interval * (Math.max(0, Math.floor(maintainedSpellCount)) + 1);
+}
+
+export function calculateTechnomagePowerPointRecovery(input: {
+  current: number;
+  maximum: number;
+  durationMinutes: number;
+  activity: "meditation" | "light" | "strenuous";
+  maintainedSpellCount: number;
+  progress: number;
+}): { current: number; recovered: number; progress: number } {
+  if (input.current >= input.maximum) {
+    return { current: input.maximum, recovered: 0, progress: 0 };
+  }
+  const interval = technomageRecoveryIntervalMinutes(
+    input.activity,
+    input.maintainedSpellCount,
+  );
+  const accumulated = Math.max(0, Math.min(0.999999, input.progress)) +
+    input.durationMinutes / interval;
+  const recovered = Math.floor(accumulated + Number.EPSILON);
+  const current = Math.min(input.maximum, input.current + recovered);
+  return {
+    current,
+    recovered: current - input.current,
+    progress: current >= input.maximum ? 0 : accumulated - recovered,
+  };
+}
+
 export interface SpellPurchasePlanInput {
   spellId: string;
   knownSpellIds: readonly string[];
-  slotTotal: number;
+  knownSpellLimit: number;
   primarySchool: TechnomageSchool | null;
   weakSchools: readonly TechnomageSchool[];
 }
@@ -138,14 +259,14 @@ export function createSpellPurchasePlan(
     };
   }
 
-  const available = Math.max(0, input.slotTotal - known.size);
+  const available = Math.max(0, input.knownSpellLimit - known.size);
   if (planned.size > available) {
     return {
       ok: false,
       error:
         "Es fehlen " +
         (planned.size - available) +
-        " Spellplatz/Spellplätze (benötigt: " +
+        " bekannte Spell(s) an Kapazität (benötigt: " +
         planned.size +
         ", verfügbar: " +
         available +
@@ -156,11 +277,11 @@ export function createSpellPurchasePlan(
 }
 
 export function getSpellPurchaseSlotCost(
-  input: Omit<SpellPurchasePlanInput, "slotTotal">,
+  input: Omit<SpellPurchasePlanInput, "knownSpellLimit">,
 ): number | null {
   const plan = createSpellPurchasePlan({
     ...input,
-    slotTotal: input.knownSpellIds.length + TECHNOMAGE_SPELLS.length,
+    knownSpellLimit: input.knownSpellIds.length + TECHNOMAGE_SPELLS.length,
   });
   return plan.ok ? plan.spellIds.length : null;
 }

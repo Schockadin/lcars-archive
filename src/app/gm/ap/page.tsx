@@ -14,8 +14,7 @@ import HelpHeading from "@/components/help/HelpHeading";
 import { GmApGuide } from "@/components/help/guides/GmGuides";
 import ApAwardPanel from "../campaign/ApAwardPanel";
 import MissionApPanel from "../campaign/MissionApPanel";
-import TechnomageSpellSlotRulesForm from "./TechnomageSpellSlotRulesForm";
-import { getTechnomageSpellSlotRules } from "@/lib/technomageSpellSlotSettings";
+import TechnomageLevelTable from "./TechnomageLevelTable";
 
 export const metadata: Metadata = {
   title: "AP",
@@ -28,14 +27,13 @@ export const metadata: Metadata = {
 export default async function GmApPage() {
   await requireGM();
 
-  const [accounts, ledger, rules, balances, characters, missions, technomageSlotRules] = await Promise.all([
+  const [accounts, ledger, rules, balances, characters, missions] = await Promise.all([
     listApAccountSummaries(),
     listApLedger(),
     getAdvancementRules(),
     listApBalances(),
     listActiveCharactersForAp(),
     listCompletableMissions(),
-    getTechnomageSpellSlotRules(),
   ]);
   const balanceById = new Map(balances.map((entry) => [entry.characterId, entry.available]));
   const awardCharacters = characters.map((character) => ({ ...character, available: balanceById.get(character.id) ?? 0 }));
@@ -61,8 +59,8 @@ export default async function GmApPage() {
             <MissionApPanel missions={missions} characters={characters} defaultMissionAp={rules.apPerMission} />
           </section>
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary-ink">Technomage-Spellslots</h2>
-            <TechnomageSpellSlotRulesForm rules={technomageSlotRules} />
+            <h2 className="text-lcars-primary-ink">Technomage-Stufen</h2>
+            <TechnomageLevelTable />
           </section>
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-primary-ink">AP-Konten</h2>

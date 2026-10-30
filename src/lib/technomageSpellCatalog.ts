@@ -1,5 +1,4 @@
 import type { TechnomageSchool } from "@/types/characterStats";
-export { technomageSpellSlotTotal } from "@/lib/technomageSpellSlots";
 
 export const TECHNOMAGE_SCHOOLS = [
   { id: "defence", label: "Abwehr", original: "Defence" },
@@ -3820,10 +3819,6 @@ export function isTechnomageRole(role: string | null | undefined): boolean {
     .replace(/[^a-z]/g, "")
     .includes("technomage");
 }
-
-// Spellplätze werden aus gespeicherten Reason-Meilensteinen berechnet.
-// Die Berechnung selbst liegt in technomageSpellSlots.ts und wird hier für
-// bestehende Aufrufstellen des Spell-Katalogs mit exportiert.
 
 export function technomageSchoolLabel(schoolId: string): string {
   const school = getTechnomageSchool(schoolId);

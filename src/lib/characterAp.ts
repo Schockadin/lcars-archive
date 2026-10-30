@@ -18,17 +18,6 @@ import {
   reapplyAdvancements,
 } from "@/lib/creationReset";
 import type { CharacterStats } from "@/types/characterStats";
-import { snapshotTechnomageApSlotReasons } from "@/lib/technomageSpellSlots";
-import { getTechnomageSpellSlotRules } from "@/lib/technomageSpellSlotSettings";
-
-function isTechnomageRole(role: string | null): boolean {
-  return (role ?? "")
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z]/g, "")
-    .includes("technomage");
-}
 
 // Die Buchungsgründe und Kontotypen selbst liegen DB-frei in
 // src/lib/apReasons.ts (Client-Komponenten brauchen die Labels) und werden
@@ -182,10 +171,7 @@ export async function advanceOwnCharacter(
   // Regelwerk VOR der Transaktion laden: src/lib/db.ts erlaubt nur EINE
   // Connection pro Prozess, eine zweite Abfrage innerhalb der offenen
   // Transaktion würde auf eine nie freiwerdende Connection warten.
-  const [rules, technomageSlotRules]: [AdvancementRules, Awaited<ReturnType<typeof getTechnomageSpellSlotRules>>] = await Promise.all([
-    getAdvancementRules(),
-    getTechnomageSpellSlotRules(),
-  ]);
+  const rules: AdvancementRules = await getAdvancementRules();
 
   return sql.begin(async (tx) => {
     const rows = await tx<{ slug: string; stats: unknown }[]>`
@@ -223,26 +209,6 @@ export async function advanceOwnCharacter(
     if (!check.ok) return { ok: false as const, error: check.error };
 
     const nextStats: CharacterStats = applyAdvancement(stats, request, check.plan);
-    if (
-      request.kind === "attribute" &&
-      request.key === "reason" &&
-      isTechnomageRole(stats.characterRole)
-    ) {
-      const slotProgress = snapshotTechnomageApSlotReasons(
-        nextStats.technomage.slotProgress,
-        balance?.earned ?? 0,
-        stats.attributes.reason,
-        technomageSlotRules.apThreshold,
-      );
-      nextStats.technomage = {
-        ...nextStats.technomage,
-        slotProgress: {
-          ...slotProgress,
-          creationReason: slotProgress.creationReason ?? stats.attributes.reason ?? 7,
-        },
-      };
-    }
-
     await tx`
       UPDATE characters
       SET metadata = metadata || ${tx.json({ stats: nextStats } as ReturnType<typeof JSON.parse>)},
@@ -363,20 +329,6 @@ export async function lockOwnCharacterCreation(
     const nextStats: CharacterStats = {
       ...reapplied.stats,
       creationLocked: true,
-      ...(isTechnomageRole(stats.characterRole)
-        ? {
-            technomage: {
-              ...reapplied.stats.technomage,
-              slotProgress: {
-                ...reapplied.stats.technomage.slotProgress,
-                creationReason:
-                  reapplied.stats.technomage.slotProgress.creationReason ??
-                  stats.attributes.reason ??
-                  7,
-              },
-            },
-          }
-        : {}),
     };
 
     await tx`

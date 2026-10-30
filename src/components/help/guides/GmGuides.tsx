@@ -351,13 +351,11 @@ export function GmApGuide() {
           Anzeige „was kostet die nächste Steigerung“.
         </p>
         <p>
-          Unter <strong>„Technomage-Spellslots“</strong> passt du die
-          Startslots, den Verstand-Basiswert und -Modifikator, Boni für
-          Organellen und FTL-Attunement sowie AP-Schwelle und Slotgewinn an.
-          Erreichte AP-Meilensteine behalten bei einer späteren
-          Verstand-Steigerung den zuvor gespeicherten Wert; neu erreichte
-          Meilensteine verwenden den dann aktuellen Wert. Die Regeln lassen sich
-          auf Standards zurücksetzen.
+          Unter <strong>„Technomage-Stufen“</strong> findest du die feste
+          Umrechnung der D20-Erfahrungsschwellen in AP: 150 XP je AP, Stufe 4 ab
+          40 AP. Gezählt werden alle erhaltenen AP; ausgegebene AP ändern die
+          Stufe nicht. Das Spelllimit und das maximale PP-Konto folgen danach
+          der Technomage-Klassenprogression aus dem Fact Book.
         </p>
       </GuideSection>
     </GuideBody>

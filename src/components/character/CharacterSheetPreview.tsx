@@ -8,7 +8,6 @@ import {
   type Talent,
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
-import type { TechnomageSpellSlotRules } from "@/lib/technomageSpellSlotRules";
 import { CORE_RULES } from "@/lib/coreRules";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
 import {
@@ -17,15 +16,20 @@ import {
   technomageSchoolLabel,
   technomageSpellExplanation,
   technomageSpellFluff,
-  technomageSpellSlotTotal,
 } from "@/lib/technomageSpellCatalog";
+import {
+  effectiveTechnomagePowerPoints,
+  technomageKnownSpellLimit,
+  technomageLevelFromAp,
+  technomagePowerPointMaximum,
+} from "@/lib/technomageSpellRules";
 
-// Der Charakterbogen als vierblättrige Vorschau — dasselbe, was der
+// Der Charakterbogen als mehrblättrige Vorschau — dasselbe, was der
 // PDF-Export erzeugt:
 //   Blatt 1  das Personnel File mit Stammdaten und Werten
-//   Blatt 2  der Spickzettel: die Talente des Charakters
+//   Blatt 2  der Spickzettel: Talente und gelernte Techno-Magie-Spells
 //   Blatt 3  die Regeln: Kernregeln (Momentum, Bedrohung, Entschlossenheit)
-//            und die eigenen Regeln der Runde (/gm/campaign)
+//            und die eigenen Regeln der Runde (/gm/rules)
 //   Blatt 4  die Biografie im selben Papier-Look
 //
 // Talente und Regeln standen einmal auf einem Blatt. Getrennt, weil sie
@@ -84,15 +88,13 @@ export interface CharacterSheetPreviewInput {
   portrait: string | null;
   portraitCrop?: PortraitCrop | null;
   stats: CharacterStats;
-  // Insgesamt erhaltene AP für Technomage-Spellslot-Meilensteine.
   earnedAp?: number;
-  technomageSpellSlotRules?: TechnomageSpellSlotRules;
   // Bereits gerendertes, bereinigtes Biografie-HTML (markdownToHtml). Der
   // Assistent lässt es beim Wechsel auf die Vorschau erzeugen, die
   // Charakterseite reicht das gespeicherte HTML durch.
   bioHtml: string | null;
   talents: Talent[];
-  // Hausregeln der Runde für den Spickzettel (gepflegt unter /gm/campaign).
+  // Hausregeln der Runde für den Spickzettel (gepflegt unter /gm/rules).
   // Leer = es gibt keine, dann fällt der Abschnitt weg.
   campaignRules: CampaignRule[];
 }
@@ -102,25 +104,32 @@ function TalentSheet({
   stats,
   talents,
   earnedAp,
-  slotRules,
 }: {
   characterName: string;
   stats: CharacterStats;
   talents: Talent[];
   earnedAp: number;
-  slotRules?: TechnomageSpellSlotRules;
 }) {
   const entries = stats.talents;
   const learnedSpells = stats.technomage.spells
     .map(getTechnomageSpell)
     .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
-  const totalSpellSlots = technomageSpellSlotTotal(
-    stats.technomage.slotProgress,
+  const knownCount = new Set(stats.technomage.spells).size;
+  const technomageLevel = technomageLevelFromAp(earnedAp);
+  const knownSpellLimit = technomageKnownSpellLimit(
+    technomageLevel,
     stats.attributes.reason,
-    earnedAp,
-    slotRules,
   );
-  const spellSlots = totalSpellSlots - new Set(stats.technomage.spells).size;
+  const powerPointMaximum = technomagePowerPointMaximum(
+    technomageLevel,
+    stats.attributes.fitness,
+    stats.attributes.presence,
+  );
+  const currentPowerPoints = effectiveTechnomagePowerPoints(
+    stats.technomage.powerPointsCurrent,
+    stats.technomage.powerPointsMaximumAtLastUpdate,
+    powerPointMaximum,
+  );
   // Zuordnung über den Katalognamen (siehe parseTalentEntry) — ein
   // umbenanntes Talent findet seinen Regeltext also weiterhin.
   const byName = new Map(
@@ -168,8 +177,8 @@ function TalentSheet({
             Spells <span className="pf-doc-heading-original">Techno-Magie</span>
           </h3>
           <p className="pf-doc-meta">
-            Spellplätze: {Math.max(0, spellSlots)} /{" "}
-            {totalSpellSlots} frei
+            Techno-Mage-Stufe {technomageLevel} · Bekannte Spells: {knownCount} /{" "}
+            {knownSpellLimit} · Power Points: {currentPowerPoints} / {powerPointMaximum}
           </p>
           {learnedSpells.length === 0 ? (
             <p className="pf-doc-empty">Noch keine Spells gelernt.</p>
@@ -319,7 +328,6 @@ export default function CharacterSheetPreview({
         stats={input.stats}
         talents={input.talents}
         earnedAp={input.earnedAp ?? 0}
-        slotRules={input.technomageSpellSlotRules}
       />
       <RulesSheet
         characterName={input.characterName}

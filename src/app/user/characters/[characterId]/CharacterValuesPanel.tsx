@@ -18,7 +18,6 @@ import {
 import { hasCompleteCreationValues } from "@/lib/characterStats";
 import { creationBudget, creationCarryOver } from "@/lib/advancement";
 import type { CharacterStats } from "@/types/characterStats";
-import type { TechnomageSpellSlotRules } from "@/lib/technomageSpellSlotRules";
 import type { AdvancementRules } from "@/lib/advancement";
 import type { ApAccount } from "@/lib/apReasons";
 import type { Talent } from "@/lib/talentCatalog";
@@ -41,7 +40,6 @@ export default function CharacterValuesPanel({
   savedStats,
   account,
   rules,
-  slotRules,
   talents,
   focuses,
 }: {
@@ -51,7 +49,6 @@ export default function CharacterValuesPanel({
   savedStats: CharacterStats;
   account: ApAccount;
   rules: AdvancementRules;
-  slotRules: TechnomageSpellSlotRules;
   talents: Talent[];
   focuses: Focus[];
 }) {
@@ -195,7 +192,6 @@ export default function CharacterValuesPanel({
           characterId={characterId}
           stats={savedStats}
           earnedAp={account.earned}
-          slotRules={slotRules}
         />
       )}
     </>
