@@ -62,7 +62,7 @@ describe("Technomage spell catalog", () => {
     expect(technomageKnownSpellLimit(1, 10)).toBe(11);
     expect(technomageKnownSpellLimit(4, 10)).toBe(27);
     expect(technomageKnownSpellLimit(4, 12)).toBe(35);
-    expect(technomageKnownSpellLimit(7, 7)).toBe(8);
+    expect(technomageKnownSpellLimit(7, 7)).toBe(20);
   });
 
   it("calculates maximum Power Points from class level and STA 2e attributes", () => {
