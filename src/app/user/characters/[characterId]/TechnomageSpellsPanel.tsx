@@ -404,7 +404,7 @@ function PowerPointTracker({
   const maximum = technomagePowerPointMaximum(
     level,
     stats.attributes.fitness,
-    stats.attributes.presence,
+    stats.attributes.insight,
   );
   const current = effectiveTechnomagePowerPoints(
     stats.technomage.powerPointsCurrent,
@@ -418,9 +418,9 @@ function PowerPointTracker({
         <div>
           <h3 className="font-bold">Power Points</h3>
           <p className="text-xs opacity-75">
-            Maximum: 10 + 1d6 + Fitness-Mod. + Präsenz-Mod.; je weitere Stufe
-            1d4 + Präsenz-Mod., auf Stufe 5/10/15/20 zusätzlich +3. Fitness
-            zählt als Konstitution, Präsenz als Charisma.
+            Maximum: 10 + 1d6 + Fitness-Mod. + Insight-Mod.; je weitere Stufe
+            1d4 + Insight-Mod., auf Stufe 5/10/15/20 zusätzlich +3.
+            Modifikator = Attributwert − 7.
           </p>
         </div>
         <p className="rounded-full border border-current/50 px-[12px] py-[6px] font-bold" role="status">
@@ -574,7 +574,9 @@ export default function TechnomageSpellsPanel({
         Das Fact Book kennt keine Spellgrade oder täglichen Slots. Die AP-Stufen
         folgen den d20-XP-Schwellen (150 XP je AP); 40 AP ergeben Stufe 4.
         Würfelwerte für Spell- und PP-Zuwachs werden als Erwartungswert
-        berechnet und kumuliert gerundet. Reason entspricht Intelligenz.
+        berechnet und kumuliert gerundet. STA-2e-Modifikatoren sind jeweils
+        Attributwert − 7; Reason bestimmt die Spell-Kapazität, Fitness und
+        Insight das PP-Maximum.
         Bekannte Spells können mit ausreichenden PP gewirkt werden; ihre
         individuellen Casting- und Maintenance-Kosten werden bei der PP-Ausgabe
         manuell gebucht.

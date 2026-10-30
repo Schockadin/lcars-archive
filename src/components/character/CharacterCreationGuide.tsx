@@ -108,7 +108,9 @@ export default function CharacterCreationGuide() {
           Power Points lassen sich beim Wirken ausgeben und nach den
           Regenerationszeiten des Fact Books zurückgewinnen. Auf dem
           Charakterbogen und im PDF stehen gelernte Spells mit Erklärung sowie
-          Stufe und PP-Kontostand.
+          Stufe und PP-Kontostand. Für Spelllimit und PP-Maximum gilt der
+          STA-2e-Modifikator: Attributwert minus 7. Reason bestimmt das
+          Spelllimit; Fitness und Insight bestimmen das PP-Maximum.
         </p>
         <p>
           Für die Zahlen gelten die <strong>Regeln der Runde</strong>: Attribute

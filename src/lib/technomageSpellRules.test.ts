@@ -11,6 +11,7 @@ import {
   calculateTechnomagePowerPointRecovery,
   createSpellPurchasePlan,
   effectiveTechnomagePowerPoints,
+  technomageAbilityModifier,
   technomageApForLevel,
   technomageKnownSpellLimit,
   technomageLevelFromAp,
@@ -50,18 +51,32 @@ describe("Technomage spell catalog", () => {
     expect(technomageApForLevel(21)).toBeNull();
   });
 
+  it("uses STA 2e attribute modifiers as the attribute value minus 7", () => {
+    expect(technomageAbilityModifier(11)).toBe(4);
+    expect(technomageAbilityModifier(9)).toBe(2);
+    expect(technomageAbilityModifier(10)).toBe(3);
+    expect(technomageAbilityModifier(null)).toBe(0);
+  });
+
   it("calculates known-spell capacity from the Fact Book class table", () => {
-    expect(technomageKnownSpellLimit(1, 10)).toBe(8);
-    expect(technomageKnownSpellLimit(4, 10)).toBe(15);
-    expect(technomageKnownSpellLimit(4, 12)).toBe(19);
+    expect(technomageKnownSpellLimit(1, 10)).toBe(11);
+    expect(technomageKnownSpellLimit(4, 10)).toBe(27);
+    expect(technomageKnownSpellLimit(4, 12)).toBe(35);
     expect(technomageKnownSpellLimit(7, 7)).toBe(8);
   });
 
-  it("calculates maximum Power Points from class level and mapped attributes", () => {
-    expect(technomagePowerPointMaximum(1, 10, 10)).toBe(14);
-    expect(technomagePowerPointMaximum(4, 10, 10)).toBe(21);
-    expect(technomagePowerPointMaximum(5, 10, 10)).toBe(27);
-    expect(technomagePowerPointMaximum(4, 12, 12)).toBe(26);
+  it("calculates maximum Power Points from class level and STA 2e attributes", () => {
+    expect(technomagePowerPointMaximum(1, 10, 10)).toBe(20);
+    expect(technomagePowerPointMaximum(4, 10, 10)).toBe(36);
+    expect(technomagePowerPointMaximum(5, 10, 10)).toBe(45);
+    expect(technomagePowerPointMaximum(4, 12, 12)).toBe(46);
+  });
+
+  it("uses STA 2e attributes for a Technomage with 40 awarded AP", () => {
+    const level = technomageLevelFromAp(40);
+    expect(level).toBe(4);
+    expect(technomageKnownSpellLimit(level, 11)).toBe(31);
+    expect(technomagePowerPointMaximum(level, 9, 10)).toBe(35);
   });
 
   it("carries new PP capacity forward and follows Fact Book recovery intervals", () => {

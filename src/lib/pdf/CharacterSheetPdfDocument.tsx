@@ -628,7 +628,7 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
   const powerPointMaximum = technomagePowerPointMaximum(
     technomageLevel,
     input.stats.attributes.fitness,
-    input.stats.attributes.presence,
+    input.stats.attributes.insight,
   );
   const currentPowerPoints = effectiveTechnomagePowerPoints(
     input.stats.technomage.powerPointsCurrent,

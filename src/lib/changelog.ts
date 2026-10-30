@@ -151,7 +151,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "D20-Fortschritt für Technomages",
     items: [
       {
-        text: "Technomage-Stufe, Spelllimit und Power-Point-Maximum folgen jetzt der nichtlinearen Klassenprogression des Fact Books. 40 erhaltene AP entsprechen Stufe 4; ausgegebene AP senken die Stufe nicht. Power Points lassen sich ausgeben und nach den Fact-Book-Zeiten regenerieren.",
+        text: "Technomage-Stufe, Spelllimit und Power-Point-Maximum folgen jetzt der nichtlinearen Klassenprogression des Fact Books und den STA-2e-Modifikatoren (Attributwert minus 7). 40 erhaltene AP entsprechen Stufe 4; ausgegebene AP senken die Stufe nicht. Power Points lassen sich ausgeben und nach den Fact-Book-Zeiten regenerieren.",
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },

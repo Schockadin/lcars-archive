@@ -355,7 +355,9 @@ export function GmApGuide() {
           Umrechnung der D20-Erfahrungsschwellen in AP: 150 XP je AP, Stufe 4 ab
           40 AP. Gezählt werden alle erhaltenen AP; ausgegebene AP ändern die
           Stufe nicht. Das Spelllimit und das maximale PP-Konto folgen danach
-          der Technomage-Klassenprogression aus dem Fact Book.
+          der Technomage-Klassenprogression aus dem Fact Book. Dabei gilt der
+          STA-2e-Modifikator (Attributwert minus 7): Reason bestimmt das
+          Spelllimit, Fitness und Insight das maximale PP-Konto.
         </p>
       </GuideSection>
     </GuideBody>

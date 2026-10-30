@@ -33,12 +33,13 @@ export function technomageApForLevel(level: number): number | null {
   return TECHNOMAGE_AP_THRESHOLDS[level - 1];
 }
 
-// Reason/Verstand übernimmt die Rolle von Intelligenz, Fitness die von
-// Konstitution und Präsenz die von Charisma. Fehlende STA-Werte zählen neutral.
+// STA-2e-Modifikatoren entsprechen dem Attributwert minus 7. Reason bestimmt
+// die Spell-Kapazität; Fitness und Insight bestimmen das PP-Maximum.
+// Fehlende STA-Werte zählen neutral.
 export function technomageAbilityModifier(score: number | null): number {
   return score === null || !Number.isFinite(score)
     ? 0
-    : Math.floor((score - 10) / 2);
+    : score - 7;
 }
 
 function expectedDie(sides: number): number {
@@ -46,7 +47,7 @@ function expectedDie(sides: number): number {
 }
 
 const SPELL_LEVELS_WITHOUT_D4 = new Set([7, 10, 13, 16, 19, 20]);
-const SPELL_LEVELS_WITHOUT_CHARISMA_D4 = new Set([5, 10, 15, 20]);
+const POWER_POINT_BONUS_LEVELS = new Set([5, 10, 15, 20]);
 
 // Das Fact Book gibt neue Spells und PP als Würfelwürfe an. Die Runde würfelt
 // nicht beim Stufenaufstieg, daher werden Erwartungswerte kumuliert und erst
@@ -69,15 +70,15 @@ export function technomageKnownSpellLimit(
 export function technomagePowerPointMaximum(
   level: number,
   fitness: number | null,
-  presence: number | null,
+  insight: number | null,
 ): number {
   const boundedLevel = Math.max(1, Math.min(20, Math.floor(level)));
-  const constitution = technomageAbilityModifier(fitness);
-  const charisma = technomageAbilityModifier(presence);
-  let total = 10 + expectedDie(6) + constitution + charisma;
+  const fitnessModifier = technomageAbilityModifier(fitness);
+  const insightModifier = technomageAbilityModifier(insight);
+  let total = 10 + expectedDie(6) + fitnessModifier + insightModifier;
   for (let gainedAt = 2; gainedAt <= boundedLevel; gainedAt += 1) {
-    total += expectedDie(4) + charisma;
-    if (SPELL_LEVELS_WITHOUT_CHARISMA_D4.has(gainedAt)) total += 3;
+    total += expectedDie(4) + insightModifier;
+    if (POWER_POINT_BONUS_LEVELS.has(gainedAt)) total += 3;
   }
   return Math.max(0, Math.round(total));
 }

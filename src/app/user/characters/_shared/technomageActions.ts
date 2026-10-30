@@ -194,7 +194,7 @@ export async function updateTechnomagePowerPointsAction(
   const maximum = technomagePowerPointMaximum(
     level,
     current.stats.attributes.fitness,
-    current.stats.attributes.presence,
+    current.stats.attributes.insight,
   );
   const saved = current.stats.technomage;
   const available = effectiveTechnomagePowerPoints(

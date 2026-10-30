@@ -123,7 +123,7 @@ function TalentSheet({
   const powerPointMaximum = technomagePowerPointMaximum(
     technomageLevel,
     stats.attributes.fitness,
-    stats.attributes.presence,
+    stats.attributes.insight,
   );
   const currentPowerPoints = effectiveTechnomagePowerPoints(
     stats.technomage.powerPointsCurrent,
