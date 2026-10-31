@@ -61,9 +61,12 @@ export default function ImpressumContent() {
         <p>
           Die Plattform verwaltet außerdem Charakterwerte und Talente. Bei
           Technomage-Charakteren können Spieler:innen Schulen und Spells
-          festlegen; die Spielleitung kann die Slotregeln einstellen und die
-          gespeicherten Auswahlen einsehen. Der Charakterbogen und sein PDF
-          zeigen die gelernten Spells mit einer Umsetzung für Star Trek
+          festlegen. Stufe, Spellkapazität und Power-Point-Maximum richten sich
+          nach erhaltenen AP, der D20-Klassenprogression und STA-2e-
+          Attributmodifikatoren. Power Points lassen sich buchen und
+          regenerieren. Die Spielleitung sieht die gespeicherten Auswahlen und
+          die AP-Umrechnung der D20-Stufen. Charakterbogen und PDF enthalten
+          detaillierte Beschreibungen der gelernten Spells für Star Trek
           Adventures (2. Edition).
         </p>
 

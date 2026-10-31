@@ -122,11 +122,13 @@ export default function DSGVOContent({ year }: { year: number }) {
           Schwerpunkte und die weiteren Angaben des Bogens; dazu zählen auch
           gewählte Departements, Attribute oder Schwerpunkte einzelner Talente).
           Bei Technomage-Charakteren gehören dazu die gewählte Primärschule,
-          schwache Schulen, gelernte Spells und die für Slot-Meilensteine
-          gespeicherten Verstand-Werte bei Erschaffung, Organellen,
-          FTL-Attunement und AP-Schwellen. Diese Angaben werden mit dem
-          Charakterbogen nach den jeweiligen Zugriffsregeln angezeigt. Hinzu
-          kommt ein{" "}
+          schwache Schulen, gelernte Spells sowie der aktuelle Power-Point-
+          Stand und der anteilige Regenerationsfortschritt. Für die Berechnung
+          des Kontostands wird außerdem das PP-Maximum der letzten Buchung
+          gespeichert. Stufe, Spellkapazität und aktuelles PP-Maximum ergeben
+          sich aus dem Erfahrungspunkte-Konto und den Charakterattributen.
+          Diese Angaben werden mit dem Charakterbogen nach den jeweiligen
+          Zugriffsregeln angezeigt. Hinzu kommt ein{" "}
           <strong>Erfahrungspunkte-Konto</strong>. Dieses Konto ist ein
           Buchungsjournal: Jede Gutschrift und jede Steigerung wird dauerhaft
           mit Betrag, Grund, Zeitpunkt und dem Account festgehalten, der sie

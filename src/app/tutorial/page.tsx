@@ -40,8 +40,10 @@ export default function TutorialPage() {
           Funktionen: was du auch ohne Konto sehen kannst, was du mit einem
           eigenen Konto selbst anlegen darfst, und was Spielleitung (GM) und
           Administration zusätzlich können. Die Charaktererschaffung erklärt
-          auch die Pflichtauswahlen bei einzelnen Talenten. Klicke einen
-          Abschnitt an, um ihn auf-/zuzuklappen.
+          auch die Pflichtauswahlen bei einzelnen Talenten sowie die
+          D20-Stufen, Power Points, Spellbäume und die ausführliche Liste
+          gelernter Spells für Technomages. Klicke einen Abschnitt an, um ihn
+          auf-/zuzuklappen.
         </p>
 
         <div className="flex flex-col gap-[10px] mt-[16px]">
