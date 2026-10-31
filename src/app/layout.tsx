@@ -1,15 +1,15 @@
 import type { Viewport } from "next";
 import { Suspense } from "react";
 import {
-  Antonio,
-  Share_Tech_Mono,
-  Inter,
-  Roboto,
-  Open_Sans,
-  JetBrains_Mono,
-  Roboto_Mono,
-  Source_Code_Pro,
-} from "next/font/google";
+  antonio,
+  shareTechMono,
+  inter,
+  roboto,
+  openSans,
+  jetBrainsMono,
+  robotoMono,
+  sourceCodePro,
+} from "./font-definitions";
 import "./globals.css";
 import {
   LcarsAppShell,
@@ -38,72 +38,6 @@ import {
   FONT_SANS_OPTIONS,
   FONT_MONO_OPTIONS,
 } from "@/lib/fonts";
-
-// next/font/google lädt die Font-Dateien zur Build-Zeit herunter und liefert
-// sie selbst aus (self-hosted) — keine Laufzeit-Anfrage an Google-Server,
-// siehe dazu den entfernten Font-Abschnitt in der Datenschutzerklärung
-// (DSGVOContent.tsx).
-const antonio = Antonio({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-antonio",
-});
-
-// Variablenname MUSS --font-share-tech-mono lauten: genau diesen Namen
-// referenzieren die ~25 `font-family: var(--font-share-tech-mono)`-Regeln in
-// src/styles/lcars-components/*.css. Hieß hier früher --font-mono-lcars —
-// dadurch war die referenzierte Variable nirgends definiert, und da ein
-// var() ohne Fallback die gesamte Deklaration ungültig macht ("invalid at
-// computed-value time", der `, monospace`-Teil greift dann NICHT), erbten
-// alle Mono-Elemente (Metadaten-Zeilen, Akten-Felder, Header, Log-Stubs)
-// still die Fließtextschrift statt Share Tech Mono.
-const shareTechMono = Share_Tech_Mono({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-share-tech-mono",
-});
-
-// Die wählbaren Alternativen zu den beiden Vorgaben (Profil → Darstellung →
-// Schriften, Registry in src/lib/fonts.ts). Auch sie kommen über next/font
-// und werden mit ausgeliefert — keine Laufzeit-Anfrage an Google, wie im
-// Kommentar oben und in der Datenschutzerklärung beschrieben.
-//
-// preload: false ist hier wichtig: ihre Variablen liegen zwar auf jeder Seite
-// an <html> an (sonst könnte fonts.css sie nicht auflösen), aber nur eine
-// davon wird tatsächlich benutzt. Ohne dieses Flag lüde jeder Seitenaufruf
-// alle sieben Schriften vorab. So deklariert der Build nur die @font-face-
-// Regeln; die Datei holt der Browser erst, wenn die Wahl sie wirklich
-// anzieht. Alle Alternativen sind Variable Fonts — deshalb ohne weight.
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  preload: false,
-});
-const roboto = Roboto({
-  subsets: ["latin"],
-  variable: "--font-roboto",
-  preload: false,
-});
-const openSans = Open_Sans({
-  subsets: ["latin"],
-  variable: "--font-open-sans",
-  preload: false,
-});
-const jetBrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
-  preload: false,
-});
-const robotoMono = Roboto_Mono({
-  subsets: ["latin"],
-  variable: "--font-roboto-mono",
-  preload: false,
-});
-const sourceCodePro = Source_Code_Pro({
-  subsets: ["latin"],
-  variable: "--font-source-code-pro",
-  preload: false,
-});
 
 // Alle Schrift-Variablen zusammen auf <html> — die Vorgaben und die
 // Alternativen, damit fonts.css die gewählte auflösen kann.

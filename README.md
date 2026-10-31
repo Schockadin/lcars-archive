@@ -1935,9 +1935,10 @@ Das Projekt ist für **Netlify** vorkonfiguriert (`@netlify/plugin-nextjs`).
 (`db:setup` / `db:ingest`) wird gegen die produktive Datenbank ausgeführt.
 
 Der Produktionsbuild auf Netlify und der Playwright-Webserver verwenden
-explizit Webpack (`next build --webpack` bzw. `next dev --webpack`). Damit
-umgehen sie den sporadischen Turbopack-Resolverfehler von `next/font/google`;
-der normale lokale Entwicklungsserver bleibt beim Next.js-Standard Turbopack.
+explizit Webpack (`next build --webpack` bzw. `next dev --webpack`). Die
+Schriften liegen lokal im Projekt und benötigen keine Google-Fonts-API beim
+Build. Der normale lokale Entwicklungsserver bleibt beim Next.js-Standard
+Turbopack.
 Die globale Instrumentation trennt ihren DB-Logger zusätzlich über
 `instrumentation.node.ts` vom Edge-Bundle, damit `postgres` und seine
 Node-Built-ins dort nicht aufgelöst werden.

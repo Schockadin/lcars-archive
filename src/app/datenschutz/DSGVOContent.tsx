@@ -555,10 +555,9 @@ export default function DSGVOContent({ year }: { year: number }) {
         {/* Abschnitt "Externe Schriftarten" entfernt: Antonio und Share Tech
           Mono — und seit v1.29.55 ebenso die im Profil wählbaren Alternativen
           (Inter, Roboto, Open Sans, JetBrains Mono, Roboto Mono, Source Code
-          Pro) — werden über next/font/google eingebunden (siehe
-          src/app/layout.tsx), das die Font-Dateien bereits zur Build-Zeit
-          herunterlädt und selbst ausliefert — es gibt keine Laufzeit-Anfrage
-          an Google-Server mehr und damit keine Übertragung der IP-Adresse. */}
+          Pro) — werden lokal mit der Anwendung ausgeliefert. Der Browser und
+          der Build rufen dafür keine Google-Server auf; eine Übertragung der
+          IP-Adresse an Google findet nicht statt. */}
 
         <h2>7. Deine Rechte</h2>
         <p>

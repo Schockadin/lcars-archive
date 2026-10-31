@@ -1,7 +1,7 @@
 /* ── Schriftwahl ──────────────────────────────────────────────────────
    Die im Profil (/user → Darstellung → Schriften) gewählten Schriften.
    Registry und Vorgaben: src/lib/fonts.ts; geladen (self-hosted) werden sie
-   in src/app/layout.tsx per next/font/google.
+   in src/app/font-definitions.ts per next/font/local.
 
    Umgehängt werden genau die beiden kanonischen Stacks aus tokens.css —
    --lcars-font-sans und --lcars-font-mono. Alles, was eine Textrolle stylt,

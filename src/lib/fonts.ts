@@ -16,11 +16,10 @@
 // statische Vorab-Renderung des Root-Layouts erhalten (Cache Components) und
 // es gibt keine Hydration-Mismatches.
 //
-// WICHTIG: Jede hier aufgeführte Schrift muss in src/app/layout.tsx per
-// next/font/google geladen (self-hosted, keine Anfrage an Google zur Laufzeit,
-// siehe Datenschutzerklärung) und in src/styles/fonts.css unter ihrer id
-// eingetragen sein. Ein Test in fonts.test.ts hält die drei Stellen
-// deckungsgleich.
+// WICHTIG: Jede hier aufgeführte Schrift muss in src/app/font-definitions.ts
+// per next/font/local geladen (self-hosted, kein Google-Aufruf) und in
+// src/styles/fonts.css unter ihrer id eingetragen sein. Ein Test in
+// fonts.test.ts hält die vier Stellen deckungsgleich.
 //
 // Bewusst OHNE "server-only": dieselbe Registry nutzen Layout, Server-Action
 // und Session (Server) wie das Profil-Formular und der ThemeApplier (Client).
