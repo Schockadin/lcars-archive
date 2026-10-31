@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FormError } from "@/app/_shared/FormPrimitives";
+import LearnedSpellsSection from "@/app/user/characters/[characterId]/LearnedSpellsSection";
 import { useToast } from "@/components/toast/ToastProvider";
 import {
   TECHNOMAGE_SPELLS,
@@ -179,14 +180,16 @@ function SpellTooltip({
       className="pointer-events-none absolute left-0 top-full z-30 mt-[6px] w-[min(360px,85vw)] rounded-[8px] border border-current/40 bg-black p-[12px] text-left text-xs leading-relaxed text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
     >
       <p className="mb-[8px] font-bold text-lcars-senary-ink">{spell.name}</p>
-      <dl className="mb-[8px] grid grid-cols-[auto_1fr] gap-x-[8px] gap-y-[3px]">
-        {details.fields.map(({ label, value }) => (
-          <div key={label} className="contents">
-            <dt className="font-bold">{label}:</dt>
-            <dd>{value}</dd>
-          </div>
-        ))}
-      </dl>
+      {details.fields.length > 0 && (
+        <dl className="mb-[8px] grid grid-cols-[auto_1fr] gap-x-[8px] gap-y-[3px]">
+          {details.fields.map(({ label, value }) => (
+            <div key={label} className="contents">
+              <dt className="font-bold">{label}:</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
       <p className="mb-[8px]">
         <strong className="block text-lcars-senary-ink">Spell-Beschreibung</strong>
         {details.mechanics}
@@ -740,6 +743,11 @@ export default function TechnomageSpellsPanel({
           )}
         </>
       )}
+      <LearnedSpellsSection
+        learnedSpellIds={technomage.spells}
+        primarySchool={technomage.primarySchool}
+        weakSchools={technomage.weakSchools}
+      />
     </section>
   );
 }

@@ -10,6 +10,7 @@ import {
 } from "@/components/lcars";
 import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
 import CharacterWizard from "@/app/user/characters/new/CharacterWizard";
+import LearnedSpellsSection from "@/app/user/characters/[characterId]/LearnedSpellsSection";
 import CharacterSheetPreviewOverlay from "@/components/character/CharacterSheetPreviewOverlay";
 import ManualEventForm from "@/components/timeline/ManualEventForm";
 import { latestEventDate } from "@/lib/timelineTypes";
@@ -573,6 +574,14 @@ export default function DevGalleryPage() {
           talents={DEMO_TALENTS}
           focuses={DEMO_FOCUSES}
           campaignRules={DEMO_RULES}
+        />
+      </section>
+
+      <section className="mb-[24px]">
+        <LearnedSpellsSection
+          learnedSpellIds={["armour-lesser", "armour", "armour-greater"]}
+          primarySchool="defence"
+          weakSchools={["elements", "conjuration", "healing"]}
         />
       </section>
 

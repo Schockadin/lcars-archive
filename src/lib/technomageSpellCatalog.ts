@@ -3808,6 +3808,80 @@ const SPELLS_BY_ID = new Map<string, TechnomageSpell>(
 );
 const SCHOOL_BY_ID = new Map(TECHNOMAGE_SCHOOLS.map((school) => [school.id, school]));
 
+export interface TechnomageSpellGroup {
+  key: string;
+  name: string;
+  spells: TechnomageSpell[];
+}
+
+const SPELL_VARIANT_ORDER: Record<string, number> = {
+  minor: 1,
+  small: 1,
+  lesser: 2,
+  medium: 3,
+  moderate: 3,
+  greater: 5,
+  large: 5,
+  major: 6,
+  huge: 6,
+  total: 7,
+  gargantuan: 7,
+  perfect: 8,
+  colossal: 8,
+  starship: 9,
+};
+
+function spellVariantParts(name: string): {
+  familyParts: string[];
+  order: number;
+} {
+  let order = 4;
+  const familyParts = name
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => {
+      const variantOrder = SPELL_VARIANT_ORDER[part.toLowerCase()];
+      if (variantOrder === undefined) return true;
+      order = Math.min(order, variantOrder);
+      return false;
+    });
+
+  return { familyParts, order };
+}
+
+export function groupTechnomageSpellVariants(
+  spells: readonly TechnomageSpell[],
+): TechnomageSpellGroup[] {
+  const groups = new Map<
+    string,
+    { name: string; spells: { spell: TechnomageSpell; order: number }[] }
+  >();
+
+  for (const spell of spells) {
+    const { familyParts, order } = spellVariantParts(spell.name);
+    const name = familyParts.join(", ") || spell.name;
+    const key = name.toLocaleLowerCase();
+    const group = groups.get(key) ?? { name, spells: [] };
+    group.spells.push({ spell, order });
+    groups.set(key, group);
+  }
+
+  return [...groups.entries()].map(([key, group]) => {
+    const variants = group.spells
+      .sort(
+        (left, right) =>
+          left.order - right.order ||
+          left.spell.name.localeCompare(right.spell.name),
+      )
+      .map(({ spell }) => spell);
+    return {
+      key,
+      name: variants.length > 1 ? group.name : variants[0].name,
+      spells: variants,
+    };
+  });
+}
+
 export function getTechnomageSchool(
   id: string | null | undefined,
 ): (typeof TECHNOMAGE_SCHOOLS)[number] | null {
@@ -3990,11 +4064,11 @@ function staTarget(sourceTarget: string): string {
 export interface TechnomageSpellDetails {
   fields: { label: string; value: string }[];
   requirements: string | null;
-  castingTime: string;
-  range: string;
-  target: string;
-  duration: string;
-  castingCost: string;
+  castingTime: string | null;
+  range: string | null;
+  target: string | null;
+  duration: string | null;
+  castingCost: string | null;
   maintenanceCost: string | null;
   difficulty: number;
   task: string;
@@ -4018,14 +4092,13 @@ export function technomageSpellDetails(
 
   const requirements =
     spell.requirements.toLowerCase() === "none" ? null : spell.requirements;
-  const castingTime = spell.sourceCastingTime ?? "nicht im Katalog erfasst";
-  const range = staRange(spell.sourceRange) ?? "nicht angegeben";
-  const target = spell.sourceTarget
+  const castingTime = spell.sourceCastingTime?.trim() || null;
+  const range = staRange(spell.sourceRange);
+  const target = spell.sourceTarget?.trim()
     ? staTarget(spell.sourceTarget)
-    : "nicht angegeben";
-  const duration =
-    staDuration(spell.sourceDuration, isPrimary, isWeak) ?? "nicht angegeben";
-  const castingCost = spell.sourceCastingCost ?? "nicht im Katalog erfasst";
+    : null;
+  const duration = staDuration(spell.sourceDuration, isPrimary, isWeak);
+  const castingCost = spell.sourceCastingCost?.trim() || null;
   const rawMaintenanceCost = spell.sourceMaintenanceCost?.trim() ?? "";
   const maintenanceCost =
     rawMaintenanceCost &&
@@ -4036,18 +4109,22 @@ export function technomageSpellDetails(
   return {
     fields: [
       ...(requirements ? [{ label: "Requirements", value: requirements }] : []),
-      { label: "Casting Time", value: castingTime },
-      { label: "Range", value: range },
-      { label: "Target", value: target },
-      { label: "Duration", value: duration },
-      { label: "Casting Cost", value: castingCost },
+      ...(castingTime ? [{ label: "Casting Time", value: castingTime }] : []),
+      ...(range ? [{ label: "Range", value: range }] : []),
+      ...(target ? [{ label: "Target", value: target }] : []),
+      ...(duration ? [{ label: "Duration", value: duration }] : []),
+      ...(castingCost ? [{ label: "Casting Cost", value: castingCost }] : []),
       ...(maintenanceCost
         ? [{ label: "Maintenance Cost", value: maintenanceCost }]
         : []),
-      {
-        label: "Difficulty",
-        value: `${difficulty} · Task: ${TASKS[spell.school]}`,
-      },
+      ...(spell.sourceMageryDc !== null
+        ? [
+            {
+              label: "Difficulty",
+              value: `${difficulty} · Task: ${TASKS[spell.school]}`,
+            },
+          ]
+        : []),
     ],
     requirements,
     castingTime,

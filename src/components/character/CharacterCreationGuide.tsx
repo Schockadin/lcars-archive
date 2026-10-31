@@ -113,6 +113,15 @@ export default function CharacterCreationGuide() {
           Spelllimit; Fitness und Insight bestimmen das PP-Maximum.
         </p>
         <p>
+          Im Abschnitt <strong>„Learned Spells // Gelernte Spells“</strong>{" "}
+          stehen die vollständigen Details aller gelernten Zauber: Fact-Book-
+          Werte, STA-Spielmechanik und Fluff. Fehlen Angaben im Fact Book,
+          erscheint das betreffende Feld nicht. Stufen derselben Spell-Familie
+          wie Lesser Armour, Armour und Greater Armour stehen gebündelt in
+          einem Eintrag; die Details jeder gelernten Variante bleiben einzeln
+          aufgeführt.
+        </p>
+        <p>
           Für die Zahlen gelten die <strong>Regeln der Runde</strong>: Attribute
           liegen zwischen 7 und 12, davon darf höchstens eines auf 12 und zwei
           dürfen auf 11 stehen; Disziplinen liegen zwischen 1 und 5, höchstens

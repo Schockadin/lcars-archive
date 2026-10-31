@@ -160,6 +160,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },
+      {
+        text: "Gelernte Spells werden mit Fact-Book-Werten, STA-Spielmechanik und Fluff ausführlich dokumentiert. Varianten wie Lesser Armour, Armour und Greater Armour stehen gebündelt in einem Eintrag; fehlende Fact-Book-Angaben werden ausgelassen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
     ],
   },
   {
