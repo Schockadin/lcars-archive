@@ -142,17 +142,15 @@ describe("Technomage spell catalog", () => {
 
     const basic = technomageSpellDetails(armour, "defence", schools);
     expect(basic.fields.map(({ label }) => label)).toEqual([
-      "Casting Time",
       "Range",
       "Target",
       "Duration",
-      "Casting Cost",
       "Difficulty",
     ]);
     expect(basic.range).toBe("Berührung");
     expect(basic.target).toBe("eine Kreatur");
-    expect(basic.castingTime).toBe("nicht im Katalog erfasst");
-    expect(basic.castingCost).toBe("nicht im Katalog erfasst");
+    expect(basic.castingTime).toBeNull();
+    expect(basic.castingCost).toBeNull();
     expect(basic.mechanics).toContain("Bei Erfolg erhält das Ziel");
     expect(basic.fluff).toBeTruthy();
 
