@@ -5,6 +5,7 @@ import {
   getTechnomageSpell,
   isTechnomageRole,
   spellPrerequisiteGroups,
+  technomageSpellDetails,
   technomageSpellExplanation,
 } from "@/lib/technomageSpellCatalog";
 import {
@@ -130,6 +131,53 @@ describe("Technomage spell catalog", () => {
         ...schools.slice(0, 2),
       ]),
     ).toContain("3 Kampfrunden");
+  });
+
+  it("formats spell details in rules-first order and omits absent optional fields", () => {
+    const armour = getTechnomageSpell("armour-lesser");
+    const blurryImage = getTechnomageSpell("blurry-image");
+    expect(armour).toBeDefined();
+    expect(blurryImage).toBeDefined();
+    if (!armour || !blurryImage) return;
+
+    const basic = technomageSpellDetails(armour, "defence", schools);
+    expect(basic.fields.map(({ label }) => label)).toEqual([
+      "Casting Time",
+      "Range",
+      "Target",
+      "Duration",
+      "Casting Cost",
+      "Difficulty",
+    ]);
+    expect(basic.range).toBe("Berührung");
+    expect(basic.target).toBe("eine Kreatur");
+    expect(basic.castingTime).toBe("nicht im Katalog erfasst");
+    expect(basic.castingCost).toBe("nicht im Katalog erfasst");
+    expect(basic.mechanics).toContain("Bei Erfolg erhält das Ziel");
+    expect(basic.fluff).toBeTruthy();
+
+    const detailed = technomageSpellDetails(
+      {
+        ...blurryImage,
+        sourceCastingTime: "1 standard action",
+        sourceCastingCost: "2 PP",
+        sourceMaintenanceCost: "1 PP per round",
+      },
+      "defence",
+      schools,
+    );
+    expect(detailed.fields.map(({ label }) => label)).toEqual([
+      "Requirements",
+      "Casting Time",
+      "Range",
+      "Target",
+      "Duration",
+      "Casting Cost",
+      "Maintenance Cost",
+      "Difficulty",
+    ]);
+    expect(detailed.fields[0].value).toBe("Personal Shield");
+    expect(detailed.fields[6].value).toBe("1 PP per round");
   });
 
   it("auto-learns local and foreign-school prerequisites", () => {

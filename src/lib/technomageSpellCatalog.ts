@@ -31,7 +31,10 @@ export interface TechnomageSpell {
   name: string;
   school: TechnomageSchool;
   requirements: string;
+  sourceCastingTime?: string | null;
   sourceMageryDc: number | null;
+  sourceCastingCost?: string | null;
+  sourceMaintenanceCost?: string | null;
   sourceRange: string | null;
   sourceTarget: string | null;
   sourceDuration: string | null;
@@ -3982,6 +3985,82 @@ function staTarget(sourceTarget: string): string {
     .replace(/100-foot/gi, "30-m")
     .replace(/feet/gi, "Fuß")
     .replace(/foot/gi, "Fuß");
+}
+
+export interface TechnomageSpellDetails {
+  fields: { label: string; value: string }[];
+  requirements: string | null;
+  castingTime: string;
+  range: string;
+  target: string;
+  duration: string;
+  castingCost: string;
+  maintenanceCost: string | null;
+  difficulty: number;
+  task: string;
+  mechanics: string;
+  fluff: string;
+}
+
+export function technomageSpellDetails(
+  spell: TechnomageSpell,
+  primarySchool: TechnomageSchool | null,
+  weakSchools: readonly TechnomageSchool[],
+): TechnomageSpellDetails {
+  const isPrimary = spell.school === primarySchool;
+  const isWeak = weakSchools.includes(spell.school);
+  const difficulty = technomageSpellDifficulty(spell) + (isWeak ? 1 : 0);
+  const aptitude = isPrimary
+    ? "Die Primärschule gibt 1 Bonuswürfel."
+    : isWeak
+      ? "Die schwache Schule erhöht die Schwierigkeit um 1."
+      : "Für eine Standardschule gilt keine Änderung.";
+
+  const requirements =
+    spell.requirements.toLowerCase() === "none" ? null : spell.requirements;
+  const castingTime = spell.sourceCastingTime ?? "nicht im Katalog erfasst";
+  const range = staRange(spell.sourceRange) ?? "nicht angegeben";
+  const target = spell.sourceTarget
+    ? staTarget(spell.sourceTarget)
+    : "nicht angegeben";
+  const duration =
+    staDuration(spell.sourceDuration, isPrimary, isWeak) ?? "nicht angegeben";
+  const castingCost = spell.sourceCastingCost ?? "nicht im Katalog erfasst";
+  const rawMaintenanceCost = spell.sourceMaintenanceCost?.trim() ?? "";
+  const maintenanceCost =
+    rawMaintenanceCost &&
+    !/^(?:none|n\/?a|not applicable|—)$/i.test(rawMaintenanceCost)
+      ? rawMaintenanceCost
+      : null;
+
+  return {
+    fields: [
+      ...(requirements ? [{ label: "Requirements", value: requirements }] : []),
+      { label: "Casting Time", value: castingTime },
+      { label: "Range", value: range },
+      { label: "Target", value: target },
+      { label: "Duration", value: duration },
+      { label: "Casting Cost", value: castingCost },
+      ...(maintenanceCost
+        ? [{ label: "Maintenance Cost", value: maintenanceCost }]
+        : []),
+      {
+        label: "Difficulty",
+        value: `${difficulty} · Task: ${TASKS[spell.school]}`,
+      },
+    ],
+    requirements,
+    castingTime,
+    range,
+    target,
+    duration,
+    castingCost,
+    maintenanceCost,
+    difficulty,
+    task: TASKS[spell.school],
+    mechanics: staEffectText(spell.effect) + " " + aptitude,
+    fluff: technomageSpellFluff(spell),
+  };
 }
 
 export function technomageSpellExplanation(

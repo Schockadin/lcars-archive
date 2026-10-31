@@ -11,6 +11,7 @@ import {
   getTechnomageSpell,
   spellPrerequisiteGroups,
   technomageSchoolLabel,
+  technomageSpellDetails,
   technomageSpellExplanation,
   technomageSpellFluff,
   type TechnomageSpell,
@@ -169,6 +170,7 @@ function SpellTooltip({
   const requirementGroups = spellPrerequisiteGroups(spell.id).map((group) =>
     group.map(getTechnomageSpell).filter((entry) => entry !== undefined),
   );
+  const details = technomageSpellDetails(spell, primarySchool, weakSchools);
 
   return (
     <div
@@ -176,30 +178,36 @@ function SpellTooltip({
       role="tooltip"
       className="pointer-events-none absolute left-0 top-full z-30 mt-[6px] w-[min(360px,85vw)] rounded-[8px] border border-current/40 bg-black p-[12px] text-left text-xs leading-relaxed text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
     >
+      <p className="mb-[8px] font-bold text-lcars-senary-ink">{spell.name}</p>
+      <dl className="mb-[8px] grid grid-cols-[auto_1fr] gap-x-[8px] gap-y-[3px]">
+        {details.fields.map(({ label, value }) => (
+          <div key={label} className="contents">
+            <dt className="font-bold">{label}:</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mb-[8px]">
+        <strong className="block text-lcars-senary-ink">Spell-Beschreibung</strong>
+        {details.mechanics}
+      </p>
       <p className="mb-[8px]">
         <strong className="block text-lcars-senary-ink">Fluff</strong>
-        {technomageSpellFluff(spell)}
+        {details.fluff}
       </p>
-      <p className="mb-[8px]">
-        <strong className="block text-lcars-senary-ink">Im Spiel · STA 2e</strong>
-        {technomageSpellExplanation(spell, primarySchool, weakSchools)}
-      </p>
-      {spell.requirements.toLowerCase() !== "none" && (
-        <p>
-          <strong className="block text-lcars-senary-ink">
-            Voraussetzungen aus dem Fact Book
-          </strong>
-          {spell.requirements}
-          {requirementGroups.some((group) => group.length > 0) && (
+      {details.requirements &&
+        requirementGroups.some((group) => group.length > 0) && (
+          <p>
+            <strong className="block text-lcars-senary-ink">
+              Spell-Voraussetzungen, automatisch gelernt
+            </strong>
             <span className="mt-[4px] block opacity-80">
-              Spell-Voraussetzungen, automatisch gelernt:{" "}
               {requirementGroups
                 .map((group) => group.map((entry) => entry.name).join(" oder "))
                 .join("; ")}
             </span>
-          )}
-        </p>
-      )}
+          </p>
+        )}
       {spell.elementalCategory && (
         <p className="mt-[6px] opacity-80">
           Elementarkategorie: {spell.elementalCategory}

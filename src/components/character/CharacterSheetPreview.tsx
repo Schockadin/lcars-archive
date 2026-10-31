@@ -14,8 +14,7 @@ import {
   getTechnomageSpell,
   isTechnomageRole,
   technomageSchoolLabel,
-  technomageSpellExplanation,
-  technomageSpellFluff,
+  technomageSpellDetails,
 } from "@/lib/technomageSpellCatalog";
 import {
   effectiveTechnomagePowerPoints,
@@ -183,27 +182,36 @@ function TalentSheet({
           {learnedSpells.length === 0 ? (
             <p className="pf-doc-empty">Noch keine Spells gelernt.</p>
           ) : (
-            learnedSpells.map((spell) => (
-              <div key={spell.id} className="pf-doc-entry">
-                <div className="pf-doc-term">{spell.name}</div>
-                <div className="pf-doc-meta">
-                  {technomageSchoolLabel(spell.school)} · Fact Book S.{" "}
-                  {spell.sourcePage}
+            learnedSpells.map((spell) => {
+              const details = technomageSpellDetails(
+                spell,
+                stats.technomage.primarySchool,
+                stats.technomage.weakSchools,
+              );
+              return (
+                <div key={spell.id} className="pf-doc-entry">
+                  <div className="pf-doc-term">{spell.name}</div>
+                  <div className="pf-doc-meta">
+                    {technomageSchoolLabel(spell.school)} · Fact Book S.{" "}
+                    {spell.sourcePage}
+                  </div>
+                  {details.fields.map(({ label, value }) => (
+                    <p key={label} className="pf-doc-text">
+                      <strong>{label}: </strong>
+                      {value}
+                    </p>
+                  ))}
+                  <p className="pf-doc-text">
+                    <strong>Spell-Beschreibung: </strong>
+                    {details.mechanics}
+                  </p>
+                  <p className="pf-doc-text">
+                    <strong>Fluff: </strong>
+                    {details.fluff}
+                  </p>
                 </div>
-                <p className="pf-doc-text">
-                  <strong>STA 2e: </strong>
-                  {technomageSpellExplanation(
-                    spell,
-                    stats.technomage.primarySchool,
-                    stats.technomage.weakSchools,
-                  )}
-                </p>
-                <p className="pf-doc-text">
-                  <strong>Fluff: </strong>
-                  {technomageSpellFluff(spell)}
-                </p>
-              </div>
-            ))
+              );
+            })
           )}
         </>
       )}

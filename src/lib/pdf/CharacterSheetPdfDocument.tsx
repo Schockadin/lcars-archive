@@ -78,8 +78,7 @@ import {
   getTechnomageSpell,
   isTechnomageRole,
   technomageSchoolLabel,
-  technomageSpellExplanation,
-  technomageSpellFluff,
+  technomageSpellDetails,
 } from "@/lib/technomageSpellCatalog";
 import {
   effectiveTechnomagePowerPoints,
@@ -689,26 +688,31 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
             Techno-Mage-Stufe {technomageLevel} · Bekannte Spells: {knownSpellCount} /{" "}
             {knownSpellLimit} · Power Points: {currentPowerPoints} / {powerPointMaximum}
           </Text>
-          {learnedSpells.map((spell) => (
-            <View key={spell.id} style={styles.cheatItem} wrap={false}>
-              <Text style={styles.cheatName}>{spell.name.toUpperCase()}</Text>
-              <Text style={styles.cheatMeta}>
-                {technomageSchoolLabel(spell.school)} · Fact Book S.{" "}
-                {spell.sourcePage}
-              </Text>
-              <Text style={styles.cheatText}>
-                STA 2e:{" "}
-                {technomageSpellExplanation(
-                  spell,
-                  input.stats.technomage.primarySchool,
-                  input.stats.technomage.weakSchools,
-                )}
-              </Text>
-              <Text style={styles.cheatText}>
-                Fluff: {technomageSpellFluff(spell)}
-              </Text>
-            </View>
-          ))}
+          {learnedSpells.map((spell) => {
+            const details = technomageSpellDetails(
+              spell,
+              input.stats.technomage.primarySchool,
+              input.stats.technomage.weakSchools,
+            );
+            return (
+              <View key={spell.id} style={styles.cheatItem}>
+                <Text style={styles.cheatName}>{spell.name.toUpperCase()}</Text>
+                <Text style={styles.cheatMeta}>
+                  {technomageSchoolLabel(spell.school)} · Fact Book S.{" "}
+                  {spell.sourcePage}
+                </Text>
+                {details.fields.map(({ label, value }) => (
+                  <Text key={label} style={styles.cheatText}>
+                    {label}: {value}
+                  </Text>
+                ))}
+                <Text style={styles.cheatText}>
+                  Spell-Beschreibung: {details.mechanics}
+                </Text>
+                <Text style={styles.cheatText}>Fluff: {details.fluff}</Text>
+              </View>
+            );
+          })}
         </>
       )}
     </Page>
