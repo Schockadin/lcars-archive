@@ -23,11 +23,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   wählen je ein noch freies Departement; Augmented Ability wählt ein Attribut,
   Dedicated Focus X einen vorhandenen Schwerpunkt und setzt ein Departement
   auf mindestens 4 voraus.
-- **Techno-Magie für Technomages** — wählt eine Primärschule und drei schwache Schulen,
-  lernt Spells aus allen sieben Schulen und sieht Slotkosten samt automatisch
-  erworbenen Voraussetzungen. Suche und Erreichbarkeitsfilter helfen bei der
-  Auswahl; die Spielleitung kann Slotregeln anpassen und gewählte Spells und
-  Aptitudes einsehen.
+- **Techno-Magie für Technomages** — wählt eine Primärschule und drei schwache Schulen
+  und lernt Spells aus allen sieben Schulen. D20-Stufen aus erhaltenen AP
+  bestimmen Spellkapazität und Power-Point-Maximum nach den Fact-Book-Werten
+  und STA-2e-Modifikatoren; Power Points lassen sich ausgeben und regenerieren.
+  Eine ausführliche Learned-Spells-Sektion bündelt Stufen derselben Spell-
+  Familie und zeigt die Angaben jeder gelernten Variante. Die Spielleitung
+  sieht gelernte Spells und die AP-Umrechnung der D20-Stufen.
 - **Missionen & Mission-Logs** — Logbucheinträge sind Charakteren und Missionen zugeordnet
   und chronologisch nach Session-Nummer sortiert.
 - **Nutzerkonten & granulares Rechtesystem (RBAC)** — die Autorisierung läuft über
@@ -1935,9 +1937,10 @@ Das Projekt ist für **Netlify** vorkonfiguriert (`@netlify/plugin-nextjs`).
 (`db:setup` / `db:ingest`) wird gegen die produktive Datenbank ausgeführt.
 
 Der Produktionsbuild auf Netlify und der Playwright-Webserver verwenden
-explizit Webpack (`next build --webpack` bzw. `next dev --webpack`). Damit
-umgehen sie den sporadischen Turbopack-Resolverfehler von `next/font/google`;
-der normale lokale Entwicklungsserver bleibt beim Next.js-Standard Turbopack.
+explizit Webpack (`next build --webpack` bzw. `next dev --webpack`). Die
+Schriften liegen lokal im Projekt und benötigen keine Google-Fonts-API beim
+Build. Der normale lokale Entwicklungsserver bleibt beim Next.js-Standard
+Turbopack.
 Die globale Instrumentation trennt ihren DB-Logger zusätzlich über
 `instrumentation.node.ts` vom Edge-Bundle, damit `postgres` und seine
 Node-Built-ins dort nicht aufgelöst werden.

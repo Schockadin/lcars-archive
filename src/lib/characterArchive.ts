@@ -7,6 +7,7 @@ import {
 } from "@/lib/characters";
 import { listTalents } from "@/lib/talents";
 import { listCampaignRules } from "@/lib/campaignRules";
+import { getApAccount } from "@/lib/characterAp";
 import { getMissionBook } from "@/lib/missionBook";
 import {
   getCharacterDocumentBytes,
@@ -209,10 +210,11 @@ export async function renderCharacterArchivePdf(input: {
   } = await loadPdfTools();
   const merged = await PDFDocument.create();
   if (input.includeCharacter) {
-    const [talents, bio, campaignRules] = await Promise.all([
+    const [talents, bio, campaignRules, apAccount] = await Promise.all([
       listTalents(),
       getCharacterBioMarkdown(input.characterId),
       listCampaignRules(),
+      getApAccount(input.characterId),
     ]);
     await appendPdf(
       merged,
@@ -223,6 +225,7 @@ export async function renderCharacterArchivePdf(input: {
         portrait: character.portrait,
         portraitCrop: character.portraitCrop,
         stats: character.stats,
+        earnedAp: apAccount.earned,
         talents,
         campaignRules,
         bioMarkdown: bio,

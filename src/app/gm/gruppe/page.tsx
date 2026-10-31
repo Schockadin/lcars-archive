@@ -10,6 +10,7 @@ import {
 import { characterHref } from "@/lib/contentRoutes";
 import { listTalents } from "@/lib/talents";
 import { listCampaignRules } from "@/lib/campaignRules";
+import { listApAccountSummaries } from "@/lib/characterAp";
 import PartyMemberSheet from "./PartyMemberSheet";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmPartySheetGuide } from "@/components/help/guides/GmGuides";
@@ -30,11 +31,15 @@ export default async function GmPartySheetPage() {
   await requireGM();
   // Talent-Katalog und Hausregeln einmal für alle Bögen — sie sind für jede
   // Figur dieselben; je Zeile geladen wären es N Abfragen für ein Ergebnis.
-  const [party, talents, campaignRules] = await Promise.all([
+  const [party, talents, campaignRules, apAccounts] = await Promise.all([
     getPartySheet(),
     listTalents(),
     listCampaignRules(),
+    listApAccountSummaries(),
   ]);
+  const earnedApByCharacter = new Map(
+    apAccounts.map((account) => [account.characterId, account.earned]),
+  );
 
   return (
     <>
@@ -105,6 +110,7 @@ export default async function GmPartySheetPage() {
                             portrait: member.portrait,
                             portraitCrop: member.portraitCrop,
                             stats: member.stats,
+                            earnedAp: earnedApByCharacter.get(member.id) ?? 0,
                             bioHtml: member.bioHtml,
                             talents,
                             campaignRules,

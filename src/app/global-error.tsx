@@ -1,29 +1,11 @@
 "use client";
-import { Antonio, Share_Tech_Mono } from "next/font/google";
+import { antonio, shareTechMono } from "./font-definitions";
 import "./globals.css";
 import ServerErrorContent from "./_shared/ServerErrorContent";
 
-// Fängt zusätzlich Fehler im Root-Layout selbst ab (layout.tsx), die ein
-// normales error.tsx NICHT abdeckt — ersetzt dabei das Root-Layout
-// komplett, muss deshalb eigene <html>/<body>-Tags mitbringen (kein
-// Layout-Erbe möglich, kein metadata-Export erlaubt, siehe Next.js-Doku).
-// Bewusst OHNE LcarsAppShell/NeoProvider/ServiceWorker — genau diese
-// könnten die Ursache des Root-Layout-Fehlers sein, die Fehlerseite muss
-// so minimal wie möglich bleiben, um selbst nicht erneut zu crashen. Fonts
-// + globals.css trotzdem importiert, damit die LCARS-Optik erhalten bleibt.
-const antonio = Antonio({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-antonio",
-});
-
-// Variablenname wie in layout.tsx — die CSS-Regeln referenzieren
-// var(--font-share-tech-mono).
-const shareTechMono = Share_Tech_Mono({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-share-tech-mono",
-});
+// Fängt Fehler im Root-Layout selbst ab und ersetzt dabei das Root-Layout
+// komplett. Die Fehlerseite bleibt bewusst minimal; Schriftdefinitionen
+// werden mit dem normalen Layout geteilt.
 
 export default function GlobalError({
   error,

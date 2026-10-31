@@ -1201,14 +1201,12 @@ export async function updateOwnCharacterTechnomage(
           ${sql.json(expected.weakSchools as ReturnType<typeof JSON.parse>)}
       AND COALESCE(metadata #> '{stats,technomage,spells}', '[]'::jsonb) =
           ${sql.json(expected.spells as ReturnType<typeof JSON.parse>)}
-      AND COALESCE(metadata #>> '{stats,technomage,slotProgress,creationReason}', '') =
-          ${expected.slotProgress.creationReason?.toString() ?? ''}
-      AND COALESCE(metadata #>> '{stats,technomage,slotProgress,organellesReason}', '') =
-          ${expected.slotProgress.organellesReason?.toString() ?? ''}
-      AND COALESCE(metadata #>> '{stats,technomage,slotProgress,ftlAttunementReason}', '') =
-          ${expected.slotProgress.ftlAttunementReason?.toString() ?? ''}
-      AND COALESCE(metadata #> '{stats,technomage,slotProgress,apMilestones}', '[]'::jsonb) =
-          ${sql.json(expected.slotProgress.apMilestones as ReturnType<typeof JSON.parse>)}
+      AND COALESCE(metadata #>> '{stats,technomage,powerPointsCurrent}', '') =
+          ${expected.powerPointsCurrent === null ? '' : String(expected.powerPointsCurrent)}
+      AND COALESCE(metadata #>> '{stats,technomage,powerPointsMaximumAtLastUpdate}', '') =
+          ${expected.powerPointsMaximumAtLastUpdate === null ? '' : String(expected.powerPointsMaximumAtLastUpdate)}
+      AND COALESCE(metadata #>> '{stats,technomage,powerPointsRecoveryProgress}', '') =
+          ${expected.powerPointsRecoveryProgress === null ? '' : String(expected.powerPointsRecoveryProgress)}
     RETURNING slug`;
   return rows[0] ?? null;
 }

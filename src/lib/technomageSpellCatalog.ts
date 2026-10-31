@@ -1,5 +1,4 @@
 import type { TechnomageSchool } from "@/types/characterStats";
-export { technomageSpellSlotTotal } from "@/lib/technomageSpellSlots";
 
 export const TECHNOMAGE_SCHOOLS = [
   { id: "defence", label: "Abwehr", original: "Defence" },
@@ -32,7 +31,10 @@ export interface TechnomageSpell {
   name: string;
   school: TechnomageSchool;
   requirements: string;
+  sourceCastingTime?: string | null;
   sourceMageryDc: number | null;
+  sourceCastingCost?: string | null;
+  sourceMaintenanceCost?: string | null;
   sourceRange: string | null;
   sourceTarget: string | null;
   sourceDuration: string | null;
@@ -3806,6 +3808,80 @@ const SPELLS_BY_ID = new Map<string, TechnomageSpell>(
 );
 const SCHOOL_BY_ID = new Map(TECHNOMAGE_SCHOOLS.map((school) => [school.id, school]));
 
+export interface TechnomageSpellGroup {
+  key: string;
+  name: string;
+  spells: TechnomageSpell[];
+}
+
+const SPELL_VARIANT_ORDER: Record<string, number> = {
+  minor: 1,
+  small: 1,
+  lesser: 2,
+  medium: 3,
+  moderate: 3,
+  greater: 5,
+  large: 5,
+  major: 6,
+  huge: 6,
+  total: 7,
+  gargantuan: 7,
+  perfect: 8,
+  colossal: 8,
+  starship: 9,
+};
+
+function spellVariantParts(name: string): {
+  familyParts: string[];
+  order: number;
+} {
+  let order = 4;
+  const familyParts = name
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => {
+      const variantOrder = SPELL_VARIANT_ORDER[part.toLowerCase()];
+      if (variantOrder === undefined) return true;
+      order = Math.min(order, variantOrder);
+      return false;
+    });
+
+  return { familyParts, order };
+}
+
+export function groupTechnomageSpellVariants(
+  spells: readonly TechnomageSpell[],
+): TechnomageSpellGroup[] {
+  const groups = new Map<
+    string,
+    { name: string; spells: { spell: TechnomageSpell; order: number }[] }
+  >();
+
+  for (const spell of spells) {
+    const { familyParts, order } = spellVariantParts(spell.name);
+    const name = familyParts.join(", ") || spell.name;
+    const key = name.toLocaleLowerCase();
+    const group = groups.get(key) ?? { name, spells: [] };
+    group.spells.push({ spell, order });
+    groups.set(key, group);
+  }
+
+  return [...groups.entries()].map(([key, group]) => {
+    const variants = group.spells
+      .sort(
+        (left, right) =>
+          left.order - right.order ||
+          left.spell.name.localeCompare(right.spell.name),
+      )
+      .map(({ spell }) => spell);
+    return {
+      key,
+      name: variants.length > 1 ? group.name : variants[0].name,
+      spells: variants,
+    };
+  });
+}
+
 export function getTechnomageSchool(
   id: string | null | undefined,
 ): (typeof TECHNOMAGE_SCHOOLS)[number] | null {
@@ -3820,10 +3896,6 @@ export function isTechnomageRole(role: string | null | undefined): boolean {
     .replace(/[^a-z]/g, "")
     .includes("technomage");
 }
-
-// Spellplätze werden aus gespeicherten Reason-Meilensteinen berechnet.
-// Die Berechnung selbst liegt in technomageSpellSlots.ts und wird hier für
-// bestehende Aufrufstellen des Spell-Katalogs mit exportiert.
 
 export function technomageSchoolLabel(schoolId: string): string {
   const school = getTechnomageSchool(schoolId);
@@ -3987,6 +4059,85 @@ function staTarget(sourceTarget: string): string {
     .replace(/100-foot/gi, "30-m")
     .replace(/feet/gi, "Fuß")
     .replace(/foot/gi, "Fuß");
+}
+
+export interface TechnomageSpellDetails {
+  fields: { label: string; value: string }[];
+  requirements: string | null;
+  castingTime: string | null;
+  range: string | null;
+  target: string | null;
+  duration: string | null;
+  castingCost: string | null;
+  maintenanceCost: string | null;
+  difficulty: number;
+  task: string;
+  mechanics: string;
+  fluff: string;
+}
+
+export function technomageSpellDetails(
+  spell: TechnomageSpell,
+  primarySchool: TechnomageSchool | null,
+  weakSchools: readonly TechnomageSchool[],
+): TechnomageSpellDetails {
+  const isPrimary = spell.school === primarySchool;
+  const isWeak = weakSchools.includes(spell.school);
+  const difficulty = technomageSpellDifficulty(spell) + (isWeak ? 1 : 0);
+  const aptitude = isPrimary
+    ? "Die Primärschule gibt 1 Bonuswürfel."
+    : isWeak
+      ? "Die schwache Schule erhöht die Schwierigkeit um 1."
+      : "Für eine Standardschule gilt keine Änderung.";
+
+  const requirements =
+    spell.requirements.toLowerCase() === "none" ? null : spell.requirements;
+  const castingTime = spell.sourceCastingTime?.trim() || null;
+  const range = staRange(spell.sourceRange);
+  const target = spell.sourceTarget?.trim()
+    ? staTarget(spell.sourceTarget)
+    : null;
+  const duration = staDuration(spell.sourceDuration, isPrimary, isWeak);
+  const castingCost = spell.sourceCastingCost?.trim() || null;
+  const rawMaintenanceCost = spell.sourceMaintenanceCost?.trim() ?? "";
+  const maintenanceCost =
+    rawMaintenanceCost &&
+    !/^(?:none|n\/?a|not applicable|—)$/i.test(rawMaintenanceCost)
+      ? rawMaintenanceCost
+      : null;
+
+  return {
+    fields: [
+      ...(requirements ? [{ label: "Requirements", value: requirements }] : []),
+      ...(castingTime ? [{ label: "Casting Time", value: castingTime }] : []),
+      ...(range ? [{ label: "Range", value: range }] : []),
+      ...(target ? [{ label: "Target", value: target }] : []),
+      ...(duration ? [{ label: "Duration", value: duration }] : []),
+      ...(castingCost ? [{ label: "Casting Cost", value: castingCost }] : []),
+      ...(maintenanceCost
+        ? [{ label: "Maintenance Cost", value: maintenanceCost }]
+        : []),
+      ...(spell.sourceMageryDc !== null
+        ? [
+            {
+              label: "Difficulty",
+              value: `${difficulty} · Task: ${TASKS[spell.school]}`,
+            },
+          ]
+        : []),
+    ],
+    requirements,
+    castingTime,
+    range,
+    target,
+    duration,
+    castingCost,
+    maintenanceCost,
+    difficulty,
+    task: TASKS[spell.school],
+    mechanics: staEffectText(spell.effect) + " " + aptitude,
+    fluff: technomageSpellFluff(spell),
+  };
 }
 
 export function technomageSpellExplanation(

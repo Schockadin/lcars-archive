@@ -102,10 +102,24 @@ export default function CharacterCreationGuide() {
           Spellbäume; beim Hover erscheinen Fluff, STA-2e-Erklärung und fremde
           Voraussetzungen. Die Slotkosten zählen Voraussetzungen mit, die beim
           Kauf automatisch gelernt werden. Suche und Checkbox filtern die
-          Liste; die freien und gesamten Spellplätze bleiben sichtbar. Slots
-          wachsen bei Erschaffung, Organellen, FTL-Attunement und den
-          konfigurierten AP-Schwellen. Auf dem Charakterbogen und im PDF stehen
-          gelernte Spells mit Erklärung.
+          Liste. Stufe, Spelllimit und PP-Maximum folgen der D20-
+          Klassenprogression aus dem Fact Book: 150 XP entsprechen einem AP,
+          deshalb sind 40 AP Stufe 4. Ausgegebene AP senken die Stufe nicht.
+          Power Points lassen sich beim Wirken ausgeben und nach den
+          Regenerationszeiten des Fact Books zurückgewinnen. Auf dem
+          Charakterbogen und im PDF stehen gelernte Spells mit Erklärung sowie
+          Stufe und PP-Kontostand. Für Spelllimit und PP-Maximum gilt der
+          STA-2e-Modifikator: Attributwert minus 7. Reason bestimmt das
+          Spelllimit; Fitness und Insight bestimmen das PP-Maximum.
+        </p>
+        <p>
+          Im Abschnitt <strong>„Learned Spells // Gelernte Spells“</strong>{" "}
+          stehen die vollständigen Details aller gelernten Zauber: Fact-Book-
+          Werte, STA-Spielmechanik und Fluff. Fehlen Angaben im Fact Book,
+          erscheint das betreffende Feld nicht. Stufen derselben Spell-Familie
+          wie Lesser Armour, Armour und Greater Armour stehen gebündelt in
+          einem Eintrag; die Details jeder gelernten Variante bleiben einzeln
+          aufgeführt.
         </p>
         <p>
           Für die Zahlen gelten die <strong>Regeln der Runde</strong>: Attribute

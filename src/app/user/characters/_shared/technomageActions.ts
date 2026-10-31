@@ -5,7 +5,6 @@ import {
   getOwnCharacterStats,
   updateOwnCharacterTechnomage,
 } from "@/lib/characters";
-import { getApAccount } from "@/lib/characterAp";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { revalidatePath } from "next/cache";
 import { characterEditHref } from "@/lib/contentRoutes";
@@ -13,10 +12,16 @@ import {
   TECHNOMAGE_SCHOOLS,
   getTechnomageSpell,
   isTechnomageRole,
-  technomageSpellSlotTotal,
 } from "@/lib/technomageSpellCatalog";
-import { createSpellPurchasePlan } from "@/lib/technomageSpellRules";
-import { getTechnomageSpellSlotRules } from "@/lib/technomageSpellSlotSettings";
+import { getApAccount } from "@/lib/characterAp";
+import {
+  calculateTechnomagePowerPointRecovery,
+  createSpellPurchasePlan,
+  effectiveTechnomagePowerPoints,
+  technomageKnownSpellLimit,
+  technomageLevelFromAp,
+  technomagePowerPointMaximum,
+} from "@/lib/technomageSpellRules";
 import type { TechnomageSchool } from "@/types/characterStats";
 
 export interface TechnomageActionState {
@@ -77,11 +82,6 @@ export async function configureTechnomageSchoolsAction(
     return { error: "Die Schulen wurden bereits festgelegt." };
   }
 
-  const creationReason =
-    saved.slotProgress.creationReason ??
-    (current.stats.creationLocked
-      ? current.stats.attributes.reason ?? 7
-      : null);
   const result = await updateOwnCharacterTechnomage(
     session.userId,
     characterId,
@@ -90,7 +90,6 @@ export async function configureTechnomageSchoolsAction(
       ...saved,
       primarySchool: primaryValue,
       weakSchools: weakValues as TechnomageSchool[],
-      slotProgress: { ...saved.slotProgress, creationReason },
     },
   );
   if (!result) {
@@ -100,60 +99,6 @@ export async function configureTechnomageSchoolsAction(
   }
   await revalidateCharacterSheet(characterId, result.slug);
   return { success: "Schulen gespeichert." };
-}
-
-export async function markTechnomageSlotMilestoneAction(
-  _state: TechnomageActionState,
-  formData: FormData,
-): Promise<TechnomageActionState> {
-  const session = await verifySession();
-  requireMatchingFormUserId(formData, session);
-
-  const characterId = readCharacterId(formData);
-  if (characterId === null) return { error: "Ungültiger Charakter." };
-  const milestone = String(formData.get("milestone") ?? "");
-  if (milestone !== "organelles" && milestone !== "ftlAttunement") {
-    return { error: "Unbekannter Spellslot-Meilenstein." };
-  }
-
-  const current = await getOwnCharacterStats(session.userId, characterId);
-  if (!current) {
-    return { error: "Charakter nicht gefunden oder keine Berechtigung." };
-  }
-  if (!isTechnomageRole(current.stats.characterRole)) {
-    return { error: "Meilensteine sind nur für Techno-Magier verfügbar." };
-  }
-
-  const saved = current.stats.technomage;
-  const reasonKey = milestone === "organelles" ? "organellesReason" : "ftlAttunementReason";
-  if (saved.slotProgress[reasonKey] !== null) {
-    return { error: "Dieser Meilenstein wurde bereits erfasst." };
-  }
-  const label = milestone === "organelles" ? "Organellen" : "FTL-Attunement";
-  const reason = current.stats.attributes.reason ?? 7;
-  const creationReason =
-    saved.slotProgress.creationReason ??
-    (current.stats.creationLocked ? reason : null);
-  const result = await updateOwnCharacterTechnomage(
-    session.userId,
-    characterId,
-    saved,
-    {
-      ...saved,
-      slotProgress: {
-        ...saved.slotProgress,
-        creationReason,
-        [reasonKey]: reason,
-      },
-    },
-  );
-  if (!result) {
-    return {
-      error: "Die Charakterwerte wurden gerade geändert. Lade die Seite neu.",
-    };
-  }
-  await revalidateCharacterSheet(characterId, result.slug);
-  return { success: label + "-Meilenstein gespeichert (Verstand " + reason + ")." };
 }
 
 export async function buyTechnomageSpellAction(
@@ -178,18 +123,14 @@ export async function buyTechnomageSpellAction(
   }
 
   const saved = current.stats.technomage;
-  const [account, slotRules] = await Promise.all([
-    getApAccount(characterId),
-    getTechnomageSpellSlotRules(),
-  ]);
+  const apAccount = await getApAccount(characterId);
+  const level = technomageLevelFromAp(apAccount.earned);
   const plan = createSpellPurchasePlan({
     spellId,
     knownSpellIds: saved.spells,
-    slotTotal: technomageSpellSlotTotal(
-      saved.slotProgress,
+    knownSpellLimit: technomageKnownSpellLimit(
+      level,
       current.stats.attributes.reason,
-      account.earned,
-      slotRules,
     ),
     primarySchool: saved.primarySchool,
     weakSchools: saved.weakSchools,
@@ -222,4 +163,105 @@ export async function buyTechnomageSpellAction(
           " automatisch gelernt."
         : "."),
   };
+}
+
+function readInteger(formData: FormData, name: string): number | null {
+  const raw = String(formData.get(name) ?? "").trim();
+  if (!/^\d+$/.test(raw)) return null;
+  const value = Number(raw);
+  return Number.isSafeInteger(value) ? value : null;
+}
+
+export async function updateTechnomagePowerPointsAction(
+  _state: TechnomageActionState,
+  formData: FormData,
+): Promise<TechnomageActionState> {
+  const session = await verifySession();
+  requireMatchingFormUserId(formData, session);
+
+  const characterId = readCharacterId(formData);
+  if (characterId === null) return { error: "Ungültiger Charakter." };
+  const current = await getOwnCharacterStats(session.userId, characterId);
+  if (!current) {
+    return { error: "Charakter nicht gefunden oder keine Berechtigung." };
+  }
+  if (!isTechnomageRole(current.stats.characterRole)) {
+    return { error: "Power Points sind nur für Techno-Magier verfügbar." };
+  }
+
+  const apAccount = await getApAccount(characterId);
+  const level = technomageLevelFromAp(apAccount.earned);
+  const maximum = technomagePowerPointMaximum(
+    level,
+    current.stats.attributes.fitness,
+    current.stats.attributes.insight,
+  );
+  const saved = current.stats.technomage;
+  const available = effectiveTechnomagePowerPoints(
+    saved.powerPointsCurrent,
+    saved.powerPointsMaximumAtLastUpdate,
+    maximum,
+  );
+  const operation = String(formData.get("operation") ?? "");
+  let nextCurrent: number;
+  let nextRecoveryProgress = saved.powerPointsRecoveryProgress;
+  let success: string;
+
+  if (operation === "spend") {
+    const amount = readInteger(formData, "amount");
+    if (amount === null || amount < 1) {
+      return { error: "Gib eine positive Anzahl auszugebender PP ein." };
+    }
+    if (amount > available) {
+      return { error: `Es sind nur ${available} PP verfügbar.` };
+    }
+    nextCurrent = available - amount;
+    success = `${amount} PP ausgegeben; ${nextCurrent} / ${maximum} PP übrig.`;
+  } else if (operation === "recover") {
+    const duration = readInteger(formData, "durationMinutes");
+    const maintained = readInteger(formData, "maintainedSpellCount");
+    const activity = String(formData.get("activity") ?? "");
+    if (
+      duration === null || duration < 1 || duration > 10_080 ||
+      maintained === null || maintained > saved.spells.length ||
+      !["meditation", "light", "strenuous"].includes(activity)
+    ) {
+      return { error: "Prüfe Dauer, Aktivität und Zahl der aufrechterhaltenen Spells." };
+    }
+    if (available >= maximum) {
+      return { error: "Die PP sind bereits vollständig regeneriert." };
+    }
+    const recovery = calculateTechnomagePowerPointRecovery({
+      current: available,
+      maximum,
+      durationMinutes: duration,
+      activity: activity as "meditation" | "light" | "strenuous",
+      maintainedSpellCount: maintained,
+      progress: saved.powerPointsRecoveryProgress ?? 0,
+    });
+    nextCurrent = recovery.current;
+    nextRecoveryProgress = recovery.progress;
+    success = recovery.recovered > 0
+      ? `${recovery.recovered} PP regeneriert; ${nextCurrent} / ${maximum} PP verfügbar.`
+      : `Regenerationsfortschritt: ${Math.min(99, Math.round(nextRecoveryProgress * 100))} % des nächsten PP.`;
+  } else {
+    return { error: "Wähle Ausgeben oder Regenerieren." };
+  }
+
+  const result = await updateOwnCharacterTechnomage(
+    session.userId,
+    characterId,
+    saved,
+    {
+      ...saved,
+      powerPointsCurrent: nextCurrent,
+      powerPointsMaximumAtLastUpdate: maximum,
+      powerPointsRecoveryProgress: nextRecoveryProgress,
+    },
+  );
+  if (!result) {
+    return { error: "Die Charakterwerte wurden gerade geändert. Lade die Seite neu." };
+  }
+  await revalidateCharacterSheet(characterId, result.slug);
+  return { success };
 }

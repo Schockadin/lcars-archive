@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   FONT_SANS_OPTIONS,
@@ -57,16 +57,33 @@ describe("Schrift-Registry", () => {
   });
 });
 
-// Die Registry ist nur die halbe Wahrheit: geladen werden die Schriften in
-// layout.tsx (next/font) und angewandt in fonts.css. Fehlt eine der beiden
-// Stellen, bliebe eine wählbare Schrift wirkungslos — und zwar still, weil
-// ein var() ohne Fallback die ganze Deklaration ungültig macht (dieselbe
-// Falle wie bei --font-share-tech-mono, siehe e2e/fonts.spec.ts).
+// Die Registry ist nur die halbe Wahrheit: geladen werden die Schriften
+// lokal in font-definitions.ts und angewandt in fonts.css. Fehlt eine der
+// beiden Stellen, bliebe eine wählbare Schrift wirkungslos.
 describe("Kopplung an Layout und Stylesheet", () => {
-  it("meldet jede Schrift in layout.tsx per next/font an", () => {
+  it("bindet alle Schriften lokal über next/font/local ein", () => {
     const layout = read("src/app/layout.tsx");
+    const definitions = read("src/app/font-definitions.ts");
+    const globalError = read("src/app/global-error.tsx");
+    expect(layout).toContain("./font-definitions");
+    expect(layout).not.toContain("next/font/google");
+    expect(globalError).toContain("./font-definitions");
+    expect(globalError).not.toContain("next/font/google");
+    expect(definitions).toContain("next/font/local");
     for (const option of [...FONT_SANS_OPTIONS, ...FONT_MONO_OPTIONS]) {
-      expect(layout).toContain(`variable: "${option.cssVariable}"`);
+      expect(definitions).toContain(`variable: "${option.cssVariable}"`);
+    }
+    for (const file of [
+      "antonio-latin.woff2",
+      "share-tech-mono-latin.woff2",
+      "inter-latin.woff2",
+      "roboto-latin.woff2",
+      "open-sans-latin.woff2",
+      "jetbrains-mono-latin.woff2",
+      "roboto-mono-latin.woff2",
+      "source-code-pro-latin.woff2",
+    ]) {
+      expect(existsSync(join(process.cwd(), "src/app/fonts", file))).toBe(true);
     }
   });
 
