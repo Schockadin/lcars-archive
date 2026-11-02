@@ -69,6 +69,12 @@ export default function ImpressumContent() {
           Charakterbogen und PDF enthalten detaillierte Beschreibungen der
           gelernten Spells für Star Trek Adventures (2. Edition).
         </p>
+        <p>
+          Spieler:innen können Personalakte, Biografie sowie Charakter- und
+          Modulwerte auf der eigenen Charakterseite als JSON-Datei herunterladen und in eine
+          eigene Figur importieren. Die Datei wird im Browser gespeichert;
+          Anhänge und Portraitdateien sind nicht enthalten.
+        </p>
 
         <h2>Haftung für Inhalte</h2>
         <p>

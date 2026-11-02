@@ -530,6 +530,14 @@ export default function TutorialPage() {
           >
             <CharacterCreationGuide />
             <p className="lcars-text mt-[12px]">
+              Auf deiner eigenen Charakterseite kannst du Personalakte,
+              Biografie sowie Charakter- und Modulwerte über „JSON herunterladen“ als
+              versionierte Datei sichern. Eine passende Datei lässt sich dort
+              auch wieder importieren. Der Import aktualisiert die geöffnete
+              Figur; AP-Journal, Profilbilddatei und angehängte Dokumente werden
+              separat verwaltet.
+            </p>
+            <p className="lcars-text mt-[12px]">
               Ist ein Charakter <strong>inaktiv oder verstorben</strong>, kannst
               du ihn auf seiner Owner-Seite in einen NPC umwandeln. Bogen, AP
               und bisherige Chronologie bleiben erhalten. Das Profilbild

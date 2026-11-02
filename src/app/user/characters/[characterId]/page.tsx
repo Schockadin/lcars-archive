@@ -23,6 +23,8 @@ import CharacterCreationGuide from "@/components/character/CharacterCreationGuid
 import CharacterDocumentsPanel from "./CharacterDocumentsPanel";
 import { listCharacterDocuments } from "@/lib/characterDocuments";
 import CharacterArchiveExportButton from "./CharacterArchiveExportButton";
+import CharacterJsonTransfer from "./CharacterJsonTransfer";
+import CharacterManagementTabs from "./CharacterManagementTabs";
 import { getCharacterArchiveOptions } from "@/lib/characterArchive";
 import CharacterNpcConversionPanel from "./CharacterNpcConversionPanel";
 import { listCampaignRuleModules, moduleSupportsCharacterRole } from "@/lib/campaignRuleModules";
@@ -139,6 +141,12 @@ export default async function OwnCharacterPage({ params }: Props) {
               />
             </div>
 
+            <CharacterJsonTransfer
+              characterId={character.id}
+              userId={session.userId}
+              characterName={character.name}
+            />
+
             <CharacterPortraitPanel
               userId={session.userId}
               character={character}
@@ -150,34 +158,38 @@ export default async function OwnCharacterPage({ params }: Props) {
               stats={sheet.stats}
             />
 
-            {/* Das Werte-Panel bündelt seine fachlichen Unterabschnitte in einer
-            gemeinsamen, aufklappbaren Hülle. */}
-            <CharacterValuesPanel
-              userId={session.userId}
-              characterId={sheet.id}
-              species={sheet.species}
-              savedStats={sheet.stats}
-              account={account}
-              rules={rules}
-              talents={talents}
-              focuses={focuses}
-            />
-
-            {activeCharacterModules.length > 0 && (
-              <RuleModuleCharacterSections
-                modules={activeCharacterModules}
-                userId={session.userId}
-                characterId={sheet.id}
-                stats={sheet.stats}
-                earnedAp={account.earned}
-              />
-            )}
-
-            <CharacterBioPanel
-              userId={session.userId}
-              characterId={character.id}
-              bioHtml={character.bioHtml}
-              sourceMarkdown={character.sourceMarkdown}
+            <CharacterManagementTabs
+              values={
+                <CharacterValuesPanel
+                  userId={session.userId}
+                  characterId={sheet.id}
+                  species={sheet.species}
+                  savedStats={sheet.stats}
+                  account={account}
+                  rules={rules}
+                  talents={talents}
+                  focuses={focuses}
+                />
+              }
+              biography={
+                <CharacterBioPanel
+                  userId={session.userId}
+                  characterId={character.id}
+                  bioHtml={character.bioHtml}
+                  sourceMarkdown={character.sourceMarkdown}
+                />
+              }
+              modules={
+                activeCharacterModules.length > 0 ? (
+                  <RuleModuleCharacterSections
+                    modules={activeCharacterModules}
+                    userId={session.userId}
+                    characterId={sheet.id}
+                    stats={sheet.stats}
+                    earnedAp={account.earned}
+                  />
+                ) : undefined
+              }
             />
 
             <CharacterDocumentsPanel

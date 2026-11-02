@@ -70,7 +70,7 @@ describe("CharacterArchiveExportButton", () => {
       />,
     );
     fireEvent.click(
-      screen.getByRole("button", { name: "Charakter exportieren" }),
+      screen.getByRole("button", { name: "Charakterarchiv als PDF exportieren" }),
     );
 
     expect(
@@ -94,7 +94,7 @@ describe("CharacterArchiveExportButton", () => {
       />,
     );
     fireEvent.click(
-      screen.getByRole("button", { name: "Charakter exportieren" }),
+      screen.getByRole("button", { name: "Charakterarchiv als PDF exportieren" }),
     );
 
     const wholeMission = screen.getByRole("checkbox", {
@@ -123,7 +123,7 @@ describe("CharacterArchiveExportButton", () => {
       />,
     );
     fireEvent.click(
-      screen.getByRole("button", { name: "Charakter exportieren" }),
+      screen.getByRole("button", { name: "Charakterarchiv als PDF exportieren" }),
     );
 
     expect(screen.getByRole("checkbox", { name: longName })).toBeVisible();

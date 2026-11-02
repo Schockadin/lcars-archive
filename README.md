@@ -2101,6 +2101,14 @@ Browser-Vorschau, ihr Download und der kombinierte Charakterarchiv-Export
 prüfen den Owner serverseitig; weder öffentliche Besucher noch die
 Spielleitung erhalten allein aufgrund ihrer Rolle Zugriff auf diese Dateien.
 
+Unter `/user/characters/<id>` lassen sich Personalakte, Biografie sowie
+Charakter- und Modulwerte außerdem als versionierte JSON-Datei herunterladen und wieder
+importieren. Importiert wird in die gerade geöffnete eigene Figur; AP-Journal,
+Portraitdatei und angehängte Dokumente werden nicht übertragen. Bereits
+abgeschlossene Erschaffung schützt Attribute, Disziplinen, Talente und
+Schwerpunkte vor Änderungen durch den JSON-Import. Aktive Regelmodule prüfen
+ihre Modulwerte und Technomage-Spells auch beim Import anhand ihrer Regeln.
+
 Beim Ausrollen: **vor** `scripts/migrate-pr62.sql` einmal
 `npx tsx --conditions=react-server scripts/purge-character-sheet-uploads.ts`
 laufen lassen — das Skript löscht die bereits hochgeladenen PDFs im

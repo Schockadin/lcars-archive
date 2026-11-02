@@ -65,7 +65,7 @@ export default function CharacterArchiveExportButton({
         onClick={() => setOpen(true)}
         className="lcars-pill-btn--outline inline-flex items-center gap-[8px] self-start"
       >
-        <DownloadIcon /> Charakter exportieren
+        <DownloadIcon /> Charakterarchiv als PDF exportieren
       </button>
 
       {open && (

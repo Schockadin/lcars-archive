@@ -160,6 +160,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },
+      {
+        text: "Auf der eigenen Charakterseite kannst du Personalakte, Biografie sowie Charakter- und Modulwerte als versionierte JSON-Datei exportieren und wieder importieren.",
+        category: "export",
+        tutorial: "charaktererschaffung",
+      },
     ],
   },
   {

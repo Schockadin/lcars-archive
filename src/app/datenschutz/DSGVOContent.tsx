@@ -181,8 +181,12 @@ export default function DSGVOContent({ year }: { year: number }) {
           hochladende Account. Die Spielleitung kann Dokumente veröffentlichter
           Charaktere ansehen und herunterladen; bei Entwürfen gilt das nur mit
           dem zusätzlichen Recht, alle Inhalte zu sehen. Der
-          Charakterarchiv-PDF-Export steht nur der Person offen, der der
-          Charakter gehört. Mit dem endgültigen Löschen des Charakters werden
+          Charakterarchiv-PDF- und JSON-Export stehen nur der Person offen,
+          der der Charakter gehört. Die JSON-Datei kann dieselbe Person auf
+          der eigenen Charakterseite wieder importieren; dabei werden die
+          ausgewählten Charakterdaten serverseitig aktualisiert. Beim
+          JSON-Transfer werden weder Portraitdateien noch angehängte Dokumente
+          übertragen. Mit dem endgültigen Löschen des Charakters werden
           auch die zugeordneten Dokumente und ihre Metadaten entfernt. Ohne
           Charakterzuordnung bleiben Dokumente bis zum Löschen durch den Account
           in dessen Dateiliste. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO —
