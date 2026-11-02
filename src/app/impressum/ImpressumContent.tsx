@@ -67,7 +67,8 @@ export default function ImpressumContent() {
           vollständigen Inhalt bearbeiten. Die Charakterseite führt außerdem
           PP, Chaos Points, Verletzungsstress, Talente und Prestige-Pfade.
           Charakterbogen und PDF enthalten detaillierte Beschreibungen der
-          gelernten Spells für Star Trek Adventures (2. Edition).
+          gelernten Spells für Star Trek Adventures (2. Edition) und verwenden
+          dafür die aktuelle Spell- und Schuldefinition des Regelmoduls.
         </p>
         <p>
           Spieler:innen können Personalakte, Biografie sowie Charakter- und

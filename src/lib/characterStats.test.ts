@@ -194,6 +194,8 @@ describe("isCharacterStatsEmpty", () => {
       { experience: "novice" },
       { pronouns: "she/her" },
       { values: ["Ein Wert"] },
+      { technomage: { spells: ["armour-lesser"] } },
+      { technomage: { powerPointsCurrent: 4 } },
     ];
     for (const raw of cases) {
       expect(isCharacterStatsEmpty(parseCharacterStats(raw))).toBe(false);

@@ -10,6 +10,8 @@ import {
 import { characterHref } from "@/lib/contentRoutes";
 import { listTalents } from "@/lib/talents";
 import { listCampaignRules } from "@/lib/campaignRules";
+import { getCampaignRuleModule } from "@/lib/campaignRuleModules";
+import { isTechnomageRole } from "@/lib/technomageSpellCatalog";
 import { listApAccountSummaries } from "@/lib/characterAp";
 import PartyMemberSheet from "./PartyMemberSheet";
 import HelpHeading from "@/components/help/HelpHeading";
@@ -31,11 +33,12 @@ export default async function GmPartySheetPage() {
   await requireGM();
   // Talent-Katalog und Hausregeln einmal für alle Bögen — sie sind für jede
   // Figur dieselben; je Zeile geladen wären es N Abfragen für ein Ergebnis.
-  const [party, talents, campaignRules, apAccounts] = await Promise.all([
+  const [party, talents, campaignRules, apAccounts, technomageModule] = await Promise.all([
     getPartySheet(),
     listTalents(),
     listCampaignRules(),
     listApAccountSummaries(),
+    getCampaignRuleModule("technomage"),
   ]);
   const earnedApByCharacter = new Map(
     apAccounts.map((account) => [account.characterId, account.earned]),
@@ -114,6 +117,12 @@ export default async function GmPartySheetPage() {
                             bioHtml: member.bioHtml,
                             talents,
                             campaignRules,
+                            technomageSpells: isTechnomageRole(member.stats.characterRole)
+                              ? technomageModule?.definition.spells
+                              : undefined,
+                            technomageSchools: isTechnomageRole(member.stats.characterRole)
+                              ? technomageModule?.definition.schools
+                              : undefined,
                           }}
                         />
                         <span className="party-sheet-player">

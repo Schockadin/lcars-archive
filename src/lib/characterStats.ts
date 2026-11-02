@@ -492,6 +492,14 @@ export function isCharacterStatsEmpty(stats: CharacterStats): boolean {
   if (stats.experience !== null) return false;
   if (TEXT_FIELDS.some((f) => stats[f.key] !== null)) return false;
   if (LIST_FIELDS.some((f) => stats[f.key].length > 0)) return false;
+  if (
+    stats.technomage.primarySchool !== null ||
+    stats.technomage.weakSchools.length > 0 ||
+    stats.technomage.spells.length > 0 ||
+    stats.technomage.powerPointsCurrent !== null ||
+    stats.technomage.powerPointsMaximumAtLastUpdate !== null ||
+    stats.technomage.powerPointsRecoveryProgress !== null
+  ) return false;
   if (Object.values(stats.ruleModules).some((module) =>
     Object.values(module.resources).some((value) => value !== 0) ||
     module.selectedTalents.length > 0 || module.selectedStatuses.length > 0 ||

@@ -2094,6 +2094,9 @@ ausschließlich vom Owner auf seiner eigenen Charakterseite
 (`/user/characters/<id>`, Panel „Werte"). Der PDF-Export
 `/api/export/character-sheet?characterId=…` folgt derselben Regel: owner-
 gescopte Abfrage, für `gm.access` zusätzlich jeder Charakter.
+Der Spell-Spickzettel in Vorschau und PDF verwendet die aktuelle
+Technomage-Moduldefinition der Kampagne, einschließlich bearbeiteter
+Spell-Namen und Schulbezeichnungen.
 
 Zusätzliche Charakterdokumente sind davon bewusst getrennt: sie erscheinen
 nur in der privaten Akte unter `/user/characters/<id>`. Auch ihre

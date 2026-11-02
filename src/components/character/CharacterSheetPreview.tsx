@@ -10,10 +10,11 @@ import {
 import type { CharacterStats } from "@/types/characterStats";
 import { CORE_RULES } from "@/lib/coreRules";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
+import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import {
+  getTechnomageSchool,
   getTechnomageSpell,
   isTechnomageRole,
-  technomageSchoolLabel,
   technomageSpellDetails,
 } from "@/lib/technomageSpellCatalog";
 import {
@@ -93,6 +94,10 @@ export interface CharacterSheetPreviewInput {
   // Charakterseite reicht das gespeicherte HTML durch.
   bioHtml: string | null;
   talents: Talent[];
+  // Aktuelle Technomage-Daten der Kampagne; ohne Moduldefinition greift der
+  // eingebaute Fact-Book-Katalog.
+  technomageSpells?: RuleModuleDefinition["spells"];
+  technomageSchools?: RuleModuleDefinition["schools"];
   // Hausregeln der Runde für den Spickzettel (gepflegt unter /gm/rules).
   // Leer = es gibt keine, dann fällt der Abschnitt weg.
   campaignRules: CampaignRule[];
@@ -103,15 +108,19 @@ function TalentSheet({
   stats,
   talents,
   earnedAp,
+  technomageSpells,
+  technomageSchools,
 }: {
   characterName: string;
   stats: CharacterStats;
   talents: Talent[];
   earnedAp: number;
+  technomageSpells?: RuleModuleDefinition["spells"];
+  technomageSchools?: RuleModuleDefinition["schools"];
 }) {
   const entries = stats.talents;
   const learnedSpells = stats.technomage.spells
-    .map((spellId) => getTechnomageSpell(spellId))
+    .map((spellId) => getTechnomageSpell(spellId, technomageSpells))
     .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
   const knownCount = new Set(stats.technomage.spells).size;
   const technomageLevel = technomageLevelFromAp(earnedAp);
@@ -192,7 +201,7 @@ function TalentSheet({
                 <div key={spell.id} className="pf-doc-entry">
                   <div className="pf-doc-term">{spell.name}</div>
                   <div className="pf-doc-meta">
-                    {technomageSchoolLabel(spell.school)} · Fact Book S.{" "}
+                    {getTechnomageSchool(spell.school, technomageSchools)?.label ?? spell.school} · Fact Book S.{" "}
                     {spell.sourcePage}
                   </div>
                   {details.fields.map(({ label, value }) => (
@@ -336,6 +345,8 @@ export default function CharacterSheetPreview({
         stats={input.stats}
         talents={input.talents}
         earnedAp={input.earnedAp ?? 0}
+        technomageSpells={input.technomageSpells}
+        technomageSchools={input.technomageSchools}
       />
       <RulesSheet
         characterName={input.characterName}

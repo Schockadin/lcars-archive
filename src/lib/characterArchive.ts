@@ -7,6 +7,7 @@ import {
 } from "@/lib/characters";
 import { listTalents } from "@/lib/talents";
 import { listCampaignRules } from "@/lib/campaignRules";
+import { getCampaignRuleModule } from "@/lib/campaignRuleModules";
 import { getApAccount } from "@/lib/characterAp";
 import { getMissionBook } from "@/lib/missionBook";
 import {
@@ -210,11 +211,12 @@ export async function renderCharacterArchivePdf(input: {
   } = await loadPdfTools();
   const merged = await PDFDocument.create();
   if (input.includeCharacter) {
-    const [talents, bio, campaignRules, apAccount] = await Promise.all([
+    const [talents, bio, campaignRules, apAccount, technomageModule] = await Promise.all([
       listTalents(),
       getCharacterBioMarkdown(input.characterId),
       listCampaignRules(),
       getApAccount(input.characterId),
+      getCampaignRuleModule("technomage"),
     ]);
     await appendPdf(
       merged,
@@ -227,6 +229,8 @@ export async function renderCharacterArchivePdf(input: {
         stats: character.stats,
         earnedAp: apAccount.earned,
         talents,
+        technomageSpells: technomageModule?.definition.spells,
+        technomageSchools: technomageModule?.definition.schools,
         campaignRules,
         bioMarkdown: bio,
       }),

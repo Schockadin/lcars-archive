@@ -28,6 +28,7 @@ import CharacterManagementTabs from "./CharacterManagementTabs";
 import { getCharacterArchiveOptions } from "@/lib/characterArchive";
 import CharacterNpcConversionPanel from "./CharacterNpcConversionPanel";
 import { listCampaignRuleModules, moduleSupportsCharacterRole } from "@/lib/campaignRuleModules";
+import { isTechnomageRole } from "@/lib/technomageSpellCatalog";
 import RuleModuleCharacterSections from "./RuleModuleCharacterSections";
 
 export const metadata: Metadata = {
@@ -88,6 +89,9 @@ export default async function OwnCharacterPage({ params }: Props) {
   const activeCharacterModules = ruleModules
     .filter((module) => module.enabled && moduleSupportsCharacterRole(module.definition, sheet.stats.characterRole))
     .map((module) => module.definition);
+  const technomageModule = isTechnomageRole(sheet.stats.characterRole)
+    ? ruleModules.find((module) => module.definition.id === "technomage")?.definition
+    : undefined;
 
   return (
     <>
@@ -131,6 +135,8 @@ export default async function OwnCharacterPage({ params }: Props) {
                   bioHtml: character.bioHtml,
                   talents,
                   campaignRules,
+                  technomageSpells: technomageModule?.spells,
+                  technomageSchools: technomageModule?.schools,
                 }}
               />
               <CharacterArchiveExportButton

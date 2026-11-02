@@ -134,7 +134,8 @@ export default function DSGVOContent({ year }: { year: number }) {
           enthält die Regeltexte, Spell- und Talentdaten sowie den Account, der
           die letzte Änderung gespeichert hat.
           Diese Angaben werden mit dem Charakterbogen nach den jeweiligen
-          Zugriffsregeln angezeigt. Hinzu kommt ein{" "}
+          Zugriffsregeln angezeigt; Vorschau und PDF nutzen für gelernte Spells
+          die aktuelle Technomage-Moduldefinition. Hinzu kommt ein{" "}
           <strong>Erfahrungspunkte-Konto</strong>. Dieses Konto ist ein
           Buchungsjournal: Jede Gutschrift und jede Steigerung wird dauerhaft
           mit Betrag, Grund, Zeitpunkt und dem Account festgehalten, der sie

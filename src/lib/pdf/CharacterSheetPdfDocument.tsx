@@ -74,10 +74,11 @@ import {
 import { PERSONNEL_FILE_ART_PNG } from "./personnelFileArt";
 import { CORE_RULES } from "@/lib/coreRules";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
+import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import {
+  getTechnomageSchool,
   getTechnomageSpell,
   isTechnomageRole,
-  technomageSchoolLabel,
   technomageSpellDetails,
 } from "@/lib/technomageSpellCatalog";
 import {
@@ -389,6 +390,10 @@ export interface CharacterSheetPdfInput {
   earnedAp: number;
   // Katalog für den Spickzettel — der Regeltext steht nicht am Charakter.
   talents: Talent[];
+  // Aktuelle Technomage-Daten der Kampagne; ohne Moduldefinition greift der
+  // eingebaute Fact-Book-Katalog.
+  technomageSpells?: RuleModuleDefinition["spells"];
+  technomageSchools?: RuleModuleDefinition["schools"];
   // Hausregeln der Runde (gepflegt unter /gm/rules); leer = kein Abschnitt.
   campaignRules: CampaignRule[];
   // Biografie als Markdown-Quelltext (characters.source_md). @react-pdf kennt
@@ -616,7 +621,7 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
     input.talents.map((talent) => [talent.name.toLowerCase(), talent]),
   );
   const learnedSpells = input.stats.technomage.spells
-    .map((spellId) => getTechnomageSpell(spellId))
+    .map((spellId) => getTechnomageSpell(spellId, input.technomageSpells))
     .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
   const technomageLevel = technomageLevelFromAp(input.earnedAp);
   const knownSpellCount = new Set(input.stats.technomage.spells).size;
@@ -698,7 +703,7 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
               <View key={spell.id} style={styles.cheatItem}>
                 <Text style={styles.cheatName}>{spell.name.toUpperCase()}</Text>
                 <Text style={styles.cheatMeta}>
-                  {technomageSchoolLabel(spell.school)} · Fact Book S.{" "}
+                  {getTechnomageSchool(spell.school, input.technomageSchools)?.label ?? spell.school} · Fact Book S.{" "}
                   {spell.sourcePage}
                 </Text>
                 {details.fields.map(({ label, value }) => (

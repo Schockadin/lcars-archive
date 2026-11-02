@@ -746,8 +746,10 @@ export default function TutorialPage() {
                 <strong>„Charakterbogen“</strong>: er zeigt dieselben Blätter
                 wie unter „Meine Charaktere“ — Personalakte, Spickzettel, Regeln
                 und Biografie — als reine Ansicht, mit Drucken und demselben
-                PDF-Download. Gepflegt werden die Werte weiterhin nur von der
-                Person, der der Charakter gehört.
+                PDF-Download. Bei Technomages stammen Spell-Namen und
+                Schulbezeichnungen dort aus der aktuellen Regelmoduldefinition.
+                Gepflegt werden die Werte weiterhin nur von der Person, der der
+                Charakter gehört.
               </p>
               <p>
                 Unter <strong>„Zusätzliche Dokumente“</strong> kannst du PDF-,

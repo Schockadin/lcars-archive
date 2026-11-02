@@ -230,6 +230,35 @@ describe("Technomage spell catalog", () => {
     expect(resistanceRequirements[1]).toContain("create-fire");
   });
 
+  it("keeps curated alternative prerequisites for the JSON-copied campaign catalogue", () => {
+    const copiedCatalogue = [...TECHNOMAGE_SPELLS];
+    const resistanceRequirements = spellPrerequisiteGroups(
+      "elemental-resistance-lesser",
+      copiedCatalogue,
+    );
+
+    expect(resistanceRequirements).toHaveLength(2);
+    expect(resistanceRequirements[0]).toEqual(["armour-lesser"]);
+    expect(resistanceRequirements[1]).toEqual([
+      "create-acid",
+      "create-fire",
+      "create-ice",
+      "create-lightning",
+      "create-sound",
+    ]);
+  });
+
+  it("uses an edited campaign spell entry when resolving a learned spell", () => {
+    const sourceSpell = getTechnomageSpell("armour-lesser");
+    expect(sourceSpell).toBeDefined();
+    if (!sourceSpell) return;
+    const editedSpell = { ...sourceSpell, name: "Modulversion: Leichte Rüstung" };
+
+    expect(getTechnomageSpell(editedSpell.id, [editedSpell])?.name).toBe(
+      "Modulversion: Leichte Rüstung",
+    );
+  });
+
   it("rejects a purchase when the prerequisite chain exceeds known-spell capacity", () => {
     const plan = createSpellPurchasePlan({
       spellId: "skin-of-wood",

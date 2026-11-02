@@ -4244,8 +4244,15 @@ export function spellPrerequisiteGroups(
     ? SPELLS_BY_ID.get(spellId)
     : spells.find((entry) => entry.id === spellId);
   if (!spell) return [];
-  if (spells === TECHNOMAGE_SPELLS && MANUAL_REQUIREMENTS[spellId]) return MANUAL_REQUIREMENTS[spellId];
-  if (spells === TECHNOMAGE_SPELLS && ANY_OF_REQUIREMENTS[spellId]) return ANY_OF_REQUIREMENTS[spellId];
+  // The live campaign module is a JSON copy of the bundled catalogue. Keep
+  // curated alternatives for unchanged catalogue entries after serialization,
+  // while letting an edited requirement use the parser below.
+  const catalogueSpell = SPELLS_BY_ID.get(spellId);
+  const keepsCatalogueRequirements = catalogueSpell &&
+    catalogueSpell.school === spell.school &&
+    catalogueSpell.requirements === spell.requirements;
+  if (keepsCatalogueRequirements && MANUAL_REQUIREMENTS[spellId]) return MANUAL_REQUIREMENTS[spellId];
+  if (keepsCatalogueRequirements && ANY_OF_REQUIREMENTS[spellId]) return ANY_OF_REQUIREMENTS[spellId];
 
   const text = normalizeRequirement(spell.requirements);
   const matches: { id: string; start: number; end: number }[] = [];
