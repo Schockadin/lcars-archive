@@ -1,8 +1,9 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { FormError, FormSuccess, SubmitButton } from "@/app/_shared/FormPrimitives";
 import type { CampaignRuleModule } from "@/lib/ruleModuleTypes";
 import { BASE_RULE_MODULE_ID } from "@/lib/baseRuleModule";
+import RuleModuleBuilder from "./RuleModuleBuilder";
 import {
   deleteCampaignRuleModuleAction,
   resetBaseCampaignRuleModuleAction,
@@ -12,19 +13,72 @@ import {
 
 const initialState: RuleModuleActionState = {};
 
+function stableSerialize(value: unknown): string {
+  if (Array.isArray(value)) {
+    return "[" + value.map(stableSerialize).join(",") + "]";
+  }
+  if (value !== null && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return "{" + Object.keys(record)
+      .sort()
+      .map((key) => JSON.stringify(key) + ":" + stableSerialize(record[key]))
+      .join(",") + "}";
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
+function RuleModuleDefinitionFields({
+  definition,
+  state,
+  onDraftChange,
+}: {
+  definition: CampaignRuleModule["definition"];
+  state: RuleModuleActionState;
+  onDraftChange: () => void;
+}) {
+  const [draft, setDraft] = useState(definition);
+
+  return (
+    <>
+      <input type="hidden" name="definition" value={JSON.stringify(draft)} />
+      <RuleModuleBuilder
+        definition={draft}
+        onChange={(nextDefinition) => {
+          setDraft(nextDefinition);
+          onDraftChange();
+        }}
+      />
+      <FormError message={state.error} />
+    </>
+  );
+}
+
 export default function RuleModuleForm({ module }: { module: CampaignRuleModule }) {
   const [state, action, pending] = useActionState(saveCampaignRuleModuleAction, initialState);
   const [resetState, resetAction, resetPending] = useActionState(resetBaseCampaignRuleModuleAction, initialState);
   const [deleteState, deleteAction, deletePending] = useActionState(deleteCampaignRuleModuleAction, initialState);
+  const [submittedDefinition, setSubmittedDefinition] = useState<string | null>(null);
   const isBaseModule = module.definition.id === BASE_RULE_MODULE_ID;
+
   return (
     <section className="flex flex-col gap-[12px] rounded-[10px] border border-current/20 p-[12px]">
-      <form action={action} className="flex flex-col gap-[12px]">
+      <form
+        action={action}
+        className="flex flex-col gap-[12px]"
+        onSubmit={(event) => {
+          const rawDefinition = new FormData(event.currentTarget).get("definition");
+          if (typeof rawDefinition !== "string") return;
+          try {
+            setSubmittedDefinition(stableSerialize(JSON.parse(rawDefinition) as unknown));
+          } catch {
+            setSubmittedDefinition(null);
+          }
+        }}
+      >
         <input type="hidden" name="moduleId" value={module.definition.id} />
         <p className="text-sm text-lcars-ink-dim">
-          Die JSON-Definition enthält die Regeln, Ressourcen, Statuswerte, Talente und
-          Prestige-Pfade dieses Moduls{module.definition.id === "technomage" ? ", Schulen und den vollständigen Spell-Katalog" : ""}.
-          Änderungen werden auf passenden Charakterakten verwendet. Vor dem Speichern wird die Struktur geprüft.
+          Stelle die Modulregeln aus den Bausteinen zusammen. Änderungen werden
+          auf passenden Charakterakten verwendet und vor dem Speichern geprüft.
         </p>
         {isBaseModule ? (
           <p className="rounded border border-current/20 p-[8px] text-sm font-bold">
@@ -36,20 +90,16 @@ export default function RuleModuleForm({ module }: { module: CampaignRuleModule 
             Modul für die Kampagne aktivieren
           </label>
         )}
-        <label htmlFor={`rule-module-definition-${module.definition.id}`} className="font-bold">
-          {module.definition.name} · bearbeitbare Moduldefinition (JSON)
-        </label>
-        <textarea
-          id={`rule-module-definition-${module.definition.id}`}
-          name="definition"
-          defaultValue={JSON.stringify(module.definition, null, 2)}
-          rows={28}
-          spellCheck={false}
-          className="lcars-input min-h-[480px] w-full font-mono text-xs"
-          required
+        <RuleModuleDefinitionFields
+          key={module.updatedAt ?? module.definition.id}
+          definition={module.definition}
+          state={state}
+          onDraftChange={() => setSubmittedDefinition(null)}
         />
-        <FormError message={state.error} />
-        {state.success && <FormSuccess>Regelmodul gespeichert.</FormSuccess>}
+        {state.success &&
+          submittedDefinition === stableSerialize(module.definition) && (
+            <FormSuccess>Regelmodul gespeichert.</FormSuccess>
+          )}
         <SubmitButton pending={pending} pendingLabel="Speichert…" className="lcars-pill-btn--outline self-start">
           Regelmodul speichern
         </SubmitButton>

@@ -15,7 +15,7 @@ export default function RuleModuleCreateForm() {
       <h3 className="font-bold">Weiteres Regelmodul anlegen</h3>
       <p className="text-xs text-lcars-ink-dim">
         Ein neues Modul kann eigene Regeln, Ressourcen, Status, Talente und Prestige-Pfade für bestimmte Rollen bereitstellen.
-        Es startet deaktiviert und lässt sich anschließend als JSON bearbeiten.
+        Es startet deaktiviert und lässt sich anschließend mit dem Baustein-Editor bearbeiten.
       </p>
       <label className="flex flex-col gap-[4px] text-sm">
         Modulname

@@ -60,8 +60,8 @@ describe("Anleitungen zu den Leitungs-Bereichen", () => {
     expect(text).toContain("Auf Standard zurücksetzen");
     expect(text).toContain("aktivieren, deaktivieren oder löschen");
     expect(text).toContain("Eigenes Regelmodul bauen");
-    expect(text).toContain("JSON-Grundgerüst anzeigen");
-    expect(text).toContain("characterRoles");
+    expect(text).toContain("Regel-Bausteine");
+    expect(text).toContain("Bausteinen zusammen");
   });
 });
 

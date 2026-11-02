@@ -155,6 +155,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },
+      {
+        text: "Eigene Regelmodule lassen sich in der Kampagnenverwaltung aus Formular-Bausteinen für Regeln, Ressourcen, Talente, Prestige-Pfade und Technomage-Spells zusammenstellen.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
     ],
   },
   {

@@ -81,22 +81,22 @@ export function GmCampaignGuide() {
         <p>
           Unter <strong>„Regel-Module“</strong> bearbeitest du die Regeln für
           Charaktere. Das kampagnenweite <strong>STA-2e-Basismodul</strong> ist
-          immer aktiv und kann nicht gelöscht werden. Seine JSON-Definition
-          lässt sich ändern; <strong>„Auf Standard zurücksetzen“</strong>
+          immer aktiv und kann nicht gelöscht werden. Seine Regel-Bausteine
+          lassen sich bearbeiten; <strong>„Auf Standard zurücksetzen“</strong>
           stellt die mitgelieferten Regeln wieder her. Auf allen
           Charakterseiten erscheinen die gemeinsamen Regeln im Modul-Tab.
         </p>
         <p>
-          Weitere Module legst du über das Formular an. Die JSON-Definition
-          enthält Regeln und optionale Charakterwerte wie Ressourcen,
-          Statuswerte, Talente oder Prestige-Pfade. Du kannst jedes Zusatzmodul
+          Weitere Module legst du über das Formular an. Im Editor stellst du
+          Regeln und Charakterwerte wie Ressourcen, Status, Talente oder
+          Prestige-Pfade aus Bausteinen zusammen. Du kannst jedes Zusatzmodul
           bearbeiten, aktivieren, deaktivieren oder löschen. Ein Modul wird
           Charakteren angezeigt, deren Rolle zu seiner Definition passt.
           Bereits gespeicherte Modulwerte bleiben beim Löschen auf den
           Charakteren erhalten.
         </p>
         <p>
-          Änderungen an einer Definition werden nach
+          Änderungen am Modul werden nach
           <strong> „Regelmodul speichern“</strong> übernommen. Das
           Technomage-Modul ist bei einer bestehenden Kampagne zunächst
           aktiviert, damit vorhandene Technomage-Charaktere weiter funktionieren;
@@ -110,67 +110,24 @@ export function GmCampaignGuide() {
             Lege unter <strong>„Weiteres Regelmodul anlegen“</strong> Name,
             Kurzbeschreibung und passende Charakterrollen fest. <code>*</code>
             {" "}gilt für alle Rollen; mehrere Rollen trennst du durch Kommas.
-            Die Modul-ID entsteht aus dem Namen und wird danach im JSON
-            mitgeführt. Sie lässt sich nicht nachträglich ändern.
+            Die Modul-ID entsteht aus dem Namen und lässt sich danach nicht
+            mehr ändern. Neue Module sind zunächst deaktiviert.
           </li>
           <li>
-            Ergänze die neue Definition im JSON-Editor und behalte die erzeugte
-            {" "}<code>id</code> bei. Allgemeine Module dürfen leere Listen
-            haben; das Technomage-Modul braucht mindestens eine Schule. IDs
-            einzelner Einträge müssen innerhalb ihrer Liste eindeutig sein,
-            mit Buchstabe oder Ziffer beginnen und höchstens 80 Buchstaben,
-            Ziffern oder Bindestriche enthalten.
+            Öffne im Modul die gewünschte Kategorie und wähle{" "}
+            <strong>„… hinzufügen“</strong>. Jeder Baustein hat passende
+            Eingabefelder: etwa Titel und Regeltext, Name und Maximum für
+            Ressourcen oder Rang und AP für Prestige-Fähigkeiten. Entfernte
+            Bausteine werden erst beim Speichern übernommen.
           </li>
           <li>
             Speichere das Modul und aktiviere es über{" "}
             <strong>„Modul für die Kampagne aktivieren“</strong>. Es erscheint
             danach auf Charakterseiten, deren Rolle zur Definition passt. Neue
-            Module starten deaktiviert.
+            Modulwerte und Auswahlen können dort auf dem Charakterbogen
+            gepflegt werden.
           </li>
         </ol>
-        <p>
-          Die Grundstruktur sieht so aus. Ersetze die Beispiel-ID durch die
-          beim Anlegen erzeugte ID und ergänze die Einträge nach Bedarf:
-        </p>
-        <details className="rounded-[10px] border border-current/20 p-[10px]">
-          <summary className="cursor-pointer font-bold">JSON-Grundgerüst anzeigen</summary>
-          <pre className="mt-[8px] max-w-full overflow-x-auto whitespace-pre rounded border border-current/15 p-[10px] text-xs">
-            {JSON.stringify({
-              id: "mein-modul",
-              name: "Mein Modul",
-              summary: "Kurze Erklärung für den Charakterbogen.",
-              characterRoles: ["*"],
-              rules: [{ id: "grundregel", title: "Grundregel", body: "Die Regelbeschreibung." }],
-              resources: [{ id: "energie", name: "Energie", abbreviation: "EN", maximum: "Nach der Modulregel" }],
-              statuses: [{ id: "geweiht", label: "Geweiht" }],
-              talents: [{
-                id: "fokus",
-                name: "Fokus",
-                category: "Modul",
-                requirements: "Keine",
-                description: "Beschreibung des Talents.",
-                repeatable: false,
-              }],
-              prestigeClasses: [{
-                id: "pfad",
-                name: "Pfad",
-                description: "Beschreibung des Pfads.",
-                requirements: "Aufnahmebedingungen als Text",
-                abilities: [{
-                  id: "pfad-rang-1",
-                  name: "Erste Fähigkeit",
-                  category: "Prestige",
-                  requirements: "Keine",
-                  description: "Beschreibung der Fähigkeit.",
-                  rank: 1,
-                  ap: 20,
-                }],
-              }],
-              schools: [],
-              spells: [],
-            }, null, 2)}
-          </pre>
-        </details>
         <p>
           <strong>Was die Felder auf dem Bogen tun:</strong> Regeln werden als
           Text angezeigt. Ressourcen bekommen ein Zahlenfeld;{" "}
@@ -189,7 +146,9 @@ export function GmCampaignGuide() {
           <code>schools</code> und <code>spells</code> mit einem festen
           Datenschema. Nutze dafür die vorhandene Technomage-Definition als
           Vorlage; das Modul mit der ID <code>technomage</code> erhält außerdem
-          die eigens implementierte Spell- und Power-Point-Logik.
+          die eigens implementierte Spell- und Power-Point-Logik. Einen
+          frei definierbaren Würfelmechanismus oder Formeln kann der Editor
+          nicht hinzufügen.
         </p>
       </GuideSection>
     </GuideBody>
