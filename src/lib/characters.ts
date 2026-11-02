@@ -1165,6 +1165,11 @@ export async function updateOwnCharacterStats(
                 COALESCE(
                   metadata #> '{stats,technomage}',
                   ${sql.json(stats.technomage as ReturnType<typeof JSON.parse>)}
+                ),
+                'ruleModules',
+                COALESCE(
+                  metadata #> '{stats,ruleModules}',
+                  ${sql.json(stats.ruleModules as ReturnType<typeof JSON.parse>)}
                 )
               )
           ),
@@ -1207,6 +1212,29 @@ export async function updateOwnCharacterTechnomage(
           ${expected.powerPointsMaximumAtLastUpdate === null ? '' : String(expected.powerPointsMaximumAtLastUpdate)}
       AND COALESCE(metadata #>> '{stats,technomage,powerPointsRecoveryProgress}', '') =
           ${expected.powerPointsRecoveryProgress === null ? '' : String(expected.powerPointsRecoveryProgress)}
+    RETURNING slug`;
+  return rows[0] ?? null;
+}
+
+export async function updateOwnCharacterRuleModules(
+  userId: number,
+  characterId: number,
+  expected: CharacterStats["ruleModules"],
+  next: CharacterStats["ruleModules"],
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`UPDATE characters
+    SET metadata = COALESCE(metadata, '{}'::jsonb) ||
+          jsonb_build_object(
+            'stats',
+            COALESCE(metadata -> 'stats', '{}'::jsonb) ||
+              jsonb_build_object('ruleModules', ${sql.json(next as ReturnType<typeof JSON.parse>)})
+          ),
+        updated_at = NOW()
+    WHERE id = ${characterId}
+      AND player_id = ${userId}
+      AND deleted_at IS NULL
+      AND COALESCE(metadata #> '{stats,ruleModules}', '{}'::jsonb) =
+          ${sql.json(expected as ReturnType<typeof JSON.parse>)}
     RETURNING slug`;
   return rows[0] ?? null;
 }

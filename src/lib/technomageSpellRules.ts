@@ -6,16 +6,11 @@ import {
   spellPrerequisiteGroups,
 } from "@/lib/technomageSpellCatalog";
 
-// XP-Schwellen des d20-Systems, umgerechnet mit 150 XP je AP. So liegt die
-// Schwelle zu Stufe 4 bei 40 AP und die Abstände wachsen danach wie im d20.
-const D20_XP_THRESHOLDS = [
-  0, 1_000, 3_000, 6_000, 10_000, 15_000, 21_000, 28_000, 36_000, 45_000,
-  55_000, 66_000, 78_000, 91_000, 105_000, 120_000, 136_000, 153_000,
-  171_000, 190_000,
-] as const;
-
-export const TECHNOMAGE_AP_THRESHOLDS = D20_XP_THRESHOLDS.map((xp) =>
-  Math.ceil(xp / 150),
+// Die AP-Schwellen folgen direkt der übersetzten Fact-Book-Formel:
+// AP(L) = ceil(10/3 × L × (L−1)). Level 4 beginnt damit bei 40 AP.
+export const TECHNOMAGE_AP_THRESHOLDS = Array.from(
+  { length: 20 },
+  (_, index) => Math.ceil((10 / 3) * (index + 1) * index),
 );
 
 export function technomageLevelFromAp(earnedAp: number): number {
@@ -34,12 +29,38 @@ export function technomageApForLevel(level: number): number | null {
 }
 
 // STA-2e-Modifikatoren entsprechen dem Attributwert minus 7. Reason bestimmt
-// die Spell-Kapazität; Fitness und Insight bestimmen das PP-Maximum.
+// die Spell-Kapazität; Fitness und Presence bestimmen das PP-Maximum.
 // Fehlende STA-Werte zählen neutral.
 export function technomageAbilityModifier(score: number | null): number {
   return score === null || !Number.isFinite(score)
     ? 0
     : score - 7;
+}
+
+export function technomageConcurrentSpellCapacity(
+  fitness: number | null,
+  multiTaskingSelections = 0,
+  otherBonuses = 0,
+): number {
+  const base = fitness === null ? 1 : Math.max(1, fitness - 6);
+  return base + Math.max(0, Math.floor(multiTaskingSelections)) +
+    Math.max(0, Math.floor(otherBonuses));
+}
+
+export function technomageChaosPointLimit(
+  insight: number | null,
+  hasOrderedMind = false,
+): number {
+  return Math.max(0, 10 + 2 * technomageAbilityModifier(insight) +
+    (hasOrderedMind ? 4 : 0));
+}
+
+export function technomageChaosControlDifficulty(
+  chaosPoints: number,
+  limit: number,
+): number | null {
+  const overshoot = Math.max(0, Math.floor(chaosPoints) - Math.floor(limit));
+  return overshoot === 0 ? null : Math.min(5, Math.ceil(overshoot / 4));
 }
 
 function expectedDie(sides: number): number {
@@ -70,14 +91,14 @@ export function technomageKnownSpellLimit(
 export function technomagePowerPointMaximum(
   level: number,
   fitness: number | null,
-  insight: number | null,
+  presence: number | null,
 ): number {
   const boundedLevel = Math.max(1, Math.min(20, Math.floor(level)));
   const fitnessModifier = technomageAbilityModifier(fitness);
-  const insightModifier = technomageAbilityModifier(insight);
-  let total = 10 + expectedDie(6) + fitnessModifier + insightModifier;
+  const presenceModifier = technomageAbilityModifier(presence);
+  let total = 10 + expectedDie(6) + fitnessModifier + presenceModifier;
   for (let gainedAt = 2; gainedAt <= boundedLevel; gainedAt += 1) {
-    total += expectedDie(4) + insightModifier;
+    total += expectedDie(4) + presenceModifier;
     if (POWER_POINT_BONUS_LEVELS.has(gainedAt)) total += 3;
   }
   return Math.max(0, Math.round(total));
@@ -134,14 +155,18 @@ export interface SpellPurchasePlanInput {
   knownSpellLimit: number;
   primarySchool: TechnomageSchool | null;
   weakSchools: readonly TechnomageSchool[];
+  spells?: readonly import("@/lib/technomageSpellCatalog").TechnomageSpell[];
 }
 
 export type SpellPurchasePlan =
   | { ok: true; spellIds: string[] }
   | { ok: false; error: string };
 
-function primarySchoolRequirement(spellId: string): TechnomageSchool | null {
-  const spell = getTechnomageSpell(spellId);
+function primarySchoolRequirement(
+  spellId: string,
+  spells?: SpellPurchasePlanInput["spells"],
+): TechnomageSchool | null {
+  const spell = getTechnomageSpell(spellId, spells);
   if (!spell) return null;
   const requirements = spell.requirements.toLowerCase();
   if (!/as a primary (aptitude|school)/.test(requirements)) return null;
@@ -152,8 +177,11 @@ function primarySchoolRequirement(spellId: string): TechnomageSchool | null {
   return school?.id ?? null;
 }
 
-function requiredKnownCount(spellId: string): number {
-  const spell = getTechnomageSpell(spellId);
+function requiredKnownCount(
+  spellId: string,
+  spells?: SpellPurchasePlanInput["spells"],
+): number {
+  const spell = getTechnomageSpell(spellId, spells);
   const match = spell?.requirements.match(
     /at least\s+(\d+)\s+(?:other\s+)?chaos spells/i,
   );
@@ -163,7 +191,7 @@ function requiredKnownCount(spellId: string): number {
 export function createSpellPurchasePlan(
   input: SpellPurchasePlanInput,
 ): SpellPurchasePlan {
-  const target = getTechnomageSpell(input.spellId);
+  const target = getTechnomageSpell(input.spellId, input.spells);
   if (!target) return { ok: false, error: "Dieser Spell ist nicht verfügbar." };
   const known = new Set(input.knownSpellIds);
   if (known.has(input.spellId)) {
@@ -182,14 +210,14 @@ export function createSpellPurchasePlan(
 
   const collect = (spellId: string): boolean => {
     if (known.has(spellId) || planned.has(spellId)) return true;
-    const spell = getTechnomageSpell(spellId);
+    const spell = getTechnomageSpell(spellId, input.spells);
     if (!spell) return true;
     if (visiting.has(spellId)) {
       failure = "Im Spell-Baum gibt es einen widersprüchlichen Kreis.";
       return false;
     }
 
-    const requiredPrimary = primarySchoolRequirement(spellId);
+    const requiredPrimary = primarySchoolRequirement(spellId, input.spells);
     if (requiredPrimary && input.primarySchool !== requiredPrimary) {
       failure =
         spell.name +
@@ -201,7 +229,7 @@ export function createSpellPurchasePlan(
     }
 
     visiting.add(spellId);
-    for (const group of spellPrerequisiteGroups(spellId)) {
+    for (const group of spellPrerequisiteGroups(spellId, input.spells)) {
       if (group.some((dependency) => known.has(dependency) || planned.has(dependency))) {
         continue;
       }
@@ -237,7 +265,7 @@ export function createSpellPurchasePlan(
       }
     }
 
-    const minimumKnown = requiredKnownCount(spellId);
+    const minimumKnown = requiredKnownCount(spellId, input.spells);
     if (minimumKnown > 0 && known.size + planned.size < minimumKnown) {
       visiting.delete(spellId);
       failure =
@@ -282,7 +310,8 @@ export function getSpellPurchaseSlotCost(
 ): number | null {
   const plan = createSpellPurchasePlan({
     ...input,
-    knownSpellLimit: input.knownSpellIds.length + TECHNOMAGE_SPELLS.length,
+    knownSpellLimit: input.knownSpellIds.length +
+      (input.spells?.length ?? TECHNOMAGE_SPELLS.length),
   });
   return plan.ok ? plan.spellIds.length : null;
 }
@@ -291,12 +320,13 @@ export function spellTreeDepth(
   spellId: string,
   school: TechnomageSchool,
   visited: ReadonlySet<string> = new Set(),
+  spells?: SpellPurchasePlanInput["spells"],
 ): number {
-  const spell = getTechnomageSpell(spellId);
+  const spell = getTechnomageSpell(spellId, spells);
   if (!spell) return 0;
-  const localDependencies = spellPrerequisiteGroups(spellId)
+  const localDependencies = spellPrerequisiteGroups(spellId, spells)
     .flat()
-    .filter((id) => getTechnomageSpell(id)?.school === school);
+    .filter((id) => getTechnomageSpell(id, spells)?.school === school);
   if (visited.has(spellId) || localDependencies.length === 0) return 0;
   const nextVisited = new Set(visited);
   nextVisited.add(spellId);
@@ -304,7 +334,7 @@ export function spellTreeDepth(
     1 +
     Math.max(
       ...localDependencies.map((id) =>
-        spellTreeDepth(id, school, nextVisited),
+        spellTreeDepth(id, school, nextVisited, spells),
       ),
     )
   );

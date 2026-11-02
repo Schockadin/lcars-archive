@@ -57,6 +57,17 @@ export interface TechnomageCharacterData {
   powerPointsRecoveryProgress: number | null;
 }
 
+// Fortschritt aus kampagnenspezifischen Regelmodulen. Ein Modul verwaltet
+// seine Ressourcen-IDs und Talentauswahl selbst; dadurch kann eine weitere
+// Regel-Erweiterung dieselbe Charakter-Untersektion nutzen.
+export interface RuleModuleCharacterData {
+  resources: Record<string, number>;
+  selectedTalents: string[];
+  selectedStatuses: string[];
+  prestigeClass: string | null;
+  prestigeAbilities: string[];
+}
+
 // Eine Steigerung, die beim erneuten Öffnen der Erschaffung zurückgenommen
 // wurde (siehe src/lib/creationReset.ts). Die Werte sind dabei auf den Stand
 // vor der Steigerung zurückgefallen und die AP wieder gutgeschrieben — die
@@ -95,6 +106,7 @@ export interface CharacterStats {
   pronouns: string | null;
   characterRole: string | null;
   technomage: TechnomageCharacterData;
+  ruleModules: Record<string, RuleModuleCharacterData>;
   assignment: string | null;
   environment: string | null;
   upbringing: string | null;

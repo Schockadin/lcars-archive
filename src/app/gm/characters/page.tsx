@@ -14,7 +14,8 @@ import CreationResetTable, {
 } from "./CreationResetTable";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmCharactersGuide } from "@/components/help/guides/GmGuides";
-import { getTechnomageSpell, TECHNOMAGE_SCHOOLS } from "@/lib/technomageSpellCatalog";
+import { getTechnomageSchool, getTechnomageSpell } from "@/lib/technomageSpellCatalog";
+import { getCampaignRuleModule } from "@/lib/campaignRuleModules";
 
 export const metadata: Metadata = {
   title: "Charaktere",
@@ -28,11 +29,12 @@ export const metadata: Metadata = {
 export default async function AdminCharactersPage() {
   await requireGM();
 
-  const [users, characters, creationStates, technomages] = await Promise.all([
+  const [users, characters, creationStates, technomages, technomageModule] = await Promise.all([
     listAllUsers(),
     getAllCharactersForAdmin(),
     getCharacterCreationStates(),
     getTechnomageCharactersForGm(),
+    getCampaignRuleModule("technomage"),
   ]);
   // Gäste dürfen keinen Charakter zugewiesen bekommen (siehe
   // assignCharacterAction in ../actions.ts, das dieselbe Regel serverseitig
@@ -108,15 +110,16 @@ export default async function AdminCharactersPage() {
               <div className="flex flex-col gap-[12px]">
                 {technomages.map((character) => {
                   const techno = character.stats.technomage;
-                  const primary = TECHNOMAGE_SCHOOLS.find(
-                    (school) => school.id === techno.primarySchool,
+                  const primary = getTechnomageSchool(
+                    techno.primarySchool,
+                    technomageModule?.definition.schools,
                   );
                   const weak = techno.weakSchools.flatMap((id) => {
-                    const school = TECHNOMAGE_SCHOOLS.find((entry) => entry.id === id);
+                    const school = getTechnomageSchool(id, technomageModule?.definition.schools);
                     return school ? [school.label] : [];
                   });
                   const spells = techno.spells
-                    .map(getTechnomageSpell)
+                    .map((spellId) => getTechnomageSpell(spellId, technomageModule?.definition.spells))
                     .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
 
                   return (
@@ -157,7 +160,7 @@ export default async function AdminCharactersPage() {
                               <li key={spell.id}>
                                 {spell.name}{" "}
                                 <span className="text-lcars-ink-dim">
-                                  · {TECHNOMAGE_SCHOOLS.find((school) => school.id === spell.school)?.label}
+                                  · {getTechnomageSchool(spell.school, technomageModule?.definition.schools)?.label ?? spell.school}
                                 </span>
                               </li>
                             ))}

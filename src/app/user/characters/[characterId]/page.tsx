@@ -23,8 +23,13 @@ import CharacterCreationGuide from "@/components/character/CharacterCreationGuid
 import CharacterDocumentsPanel from "./CharacterDocumentsPanel";
 import { listCharacterDocuments } from "@/lib/characterDocuments";
 import CharacterArchiveExportButton from "./CharacterArchiveExportButton";
+import CharacterJsonTransfer from "./CharacterJsonTransfer";
+import CharacterManagementTabs from "./CharacterManagementTabs";
 import { getCharacterArchiveOptions } from "@/lib/characterArchive";
 import CharacterNpcConversionPanel from "./CharacterNpcConversionPanel";
+import { listCampaignRuleModules, moduleSupportsCharacterRole } from "@/lib/campaignRuleModules";
+import { isTechnomageRole } from "@/lib/technomageSpellCatalog";
+import RuleModuleCharacterSections from "./RuleModuleCharacterSections";
 
 export const metadata: Metadata = {
   title: "Charakter",
@@ -67,6 +72,7 @@ export default async function OwnCharacterPage({ params }: Props) {
     revisions,
     documents,
     archiveOptions,
+    ruleModules,
   ] = await Promise.all([
     getApAccount(sheet.id),
     getAdvancementRules(),
@@ -78,7 +84,14 @@ export default async function OwnCharacterPage({ params }: Props) {
     getViewer().then((v) => listRevisions("character", character.id, v)),
     listCharacterDocuments(character.id),
     getCharacterArchiveOptions(session.userId, character.id),
+    listCampaignRuleModules(),
   ]);
+  const activeCharacterModules = ruleModules
+    .filter((module) => module.enabled && moduleSupportsCharacterRole(module.definition, sheet.stats.characterRole))
+    .map((module) => module.definition);
+  const technomageModule = isTechnomageRole(sheet.stats.characterRole)
+    ? ruleModules.find((module) => module.definition.id === "technomage")?.definition
+    : undefined;
 
   return (
     <>
@@ -122,6 +135,8 @@ export default async function OwnCharacterPage({ params }: Props) {
                   bioHtml: character.bioHtml,
                   talents,
                   campaignRules,
+                  technomageSpells: technomageModule?.spells,
+                  technomageSchools: technomageModule?.schools,
                 }}
               />
               <CharacterArchiveExportButton
@@ -131,6 +146,12 @@ export default async function OwnCharacterPage({ params }: Props) {
                 missions={archiveOptions}
               />
             </div>
+
+            <CharacterJsonTransfer
+              characterId={character.id}
+              userId={session.userId}
+              characterName={character.name}
+            />
 
             <CharacterPortraitPanel
               userId={session.userId}
@@ -143,24 +164,38 @@ export default async function OwnCharacterPage({ params }: Props) {
               stats={sheet.stats}
             />
 
-            {/* Das Werte-Panel bündelt seine fachlichen Unterabschnitte in einer
-            gemeinsamen, aufklappbaren Hülle. */}
-            <CharacterValuesPanel
-              userId={session.userId}
-              characterId={sheet.id}
-              species={sheet.species}
-              savedStats={sheet.stats}
-              account={account}
-              rules={rules}
-              talents={talents}
-              focuses={focuses}
-            />
-
-            <CharacterBioPanel
-              userId={session.userId}
-              characterId={character.id}
-              bioHtml={character.bioHtml}
-              sourceMarkdown={character.sourceMarkdown}
+            <CharacterManagementTabs
+              values={
+                <CharacterValuesPanel
+                  userId={session.userId}
+                  characterId={sheet.id}
+                  species={sheet.species}
+                  savedStats={sheet.stats}
+                  account={account}
+                  rules={rules}
+                  talents={talents}
+                  focuses={focuses}
+                />
+              }
+              biography={
+                <CharacterBioPanel
+                  userId={session.userId}
+                  characterId={character.id}
+                  bioHtml={character.bioHtml}
+                  sourceMarkdown={character.sourceMarkdown}
+                />
+              }
+              modules={
+                activeCharacterModules.length > 0 ? (
+                  <RuleModuleCharacterSections
+                    modules={activeCharacterModules}
+                    userId={session.userId}
+                    characterId={sheet.id}
+                    stats={sheet.stats}
+                    earnedAp={account.earned}
+                  />
+                ) : undefined
+              }
             />
 
             <CharacterDocumentsPanel

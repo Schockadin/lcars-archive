@@ -12,6 +12,7 @@ import type {
   CharacterExperience,
   CharacterStats,
   PendingAdvancement,
+  RuleModuleCharacterData,
   TechnomageCharacterData,
   TechnomageSchool,
 } from "@/types/characterStats";
@@ -181,6 +182,7 @@ export const EMPTY_CHARACTER_STATS: CharacterStats = {
     powerPointsMaximumAtLastUpdate: null,
     powerPointsRecoveryProgress: null,
   },
+  ruleModules: {},
   assignment: null,
   environment: null,
   upbringing: null,
@@ -326,6 +328,37 @@ function normalizeTechnomage(value: unknown): TechnomageCharacterData {
   };
 }
 
+function normalizeRuleModuleData(value: unknown): RuleModuleCharacterData {
+  const source = asRecord(value);
+  const rawResources = asRecord(source.resources);
+  const resources: Record<string, number> = {};
+  for (const [id, raw] of Object.entries(rawResources)) {
+    if (!/^[a-z0-9][a-z0-9-]{0,79}$/i.test(id)) continue;
+    const number = typeof raw === "string" ? Number(raw.trim()) : raw;
+    if (typeof number === "number" && Number.isInteger(number) && number >= 0 && number <= 999_999) {
+      resources[id] = number;
+    }
+  }
+  const prestigeClass = normalizeText(source.prestigeClass);
+  return {
+    resources,
+    selectedTalents: normalizeList(source.selectedTalents).slice(0, 500),
+    selectedStatuses: [...new Set(normalizeList(source.selectedStatuses))].slice(0, 100),
+    prestigeClass,
+    prestigeAbilities: [...new Set(normalizeList(source.prestigeAbilities))].slice(0, 200),
+  };
+}
+
+function normalizeRuleModules(value: unknown): Record<string, RuleModuleCharacterData> {
+  const source = asRecord(value);
+  const result: Record<string, RuleModuleCharacterData> = {};
+  for (const [id, moduleData] of Object.entries(source)) {
+    if (!/^[a-z0-9][a-z0-9-]{0,79}$/i.test(id)) continue;
+    result[id] = normalizeRuleModuleData(moduleData);
+  }
+  return result;
+}
+
 // Tolerante Normalisierung beliebiger jsonb-Daten auf die vollständige
 // CharacterStats-Form: fehlende/kaputte Felder werden zu null bzw. [], nie zu
 // undefined — die Anzeige und das Formular können sich so auf jedes Feld
@@ -367,6 +400,7 @@ export function parseCharacterStats(raw: unknown): CharacterStats {
   };
 
   stats.technomage = normalizeTechnomage(source.technomage);
+  stats.ruleModules = normalizeRuleModules(source.ruleModules);
 
   for (const field of TEXT_FIELDS) {
     stats[field.key] = normalizeText(source[field.key]);
@@ -458,5 +492,18 @@ export function isCharacterStatsEmpty(stats: CharacterStats): boolean {
   if (stats.experience !== null) return false;
   if (TEXT_FIELDS.some((f) => stats[f.key] !== null)) return false;
   if (LIST_FIELDS.some((f) => stats[f.key].length > 0)) return false;
+  if (
+    stats.technomage.primarySchool !== null ||
+    stats.technomage.weakSchools.length > 0 ||
+    stats.technomage.spells.length > 0 ||
+    stats.technomage.powerPointsCurrent !== null ||
+    stats.technomage.powerPointsMaximumAtLastUpdate !== null ||
+    stats.technomage.powerPointsRecoveryProgress !== null
+  ) return false;
+  if (Object.values(stats.ruleModules).some((module) =>
+    Object.values(module.resources).some((value) => value !== 0) ||
+    module.selectedTalents.length > 0 || module.selectedStatuses.length > 0 ||
+    module.prestigeClass !== null || module.prestigeAbilities.length > 0,
+  )) return false;
   return true;
 }

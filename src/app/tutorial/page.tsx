@@ -530,6 +530,14 @@ export default function TutorialPage() {
           >
             <CharacterCreationGuide />
             <p className="lcars-text mt-[12px]">
+              Auf deiner eigenen Charakterseite kannst du Personalakte,
+              Biografie sowie Charakter- und Modulwerte über „JSON herunterladen“ als
+              versionierte Datei sichern. Eine passende Datei lässt sich dort
+              auch wieder importieren. Der Import aktualisiert die geöffnete
+              Figur; AP-Journal, Profilbilddatei und angehängte Dokumente werden
+              separat verwaltet.
+            </p>
+            <p className="lcars-text mt-[12px]">
               Ist ein Charakter <strong>inaktiv oder verstorben</strong>, kannst
               du ihn auf seiner Owner-Seite in einen NPC umwandeln. Bogen, AP
               und bisherige Chronologie bleiben erhalten. Das Profilbild
@@ -738,8 +746,10 @@ export default function TutorialPage() {
                 <strong>„Charakterbogen“</strong>: er zeigt dieselben Blätter
                 wie unter „Meine Charaktere“ — Personalakte, Spickzettel, Regeln
                 und Biografie — als reine Ansicht, mit Drucken und demselben
-                PDF-Download. Gepflegt werden die Werte weiterhin nur von der
-                Person, der der Charakter gehört.
+                PDF-Download. Bei Technomages stammen Spell-Namen und
+                Schulbezeichnungen dort aus der aktuellen Regelmoduldefinition.
+                Gepflegt werden die Werte weiterhin nur von der Person, der der
+                Charakter gehört.
               </p>
               <p>
                 Unter <strong>„Zusätzliche Dokumente“</strong> kannst du PDF-,

@@ -127,8 +127,15 @@ export default function DSGVOContent({ year }: { year: number }) {
           des Kontostands wird außerdem das PP-Maximum der letzten Buchung
           gespeichert. Stufe, Spellkapazität und aktuelles PP-Maximum ergeben
           sich aus dem Erfahrungspunkte-Konto und den Charakterattributen.
+          Wenn ein Regelmodul aktiviert ist, kommen modulabhängige Ressourcen,
+          Statuswerte, erworbene Talente und Prestige-Pfade hinzu. Die
+          Technomage-Sektion speichert insbesondere Chaos Points und
+          Verletzungsstress. Die Spielleitungskonfiguration des Regelmoduls
+          enthält die Regeltexte, Spell- und Talentdaten sowie den Account, der
+          die letzte Änderung gespeichert hat.
           Diese Angaben werden mit dem Charakterbogen nach den jeweiligen
-          Zugriffsregeln angezeigt. Hinzu kommt ein{" "}
+          Zugriffsregeln angezeigt; Vorschau und PDF nutzen für gelernte Spells
+          die aktuelle Technomage-Moduldefinition. Hinzu kommt ein{" "}
           <strong>Erfahrungspunkte-Konto</strong>. Dieses Konto ist ein
           Buchungsjournal: Jede Gutschrift und jede Steigerung wird dauerhaft
           mit Betrag, Grund, Zeitpunkt und dem Account festgehalten, der sie
@@ -175,8 +182,12 @@ export default function DSGVOContent({ year }: { year: number }) {
           hochladende Account. Die Spielleitung kann Dokumente veröffentlichter
           Charaktere ansehen und herunterladen; bei Entwürfen gilt das nur mit
           dem zusätzlichen Recht, alle Inhalte zu sehen. Der
-          Charakterarchiv-PDF-Export steht nur der Person offen, der der
-          Charakter gehört. Mit dem endgültigen Löschen des Charakters werden
+          Charakterarchiv-PDF- und JSON-Export stehen nur der Person offen,
+          der der Charakter gehört. Die JSON-Datei kann dieselbe Person auf
+          der eigenen Charakterseite wieder importieren; dabei werden die
+          ausgewählten Charakterdaten serverseitig aktualisiert. Beim
+          JSON-Transfer werden weder Portraitdateien noch angehängte Dokumente
+          übertragen. Mit dem endgültigen Löschen des Charakters werden
           auch die zugeordneten Dokumente und ihre Metadaten entfernt. Ohne
           Charakterzuordnung bleiben Dokumente bis zum Löschen durch den Account
           in dessen Dateiliste. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO —

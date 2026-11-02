@@ -19,6 +19,7 @@ import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import { listTalents } from "@/lib/talents";
 import { getApAccount } from "@/lib/characterAp";
 import { listCampaignRules } from "@/lib/campaignRules";
+import { getCampaignRuleModule } from "@/lib/campaignRuleModules";
 import { renderCharacterSheetPdf } from "@/lib/pdf/CharacterSheetPdfDocument";
 import { slugifyBase } from "@/lib/slug";
 
@@ -46,11 +47,12 @@ export async function GET(request: Request) {
   // Die Biografie steht nicht an den Werten, sondern als Markdown an der
   // Akte — für das dritte Blatt eigens geladen (ungescopt, die Berechtigung
   // ist oben bereits geklärt).
-  const [talents, bio, campaignRules, account] = await Promise.all([
+  const [talents, bio, campaignRules, account, technomageModule] = await Promise.all([
     listTalents(),
     getCharacterBioMarkdown(characterId),
     listCampaignRules(),
     getApAccount(characterId),
+    getCampaignRuleModule("technomage"),
   ]);
   const pdfBuffer = await renderCharacterSheetPdf({
     name: character.name,
@@ -61,6 +63,8 @@ export async function GET(request: Request) {
     stats: character.stats,
     earnedAp: account.earned,
     talents,
+    technomageSpells: technomageModule?.definition.spells,
+    technomageSchools: technomageModule?.definition.schools,
     campaignRules,
     bioMarkdown: bio,
   });

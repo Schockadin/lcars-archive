@@ -5,18 +5,23 @@ import {
   technomageSpellDetails,
 } from "@/lib/technomageSpellCatalog";
 import type { TechnomageSchool } from "@/types/characterStats";
+import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 
 export default function LearnedSpellsSection({
   learnedSpellIds,
   primarySchool,
   weakSchools,
+  spells,
+  schools,
 }: {
   learnedSpellIds: readonly string[];
   primarySchool: TechnomageSchool | null;
   weakSchools: readonly TechnomageSchool[];
+  spells: RuleModuleDefinition["spells"];
+  schools: RuleModuleDefinition["schools"];
 }) {
   const learnedSpells = learnedSpellIds
-    .map(getTechnomageSpell)
+    .map((id) => getTechnomageSpell(id, spells))
     .filter((spell) => spell !== undefined);
   const groups = groupTechnomageSpellVariants(learnedSpells);
 
@@ -47,7 +52,7 @@ export default function LearnedSpellsSection({
                   primarySchool,
                   weakSchools,
                 );
-                const school = getTechnomageSchool(spell.school);
+                const school = getTechnomageSchool(spell.school, schools);
 
                 return (
                   <section

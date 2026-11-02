@@ -9,6 +9,9 @@ import SessionDefaultsForm from "./SessionDefaultsForm";
 import AdvancementRulesForm from "../ap/AdvancementRulesForm";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmCampaignGuide } from "@/components/help/guides/GmGuides";
+import { listCampaignRuleModules } from "@/lib/campaignRuleModules";
+import RuleModuleForm from "./RuleModuleForm";
+import RuleModuleCreateForm from "./RuleModuleCreateForm";
 
 export const metadata: Metadata = {
   title: "Kampagne",
@@ -24,10 +27,11 @@ export const metadata: Metadata = {
 export default async function AdminCampaignPage() {
   await requireGM();
 
-  const [ingameYearInfo, sessionDefaults, rules] = await Promise.all([
+  const [ingameYearInfo, sessionDefaults, rules, ruleModules] = await Promise.all([
     getIngameYearInfo(),
     getSessionDefaults(),
     getAdvancementRules(),
+    listCampaignRuleModules(),
   ]);
 
   return (
@@ -53,6 +57,20 @@ export default async function AdminCampaignPage() {
             </summary>
             <div className="mt-[12px]">
               <SessionDefaultsForm defaults={sessionDefaults} />
+            </div>
+          </details>
+          <details className="lcars-details">
+            <summary className="lcars-details-summary">
+              <span className="lcars-data-row-chevron" aria-hidden="true" />
+              <h2 className="inline text-lcars-primary-ink">Regel-Module</h2>
+            </summary>
+            <div className="mt-[12px] flex flex-col gap-[16px]">
+              <p className="text-[13px] text-lcars-ink-dim">
+                Aktivierbare Zusatzregeln mit eigenen Ressourcen und Charakterdaten. Module erscheinen bei Charakteren,
+                deren Rolle zur Moduldefinition passt.
+              </p>
+              <RuleModuleCreateForm />
+              {ruleModules.map((module) => <RuleModuleForm key={module.definition.id} module={module} />)}
             </div>
           </details>
           <details className="lcars-details">

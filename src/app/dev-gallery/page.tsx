@@ -11,6 +11,7 @@ import {
 import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
 import CharacterWizard from "@/app/user/characters/new/CharacterWizard";
 import LearnedSpellsSection from "@/app/user/characters/[characterId]/LearnedSpellsSection";
+import { TECHNOMAGE_SCHOOLS, TECHNOMAGE_SPELLS } from "@/lib/technomageSpellCatalog";
 import CharacterSheetPreviewOverlay from "@/components/character/CharacterSheetPreviewOverlay";
 import ManualEventForm from "@/components/timeline/ManualEventForm";
 import { latestEventDate } from "@/lib/timelineTypes";
@@ -582,6 +583,8 @@ export default function DevGalleryPage() {
           learnedSpellIds={["armour-lesser", "armour", "armour-greater"]}
           primarySchool="defence"
           weakSchools={["elements", "conjuration", "healing"]}
+          spells={[...TECHNOMAGE_SPELLS]}
+          schools={TECHNOMAGE_SCHOOLS.map((school) => ({ ...school }))}
         />
       </section>
 
