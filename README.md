@@ -34,7 +34,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **STA-2e-Basismodul** — zeigt gemeinsame Grundregeln auf allen Charakterseiten.
   Die Spielleitung kann es unter `/gm/campaign` bearbeiten und auf den
   mitgelieferten Standard zurücksetzen; Zusatzmodule lassen sich aktivieren,
-  deaktivieren, anlegen und löschen.
+  deaktivieren, anlegen und löschen. Eigene Module können frei benannte
+  Inhaltsbereiche mit eigenen Feldern und von Charakteren auswählbaren
+  Einträgen enthalten.
 - **Missionen & Mission-Logs** — Logbucheinträge sind Charakteren und Missionen zugeordnet
   und chronologisch nach Session-Nummer sortiert.
 - **Nutzerkonten & granulares Rechtesystem (RBAC)** — die Autorisierung läuft über

@@ -67,7 +67,9 @@ export default function ImpressumContent() {
           vollständigen Inhalt bearbeiten. Das allgemeine STA-2e-Basismodul ist
           für alle Charaktere aktiv; die Spielleitung kann es bearbeiten und
           auf den Standard zurücksetzen. Weitere Regelmodule lassen sich
-          hinzufügen, aktivieren, deaktivieren und löschen. Die Charakterseite führt außerdem
+          hinzufügen, aktivieren, deaktivieren und löschen. Eigene Module
+          können zusätzliche Inhaltslisten mit individuellen Feldern und
+          auswählbaren Einträgen enthalten. Die Charakterseite führt außerdem
           PP, Chaos Points, Verletzungsstress, Talente und Prestige-Pfade.
           Charakterbogen und PDF enthalten detaillierte Beschreibungen der
           gelernten Spells für Star Trek Adventures (2. Edition) und verwenden
