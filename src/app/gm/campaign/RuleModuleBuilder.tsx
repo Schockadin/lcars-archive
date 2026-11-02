@@ -249,9 +249,15 @@ function EntryCard({
   return (
     <details
       className="rounded-[8px] border border-current/15 p-[10px]"
-      onToggle={(event) => setExpanded(event.currentTarget.open)}
+      open={expanded}
     >
-      <summary className="cursor-pointer">
+      <summary
+        className="cursor-pointer"
+        onClick={(event) => {
+          event.preventDefault();
+          setExpanded((current) => !current);
+        }}
+      >
         <strong>{title || "Unbenannter Baustein"}</strong>{" "}
         <span className="text-xs opacity-70">({id || "ohne ID"})</span>
       </summary>
