@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.7",
+    title: "STA 2e als bearbeitbares Basismodul",
+    items: [
+      {
+        text: "Das STA-2e-Basismodul ist für alle Charaktere dauerhaft aktiv und kann von der Spielleitung bearbeitet oder auf den Standard zurückgesetzt werden. Weitere Regelmodule lassen sich unter „Kampagne“ aktivieren, deaktivieren, anlegen und löschen.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+    ],
+  },
+  {
     version: "2.6",
     title: "Erweiterbare Regel-Module",
     items: [

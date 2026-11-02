@@ -66,8 +66,8 @@ export default async function AdminCampaignPage() {
             </summary>
             <div className="mt-[12px] flex flex-col gap-[16px]">
               <p className="text-[13px] text-lcars-ink-dim">
-                Aktivierbare Zusatzregeln mit eigenen Ressourcen und Charakterdaten. Module erscheinen bei Charakteren,
-                deren Rolle zur Moduldefinition passt.
+                Das STA-2e-Basismodul gilt für alle Charaktere und bleibt aktiv. Weitere Module lassen sich bearbeiten,
+                aktivieren oder deaktivieren und löschen; sie erscheinen bei Charakteren, deren Rolle zur Moduldefinition passt.
               </p>
               <RuleModuleCreateForm />
               {ruleModules.map((module) => <RuleModuleForm key={module.definition.id} module={module} />)}

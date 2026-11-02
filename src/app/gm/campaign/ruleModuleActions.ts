@@ -1,7 +1,13 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { requireGM } from "@/lib/dal";
-import { getCampaignRuleModule, saveCampaignRuleModule } from "@/lib/campaignRuleModules";
+import {
+  deleteCampaignRuleModule,
+  getCampaignRuleModule,
+  isBaseRuleModule,
+  resetBaseCampaignRuleModule,
+  saveCampaignRuleModule,
+} from "@/lib/campaignRuleModules";
 import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import { validateRuleModuleDefinition } from "@/lib/ruleModuleTypes";
 
@@ -76,8 +82,40 @@ export async function saveCampaignRuleModuleAction(
   if (!definition) {
     return { error: "Die Modulstruktur ist ungültig. Prüfe Regeln, Ressourcen, Talente, Prestige-Klassen, Schulen und Spells." };
   }
-  const enabled = formData.get("enabled") === "true";
+  const enabled = isBaseRuleModule(moduleId) || formData.get("enabled") === "true";
   await saveCampaignRuleModule(moduleId, enabled, definition, user.id);
+  revalidatePath("/gm/campaign");
+  revalidatePath("/user/characters");
+  return { success: true };
+}
+
+export async function deleteCampaignRuleModuleAction(
+  _state: RuleModuleActionState,
+  formData: FormData,
+): Promise<RuleModuleActionState> {
+  const user = await requireGM();
+  const moduleId = String(formData.get("moduleId") ?? "");
+  if (isBaseRuleModule(moduleId)) {
+    return { error: "Das STA-2e-Basismodul kann nicht gelöscht werden." };
+  }
+  if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(moduleId)) {
+    return { error: "Ungültige Modul-ID." };
+  }
+  if (!(await getCampaignRuleModule(moduleId))) {
+    return { error: "Dieses Regelmodul existiert nicht mehr." };
+  }
+  await deleteCampaignRuleModule(moduleId, user.id);
+  revalidatePath("/gm/campaign");
+  revalidatePath("/user/characters");
+  return { success: true };
+}
+
+export async function resetBaseCampaignRuleModuleAction(
+  _state: RuleModuleActionState,
+  _formData: FormData,
+): Promise<RuleModuleActionState> {
+  await requireGM();
+  await resetBaseCampaignRuleModule();
   revalidatePath("/gm/campaign");
   revalidatePath("/user/characters");
   return { success: true };

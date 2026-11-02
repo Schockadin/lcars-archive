@@ -64,7 +64,10 @@ export default function ImpressumContent() {
           festlegen. Stufe, Spellkapazität und Power-Point-Maximum folgen der
           STA-2e-AP-Formel und den Attributmodifikatoren. Die Spielleitung kann
           das Technomage-Regelmodul unter „Kampagne“ aktivieren und seinen
-          vollständigen Inhalt bearbeiten. Die Charakterseite führt außerdem
+          vollständigen Inhalt bearbeiten. Das allgemeine STA-2e-Basismodul ist
+          für alle Charaktere aktiv; die Spielleitung kann es bearbeiten und
+          auf den Standard zurücksetzen. Weitere Regelmodule lassen sich
+          hinzufügen, aktivieren, deaktivieren und löschen. Die Charakterseite führt außerdem
           PP, Chaos Points, Verletzungsstress, Talente und Prestige-Pfade.
           Charakterbogen und PDF enthalten detaillierte Beschreibungen der
           gelernten Spells für Star Trek Adventures (2. Edition) und verwenden

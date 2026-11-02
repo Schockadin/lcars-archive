@@ -79,19 +79,28 @@ export function GmCampaignGuide() {
       </GuideSection>
       <GuideSection title="Kampagne · Regel-Module">
         <p>
-          Unter <strong>„Regel-Module“</strong> aktivierst du optionale
-          Regelsysteme für passende Charakterrollen. Das Technomage-Modul
-          enthält die STA-2e-Regeln, alle Spells, Talente und sechs
-          Prestige-Pfade. Die JSON-Definition lässt sich als Ganzes bearbeiten;
-          auf den Charakterseiten erscheinen daraus die Regeln, Ressourcen und
-          auswählbaren Moduleinträge. Die Charakter-Sektion gilt auch als
-          Grundlage für weitere Module mit eigenen Ressourcen oder Statuswerten.
+          Unter <strong>„Regel-Module“</strong> bearbeitest du die Regeln für
+          Charaktere. Das kampagnenweite <strong>STA-2e-Basismodul</strong> ist
+          immer aktiv und kann nicht gelöscht werden. Seine JSON-Definition
+          lässt sich ändern; <strong>„Auf Standard zurücksetzen“</strong>
+          stellt die mitgelieferten Regeln wieder her. Auf allen
+          Charakterseiten erscheinen die gemeinsamen Regeln im Modul-Tab.
         </p>
         <p>
-          Änderungen werden erst nach <strong>„Regelmodul speichern“</strong>
-          übernommen. Bei einer bestehenden Kampagne ist das Technomage-Modul
-          zunächst aktiviert, damit vorhandene Technomage-Charaktere weiter
-          funktionieren.
+          Weitere Module legst du über das Formular an. Die JSON-Definition
+          enthält Regeln und optionale Charakterwerte wie Ressourcen,
+          Statuswerte, Talente oder Prestige-Pfade. Du kannst jedes Zusatzmodul
+          bearbeiten, aktivieren, deaktivieren oder löschen. Ein Modul wird
+          Charakteren angezeigt, deren Rolle zu seiner Definition passt.
+          Bereits gespeicherte Modulwerte bleiben beim Löschen auf den
+          Charakteren erhalten.
+        </p>
+        <p>
+          Änderungen an einer Definition werden nach
+          <strong> „Regelmodul speichern“</strong> übernommen. Das
+          Technomage-Modul ist bei einer bestehenden Kampagne zunächst
+          aktiviert, damit vorhandene Technomage-Charaktere weiter funktionieren;
+          es enthält die Technomage-Regeln, Spells, Talente und Prestige-Pfade.
         </p>
       </GuideSection>
     </GuideBody>

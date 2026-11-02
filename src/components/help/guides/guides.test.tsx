@@ -52,6 +52,14 @@ describe("Anleitungen zu den Leitungs-Bereichen", () => {
     render(<GmAreaGuides />);
     erwarteBeschrifteteBilder(10);
   });
+
+  it("erklärt Basismodul, Zurücksetzen und Verwaltung optionaler Module", () => {
+    const { container } = render(<GmAreaGuides />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("STA-2e-Basismodul");
+    expect(text).toContain("Auf Standard zurücksetzen");
+    expect(text).toContain("aktivieren, deaktivieren oder löschen");
+  });
 });
 
 describe("Anleitungen zum eigenen Bereich", () => {

@@ -131,8 +131,10 @@ export default function DSGVOContent({ year }: { year: number }) {
           Statuswerte, erworbene Talente und Prestige-Pfade hinzu. Die
           Technomage-Sektion speichert insbesondere Chaos Points und
           Verletzungsstress. Die Spielleitungskonfiguration des Regelmoduls
-          enthält die Regeltexte, Spell- und Talentdaten sowie den Account, der
-          die letzte Änderung gespeichert hat.
+          enthält die Regeltexte, Spell- und Talentdaten der Module sowie den
+          Account, der die letzte Änderung gespeichert hat. Dazu gehören das
+          gemeinsame STA-2e-Basismodul und optionale, von der Spielleitung
+          verwaltete Module.
           Diese Angaben werden mit dem Charakterbogen nach den jeweiligen
           Zugriffsregeln angezeigt; Vorschau und PDF nutzen für gelernte Spells
           die aktuelle Technomage-Moduldefinition. Hinzu kommt ein{" "}

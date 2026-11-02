@@ -182,6 +182,9 @@ export default function RuleModuleCharacterSections({
     const saved = stats.ruleModules[definition.id] ?? {
       resources: {}, selectedTalents: [], selectedStatuses: [], prestigeClass: null, prestigeAbilities: [],
     };
+    const hasCharacterFields = definition.resources.length > 0 ||
+      definition.statuses.length > 0 || definition.talents.length > 0 ||
+      definition.prestigeClasses.length > 0 || definition.id === "technomage";
     return (
       <section key={definition.id} className="flex flex-col gap-[12px] rounded-[12px] border border-current/30 p-[12px]">
         <div>
@@ -192,7 +195,11 @@ export default function RuleModuleCharacterSections({
         {definition.id === "technomage" && (
           <TechnomageSpellsPanel userId={userId} characterId={characterId} stats={stats} earnedAp={earnedAp} moduleDefinition={definition} />
         )}
-        <ModuleEditor key={`${definition.id}-${JSON.stringify(saved)}`} definition={definition} saved={saved} userId={userId} characterId={characterId} earnedAp={earnedAp} insight={stats.attributes.insight} />
+        {hasCharacterFields ? (
+          <ModuleEditor key={`${definition.id}-${JSON.stringify(saved)}`} definition={definition} saved={saved} userId={userId} characterId={characterId} earnedAp={earnedAp} insight={stats.attributes.insight} />
+        ) : (
+          <p className="text-sm opacity-75">Dieses Modul ergänzt den Charakterbogen um Regeln, aber keine eigenen Modulwerte.</p>
+        )}
         <details>
           <summary className="cursor-pointer font-bold">Regeln des Moduls ({definition.rules.length})</summary>
           <div className="mt-[8px] flex flex-col gap-[10px]">
