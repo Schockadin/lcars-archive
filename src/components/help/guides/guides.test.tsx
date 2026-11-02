@@ -59,6 +59,9 @@ describe("Anleitungen zu den Leitungs-Bereichen", () => {
     expect(text).toContain("STA-2e-Basismodul");
     expect(text).toContain("Auf Standard zurücksetzen");
     expect(text).toContain("aktivieren, deaktivieren oder löschen");
+    expect(text).toContain("Eigenes Regelmodul bauen");
+    expect(text).toContain("JSON-Grundgerüst anzeigen");
+    expect(text).toContain("characterRoles");
   });
 });
 

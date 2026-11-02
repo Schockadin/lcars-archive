@@ -103,6 +103,95 @@ export function GmCampaignGuide() {
           es enthält die Technomage-Regeln, Spells, Talente und Prestige-Pfade.
         </p>
       </GuideSection>
+
+      <GuideSection title="Kampagne · Eigenes Regelmodul bauen">
+        <ol className="list-decimal flex flex-col gap-[8px] pl-[22px]">
+          <li>
+            Lege unter <strong>„Weiteres Regelmodul anlegen“</strong> Name,
+            Kurzbeschreibung und passende Charakterrollen fest. <code>*</code>
+            {" "}gilt für alle Rollen; mehrere Rollen trennst du durch Kommas.
+            Die Modul-ID entsteht aus dem Namen und wird danach im JSON
+            mitgeführt. Sie lässt sich nicht nachträglich ändern.
+          </li>
+          <li>
+            Ergänze die neue Definition im JSON-Editor und behalte die erzeugte
+            {" "}<code>id</code> bei. Allgemeine Module dürfen leere Listen
+            haben; das Technomage-Modul braucht mindestens eine Schule. IDs
+            einzelner Einträge müssen innerhalb ihrer Liste eindeutig sein,
+            mit Buchstabe oder Ziffer beginnen und höchstens 80 Buchstaben,
+            Ziffern oder Bindestriche enthalten.
+          </li>
+          <li>
+            Speichere das Modul und aktiviere es über{" "}
+            <strong>„Modul für die Kampagne aktivieren“</strong>. Es erscheint
+            danach auf Charakterseiten, deren Rolle zur Definition passt. Neue
+            Module starten deaktiviert.
+          </li>
+        </ol>
+        <p>
+          Die Grundstruktur sieht so aus. Ersetze die Beispiel-ID durch die
+          beim Anlegen erzeugte ID und ergänze die Einträge nach Bedarf:
+        </p>
+        <details className="rounded-[10px] border border-current/20 p-[10px]">
+          <summary className="cursor-pointer font-bold">JSON-Grundgerüst anzeigen</summary>
+          <pre className="mt-[8px] max-w-full overflow-x-auto whitespace-pre rounded border border-current/15 p-[10px] text-xs">
+            {JSON.stringify({
+              id: "mein-modul",
+              name: "Mein Modul",
+              summary: "Kurze Erklärung für den Charakterbogen.",
+              characterRoles: ["*"],
+              rules: [{ id: "grundregel", title: "Grundregel", body: "Die Regelbeschreibung." }],
+              resources: [{ id: "energie", name: "Energie", abbreviation: "EN", maximum: "Nach der Modulregel" }],
+              statuses: [{ id: "geweiht", label: "Geweiht" }],
+              talents: [{
+                id: "fokus",
+                name: "Fokus",
+                category: "Modul",
+                requirements: "Keine",
+                description: "Beschreibung des Talents.",
+                repeatable: false,
+              }],
+              prestigeClasses: [{
+                id: "pfad",
+                name: "Pfad",
+                description: "Beschreibung des Pfads.",
+                requirements: "Aufnahmebedingungen als Text",
+                abilities: [{
+                  id: "pfad-rang-1",
+                  name: "Erste Fähigkeit",
+                  category: "Prestige",
+                  requirements: "Keine",
+                  description: "Beschreibung der Fähigkeit.",
+                  rank: 1,
+                  ap: 20,
+                }],
+              }],
+              schools: [],
+              spells: [],
+            }, null, 2)}
+          </pre>
+        </details>
+        <p>
+          <strong>Was die Felder auf dem Bogen tun:</strong> Regeln werden als
+          Text angezeigt. Ressourcen bekommen ein Zahlenfeld;{" "}
+          <code>maximum</code> beschreibt den Höchstwert, wird aber nicht
+          automatisch berechnet oder erzwungen. Statuswerte sind auswählbare
+          Häkchen. Talente dokumentieren vorhandene Auswahlen, vergeben aber
+          keine regulären Talentwahlen oder AP. Bei Prestige-Pfaden werden
+          Fähigkeiten anhand ihres <code>ap</code>-Werts freigeschaltet;
+          <code>requirements</code> beschreibt Voraussetzungen als Text. Das
+          Modul führt keine frei definierten Formeln oder neuen Würfelregeln
+          aus. Bei Prestige-Fähigkeiten müssen <code>rank</code> zwischen 1
+          und 10 sowie <code>ap</code> mindestens 0 sein.
+        </p>
+        <p>
+          <strong>Technomage-Spells</strong> verwenden zusätzlich{" "}
+          <code>schools</code> und <code>spells</code> mit einem festen
+          Datenschema. Nutze dafür die vorhandene Technomage-Definition als
+          Vorlage; das Modul mit der ID <code>technomage</code> erhält außerdem
+          die eigens implementierte Spell- und Power-Point-Logik.
+        </p>
+      </GuideSection>
     </GuideBody>
   );
 }
