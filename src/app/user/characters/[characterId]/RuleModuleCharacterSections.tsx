@@ -98,6 +98,43 @@ function ModuleEditor({
         </section>
       )}
 
+      {definition.collections.map((collection) => {
+        const selected = saved.selectedCollectionEntries[collection.id] ?? [];
+        return (
+          <section key={collection.id} className="flex flex-col gap-[8px] rounded-[10px] border border-current/20 p-[10px]">
+            <div>
+              <h3 className="font-bold">{collection.title}</h3>
+              {collection.description && <p className="text-sm opacity-75">{collection.description}</p>}
+            </div>
+            {collection.entries.length > 0 ? (
+              <div className="grid gap-[8px] md:grid-cols-2">
+                {collection.entries.map((entry) => (
+                  <label key={entry.id} className="flex gap-[8px] rounded border border-current/15 p-[8px] text-sm">
+                    <input type="checkbox" name={`collection:${collection.id}`} value={entry.id} defaultChecked={selected.includes(entry.id)} />
+                    <span className="min-w-0">
+                      <strong>{entry.name}</strong>
+                      {collection.fields.length > 0 && (
+                        <span className="mt-[3px] block text-xs opacity-75">
+                          {collection.fields.map((field) => {
+                            const value = entry.values[field.id];
+                            const formatted = field.type === "checkbox"
+                              ? (value === true ? "Ja" : "Nein")
+                              : value === undefined || value === "" ? "—" : String(value);
+                            return <span key={field.id} className="mr-[10px]">{field.label}: {formatted}</span>;
+                          })}
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm opacity-75">Für diesen Bereich wurden noch keine Einträge angelegt.</p>
+            )}
+          </section>
+        );
+      })}
+
       {isTechnomage && (
         <p className="text-xs opacity-75">
           Chaos-Kontrollgrenze: {chaosLimit} CP{chaosDifficulty === null
@@ -180,8 +217,11 @@ export default function RuleModuleCharacterSections({
 }) {
   return modules.map((definition) => {
     const saved = stats.ruleModules[definition.id] ?? {
-      resources: {}, selectedTalents: [], selectedStatuses: [], prestigeClass: null, prestigeAbilities: [],
+      resources: {}, selectedTalents: [], selectedStatuses: [], selectedCollectionEntries: {}, prestigeClass: null, prestigeAbilities: [],
     };
+    const hasCharacterFields = definition.resources.length > 0 ||
+      definition.statuses.length > 0 || definition.talents.length > 0 ||
+      definition.prestigeClasses.length > 0 || definition.collections.length > 0 || definition.id === "technomage";
     return (
       <section key={definition.id} className="flex flex-col gap-[12px] rounded-[12px] border border-current/30 p-[12px]">
         <div>
@@ -192,7 +232,11 @@ export default function RuleModuleCharacterSections({
         {definition.id === "technomage" && (
           <TechnomageSpellsPanel userId={userId} characterId={characterId} stats={stats} earnedAp={earnedAp} moduleDefinition={definition} />
         )}
-        <ModuleEditor key={`${definition.id}-${JSON.stringify(saved)}`} definition={definition} saved={saved} userId={userId} characterId={characterId} earnedAp={earnedAp} insight={stats.attributes.insight} />
+        {hasCharacterFields ? (
+          <ModuleEditor key={`${definition.id}-${JSON.stringify(saved)}`} definition={definition} saved={saved} userId={userId} characterId={characterId} earnedAp={earnedAp} insight={stats.attributes.insight} />
+        ) : (
+          <p className="text-sm opacity-75">Dieses Modul ergänzt den Charakterbogen um Regeln, aber keine eigenen Modulwerte.</p>
+        )}
         <details>
           <summary className="cursor-pointer font-bold">Regeln des Moduls ({definition.rules.length})</summary>
           <div className="mt-[8px] flex flex-col gap-[10px]">

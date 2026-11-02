@@ -79,19 +79,83 @@ export function GmCampaignGuide() {
       </GuideSection>
       <GuideSection title="Kampagne · Regel-Module">
         <p>
-          Unter <strong>„Regel-Module“</strong> aktivierst du optionale
-          Regelsysteme für passende Charakterrollen. Das Technomage-Modul
-          enthält die STA-2e-Regeln, alle Spells, Talente und sechs
-          Prestige-Pfade. Die JSON-Definition lässt sich als Ganzes bearbeiten;
-          auf den Charakterseiten erscheinen daraus die Regeln, Ressourcen und
-          auswählbaren Moduleinträge. Die Charakter-Sektion gilt auch als
-          Grundlage für weitere Module mit eigenen Ressourcen oder Statuswerten.
+          Unter <strong>„Regel-Module“</strong> bearbeitest du die Regeln für
+          Charaktere. Das kampagnenweite <strong>STA-2e-Basismodul</strong> ist
+          immer aktiv und kann nicht gelöscht werden. Seine Regel-Bausteine
+          lassen sich bearbeiten; <strong>„Auf Standard zurücksetzen“</strong>
+          stellt die mitgelieferten Regeln wieder her. Auf allen
+          Charakterseiten erscheinen die gemeinsamen Regeln im Modul-Tab.
         </p>
         <p>
-          Änderungen werden erst nach <strong>„Regelmodul speichern“</strong>
-          übernommen. Bei einer bestehenden Kampagne ist das Technomage-Modul
-          zunächst aktiviert, damit vorhandene Technomage-Charaktere weiter
-          funktionieren.
+          Weitere Module legst du über das Formular an. Im Editor stellst du
+          Regeln und Charakterwerte wie Ressourcen, Status, Talente oder
+          Prestige-Pfade aus Bausteinen zusammen. Zusätzlich kannst du eigene
+          Inhaltsbereiche mit benannten Feldern und auswählbaren Einträgen
+          anlegen, etwa Kräfte, Ausrüstung, Formen oder Fraktionsvorteile. Du kannst jedes Zusatzmodul
+          bearbeiten, aktivieren, deaktivieren oder löschen. Ein Modul wird
+          Charakteren angezeigt, deren Rolle zu seiner Definition passt.
+          Bereits gespeicherte Modulwerte bleiben beim Löschen auf den
+          Charakteren erhalten.
+        </p>
+        <p>
+          Änderungen am Modul werden nach
+          <strong> „Regelmodul speichern“</strong> übernommen. Das
+          Technomage-Modul ist bei einer bestehenden Kampagne zunächst
+          aktiviert, damit vorhandene Technomage-Charaktere weiter funktionieren;
+          es enthält die Technomage-Regeln, Spells, Talente und Prestige-Pfade.
+        </p>
+      </GuideSection>
+
+      <GuideSection title="Kampagne · Eigenes Regelmodul bauen">
+        <ol className="list-decimal flex flex-col gap-[8px] pl-[22px]">
+          <li>
+            Lege unter <strong>„Weiteres Regelmodul anlegen“</strong> Name,
+            Kurzbeschreibung und passende Charakterrollen fest. <code>*</code>
+            {" "}gilt für alle Rollen; mehrere Rollen trennst du durch Kommas.
+            Die Modul-ID entsteht aus dem Namen und lässt sich danach nicht
+            mehr ändern. Neue Module sind zunächst deaktiviert.
+          </li>
+          <li>
+            Öffne im Modul die gewünschte Kategorie und wähle{" "}
+            <strong>„… hinzufügen“</strong>. Jeder Baustein hat passende
+            Eingabefelder: etwa Titel und Regeltext, Name und Maximum für
+            Ressourcen oder Rang und AP für Prestige-Fähigkeiten. Ein eigener
+            Inhaltsbereich kann seine Felder als Text, Zahl, Ja/Nein oder
+            Auswahlliste definieren; darunter legst du die auswählbaren Einträge
+            samt Werten an. Entfernte Bausteine werden erst beim Speichern
+            übernommen.
+          </li>
+          <li>
+            Speichere das Modul und aktiviere es über{" "}
+            <strong>„Modul für die Kampagne aktivieren“</strong>. Es erscheint
+            danach auf Charakterseiten, deren Rolle zur Definition passt. Neue
+            Modulwerte und Auswahlen können dort auf dem Charakterbogen
+            gepflegt werden.
+          </li>
+        </ol>
+        <p>
+          <strong>Was die Felder auf dem Bogen tun:</strong> Regeln werden als
+          Text angezeigt. Ressourcen bekommen ein Zahlenfeld;{" "}
+          <code>maximum</code> beschreibt den Höchstwert, wird aber nicht
+          automatisch berechnet oder erzwungen. Statuswerte sind auswählbare
+          Häkchen. Talente dokumentieren vorhandene Auswahlen, vergeben aber
+          keine regulären Talentwahlen oder AP. Bei Prestige-Pfaden werden
+          Fähigkeiten anhand ihres <code>ap</code>-Werts freigeschaltet;
+          <code>requirements</code> beschreibt Voraussetzungen als Text. Eigene
+          Inhaltsbereiche zeigen ihre Felder auf dem Charakterbogen an und
+          lassen passende Einträge auswählen. Die Werte dienen der
+          Dokumentation; das Modul führt keine frei definierten Formeln oder
+          neuen Würfelregeln aus. Bei Prestige-Fähigkeiten müssen <code>rank</code> zwischen 1
+          und 10 sowie <code>ap</code> mindestens 0 sein.
+        </p>
+        <p>
+          <strong>Technomage-Spells</strong> verwenden zusätzlich{" "}
+          <code>schools</code> und <code>spells</code> mit einem festen
+          Datenschema. Nutze dafür die vorhandene Technomage-Definition als
+          Vorlage; das Modul mit der ID <code>technomage</code> erhält außerdem
+          die eigens implementierte Spell- und Power-Point-Logik. Einen
+          frei definierbaren Würfelmechanismus oder Formeln kann der Editor
+          nicht hinzufügen.
         </p>
       </GuideSection>
     </GuideBody>

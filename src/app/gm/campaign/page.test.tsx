@@ -6,7 +6,11 @@ vi.mock("@/lib/dal", () => ({ requireGM: vi.fn(async () => ({ id: 1 })) }));
 vi.mock("@/lib/campaign", () => ({ getIngameYearInfo: vi.fn(async () => ({ effectiveYear: 2400 })) }));
 vi.mock("@/lib/advancementSettings", () => ({ getAdvancementRules: vi.fn() }));
 vi.mock("@/lib/campaignRuleModules", () => ({
-  listCampaignRuleModules: vi.fn(async () => []),
+  listCampaignRuleModules: vi.fn(async () => [{
+    enabled: true,
+    updatedAt: null,
+    definition: { id: "sta2e", name: "STA 2e · Basismodul" },
+  }]),
 }));
 vi.mock("@/lib/sessionDefaults", () => ({
   getSessionDefaults: vi.fn(async () => ({
@@ -21,6 +25,9 @@ vi.mock("@/components/help/HelpHeading", () => ({ default: () => <h1>Kampagne</h
 vi.mock("./IngameYearForm", () => ({ default: () => null }));
 vi.mock("./SessionDefaultsForm", () => ({ default: () => null }));
 vi.mock("./RuleModuleCreateForm", () => ({ default: () => <p>Regelmodul anlegen</p> }));
+vi.mock("./RuleModuleForm", () => ({
+  default: ({ module }: { module: { definition: { name: string } } }) => <p>{module.definition.name} bearbeiten</p>,
+}));
 vi.mock("../ap/AdvancementRulesForm", () => ({ default: () => <p>Steigerungsregeln bearbeiten</p> }));
 
 import { getAdvancementRules } from "@/lib/advancementSettings";
@@ -38,6 +45,7 @@ describe("Kampagnenregeln", () => {
     expect(screen.getByText("Ingame Jahr (2400)")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Regel-Module", hidden: true })).toBeInTheDocument();
     expect(screen.getByText("Regelmodul anlegen")).toBeInTheDocument();
+    expect(screen.getByText("STA 2e · Basismodul bearbeiten")).toBeInTheDocument();
     expect(container.querySelectorAll("details[open]")).toHaveLength(0);
   });
 });

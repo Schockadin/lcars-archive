@@ -193,6 +193,7 @@ export const TECHNOMAGE_RULE_MODULE: RuleModuleDefinition = {
       ability("instrument-chaos-empowerment", "Chaos Empowerment", 10, 607, "Schadens-Spells wirken wie mit Empower Spell ohne dessen PP-Aufschlag und Zusatzschwierigkeit; nicht kumulativ."),
     ]),
   ],
+  collections: [],
   schools: TECHNOMAGE_SCHOOLS.map((school) => ({ ...school })),
   spells: [...TECHNOMAGE_SPELLS],
 };
