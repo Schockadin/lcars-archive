@@ -6,24 +6,21 @@ import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import type {
   RuleModulePrestigeAbility,
   RuleModulePrestigeClass,
+  RuleModuleCollection,
+  RuleModuleCollectionEntry,
+  RuleModuleCollectionField,
+  RuleModuleCollectionFieldType,
   RuleModuleResource,
   RuleModuleRule,
   RuleModuleStatus,
   RuleModuleTalent,
 } from "@/lib/ruleModuleTypes";
-import {
-  TECHNOMAGE_SCHOOLS,
-  type TechnomageEffect,
-  type TechnomageSpell,
-} from "@/lib/technomageSpellCatalog";
 type CollectionKey =
   | "rules"
   | "resources"
   | "statuses"
   | "talents"
-  | "prestigeClasses"
-  | "schools"
-  | "spells";
+  | "prestigeClasses";
 type CollectionItem<K extends CollectionKey> = RuleModuleDefinition[K][number];
 
 function replaceCollection<K extends CollectionKey>(
@@ -275,28 +272,6 @@ function EntryCard({
   );
 }
 
-const EFFECT_OPTIONS: { value: TechnomageEffect; label: string }[] = [
-  { value: "attack", label: "Angriff" },
-  { value: "concealment", label: "Tarnung" },
-  { value: "crafting", label: "Herstellung" },
-  { value: "creation", label: "Erschaffung" },
-  { value: "defence", label: "Abwehr" },
-  { value: "enhancement", label: "Verstärkung" },
-  { value: "healing", label: "Heilung" },
-  { value: "illusion", label: "Illusion" },
-  { value: "manipulation", label: "Manipulation" },
-  { value: "movement", label: "Bewegung" },
-  { value: "perception", label: "Wahrnehmung" },
-  { value: "protection", label: "Schutz" },
-  { value: "summoning", label: "Beschwörung" },
-  { value: "utility", label: "Hilfszauber" },
-];
-
-const SCHOOL_OPTIONS = TECHNOMAGE_SCHOOLS.map((school) => ({
-  value: school.id,
-  label: school.label + " (" + school.original + ")",
-}));
-
 export default function RuleModuleBuilder({
   definition,
   onChange,
@@ -304,7 +279,15 @@ export default function RuleModuleBuilder({
   definition: RuleModuleDefinition;
   onChange: (definition: RuleModuleDefinition) => void;
 }) {
-  const [spellSearch, setSpellSearch] = useState("");
+  const setCustomCollection = (
+    index: number,
+    change: (collection: RuleModuleCollection) => RuleModuleCollection,
+  ) => onChange({
+    ...definition,
+    collections: definition.collections.map((collection, currentIndex) =>
+      currentIndex === index ? change(collection) : collection,
+    ),
+  });
   const setCollection = <K extends CollectionKey>(
     key: K,
     change: (items: CollectionItem<K>[]) => CollectionItem<K>[],
@@ -410,55 +393,16 @@ export default function RuleModuleBuilder({
     };
     setCollection("prestigeClasses", (items) => [...items, item]);
   };
-  const addSchool = () => {
-    const school = TECHNOMAGE_SCHOOLS.find(
-      (candidate) =>
-        !definition.schools.some((entry) => entry.id === candidate.id),
-    );
-    if (!school) return;
-    setCollection("schools", (items) => [
-      ...items,
-      { ...school },
-    ]);
-  };
-  const addSpell = () => {
-    const school = definition.schools[0]?.id;
-    if (!school) return;
-    const item: TechnomageSpell = {
-      id: nextEntryId(definition.spells.map((spell) => spell.id), "spell"),
-      name: "Neuer Spell",
-      school,
-      requirements: "",
-      sourceCastingTime: null,
-      sourceMageryDc: null,
-      sourceCastingCost: null,
-      sourceMaintenanceCost: null,
-      sourceRange: null,
-      sourceTarget: null,
-      sourceDuration: null,
-      elementalCategory: null,
-      sourcePage: 1,
-      effect: "utility",
+  const addCustomCollection = () => {
+    const item: RuleModuleCollection = {
+      id: nextEntryId(definition.collections.map((collection) => collection.id), "inhalt"),
+      title: "Neuer Inhaltsbereich",
+      description: "",
+      fields: [],
+      entries: [],
     };
-    setCollection("spells", (items) => [...items, item]);
+    onChange({ ...definition, collections: [...definition.collections, item] });
   };
-
-  const usedSchoolIds = new Set(definition.schools.map((school) => school.id));
-  const availableSchoolCount = TECHNOMAGE_SCHOOLS.filter(
-    (school) => !usedSchoolIds.has(school.id),
-  ).length;
-  const visibleSpells = definition.spells
-    .map((spell, index) => ({ spell, index }))
-    .filter(({ spell }) => {
-      const query = spellSearch.trim().toLocaleLowerCase();
-      const school = definition.schools.find((entry) => entry.id === spell.school);
-      return !query ||
-        spell.name.toLocaleLowerCase().includes(query) ||
-        spell.id.toLocaleLowerCase().includes(query) ||
-        (school?.label.toLocaleLowerCase().includes(query) ?? false) ||
-        (school?.original.toLocaleLowerCase().includes(query) ?? false);
-    });
-
   return (
     <div className="flex flex-col gap-[12px]">
       <section className="grid gap-[10px] rounded-[10px] border border-current/20 p-[10px] sm:grid-cols-2">
@@ -725,173 +669,249 @@ export default function RuleModuleBuilder({
         ))}
       </BuilderSection>
 
-      {definition.id === "technomage" && (
-        <>
-          <BuilderSection
-            title="Technomage-Schulen"
-            count={definition.schools.length}
-            addLabel="Schule hinzufügen"
-            onAdd={addSchool}
-            addDisabled={
-              definition.schools.length >= 30 || availableSchoolCount === 0
-            }
+      <BuilderSection
+        title="Eigene Inhaltsbereiche"
+        count={definition.collections.length}
+        addLabel="Inhaltsbereich hinzufügen"
+        onAdd={addCustomCollection}
+        addDisabled={definition.collections.length >= 100}
+      >
+        <p className="text-sm opacity-75">
+          Erstelle eigene Listen, zum Beispiel für Kräfte, Ausrüstung, Formen,
+          Fraktionsvorteile oder optionale Fähigkeiten. Charaktere können
+          Einträge auswählen; die Werte bleiben beschreibende Modul-Daten.
+        </p>
+        {definition.collections.map((collection, collectionIndex) => (
+          <EntryCard
+            key={collection.id + "-" + collectionIndex}
+            title={collection.title}
+            id={collection.id}
+            onRemove={() => onChange({
+              ...definition,
+              collections: definition.collections.filter((_, index) => index !== collectionIndex),
+            })}
           >
-            {definition.schools.map((school, index) => (
-              <EntryCard
-                key={school.id + "-" + index}
-                title={school.label}
-                id={school.id}
-                removeDisabled={definition.spells.some(
-                  (spell) => spell.school === school.id,
-                ) || definition.schools.length <= 1}
-                onRemove={() => removeItem("schools", index)}
-              >
-                <SelectField
-                  label="Schul-ID"
-                  value={school.id}
-                  options={SCHOOL_OPTIONS.filter(
-                    (option) =>
-                      option.value === school.id ||
-                      !usedSchoolIds.has(option.value),
-                  )}
-                  onChange={(id) => {
-                    onChange({
-                      ...definition,
-                      schools: definition.schools.map((item, currentIndex) =>
-                        currentIndex === index ? { ...item, id } : item,
-                      ),
-                      spells: definition.spells.map((spell) =>
-                        spell.school === school.id ? { ...spell, school: id } : spell,
-                      ),
-                    });
-                  }}
+            <div className="grid gap-[10px] sm:grid-cols-2">
+              <TextField
+                label="ID"
+                value={collection.id}
+                onChange={(id) => setCustomCollection(collectionIndex, (item) => ({ ...item, id }))}
+                required
+                maxLength={80}
+              />
+              <TextField
+                label="Titel"
+                value={collection.title}
+                onChange={(title) => setCustomCollection(collectionIndex, (item) => ({ ...item, title }))}
+                required
+                maxLength={120}
+              />
+              <div className="sm:col-span-2">
+                <TextAreaField
+                  label="Hinweis für die Spielenden"
+                  value={collection.description}
+                  onChange={(description) => setCustomCollection(collectionIndex, (item) => ({ ...item, description }))}
+                  rows={2}
+                  maxLength={2000}
                 />
-                <TextField
-                  label="Anzeigename"
-                  value={school.label}
-                  onChange={(label) =>
-                    setCollection("schools", (items) =>
-                      items.map((item, currentIndex) =>
-                        currentIndex === index ? { ...item, label } : item,
-                      ),
-                    )
-                  }
-                />
-                <TextField
-                  label="Originalname"
-                  value={school.original}
-                  onChange={(original) =>
-                    setCollection("schools", (items) =>
-                      items.map((item, currentIndex) =>
-                        currentIndex === index ? { ...item, original } : item,
-                      ),
-                    )
-                  }
-                />
-                {definition.spells.some((spell) => spell.school === school.id) && (
-                  <p className="text-xs text-lcars-ink-dim">
-                    Diese Schule wird noch von Spells verwendet. Entferne zuerst
-                    die zugehörigen Spells.
-                  </p>
-                )}
-              </EntryCard>
-            ))}
-            {definition.schools.length <= 1 && (
-              <p className="text-xs text-lcars-ink-dim">
-                Ein Technomage-Modul benötigt mindestens eine Schule.
-              </p>
-            )}
-          </BuilderSection>
+              </div>
+            </div>
 
-          <BuilderSection
-            title="Technomage-Spells"
-            count={definition.spells.length}
-            addLabel="Spell hinzufügen"
-            onAdd={addSpell}
-            addDisabled={
-              definition.spells.length >= 2000 || definition.schools.length === 0
-            }
-          >
-            {definition.schools.length === 0 && (
-              <p className="text-sm text-lcars-ink-dim">
-                Lege zuerst mindestens eine Schule an, damit Spells zugeordnet
-                werden können.
-              </p>
-            )}
-            <TextField
-              label="Spells nach Name, ID oder Schule filtern"
-              value={spellSearch}
-              onChange={setSpellSearch}
-            />
-            {visibleSpells.length < definition.spells.length && (
-              <p className="text-xs text-lcars-ink-dim">
-                {visibleSpells.length} von {definition.spells.length} Spells
-              </p>
-            )}
-            {visibleSpells.map(({ spell, index }) => (
-              <EntryCard
-                key={spell.id + "-" + index}
-                title={spell.name}
-                id={spell.id}
-                onRemove={() => removeItem("spells", index)}
-              >
-                <div className="grid gap-[10px] sm:grid-cols-2">
-                  <TextField label="ID" value={spell.id} onChange={(id) => patchItem("spells", index, { id })} />
-                  <TextField label="Spell-Name" value={spell.name} onChange={(name) => patchItem("spells", index, { name })} required />
-                  <SelectField
-                    label="Schule"
-                    value={spell.school}
-                    options={definition.schools.map((school) => ({
-                      value: school.id,
-                      label: school.label,
+            <div className="rounded border border-current/15 p-[10px]">
+              <div className="mb-[8px] flex flex-wrap items-center justify-between gap-[8px]">
+                <h4 className="font-bold">Eintragsfelder ({collection.fields.length})</h4>
+                <button
+                  type="button"
+                  className="lcars-pill-btn--outline"
+                  disabled={collection.fields.length >= 30}
+                  onClick={() => {
+                    const field: RuleModuleCollectionField = {
+                      id: nextEntryId(collection.fields.map((item) => item.id), "feld"),
+                      label: "Neues Feld",
+                      type: "text",
+                      options: [],
+                    };
+                    setCustomCollection(collectionIndex, (item) => ({ ...item, fields: [...item.fields, field] }));
+                  }}
+                >
+                  + Feld hinzufügen
+                </button>
+              </div>
+              {collection.fields.map((field, fieldIndex) => (
+                <div key={field.id + "-" + fieldIndex} className="mb-[8px] grid gap-[8px] rounded border border-current/10 p-[8px] sm:grid-cols-2">
+                  <TextField
+                    label="Feld-ID"
+                    value={field.id}
+                    onChange={(id) => setCustomCollection(collectionIndex, (item) => ({
+                      ...item,
+                      fields: item.fields.map((current, index) => index === fieldIndex ? { ...current, id } : current),
+                      entries: item.entries.map((entry) => {
+                        const values = { ...entry.values };
+                        if (Object.prototype.hasOwnProperty.call(values, field.id)) {
+                          values[id] = values[field.id];
+                          delete values[field.id];
+                        }
+                        return { ...entry, values };
+                      }),
                     }))}
-                    onChange={(school) => patchItem("spells", index, { school })}
-                  />
-                  <SelectField
-                    label="Wirkungsart"
-                    value={spell.effect}
-                    options={EFFECT_OPTIONS}
-                    onChange={(effect) => patchItem("spells", index, { effect })}
-                  />
-                  <TextField label="Voraussetzungen" value={spell.requirements} onChange={(requirements) => patchItem("spells", index, { requirements })} />
-                  <NumberField
-                    label="Magery-Schwierigkeit (optional)"
-                    value={spell.sourceMageryDc}
-                    onChange={(sourceMageryDc) => patchItem("spells", index, { sourceMageryDc })}
-                    nullable
-                    step="any"
+                    required
+                    maxLength={80}
                   />
                   <TextField
-                    label="Casting Time"
-                    value={spell.sourceCastingTime ?? ""}
-                    onChange={(sourceCastingTime) => patchItem("spells", index, { sourceCastingTime: sourceCastingTime || null })}
+                    label="Feldname"
+                    value={field.label}
+                    onChange={(label) => setCustomCollection(collectionIndex, (item) => ({
+                      ...item,
+                      fields: item.fields.map((current, index) => index === fieldIndex ? { ...current, label } : current),
+                    }))}
+                    required
+                    maxLength={120}
                   />
-                  <TextField
-                    label="Casting Cost"
-                    value={spell.sourceCastingCost ?? ""}
-                    onChange={(sourceCastingCost) => patchItem("spells", index, { sourceCastingCost: sourceCastingCost || null })}
+                  <SelectField<RuleModuleCollectionFieldType>
+                    label="Feldtyp"
+                    value={field.type}
+                    options={[
+                      { value: "text", label: "Text" },
+                      { value: "number", label: "Zahl" },
+                      { value: "checkbox", label: "Ja/Nein" },
+                      { value: "select", label: "Auswahlliste" },
+                    ]}
+                    onChange={(type) => setCustomCollection(collectionIndex, (item) => ({
+                      ...item,
+                      fields: item.fields.map((current, index) => index === fieldIndex ? { ...current, type, options: type === "select" ? (current.options.length > 0 ? current.options : ["Option 1"]) : [] } : current),
+                      entries: item.entries.map((entry) => ({
+                        ...entry,
+                        values: { ...entry.values, [field.id]: type === "number" ? 0 : type === "checkbox" ? false : type === "select" ? (field.options[0] ?? "Option 1") : "" },
+                      })),
+                    }))}
                   />
-                  <TextField
-                    label="Maintenance Cost"
-                    value={spell.sourceMaintenanceCost ?? ""}
-                    onChange={(sourceMaintenanceCost) => patchItem("spells", index, { sourceMaintenanceCost: sourceMaintenanceCost || null })}
-                  />
-                  <TextField label="Reichweite" value={spell.sourceRange ?? ""} onChange={(sourceRange) => patchItem("spells", index, { sourceRange: sourceRange || null })} />
-                  <TextField label="Ziel" value={spell.sourceTarget ?? ""} onChange={(sourceTarget) => patchItem("spells", index, { sourceTarget: sourceTarget || null })} />
-                  <TextField label="Dauer" value={spell.sourceDuration ?? ""} onChange={(sourceDuration) => patchItem("spells", index, { sourceDuration: sourceDuration || null })} />
-                  <TextField label="Element-Kategorie" value={spell.elementalCategory ?? ""} onChange={(elementalCategory) => patchItem("spells", index, { elementalCategory: elementalCategory || null })} />
-                  <NumberField
-                    label="Fact-Book-Seite"
-                    value={spell.sourcePage}
-                    minimum={1}
-                    onChange={(sourcePage) => patchItem("spells", index, { sourcePage: sourcePage ?? 1 })}
-                  />
+                  {field.type === "select" && (
+                    <TextField
+                      label="Optionen (mit Komma trennen)"
+                      value={field.options.join(", ")}
+                      onChange={(raw) => {
+                        const options = raw.split(",").map((option) => option.trim()).filter(Boolean).slice(0, 50);
+                        setCustomCollection(collectionIndex, (item) => ({
+                          ...item,
+                          fields: item.fields.map((current, index) => index === fieldIndex ? { ...current, options } : current),
+                          entries: item.entries.map((entry) => ({
+                            ...entry,
+                            values: {
+                              ...entry.values,
+                              [field.id]: options.includes(String(entry.values[field.id] ?? "")) ? entry.values[field.id] : (options[0] ?? ""),
+                            },
+                          })),
+                        }));
+                      }}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    className="lcars-pill-btn--outline self-end justify-self-start"
+                    onClick={() => setCustomCollection(collectionIndex, (item) => ({
+                      ...item,
+                      fields: item.fields.filter((_, index) => index !== fieldIndex),
+                      entries: item.entries.map((entry) => {
+                        const values = { ...entry.values };
+                        delete values[field.id];
+                        return { ...entry, values };
+                      }),
+                    }))}
+                  >
+                    Feld entfernen
+                  </button>
                 </div>
-              </EntryCard>
-            ))}
-          </BuilderSection>
-        </>
-      )}
+              ))}
+            </div>
+
+            <div className="rounded border border-current/15 p-[10px]">
+              <div className="mb-[8px] flex flex-wrap items-center justify-between gap-[8px]">
+                <h4 className="font-bold">Einträge ({collection.entries.length})</h4>
+                <button
+                  type="button"
+                  className="lcars-pill-btn--outline"
+                  disabled={collection.entries.length >= 500}
+                  onClick={() => {
+                    const values: RuleModuleCollectionEntry["values"] = {};
+                    for (const field of collection.fields) {
+                      values[field.id] = field.type === "number" ? 0 : field.type === "checkbox" ? false : field.type === "select" ? (field.options[0] ?? "") : "";
+                    }
+                    const entry: RuleModuleCollectionEntry = {
+                      id: nextEntryId(collection.entries.map((item) => item.id), "eintrag"),
+                      name: "Neuer Eintrag",
+                      values,
+                    };
+                    setCustomCollection(collectionIndex, (item) => ({ ...item, entries: [...item.entries, entry] }));
+                  }}
+                >
+                  + Eintrag hinzufügen
+                </button>
+              </div>
+              {collection.entries.map((entry, entryIndex) => (
+                <EntryCard
+                  key={entry.id + "-" + entryIndex}
+                  title={entry.name}
+                  id={entry.id}
+                  onRemove={() => setCustomCollection(collectionIndex, (item) => ({
+                    ...item,
+                    entries: item.entries.filter((_, index) => index !== entryIndex),
+                  }))}
+                >
+                  <TextField
+                    label="Eintragsname"
+                    value={entry.name}
+                    onChange={(name) => setCustomCollection(collectionIndex, (item) => ({
+                      ...item,
+                      entries: item.entries.map((current, index) => index === entryIndex ? { ...current, name } : current),
+                    }))}
+                    required
+                    maxLength={200}
+                  />
+                  <div className="grid gap-[8px] sm:grid-cols-2">
+                    {collection.fields.map((field) => (
+                      <Field key={field.id} label={field.label}>
+                        {field.type === "checkbox" ? (
+                          <input
+                            type="checkbox"
+                            checked={entry.values[field.id] === true}
+                            onChange={(event) => setCustomCollection(collectionIndex, (item) => ({
+                              ...item,
+                              entries: item.entries.map((current, index) => index === entryIndex ? { ...current, values: { ...current.values, [field.id]: event.currentTarget.checked } } : current),
+                            }))}
+                          />
+                        ) : field.type === "select" ? (
+                          <select
+                            className="lcars-input w-full"
+                            value={String(entry.values[field.id] ?? "")}
+                            onChange={(event) => setCustomCollection(collectionIndex, (item) => ({
+                              ...item,
+                              entries: item.entries.map((current, index) => index === entryIndex ? { ...current, values: { ...current.values, [field.id]: event.currentTarget.value } } : current),
+                            }))}
+                          >
+                            {field.options.map((option) => <option key={option} value={option}>{option}</option>)}
+                          </select>
+                        ) : (
+                          <input
+                            className="lcars-input w-full"
+                            type={field.type === "number" ? "number" : "text"}
+                            value={String(entry.values[field.id] ?? (field.type === "number" ? 0 : ""))}
+                            onChange={(event) => setCustomCollection(collectionIndex, (item) => ({
+                              ...item,
+                              entries: item.entries.map((current, index) => index === entryIndex ? { ...current, values: { ...current.values, [field.id]: field.type === "number" ? Number(event.currentTarget.value) : event.currentTarget.value } } : current),
+                            }))}
+                          />
+                        )}
+                      </Field>
+                    ))}
+                  </div>
+                </EntryCard>
+              ))}
+            </div>
+          </EntryCard>
+        ))}
+      </BuilderSection>
+
+
     </div>
   );
 }

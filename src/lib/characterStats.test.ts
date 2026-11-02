@@ -82,13 +82,17 @@ describe("parseCharacterStats", () => {
     });
   });
 
-  it("preserves generic rule-module resources, statuses, and repeatable talent selections", () => {
+  it("preserves generic rule-module resources, statuses, collection choices, and repeatable talents", () => {
     const stats = parseCharacterStats({
       ruleModules: {
         technomage: {
           resources: { "chaos-points": 18, "injury-stress": 2 },
           selectedTalents: ["multi-tasking", "multi-tasking", "ordered-mind"],
           selectedStatuses: ["berserk", "berserk"],
+          selectedCollectionEntries: {
+            upgrades: ["optical-sensor", "optical-sensor", "shielding"],
+            "invalid id": ["ignored"],
+          },
           prestigeClass: "destroyer",
           prestigeAbilities: ["destroyer-self-control"],
         },
@@ -99,6 +103,7 @@ describe("parseCharacterStats", () => {
       resources: { "chaos-points": 18, "injury-stress": 2 },
       selectedTalents: ["multi-tasking", "multi-tasking", "ordered-mind"],
       selectedStatuses: ["berserk"],
+      selectedCollectionEntries: { upgrades: ["optical-sensor", "shielding"] },
       prestigeClass: "destroyer",
       prestigeAbilities: ["destroyer-self-control"],
     });

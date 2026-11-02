@@ -4,6 +4,7 @@ import { FormError, FormSuccess, SubmitButton } from "@/app/_shared/FormPrimitiv
 import type { CampaignRuleModule } from "@/lib/ruleModuleTypes";
 import { BASE_RULE_MODULE_ID } from "@/lib/baseRuleModule";
 import RuleModuleBuilder from "./RuleModuleBuilder";
+import TechnomageRuleModuleBuilder from "./TechnomageRuleModuleBuilder";
 import {
   deleteCampaignRuleModuleAction,
   resetBaseCampaignRuleModuleAction,
@@ -37,17 +38,21 @@ function RuleModuleDefinitionFields({
   onDraftChange: () => void;
 }) {
   const [draft, setDraft] = useState(definition);
+  const updateDraft = (nextDefinition: CampaignRuleModule["definition"]) => {
+    setDraft(nextDefinition);
+    onDraftChange();
+  };
 
   return (
     <>
       <input type="hidden" name="definition" value={JSON.stringify(draft)} />
       <RuleModuleBuilder
         definition={draft}
-        onChange={(nextDefinition) => {
-          setDraft(nextDefinition);
-          onDraftChange();
-        }}
+        onChange={updateDraft}
       />
+      {draft.id === "technomage" && (
+        <TechnomageRuleModuleBuilder definition={draft} onChange={updateDraft} />
+      )}
       <FormError message={state.error} />
     </>
   );

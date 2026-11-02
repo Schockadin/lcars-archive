@@ -66,6 +66,16 @@ export async function saveCharacterRuleModuleAction(
     }
   }
 
+  const selectedCollectionEntries: Record<string, string[]> = {};
+  for (const collection of campaignModule.definition.collections) {
+    const allowedEntries = new Set(collection.entries.map((entry) => entry.id));
+    const selectedEntries = [...new Set(formData.getAll(`collection:${collection.id}`).map(String))];
+    if (selectedEntries.some((id) => !allowedEntries.has(id))) {
+      return { error: `Die Auswahl für „${collection.title}“ enthält einen ungültigen Eintrag.` };
+    }
+    selectedCollectionEntries[collection.id] = selectedEntries;
+  }
+
   const resources: Record<string, number> = {};
   for (const resource of campaignModule.definition.resources) {
     // Die Technomage-PP haben ein eigenes, regelgeprüftes Ausgaben- und
@@ -81,6 +91,7 @@ export async function saveCharacterRuleModuleAction(
     resources,
     selectedTalents,
     selectedStatuses,
+    selectedCollectionEntries,
     prestigeClass,
     prestigeAbilities: selectedAbilities,
   };

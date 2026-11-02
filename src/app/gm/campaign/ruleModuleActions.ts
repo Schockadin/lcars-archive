@@ -53,6 +53,7 @@ export async function createCampaignRuleModuleAction(
     statuses: [],
     talents: [],
     prestigeClasses: [],
+    collections: [],
     schools: [],
     spells: [],
   };
@@ -80,7 +81,7 @@ export async function saveCampaignRuleModuleAction(
   }
   const definition = validateRuleModuleDefinition(parsed, moduleId);
   if (!definition) {
-    return { error: "Die Modulstruktur ist ungültig. Prüfe Regeln, Ressourcen, Talente, Prestige-Klassen, Schulen und Spells." };
+    return { error: "Die Modulstruktur ist ungültig. Prüfe Regeln, Ressourcen, Talente, Prestige-Pfade, eigene Inhaltsbereiche sowie gegebenenfalls Schulen und Spells." };
   }
   const enabled = isBaseRuleModule(moduleId) || formData.get("enabled") === "true";
   await saveCampaignRuleModule(moduleId, enabled, definition, user.id);

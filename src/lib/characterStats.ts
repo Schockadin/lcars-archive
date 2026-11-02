@@ -340,10 +340,17 @@ function normalizeRuleModuleData(value: unknown): RuleModuleCharacterData {
     }
   }
   const prestigeClass = normalizeText(source.prestigeClass);
+  const rawCollections = asRecord(source.selectedCollectionEntries);
+  const selectedCollectionEntries: Record<string, string[]> = {};
+  for (const [collectionId, rawEntries] of Object.entries(rawCollections)) {
+    if (!/^[a-z0-9][a-z0-9-]{0,79}$/i.test(collectionId)) continue;
+    selectedCollectionEntries[collectionId] = [...new Set(normalizeList(rawEntries))].slice(0, 500);
+  }
   return {
     resources,
     selectedTalents: normalizeList(source.selectedTalents).slice(0, 500),
     selectedStatuses: [...new Set(normalizeList(source.selectedStatuses))].slice(0, 100),
+    selectedCollectionEntries,
     prestigeClass,
     prestigeAbilities: [...new Set(normalizeList(source.prestigeAbilities))].slice(0, 200),
   };

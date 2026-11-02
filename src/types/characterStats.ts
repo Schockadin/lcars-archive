@@ -64,6 +64,7 @@ export interface RuleModuleCharacterData {
   resources: Record<string, number>;
   selectedTalents: string[];
   selectedStatuses: string[];
+  selectedCollectionEntries: Record<string, string[]>;
   prestigeClass: string | null;
   prestigeAbilities: string[];
 }

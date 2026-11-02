@@ -45,6 +45,7 @@ export const BASE_RULE_MODULE: RuleModuleDefinition = {
   statuses: [],
   talents: [],
   prestigeClasses: [],
+  collections: [],
   schools: [],
   spells: [],
 };

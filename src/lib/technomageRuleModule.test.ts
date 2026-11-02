@@ -32,9 +32,41 @@ describe("Technomage STA 2e rule module", () => {
       statuses: [],
       talents: [],
       prestigeClasses: [],
+      collections: [],
       schools: [],
       spells: [],
     };
     expect(validateRuleModuleDefinition(definition, "xenobiology")).toEqual(definition);
+  });
+
+  it("validates independent module catalogs with typed fields and selectable entries", () => {
+    const definition = {
+      id: "xenobiology",
+      name: "Xenobiologie",
+      summary: "Forschungserweiterung.",
+      characterRoles: ["*"],
+      rules: [],
+      resources: [],
+      statuses: [],
+      talents: [],
+      prestigeClasses: [],
+      collections: [{
+        id: "research-tools",
+        title: "Forschungswerkzeuge",
+        description: "Freigeschaltete Ausrüstung.",
+        fields: [
+          { id: "quality", label: "Qualität", type: "select", options: ["Standard", "Erweitert"] },
+          { id: "charges", label: "Ladungen", type: "number", options: [] },
+        ],
+        entries: [{ id: "scanner", name: "Bioscanner", values: { quality: "Erweitert", charges: 3 } }],
+      }],
+      schools: [],
+      spells: [],
+    };
+    expect(validateRuleModuleDefinition(definition, "xenobiology")).toEqual(definition);
+    expect(validateRuleModuleDefinition({
+      ...definition,
+      collections: [{ ...definition.collections[0], entries: [{ id: "scanner", name: "Bioscanner", values: { quality: "Unbekannt", charges: 3 } }] }],
+    }, "xenobiology")).toBeNull();
   });
 });

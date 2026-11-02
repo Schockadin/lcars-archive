@@ -89,7 +89,9 @@ export function GmCampaignGuide() {
         <p>
           Weitere Module legst du über das Formular an. Im Editor stellst du
           Regeln und Charakterwerte wie Ressourcen, Status, Talente oder
-          Prestige-Pfade aus Bausteinen zusammen. Du kannst jedes Zusatzmodul
+          Prestige-Pfade aus Bausteinen zusammen. Zusätzlich kannst du eigene
+          Inhaltsbereiche mit benannten Feldern und auswählbaren Einträgen
+          anlegen, etwa Kräfte, Ausrüstung, Formen oder Fraktionsvorteile. Du kannst jedes Zusatzmodul
           bearbeiten, aktivieren, deaktivieren oder löschen. Ein Modul wird
           Charakteren angezeigt, deren Rolle zu seiner Definition passt.
           Bereits gespeicherte Modulwerte bleiben beim Löschen auf den
@@ -117,8 +119,11 @@ export function GmCampaignGuide() {
             Öffne im Modul die gewünschte Kategorie und wähle{" "}
             <strong>„… hinzufügen“</strong>. Jeder Baustein hat passende
             Eingabefelder: etwa Titel und Regeltext, Name und Maximum für
-            Ressourcen oder Rang und AP für Prestige-Fähigkeiten. Entfernte
-            Bausteine werden erst beim Speichern übernommen.
+            Ressourcen oder Rang und AP für Prestige-Fähigkeiten. Ein eigener
+            Inhaltsbereich kann seine Felder als Text, Zahl, Ja/Nein oder
+            Auswahlliste definieren; darunter legst du die auswählbaren Einträge
+            samt Werten an. Entfernte Bausteine werden erst beim Speichern
+            übernommen.
           </li>
           <li>
             Speichere das Modul und aktiviere es über{" "}
@@ -136,9 +141,11 @@ export function GmCampaignGuide() {
           Häkchen. Talente dokumentieren vorhandene Auswahlen, vergeben aber
           keine regulären Talentwahlen oder AP. Bei Prestige-Pfaden werden
           Fähigkeiten anhand ihres <code>ap</code>-Werts freigeschaltet;
-          <code>requirements</code> beschreibt Voraussetzungen als Text. Das
-          Modul führt keine frei definierten Formeln oder neuen Würfelregeln
-          aus. Bei Prestige-Fähigkeiten müssen <code>rank</code> zwischen 1
+          <code>requirements</code> beschreibt Voraussetzungen als Text. Eigene
+          Inhaltsbereiche zeigen ihre Felder auf dem Charakterbogen an und
+          lassen passende Einträge auswählen. Die Werte dienen der
+          Dokumentation; das Modul führt keine frei definierten Formeln oder
+          neuen Würfelregeln aus. Bei Prestige-Fähigkeiten müssen <code>rank</code> zwischen 1
           und 10 sowie <code>ap</code> mindestens 0 sein.
         </p>
         <p>

@@ -80,6 +80,15 @@ function validateRuleModuleData(
     return `${id}: Die Modulauswahl enthält einen unbekannten Status.`;
   }
 
+  const collections = new Map(definition.collections.map((collection) => [collection.id, collection]));
+  for (const [collectionId, selectedIds] of Object.entries(data.selectedCollectionEntries)) {
+    const collection = collections.get(collectionId);
+    const entries = new Set(collection?.entries.map((entry) => entry.id) ?? []);
+    if (!collection || selectedIds.some((entryId) => !entries.has(entryId))) {
+      return `${id}: Die Modulauswahl enthält einen unbekannten Inhaltsbereich-Eintrag.`;
+    }
+  }
+
   const prestige = data.prestigeClass
     ? definition.prestigeClasses.find((item) => item.id === data.prestigeClass)
     : undefined;
@@ -116,10 +125,12 @@ async function validateRuleModuleImports(
   for (const id of moduleIds) {
     const next = stats.ruleModules[id] ?? {
       resources: {}, selectedTalents: [], selectedStatuses: [],
+      selectedCollectionEntries: {},
       prestigeClass: null, prestigeAbilities: [],
     };
     const previous = current.ruleModules[id] ?? {
       resources: {}, selectedTalents: [], selectedStatuses: [],
+      selectedCollectionEntries: {},
       prestigeClass: null, prestigeAbilities: [],
     };
     if (sameJson(next, previous)) continue;
