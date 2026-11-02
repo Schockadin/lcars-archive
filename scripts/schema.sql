@@ -1499,6 +1499,21 @@ CREATE TABLE IF NOT EXISTS campaign_rules (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ---------------------------------------------------------------------------
+-- campaign_rule_modules
+-- ---------------------------------------------------------------------------
+-- Aktivierbare, JSON-definierte Regelsysteme der Kampagne. Die Definition
+-- enthält Regeln, Ressourcen, Talente, Prestige-Pfade und gegebenenfalls
+-- Spells und kann unter /gm/campaign bearbeitet werden.
+CREATE TABLE IF NOT EXISTS campaign_rule_modules (
+  id          TEXT PRIMARY KEY,
+  enabled     BOOLEAN NOT NULL DEFAULT TRUE,
+  definition  JSONB NOT NULL,
+  updated_by  INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 
 -- ---------------------------------------------------------------------------
 -- Aus drei Sichtbarkeiten werden zwei Zustände (siehe migrate-pr71.sql)

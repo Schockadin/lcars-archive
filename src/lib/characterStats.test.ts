@@ -82,6 +82,28 @@ describe("parseCharacterStats", () => {
     });
   });
 
+  it("preserves generic rule-module resources, statuses, and repeatable talent selections", () => {
+    const stats = parseCharacterStats({
+      ruleModules: {
+        technomage: {
+          resources: { "chaos-points": 18, "injury-stress": 2 },
+          selectedTalents: ["multi-tasking", "multi-tasking", "ordered-mind"],
+          selectedStatuses: ["berserk", "berserk"],
+          prestigeClass: "destroyer",
+          prestigeAbilities: ["destroyer-self-control"],
+        },
+      },
+    });
+
+    expect(stats.ruleModules.technomage).toEqual({
+      resources: { "chaos-points": 18, "injury-stress": 2 },
+      selectedTalents: ["multi-tasking", "multi-tasking", "ordered-mind"],
+      selectedStatuses: ["berserk"],
+      prestigeClass: "destroyer",
+      prestigeAbilities: ["destroyer-self-control"],
+    });
+  });
+
   it("verwirft Zahlen außerhalb des erlaubten Bereichs und Nicht-Ganzzahlen", () => {
     const stats = parseCharacterStats({
       // Attribute liegen zwischen 7 und 12, Disziplinen zwischen 1 und 5.

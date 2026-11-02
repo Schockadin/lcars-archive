@@ -77,6 +77,23 @@ export function GmCampaignGuide() {
           {" "}nachlesen.
         </p>
       </GuideSection>
+      <GuideSection title="Kampagne · Regel-Module">
+        <p>
+          Unter <strong>„Regel-Module“</strong> aktivierst du optionale
+          Regelsysteme für passende Charakterrollen. Das Technomage-Modul
+          enthält die STA-2e-Regeln, alle Spells, Talente und sechs
+          Prestige-Pfade. Die JSON-Definition lässt sich als Ganzes bearbeiten;
+          auf den Charakterseiten erscheinen daraus die Regeln, Ressourcen und
+          auswählbaren Moduleinträge. Die Charakter-Sektion gilt auch als
+          Grundlage für weitere Module mit eigenen Ressourcen oder Statuswerten.
+        </p>
+        <p>
+          Änderungen werden erst nach <strong>„Regelmodul speichern“</strong>
+          übernommen. Bei einer bestehenden Kampagne ist das Technomage-Modul
+          zunächst aktiviert, damit vorhandene Technomage-Charaktere weiter
+          funktionieren.
+        </p>
+      </GuideSection>
     </GuideBody>
   );
 }
@@ -352,12 +369,12 @@ export function GmApGuide() {
         </p>
         <p>
           Unter <strong>„Technomage-Stufen“</strong> findest du die feste
-          Umrechnung der D20-Erfahrungsschwellen in AP: 150 XP je AP, Stufe 4 ab
-          40 AP. Gezählt werden alle erhaltenen AP; ausgegebene AP ändern die
-          Stufe nicht. Das Spelllimit und das maximale PP-Konto folgen danach
-          der Technomage-Klassenprogression aus dem Fact Book. Dabei gilt der
+          AP-Formel des STA-2e-Fact-Books: aufgerundet 10/3 × Level × (Level−1),
+          Stufe 4 ab 40 AP. Gezählt werden alle erhaltenen AP; ausgegebene AP
+          ändern die Stufe nicht. Das Spelllimit und das maximale PP-Konto
+          folgen der Technomage-Progression aus dem Fact Book. Dabei gilt der
           STA-2e-Modifikator (Attributwert minus 7): Reason bestimmt das
-          Spelllimit, Fitness und Insight das maximale PP-Konto.
+          Spelllimit, Fitness und Presence das maximale PP-Konto.
         </p>
       </GuideSection>
     </GuideBody>

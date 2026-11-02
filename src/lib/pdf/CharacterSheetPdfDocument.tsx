@@ -616,7 +616,7 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
     input.talents.map((talent) => [talent.name.toLowerCase(), talent]),
   );
   const learnedSpells = input.stats.technomage.spells
-    .map(getTechnomageSpell)
+    .map((spellId) => getTechnomageSpell(spellId))
     .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
   const technomageLevel = technomageLevelFromAp(input.earnedAp);
   const knownSpellCount = new Set(input.stats.technomage.spells).size;
@@ -627,7 +627,7 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
   const powerPointMaximum = technomagePowerPointMaximum(
     technomageLevel,
     input.stats.attributes.fitness,
-    input.stats.attributes.insight,
+    input.stats.attributes.presence,
   );
   const currentPowerPoints = effectiveTechnomagePowerPoints(
     input.stats.technomage.powerPointsCurrent,

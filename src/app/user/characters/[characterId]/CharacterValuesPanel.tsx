@@ -23,8 +23,6 @@ import type { ApAccount } from "@/lib/apReasons";
 import type { Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
 import CharacterPanel from "./CharacterPanel";
-import TechnomageSpellsPanel from "./TechnomageSpellsPanel";
-import { isTechnomageRole } from "@/lib/technomageSpellCatalog";
 
 const initialState: CharacterPanelState = {};
 const initialAdvancementState: AdvancementActionResult = {};
@@ -186,14 +184,6 @@ export default function CharacterValuesPanel({
         )}
       </div>
       </CharacterPanel>
-      {isTechnomageRole(savedStats.characterRole) && (
-        <TechnomageSpellsPanel
-          userId={userId}
-          characterId={characterId}
-          stats={savedStats}
-          earnedAp={account.earned}
-        />
-      )}
     </>
   );
 }

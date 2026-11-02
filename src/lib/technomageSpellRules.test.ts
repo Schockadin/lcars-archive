@@ -5,6 +5,7 @@ import {
   getTechnomageSpell,
   isTechnomageRole,
   spellPrerequisiteGroups,
+  technomageSpellDifficulty,
   technomageSpellDetails,
   technomageSpellExplanation,
 } from "@/lib/technomageSpellCatalog";
@@ -17,6 +18,9 @@ import {
   technomageKnownSpellLimit,
   technomageLevelFromAp,
   technomagePowerPointMaximum,
+  technomageChaosControlDifficulty,
+  technomageChaosPointLimit,
+  technomageConcurrentSpellCapacity,
   technomageRecoveryIntervalMinutes,
 } from "@/lib/technomageSpellRules";
 
@@ -40,7 +44,7 @@ describe("Technomage spell catalog", () => {
     expect(isTechnomageRole("Mediziner")).toBe(false);
   });
 
-  it("maps total awarded AP to nonlinear d20 levels", () => {
+  it("maps total awarded AP to Fact-Book Technomage levels", () => {
     expect(technomageLevelFromAp(0)).toBe(1);
     expect(technomageLevelFromAp(6)).toBe(1);
     expect(technomageLevelFromAp(7)).toBe(2);
@@ -66,11 +70,12 @@ describe("Technomage spell catalog", () => {
     expect(technomageKnownSpellLimit(7, 7)).toBe(20);
   });
 
-  it("calculates maximum Power Points from class level and STA 2e attributes", () => {
+  it("calculates maximum Power Points with Fitness and Presence modifiers", () => {
     expect(technomagePowerPointMaximum(1, 10, 10)).toBe(20);
     expect(technomagePowerPointMaximum(4, 10, 10)).toBe(36);
     expect(technomagePowerPointMaximum(5, 10, 10)).toBe(45);
     expect(technomagePowerPointMaximum(4, 12, 12)).toBe(46);
+    expect(technomagePowerPointMaximum(1, 9, 7)).toBe(16);
   });
 
   it("uses STA 2e attributes for a Technomage with 40 awarded AP", () => {
@@ -78,6 +83,25 @@ describe("Technomage spell catalog", () => {
     expect(level).toBe(4);
     expect(technomageKnownSpellLimit(level, 11)).toBe(31);
     expect(technomagePowerPointMaximum(level, 9, 10)).toBe(35);
+  });
+
+  it("calculates concurrent spell capacity and Chaos checks from Fact-Book attributes", () => {
+    expect(technomageConcurrentSpellCapacity(9, 2)).toBe(5);
+    expect(technomageConcurrentSpellCapacity(null)).toBe(1);
+    expect(technomageChaosPointLimit(10)).toBe(16);
+    expect(technomageChaosPointLimit(10, true)).toBe(20);
+    expect(technomageChaosControlDifficulty(20, 16)).toBe(1);
+    expect(technomageChaosControlDifficulty(33, 16)).toBe(5);
+    expect(technomageChaosControlDifficulty(16, 16)).toBeNull();
+  });
+
+  it("maps Fact-Book Magery DCs to STA base difficulty 0–4", () => {
+    const lesser = getTechnomageSpell("armour-lesser");
+    const greater = getTechnomageSpell("armour-greater");
+    const highDc = TECHNOMAGE_SPELLS.find((entry) => entry.sourceMageryDc === 32);
+    expect(lesser && technomageSpellDifficulty(lesser)).toBe(0);
+    expect(greater && technomageSpellDifficulty(greater)).toBe(2);
+    expect(highDc && technomageSpellDifficulty(highDc)).toBe(4);
   });
 
   it("carries new PP capacity forward and follows Fact Book recovery intervals", () => {

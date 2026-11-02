@@ -11,9 +11,9 @@ import { characterEditHref } from "@/lib/contentRoutes";
 import {
   TECHNOMAGE_SCHOOLS,
   getTechnomageSpell,
-  isTechnomageRole,
 } from "@/lib/technomageSpellCatalog";
 import { getApAccount } from "@/lib/characterAp";
+import { getCampaignRuleModule, moduleSupportsCharacterRole } from "@/lib/campaignRuleModules";
 import {
   calculateTechnomagePowerPointRecovery,
   createSpellPurchasePlan,
@@ -74,7 +74,8 @@ export async function configureTechnomageSchoolsAction(
   if (!current) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
   }
-  if (!isTechnomageRole(current.stats.characterRole)) {
+  const ruleModule = await getCampaignRuleModule("technomage");
+  if (!ruleModule?.enabled || !moduleSupportsCharacterRole(ruleModule.definition, current.stats.characterRole)) {
     return { error: "Die Schulauswahl ist nur für Techno-Magier verfügbar." };
   }
   const saved = current.stats.technomage;
@@ -111,14 +112,16 @@ export async function buyTechnomageSpellAction(
   const characterId = readCharacterId(formData);
   if (characterId === null) return { error: "Ungültiger Charakter." };
   const spellId = String(formData.get("spellId") ?? "");
-  const spell = getTechnomageSpell(spellId);
+  const ruleModule = await getCampaignRuleModule("technomage");
+  if (!ruleModule?.enabled) return { error: "Das Technomage-Regelmodul ist nicht aktiviert." };
+  const spell = getTechnomageSpell(spellId, ruleModule.definition.spells);
   if (!spell) return { error: "Dieser Spell ist nicht verfügbar." };
 
   const current = await getOwnCharacterStats(session.userId, characterId);
   if (!current) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
   }
-  if (!isTechnomageRole(current.stats.characterRole)) {
+  if (!moduleSupportsCharacterRole(ruleModule.definition, current.stats.characterRole)) {
     return { error: "Spells sind nur für Techno-Magier verfügbar." };
   }
 
@@ -134,6 +137,7 @@ export async function buyTechnomageSpellAction(
     ),
     primarySchool: saved.primarySchool,
     weakSchools: saved.weakSchools,
+    spells: ruleModule.definition.spells,
   });
   if (!plan.ok) return { error: plan.error };
 
@@ -185,7 +189,8 @@ export async function updateTechnomagePowerPointsAction(
   if (!current) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
   }
-  if (!isTechnomageRole(current.stats.characterRole)) {
+  const ruleModule = await getCampaignRuleModule("technomage");
+  if (!ruleModule?.enabled || !moduleSupportsCharacterRole(ruleModule.definition, current.stats.characterRole)) {
     return { error: "Power Points sind nur für Techno-Magier verfügbar." };
   }
 
@@ -194,7 +199,7 @@ export async function updateTechnomagePowerPointsAction(
   const maximum = technomagePowerPointMaximum(
     level,
     current.stats.attributes.fitness,
-    current.stats.attributes.insight,
+    current.stats.attributes.presence,
   );
   const saved = current.stats.technomage;
   const available = effectiveTechnomagePowerPoints(

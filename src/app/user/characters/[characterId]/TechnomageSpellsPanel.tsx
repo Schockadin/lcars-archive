@@ -6,12 +6,9 @@ import { FormError } from "@/app/_shared/FormPrimitives";
 import LearnedSpellsSection from "@/app/user/characters/[characterId]/LearnedSpellsSection";
 import { useToast } from "@/components/toast/ToastProvider";
 import {
-  TECHNOMAGE_SPELLS,
-  TECHNOMAGE_SCHOOLS,
   getTechnomageSchool,
   getTechnomageSpell,
   spellPrerequisiteGroups,
-  technomageSchoolLabel,
   technomageSpellDetails,
   technomageSpellExplanation,
   technomageSpellFluff,
@@ -21,6 +18,7 @@ import {
   effectiveTechnomagePowerPoints,
   getSpellPurchaseSlotCost,
   spellTreeDepth,
+  technomageConcurrentSpellCapacity,
   technomageApForLevel,
   technomageKnownSpellLimit,
   technomageLevelFromAp,
@@ -30,6 +28,7 @@ import type {
   CharacterStats,
   TechnomageSchool,
 } from "@/types/characterStats";
+import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import {
   buyTechnomageSpellAction,
   configureTechnomageSchoolsAction,
@@ -55,9 +54,11 @@ function useActionFeedback(state: TechnomageActionState) {
 function SchoolSetup({
   userId,
   characterId,
+  schools,
 }: {
   userId: number;
   characterId: number;
+  schools: RuleModuleDefinition["schools"];
 }) {
   const [state, action, pending] = useActionState(
     configureTechnomageSchoolsAction,
@@ -99,7 +100,7 @@ function SchoolSetup({
           <option value="" disabled>
             Schule auswählen
           </option>
-          {TECHNOMAGE_SCHOOLS.map((school) => (
+          {schools.map((school) => (
             <option key={school.id} value={school.id}>
               {school.label} ({school.original})
             </option>
@@ -129,7 +130,7 @@ function SchoolSetup({
               <option value="" disabled>
                 Schule auswählen
               </option>
-              {TECHNOMAGE_SCHOOLS.map((school) => (
+              {schools.map((school) => (
                 <option
                   key={school.id}
                   value={school.id}
@@ -161,15 +162,17 @@ function SpellTooltip({
   spellId,
   primarySchool,
   weakSchools,
+  spells,
 }: {
   spellId: string;
   primarySchool: TechnomageSchool | null;
   weakSchools: readonly TechnomageSchool[];
+  spells: RuleModuleDefinition["spells"];
 }) {
-  const spell = getTechnomageSpell(spellId);
+  const spell = getTechnomageSpell(spellId, spells);
   if (!spell) return null;
-  const requirementGroups = spellPrerequisiteGroups(spell.id).map((group) =>
-    group.map(getTechnomageSpell).filter((entry) => entry !== undefined),
+  const requirementGroups = spellPrerequisiteGroups(spell.id, spells).map((group) =>
+    group.map((id) => getTechnomageSpell(id, spells)).filter((entry) => entry !== undefined),
   );
   const details = technomageSpellDetails(spell, primarySchool, weakSchools);
 
@@ -232,6 +235,8 @@ function SpellTree({
   searchQuery,
   availableSlots,
   reachableOnly,
+  moduleSpells,
+  moduleSchools,
 }: {
   schoolId: TechnomageSchool;
   knownSpellIds: readonly string[];
@@ -241,10 +246,12 @@ function SpellTree({
   searchQuery: string;
   availableSlots: number;
   reachableOnly: boolean;
+  moduleSpells: RuleModuleDefinition["spells"];
+  moduleSchools: RuleModuleDefinition["schools"];
 }) {
-  const spells = useMemo(() => {
+  const orderedSpells = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase();
-    return TECHNOMAGE_SPELLS.filter((spell) => spell.school === schoolId)
+    return moduleSpells.filter((spell) => spell.school === schoolId)
       .map((spell) => ({
         spell,
         slotCost: getSpellPurchaseSlotCost({
@@ -252,6 +259,7 @@ function SpellTree({
           knownSpellIds,
           primarySchool,
           weakSchools,
+          spells: moduleSpells,
         }),
       }))
       .filter(({ spell, slotCost }) => {
@@ -277,8 +285,8 @@ function SpellTree({
       })
       .sort(
         (a, b) =>
-          spellTreeDepth(a.spell.id, schoolId) -
-            spellTreeDepth(b.spell.id, schoolId) ||
+          spellTreeDepth(a.spell.id, schoolId, new Set(), moduleSpells) -
+            spellTreeDepth(b.spell.id, schoolId, new Set(), moduleSpells) ||
           a.spell.name.localeCompare(b.spell.name),
       );
   }, [
@@ -289,22 +297,23 @@ function SpellTree({
     knownSpellIds,
     availableSlots,
     reachableOnly,
+    moduleSpells,
   ]);
   const known = new Set(knownSpellIds);
 
   return (
     <ol className="ml-[8px] flex flex-col gap-[10px] border-l-2 border-current/25 pl-[14px]">
-      {spells.length === 0 && (
+      {orderedSpells.length === 0 && (
         <li className="list-none py-[8px] text-sm opacity-75" role="status">
           Keine passenden Spells in dieser Schule.
         </li>
       )}
-      {spells.map(({ spell, slotCost }) => {
+      {orderedSpells.map(({ spell, slotCost }) => {
         const learned = known.has(spell.id);
-        const prerequisiteGroups = spellPrerequisiteGroups(spell.id);
+        const prerequisiteGroups = spellPrerequisiteGroups(spell.id, moduleSpells);
         const prerequisiteIds = prerequisiteGroups.flat();
         const foreignDependencies = prerequisiteIds
-          .map((id) => getTechnomageSpell(id))
+          .map((id) => getTechnomageSpell(id, moduleSpells))
           .filter(
             (entry): entry is TechnomageSpell =>
               entry !== undefined && entry.school !== schoolId,
@@ -312,7 +321,7 @@ function SpellTree({
         const localRequirementGroups = prerequisiteGroups
           .map((group) =>
             group
-              .map((id) => getTechnomageSpell(id))
+              .map((id) => getTechnomageSpell(id, moduleSpells))
               .filter(
                 (entry): entry is TechnomageSpell =>
                   entry !== undefined && entry.school === schoolId,
@@ -345,7 +354,7 @@ function SpellTree({
                   {schoolId === "elements" && spell.elementalCategory
                     ? spell.elementalCategory
                     : "Stufe " +
-                      (spellTreeDepth(spell.id, schoolId) + 1)}
+                      (spellTreeDepth(spell.id, schoolId, new Set(), moduleSpells) + 1)}
                 </span>
                 {localRequirementGroups.length > 0 && (
                   <span className="block text-[11px] opacity-70">
@@ -363,7 +372,7 @@ function SpellTree({
                     title={foreignDependencies
                       .map(
                         (entry) =>
-                          entry.name + " · " + technomageSchoolLabel(entry.school),
+                          entry.name + " · " + (getTechnomageSchool(entry.school, moduleSchools)?.label ?? entry.school),
                       )
                       .join(", ")}
                   >
@@ -386,6 +395,7 @@ function SpellTree({
               spellId={spell.id}
               primarySchool={primarySchool}
               weakSchools={weakSchools}
+              spells={moduleSpells}
             />
           </li>
         );
@@ -415,7 +425,7 @@ function PowerPointTracker({
   const maximum = technomagePowerPointMaximum(
     level,
     stats.attributes.fitness,
-    stats.attributes.insight,
+    stats.attributes.presence,
   );
   const current = effectiveTechnomagePowerPoints(
     stats.technomage.powerPointsCurrent,
@@ -429,8 +439,8 @@ function PowerPointTracker({
         <div>
           <h3 className="font-bold">Power Points</h3>
           <p className="text-xs opacity-75">
-            Maximum: 10 + 1d6 + Fitness-Mod. + Insight-Mod.; je weitere Stufe
-            1d4 + Insight-Mod., auf Stufe 5/10/15/20 zusätzlich +3.
+            Maximum: 10 + 1d6 + Fitness-Mod. + Presence-Mod.; je weitere Stufe
+            1d4 + Presence-Mod., auf Stufe 5/10/15/20 zusätzlich +3.
             Modifikator = Attributwert − 7.
           </p>
         </div>
@@ -529,11 +539,13 @@ export default function TechnomageSpellsPanel({
   characterId,
   stats,
   earnedAp,
+  moduleDefinition,
 }: {
   userId: number;
   characterId: number;
   stats: CharacterStats;
   earnedAp: number;
+  moduleDefinition: RuleModuleDefinition;
 }) {
   const [schoolIndex, setSchoolIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
@@ -545,12 +557,19 @@ export default function TechnomageSpellsPanel({
   useActionFeedback(state);
 
   const technomage = stats.technomage;
+  const moduleSpells = moduleDefinition.spells;
+  const moduleSchools = moduleDefinition.schools;
   const level = technomageLevelFromAp(earnedAp);
   const total = technomageKnownSpellLimit(level, stats.attributes.reason);
+  const selectedModuleTalents = stats.ruleModules["technomage"]?.selectedTalents ?? [];
+  const concurrentSpellCapacity = technomageConcurrentSpellCapacity(
+    stats.attributes.fitness,
+    selectedModuleTalents.filter((id) => id === "multi-tasking").length,
+  );
   const learnedCount = new Set(technomage.spells).size;
   const available = Math.max(0, total - learnedCount);
   const nextLevelAp = technomageApForLevel(level + 1);
-  const activeSchool = TECHNOMAGE_SCHOOLS[schoolIndex];
+  const activeSchool = moduleSchools[schoolIndex];
   const configured = Boolean(
     technomage.primarySchool && technomage.weakSchools.length === 3,
   );
@@ -567,6 +586,7 @@ export default function TechnomageSpellsPanel({
           </h2>
           <p className="text-xs opacity-75">
             Techno-Mage-Stufe {level} · {earnedAp} AP vergeben
+            {" · "}{concurrentSpellCapacity} gleichzeitig aktive Spells
             {nextLevelAp === null
               ? " · höchste Stufe"
               : ` · Stufe ${level + 1} ab ${nextLevelAp} AP`}
@@ -583,11 +603,11 @@ export default function TechnomageSpellsPanel({
 
       <p className="text-xs opacity-75">
         Das Fact Book kennt keine Spellgrade oder täglichen Slots. Die AP-Stufen
-        folgen den d20-XP-Schwellen (150 XP je AP); 40 AP ergeben Stufe 4.
+        folgen der AP-Formel aus dem STA-2e-Fact-Book; 40 AP ergeben Stufe 4.
         Würfelwerte für Spell- und PP-Zuwachs werden als Erwartungswert
         berechnet und kumuliert gerundet. STA-2e-Modifikatoren sind jeweils
         Attributwert − 7; Reason bestimmt die Spell-Kapazität, Fitness und
-        Insight das PP-Maximum.
+        Presence das PP-Maximum. Magery nutzt Reason oder Daring + Science.
         Bekannte Spells können mit ausreichenden PP gewirkt werden; ihre
         individuellen Casting- und Maintenance-Kosten werden bei der PP-Ausgabe
         manuell gebucht.
@@ -601,7 +621,7 @@ export default function TechnomageSpellsPanel({
       />
 
       <div className="flex flex-wrap gap-[6px] text-xs">
-        {TECHNOMAGE_SCHOOLS.map((school) => (
+        {moduleSchools.map((school) => (
           <span
             key={school.id}
             className={
@@ -624,15 +644,15 @@ export default function TechnomageSpellsPanel({
       </div>
 
       {!configured ? (
-        <SchoolSetup userId={userId} characterId={characterId} />
+        <SchoolSetup userId={userId} characterId={characterId} schools={moduleSchools} />
       ) : (
         <>
           <p className="text-sm">
             Primär:{" "}
-            {getTechnomageSchool(technomage.primarySchool)?.label ?? "—"} ·
+            {getTechnomageSchool(technomage.primarySchool, moduleSchools)?.label ?? "—"} ·
             Schwach:{" "}
             {technomage.weakSchools
-              .map((school) => getTechnomageSchool(school)?.label ?? school)
+              .map((school) => getTechnomageSchool(school, moduleSchools)?.label ?? school)
               .join(", ")}
           </p>
           <div
@@ -645,8 +665,8 @@ export default function TechnomageSpellsPanel({
               onClick={() =>
                 setSchoolIndex(
                   (current) =>
-                    (current + TECHNOMAGE_SCHOOLS.length - 1) %
-                    TECHNOMAGE_SCHOOLS.length,
+                    (current + moduleSchools.length - 1) %
+                    moduleSchools.length,
                 )
               }
               className="lcars-pill-btn--outline"
@@ -658,7 +678,7 @@ export default function TechnomageSpellsPanel({
               aria-label="Techno-Magie-Schulen"
               className="flex min-w-0 flex-1 gap-[6px] overflow-x-auto py-[2px]"
             >
-              {TECHNOMAGE_SCHOOLS.map((school, index) => (
+              {moduleSchools.map((school, index) => (
                 <button
                   key={school.id}
                   type="button"
@@ -679,11 +699,7 @@ export default function TechnomageSpellsPanel({
             <button
               type="button"
               aria-label="Nächste Schule"
-              onClick={() =>
-                setSchoolIndex(
-                  (current) => (current + 1) % TECHNOMAGE_SCHOOLS.length,
-                )
-              }
+              onClick={() => setSchoolIndex((current) => (current + 1) % moduleSchools.length)}
               className="lcars-pill-btn--outline"
             >
               ›
@@ -692,7 +708,7 @@ export default function TechnomageSpellsPanel({
           <p className="text-sm opacity-75">
             {activeSchool.label} · {activeSchool.original} ·{" "}
             {
-              TECHNOMAGE_SPELLS.filter(
+              moduleSpells.filter(
                 (spell) => spell.school === activeSchool.id,
               ).length
             }{" "}
@@ -733,6 +749,8 @@ export default function TechnomageSpellsPanel({
               searchQuery={searchQuery}
               availableSlots={available}
               reachableOnly={reachableOnly}
+              moduleSpells={moduleSpells}
+              moduleSchools={moduleSchools}
             />
             <FormError message={state.error} />
           </form>
@@ -747,6 +765,8 @@ export default function TechnomageSpellsPanel({
         learnedSpellIds={technomage.spells}
         primarySchool={technomage.primarySchool}
         weakSchools={technomage.weakSchools}
+        spells={moduleSpells}
+        schools={moduleSchools}
       />
     </section>
   );

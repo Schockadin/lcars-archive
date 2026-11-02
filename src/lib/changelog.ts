@@ -147,16 +147,32 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: "2.5",
-    title: "D20-Fortschritt für Technomages",
+    version: "2.6",
+    title: "Erweiterbare Regel-Module",
     items: [
       {
-        text: "Technomage-Stufe, Spelllimit und Power-Point-Maximum folgen jetzt der nichtlinearen Klassenprogression des Fact Books und den STA-2e-Modifikatoren (Attributwert minus 7). 40 erhaltene AP entsprechen Stufe 4; ausgegebene AP senken die Stufe nicht. Power Points lassen sich ausgeben und nach den Fact-Book-Zeiten regenerieren.",
+        text: "Technomage-Charaktere erhalten eine eigene Regelmodul-Sektion mit Spell-Bäumen, Power Points, Chaos- und Verletzungsstress, Talenten sowie Prestige-Pfaden.",
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },
       {
-        text: "Die Spielleitung sieht auf der AP-Seite die vollständige Umrechnung der D20-Stufen in AP.",
+        text: "Die Spielleitung kann das vollständige Technomage-Regelmodul in der Kampagnenverwaltung aktivieren und Regeln, Spells, Talente, Prestige-Pfade und Ressourcen bearbeiten.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+    ],
+  },
+  {
+    version: "2.5",
+    title: "AP-Stufen für Technomages",
+    items: [
+      {
+        text: "Technomage-Stufe, Spelllimit und Power-Point-Maximum folgen der AP-Formel des STA-2e-Fact-Books und den Attributmodifikatoren (Attributwert minus 7). 40 erhaltene AP entsprechen Stufe 4; ausgegebene AP senken die Stufe nicht. Power Points lassen sich ausgeben und nach den Fact-Book-Zeiten regenerieren.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Die Spielleitung sieht auf der AP-Seite die vollständigen Technomage-AP-Schwellen.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },

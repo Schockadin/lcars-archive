@@ -127,6 +127,12 @@ export default function DSGVOContent({ year }: { year: number }) {
           des Kontostands wird außerdem das PP-Maximum der letzten Buchung
           gespeichert. Stufe, Spellkapazität und aktuelles PP-Maximum ergeben
           sich aus dem Erfahrungspunkte-Konto und den Charakterattributen.
+          Wenn ein Regelmodul aktiviert ist, kommen modulabhängige Ressourcen,
+          Statuswerte, erworbene Talente und Prestige-Pfade hinzu. Die
+          Technomage-Sektion speichert insbesondere Chaos Points und
+          Verletzungsstress. Die Spielleitungskonfiguration des Regelmoduls
+          enthält die Regeltexte, Spell- und Talentdaten sowie den Account, der
+          die letzte Änderung gespeichert hat.
           Diese Angaben werden mit dem Charakterbogen nach den jeweiligen
           Zugriffsregeln angezeigt. Hinzu kommt ein{" "}
           <strong>Erfahrungspunkte-Konto</strong>. Dieses Konto ist ein

@@ -102,15 +102,15 @@ export default function CharacterCreationGuide() {
           Spellbäume; beim Hover erscheinen Fluff, STA-2e-Erklärung und fremde
           Voraussetzungen. Die Slotkosten zählen Voraussetzungen mit, die beim
           Kauf automatisch gelernt werden. Suche und Checkbox filtern die
-          Liste. Stufe, Spelllimit und PP-Maximum folgen der D20-
-          Klassenprogression aus dem Fact Book: 150 XP entsprechen einem AP,
-          deshalb sind 40 AP Stufe 4. Ausgegebene AP senken die Stufe nicht.
+          Liste. Stufe, Spelllimit und PP-Maximum folgen der AP-Formel des
+          STA-2e-Fact-Books: 40 AP entsprechen Stufe 4. Ausgegebene AP senken
+          die Stufe nicht.
           Power Points lassen sich beim Wirken ausgeben und nach den
           Regenerationszeiten des Fact Books zurückgewinnen. Auf dem
           Charakterbogen und im PDF stehen gelernte Spells mit Erklärung sowie
           Stufe und PP-Kontostand. Für Spelllimit und PP-Maximum gilt der
           STA-2e-Modifikator: Attributwert minus 7. Reason bestimmt das
-          Spelllimit; Fitness und Insight bestimmen das PP-Maximum.
+          Spelllimit; Fitness und Presence bestimmen das PP-Maximum.
         </p>
         <p>
           Im Abschnitt <strong>„Learned Spells // Gelernte Spells“</strong>{" "}
@@ -120,6 +120,15 @@ export default function CharacterCreationGuide() {
           wie Lesser Armour, Armour und Greater Armour stehen gebündelt in
           einem Eintrag; die Details jeder gelernten Variante bleiben einzeln
           aufgeführt.
+        </p>
+        <p>
+          Das Regelmodul ergänzt darunter eine eigene Charakter-Sektion: Dort
+          verwaltest du Chaos Points, Verletzungsstress, Status, erworbene
+          Technomage-Talente und deinen Prestige-Pfad. Talente werden dort nur
+          dokumentiert — eine Talentwahl muss regulär verdient sein; AP werden
+          für Module-Talente nicht zusätzlich ausgegeben. Die Spielleitung
+          kann das Modul und seinen Inhalt unter <strong>„Kampagne“ →
+          „Regel-Module“</strong> aktivieren und bearbeiten.
         </p>
         <p>
           Für die Zahlen gelten die <strong>Regeln der Runde</strong>: Attribute

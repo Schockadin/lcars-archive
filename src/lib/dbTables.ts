@@ -276,6 +276,14 @@ export const DB_TABLE_COLUMNS = {
     "created_at",
     "updated_at",
   ],
+  campaign_rule_modules: [
+    "id",
+    "enabled",
+    "definition",
+    "updated_by",
+    "created_at",
+    "updated_at",
+  ],
   talents: [
     "id",
     "name",
@@ -537,6 +545,7 @@ export const BACKUP_TABLES = [
   "character_ap_entries",
   "campaign_settings",
   "campaign_rules",
+  "campaign_rule_modules",
   "talents",
   "focuses",
   // game_sessions steht oben im Inhalte-Block, siehe dort.

@@ -23,13 +23,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   wählen je ein noch freies Departement; Augmented Ability wählt ein Attribut,
   Dedicated Focus X einen vorhandenen Schwerpunkt und setzt ein Departement
   auf mindestens 4 voraus.
-- **Techno-Magie für Technomages** — wählt eine Primärschule und drei schwache Schulen
-  und lernt Spells aus allen sieben Schulen. D20-Stufen aus erhaltenen AP
-  bestimmen Spellkapazität und Power-Point-Maximum nach den Fact-Book-Werten
-  und STA-2e-Modifikatoren; Power Points lassen sich ausgeben und regenerieren.
-  Eine ausführliche Learned-Spells-Sektion bündelt Stufen derselben Spell-
-  Familie und zeigt die Angaben jeder gelernten Variante. Die Spielleitung
-  sieht gelernte Spells und die AP-Umrechnung der D20-Stufen.
+- **Technomage-Regelmodul für STA 2e** — bildet Stufen direkt über die AP-Formel
+  des übersetzten Fact Books ab (40 AP = Stufe 4), berechnet Spellkapazität und
+  PP mit STA-2e-Modifikatoren und enthält alle 289 Spells, Technomage-Talente
+  und sechs Prestige-Pfade. Auf der eigenen Charakterseite lassen sich neben
+  Spells auch PP, Chaos Points, Verletzungsstress, Status und erworbene
+  Modultalente führen. Die Spielleitung aktiviert und bearbeitet das Modul unter
+  `/gm/campaign`; die Charakter-Untersektion ist für weitere Regelmodule mit
+  eigenen Ressourcen wiederverwendbar.
 - **Missionen & Mission-Logs** — Logbucheinträge sind Charakteren und Missionen zugeordnet
   und chronologisch nach Session-Nummer sortiert.
 - **Nutzerkonten & granulares Rechtesystem (RBAC)** — die Autorisierung läuft über
@@ -2230,6 +2231,14 @@ Rollen-Hochstufungs-Bug verursacht). Datenverändernde bzw. einmalige Schritte
 (Backfills, Seeds, Constraint-Wechsel) liegen pro Pull Request in einer eigenen
 `scripts/migrate-pr<NN>.sql`, die nach dem Merge einmalig gegen die Produktions-
 DB ausgeführt wird.
+
+Für PR #117 muss vor dem Deploy `scripts/migrate-pr117.sql` ausgeführt werden.
+Die Tabelle `campaign_rule_modules` wird auf der Kampagnen- und Charakterseite
+gelesen; ohne die Migration antworten diese Seiten mit einem Datenbankfehler:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr117.sql
+```
 
 Für Version 2.0 muss `scripts/migrate-v2.sql` vor dem Deploy auf der Datenbank
 ausgeführt werden. Es legt `user_images` für die persönliche Bildbibliothek an

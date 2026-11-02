@@ -3884,8 +3884,12 @@ export function groupTechnomageSpellVariants(
 
 export function getTechnomageSchool(
   id: string | null | undefined,
-): (typeof TECHNOMAGE_SCHOOLS)[number] | null {
-  return id ? SCHOOL_BY_ID.get(id as TechnomageSchool) ?? null : null;
+  schools: readonly { id: string; label: string; original: string }[] = TECHNOMAGE_SCHOOLS,
+): { id: string; label: string; original: string } | null {
+  if (!id) return null;
+  return schools === TECHNOMAGE_SCHOOLS
+    ? SCHOOL_BY_ID.get(id as TechnomageSchool) ?? null
+    : schools.find((school) => school.id === id) ?? null;
 }
 
 export function isTechnomageRole(role: string | null | undefined): boolean {
@@ -3921,22 +3925,15 @@ export function technomageSpellFluff(spell: TechnomageSpell): string {
   }
 }
 
-const TASKS: Record<TechnomageSchool, string> = {
-  defence: "Kontrolle + Sicherheit",
-  elements: "Wagemut + Technik",
-  conjuration: "Verstand + Technik",
-  movement: "Wagemut + Steuerung",
-  healing: "Kontrolle + Medizin",
-  enhancement: "Einsicht + Wissenschaft",
-  creation: "Verstand + Technik",
-};
+const MAGERY_TASK = "Reason oder Daring + Science (je nach Situation)";
 
 export function technomageSpellDifficulty(spell: TechnomageSpell): number {
-  if (spell.sourceMageryDc === null) return 2;
-  return Math.max(
-    1,
-    Math.min(5, 1 + Math.floor((spell.sourceMageryDc - 14) / 5)),
-  );
+  const dc = spell.sourceMageryDc;
+  if (dc === null || dc <= 17) return 0;
+  if (dc <= 21) return 1;
+  if (dc <= 26) return 2;
+  if (dc <= 31) return 3;
+  return 4;
 }
 
 function staEffectText(effect: TechnomageEffect): string {
@@ -4083,12 +4080,15 @@ export function technomageSpellDetails(
 ): TechnomageSpellDetails {
   const isPrimary = spell.school === primarySchool;
   const isWeak = weakSchools.includes(spell.school);
-  const difficulty = technomageSpellDifficulty(spell) + (isWeak ? 1 : 0);
+  const difficulty = Math.max(
+    0,
+    technomageSpellDifficulty(spell) + (isPrimary ? -1 : isWeak ? 1 : 0),
+  );
   const aptitude = isPrimary
-    ? "Die Primärschule gibt 1 Bonuswürfel."
+    ? "Primary: Schwierigkeit −1 und Casting-Kosten −1 PP (Minimum 0); Maintenance bleibt gleich."
     : isWeak
-      ? "Die schwache Schule erhöht die Schwierigkeit um 1."
-      : "Für eine Standardschule gilt keine Änderung.";
+      ? "Weak: Schwierigkeit +1 und doppelte Casting-Kosten; Maintenance bleibt gleich."
+      : "Standard: keine Aptitude-Änderung.";
 
   const requirements =
     spell.requirements.toLowerCase() === "none" ? null : spell.requirements;
@@ -4121,7 +4121,7 @@ export function technomageSpellDetails(
         ? [
             {
               label: "Difficulty",
-              value: `${difficulty} · Task: ${TASKS[spell.school]}`,
+              value: `${difficulty} · Task: ${MAGERY_TASK}`,
             },
           ]
         : []),
@@ -4134,7 +4134,7 @@ export function technomageSpellDetails(
     castingCost,
     maintenanceCost,
     difficulty,
-    task: TASKS[spell.school],
+    task: MAGERY_TASK,
     mechanics: staEffectText(spell.effect) + " " + aptitude,
     fluff: technomageSpellFluff(spell),
   };
@@ -4148,16 +4148,19 @@ export function technomageSpellExplanation(
   const baseDifficulty = technomageSpellDifficulty(spell);
   const isPrimary = spell.school === primarySchool;
   const isWeak = weakSchools.includes(spell.school);
-  const difficulty = baseDifficulty + (isWeak ? 1 : 0);
+  const difficulty = Math.max(
+    0,
+    baseDifficulty + (isPrimary ? -1 : isWeak ? 1 : 0),
+  );
   const aptitude = isPrimary
-    ? "Die Primärschule gibt 1 Bonuswürfel."
+    ? "Primary senkt Schwierigkeit und Casting-Kosten um je 1 (Minimum 0); Maintenance bleibt gleich."
     : isWeak
-      ? "Die schwache Schule erhöht die Schwierigkeit um 1."
-      : "Für eine Standardschule gilt keine Änderung.";
+      ? "Weak erhöht die Schwierigkeit um 1 und verdoppelt Casting-Kosten; Maintenance bleibt gleich."
+      : "Standard: keine Aptitude-Änderung.";
   const range = staRange(spell.sourceRange);
   const duration = staDuration(spell.sourceDuration, isPrimary, isWeak);
   const frame = [
-    "Task: " + TASKS[spell.school] + ", Schwierigkeit " + difficulty + ".",
+    "Task: " + MAGERY_TASK + ", Schwierigkeit " + difficulty + ".",
     spell.sourceTarget ? "Ziel: " + staTarget(spell.sourceTarget) + "." : "",
     range ? "Reichweite: " + range + "." : "",
     duration ? "Dauer: " + duration + "." : "",
@@ -4233,15 +4236,31 @@ const VARIANT_INDEX = [
   })),
 ].sort((a, b) => b.variant.length - a.variant.length);
 
-export function spellPrerequisiteGroups(spellId: string): string[][] {
-  const spell = SPELLS_BY_ID.get(spellId);
+export function spellPrerequisiteGroups(
+  spellId: string,
+  spells: readonly TechnomageSpell[] = TECHNOMAGE_SPELLS,
+): string[][] {
+  const spell = spells === TECHNOMAGE_SPELLS
+    ? SPELLS_BY_ID.get(spellId)
+    : spells.find((entry) => entry.id === spellId);
   if (!spell) return [];
-  if (MANUAL_REQUIREMENTS[spellId]) return MANUAL_REQUIREMENTS[spellId];
-  if (ANY_OF_REQUIREMENTS[spellId]) return ANY_OF_REQUIREMENTS[spellId];
+  if (spells === TECHNOMAGE_SPELLS && MANUAL_REQUIREMENTS[spellId]) return MANUAL_REQUIREMENTS[spellId];
+  if (spells === TECHNOMAGE_SPELLS && ANY_OF_REQUIREMENTS[spellId]) return ANY_OF_REQUIREMENTS[spellId];
 
   const text = normalizeRequirement(spell.requirements);
   const matches: { id: string; start: number; end: number }[] = [];
-  for (const { variant, id } of VARIANT_INDEX) {
+  const variants = spells === TECHNOMAGE_SPELLS
+    ? VARIANT_INDEX
+    : [
+        ...spells.flatMap((entry) =>
+          nameVariants(entry).map((variant) => ({ variant, id: entry.id })),
+        ),
+        ...Object.entries(EXTRA_REQUIREMENT_ALIASES).map(([variant, id]) => ({
+          variant,
+          id,
+        })),
+      ].sort((a, b) => b.variant.length - a.variant.length);
+  for (const { variant, id } of variants) {
     if (id === spellId || variant.length < 4) continue;
     let start = text.indexOf(variant);
     while (start >= 0) {
@@ -4259,6 +4278,9 @@ export function spellPrerequisiteGroups(spellId: string): string[][] {
 
 export function getTechnomageSpell(
   id: string,
+  spells: readonly TechnomageSpell[] = TECHNOMAGE_SPELLS,
 ): TechnomageSpell | undefined {
-  return SPELLS_BY_ID.get(id);
+  return spells === TECHNOMAGE_SPELLS
+    ? SPELLS_BY_ID.get(id)
+    : spells.find((spell) => spell.id === id);
 }

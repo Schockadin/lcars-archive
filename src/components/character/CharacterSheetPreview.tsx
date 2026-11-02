@@ -111,7 +111,7 @@ function TalentSheet({
 }) {
   const entries = stats.talents;
   const learnedSpells = stats.technomage.spells
-    .map(getTechnomageSpell)
+    .map((spellId) => getTechnomageSpell(spellId))
     .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
   const knownCount = new Set(stats.technomage.spells).size;
   const technomageLevel = technomageLevelFromAp(earnedAp);
@@ -122,7 +122,7 @@ function TalentSheet({
   const powerPointMaximum = technomagePowerPointMaximum(
     technomageLevel,
     stats.attributes.fitness,
-    stats.attributes.insight,
+    stats.attributes.presence,
   );
   const currentPowerPoints = effectiveTechnomagePowerPoints(
     stats.technomage.powerPointsCurrent,

@@ -116,7 +116,7 @@ export default async function AdminCharactersPage() {
                     return school ? [school.label] : [];
                   });
                   const spells = techno.spells
-                    .map(getTechnomageSpell)
+                    .map((spellId) => getTechnomageSpell(spellId))
                     .filter((spell): spell is NonNullable<typeof spell> => Boolean(spell));
 
                   return (

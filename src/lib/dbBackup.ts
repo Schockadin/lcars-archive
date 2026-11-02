@@ -47,6 +47,7 @@ const NO_SERIAL_ID: readonly TableName[] = [
   "planned_session_characters",
   "planned_session_rsvps",
   "campaign_settings",
+  "campaign_rule_modules",
   // Schlüssel ist der Rollen-Key (TEXT), keine Sequence.
   "roles",
   // Schlüssel ist character_id (ein Datensatz je umgewandeltem Charakter,
@@ -74,6 +75,7 @@ const JSONB_COLUMNS: Partial<Record<TableName, readonly string[]>> = {
     "changelog_featured_versions",
     "changelog_hidden_categories",
   ],
+  campaign_rule_modules: ["definition"],
 };
 
 // 1 = die enge Tabellenauswahl bis v1.47, 2 = alle Inhalts- und

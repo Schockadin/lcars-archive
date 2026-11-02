@@ -25,6 +25,8 @@ import { listCharacterDocuments } from "@/lib/characterDocuments";
 import CharacterArchiveExportButton from "./CharacterArchiveExportButton";
 import { getCharacterArchiveOptions } from "@/lib/characterArchive";
 import CharacterNpcConversionPanel from "./CharacterNpcConversionPanel";
+import { listCampaignRuleModules, moduleSupportsCharacterRole } from "@/lib/campaignRuleModules";
+import RuleModuleCharacterSections from "./RuleModuleCharacterSections";
 
 export const metadata: Metadata = {
   title: "Charakter",
@@ -67,6 +69,7 @@ export default async function OwnCharacterPage({ params }: Props) {
     revisions,
     documents,
     archiveOptions,
+    ruleModules,
   ] = await Promise.all([
     getApAccount(sheet.id),
     getAdvancementRules(),
@@ -78,7 +81,11 @@ export default async function OwnCharacterPage({ params }: Props) {
     getViewer().then((v) => listRevisions("character", character.id, v)),
     listCharacterDocuments(character.id),
     getCharacterArchiveOptions(session.userId, character.id),
+    listCampaignRuleModules(),
   ]);
+  const activeCharacterModules = ruleModules
+    .filter((module) => module.enabled && moduleSupportsCharacterRole(module.definition, sheet.stats.characterRole))
+    .map((module) => module.definition);
 
   return (
     <>
@@ -155,6 +162,16 @@ export default async function OwnCharacterPage({ params }: Props) {
               talents={talents}
               focuses={focuses}
             />
+
+            {activeCharacterModules.length > 0 && (
+              <RuleModuleCharacterSections
+                modules={activeCharacterModules}
+                userId={session.userId}
+                characterId={sheet.id}
+                stats={sheet.stats}
+                earnedAp={account.earned}
+              />
+            )}
 
             <CharacterBioPanel
               userId={session.userId}
