@@ -95,7 +95,7 @@ export const DEPARTMENT_BOXES: Record<string, Box> = {
 };
 
 // Listenblöcke: links Werte/Schwerpunkte/Hobbys/Angriffe, rechts
-// Spezies-Fähigkeit/Talente/Sonderregeln/Ausrüstung.
+// Spezies-Fähigkeit/Talente/Rollenbonus/Ausrüstung.
 export const LIST_BOXES = {
   values: { left: 137, top: 611, width: 310, height: 104 },
   focuses: { left: 137, top: 723, width: 310, height: 121 },

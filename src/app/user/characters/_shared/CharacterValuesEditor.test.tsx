@@ -59,7 +59,7 @@ function renderEditor(
       rules={DEFAULT_ADVANCEMENT_RULES}
       talents={[talent]}
       focuses={[focus]}
-      species={null}
+      species={[]}
       idPrefix="test-values"
       showPersonnelFields={false}
       flatSections={flatSections}
@@ -75,6 +75,28 @@ function renderEditor(
 }
 
 describe("CharacterValuesEditor – Inline-Steigerungen", () => {
+  it("zeigt die Spezies-Abilities der gewählten Spezies und den Rollenbonus", () => {
+    const stats = lockedStats();
+    stats.characterRole = "Communications Officer";
+
+    render(
+      <CharacterValuesEditor
+        stats={stats}
+        onChange={vi.fn()}
+        rules={DEFAULT_ADVANCEMENT_RULES}
+        talents={[talent]}
+        focuses={[focus]}
+        species={["Human"]}
+        idPrefix="test-values"
+        showPersonnelFields={false}
+      />,
+    );
+
+    expect(screen.getByRole("checkbox", { name: /Human — Faith of the Heart/ })).toBeInTheDocument();
+    expect(screen.getByText(/zwei Erfolge/)).toBeInTheDocument();
+    expect(screen.getByText("Role Bonus")).toBeInTheDocument();
+  });
+
   it("zeigt Kosten am Wert und sendet die konkrete Steigerung", () => {
     const { submit } = renderEditor(100);
     const input = screen.getByLabelText(/Control/);

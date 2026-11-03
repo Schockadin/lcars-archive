@@ -147,6 +147,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.8",
+    title: "Charaktereditor mit Spezies und STA-2e-Rollen",
+    items: [
+      {
+        text: "Charaktere werden in denselben Tabs für Werte, persönliche Daten, Biografie und Dateien angelegt und bearbeitet. Aktivierte Regelmodule können passende eigene Charakter-Tabs ergänzen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Spezies lassen sich mehrfach auswählen; verfügbare Species Abilities richten sich nach der Auswahl. STA-2e-Rollen zeigen ihren passenden Role Bonus automatisch an.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+    ],
+  },
+  {
     version: "2.7",
     title: "STA 2e als bearbeitbares Basismodul",
     items: [

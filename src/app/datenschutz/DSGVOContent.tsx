@@ -119,7 +119,8 @@ export default function DSGVOContent({ year }: { year: number }) {
         <p>
           Zum Charakter einer Person gehören neben der Akte auch ihre{" "}
           <strong>Charakterwerte</strong> (Attribute, Disziplinen, Talente,
-          Schwerpunkte und die weiteren Angaben des Bogens; dazu zählen auch
+          Schwerpunkte, ausgewählte Spezies und Species Abilities, die Rolle,
+          ihr Role Bonus und die weiteren Angaben des Bogens; dazu zählen auch
           gewählte Departements, Attribute oder Schwerpunkte einzelner Talente).
           Bei Technomage-Charakteren gehören dazu die gewählte Primärschule,
           schwache Schulen, gelernte Spells sowie der aktuelle Power-Point-

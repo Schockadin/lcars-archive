@@ -10,6 +10,7 @@ import {
 } from "@/lib/characterStats";
 import type { CharacterStats } from "@/types/characterStats";
 import { parseTalentEntry } from "@/lib/talentCatalog";
+import { getRoleBonusEntries, getRoleLabel, getSpeciesListLabel } from "@/lib/sta2eCharacterOptions";
 import {
   DEFAULT_CROP,
   previewStyle,
@@ -106,7 +107,7 @@ export default function PersonnelFileView({
   const experienceLabel =
     EXPERIENCE_OPTIONS.find((option) => option.value === stats.experience)
       ?.label ?? "";
-  const traits = [species, stats.traits].filter(Boolean).join(" · ");
+  const traits = [getSpeciesListLabel(species), stats.traits].filter(Boolean).join(" · ");
 
   return (
     <div className={expanded ? "pf-page pf-page--expanded" : "pf-page"}>
@@ -171,7 +172,7 @@ export default function PersonnelFileView({
           />
           <StaticField
             box={HEAD_BOXES.characterRole}
-            value={stats.characterRole ?? ""}
+            value={getRoleLabel(stats.characterRole)}
             label="Rolle"
           />
           <StaticField
@@ -304,7 +305,7 @@ export default function PersonnelFileView({
           />
           <StaticList
             box={LIST_BOXES.specialRules}
-            entries={stats.specialRules}
+            entries={getRoleBonusEntries(stats.characterRole, stats.specialRules)}
           />
         </div>
       </div>

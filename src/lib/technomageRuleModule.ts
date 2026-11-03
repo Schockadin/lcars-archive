@@ -52,6 +52,7 @@ export const TECHNOMAGE_RULE_MODULE: RuleModuleDefinition = {
   summary:
     "Vollständiges, auf Star Trek Adventures 2e übertragenes Technomage-Regelmodul mit AP-Stufen, Spell-Katalog, Talenten, Prestige-Pfaden und Ressourcen.",
   characterRoles: ["technomage", "techno mage"],
+  characterTab: { enabled: true, label: "Technomage" },
   rules: [
     { id: "magery", title: "Magery und Proben", body: "Eine Spell-Aktivierung ist eine Aufgabe mit Reason oder Daring + Science, je nach kontrollierter oder spontaner Situation. Eine misslungene Aktivierung verbraucht die Casting-PP ebenfalls. Fact-Book-DC 14–17 entspricht D 0; 18–21 D 1; 22–26 D 2; 27–31 D 3; ab 32 D 4. Die endgültige Schwierigkeit ist max(0, Basis-D + Aptitude + Talente + Situation). Primary senkt D um 1, Weak erhöht D um 1. Schwierigkeit kann nie negativ werden." },
     { id: "aptitudes", title: "Aptitudes und Casting-Kosten", body: "Es gibt Defense, Elements, Conjuration, Movement, Healing, Enhancement und Creation; Elements kann eine Element-Spezialisierung verlangen. Die Basis-Casting-Kosten samt Zusatz-Zielen werden zuerst addiert. Primary kostet max(0, Basis−1) PP, Standard die Basiskosten, Weak doppelte Basiskosten. Anschließend folgen Talent-Multiplikatoren (Bruchteile aufrunden) und feste Talent-Aufschläge. Maintenance bleibt unverändert, sofern Fähigkeit oder Talent sie nicht ausdrücklich ändert. Weak-Schulen können einzelne Wirkungen einschränken oder Spells ausschließen." },

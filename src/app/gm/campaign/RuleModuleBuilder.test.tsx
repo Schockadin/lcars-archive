@@ -54,6 +54,14 @@ describe("RuleModuleBuilder", () => {
     expect(screen.getByText("Schiffssysteme")).toBeInTheDocument();
   });
 
+  it("konfiguriert ein eigenes Charakter-Tab pro Modul", () => {
+    render(<BuilderHarness />);
+
+    fireEvent.click(screen.getByLabelText("Eigenes Charakter-Tab anzeigen"));
+
+    expect(screen.getByLabelText("Tab-Beschriftung")).toHaveValue("Testmodul");
+  });
+
   it("baut frei benannte Inhaltsbereiche mit eigenen Auswahlfeldern und Einträgen", () => {
     render(<BuilderHarness />);
 

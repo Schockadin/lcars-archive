@@ -29,6 +29,8 @@ import type { Focus } from "@/lib/focusCatalog";
 import { TalentModal } from "./TalentPicker";
 import { FocusModal } from "./FocusPicker";
 import EntryAddModal from "./EntryAddModal";
+import CharacterRoleSelect from "./CharacterRoleSelect";
+import { getAdditionalRoleBonusNotes, getRoleBonusEntries, getSpeciesAbilityChoices, findRoleOption } from "@/lib/sta2eCharacterOptions";
 
 export interface InlineAdvancement {
   characterId: number;
@@ -47,9 +49,8 @@ export interface InlineAdvancement {
 // Budget-Anzeige, Vorschau und das abschickende Formular alle mit demselben
 // Stand, ohne ihn zu kopieren.
 
-// Freitextlisten, die als ganze Regelsätze gepflegt werden (Spezies-Fähigkeit,
-// Sonderregeln) — dort steht in der Runde ein Absatz, keine Aufzählung. Alle
-// übrigen Listen laufen über das Hinzufügen-Fenster.
+// Diese Bereiche werden aus Spezies- und Rollenkatalogen dargestellt und
+// brauchen daher kein allgemeines Listen-Hinzufügen-Fenster.
 const TEXTAREA_LISTS = new Set(["speciesAbilities", "specialRules"]);
 // Talente und Schwerpunkte kommen ausschließlich aus ihrem Katalog und haben
 // je ein eigenes Auswahlfenster (TalentPicker/FocusPicker) statt des freien
@@ -225,7 +226,7 @@ export default function CharacterValuesEditor({
   // Schwerpunkt-Katalog für die Auswahl (gepflegt unter /gm/focuses).
   focuses: Focus[];
   // Spezies der Akte — für Voraussetzungen wie „Vulcan".
-  species: string | null;
+  species: string[];
   // Präfix der Feld-IDs; auf einer Seite können zwei Editoren stehen.
   idPrefix: string;
   // Nur auf der eigenen Charakterseite nach abgeschlossener Erschaffung:
@@ -346,6 +347,22 @@ export default function CharacterValuesEditor({
   const departmentOver = overfilledValues(departmentValues, DEPARTMENT_RULE);
   const budget = creationBudget(stats, rules);
   const maxStress = computeStress(stats);
+  const speciesAbilityChoices = getSpeciesAbilityChoices(species);
+  const knownAbilityValues = new Set(
+    getSpeciesAbilityChoices(
+      // Nur zum Erkennen und Erhalt älterer Einträge, die nicht mehr zu einer
+      // aktuell ausgewählten Spezies gehören.
+      species,
+    ).map((choice) => choice.value),
+  );
+  const legacySpeciesAbilities = stats.speciesAbilities.filter(
+    (entry) => !knownAbilityValues.has(entry),
+  );
+  const roleOption = findRoleOption(stats.characterRole);
+  const roleBonusEntries = getRoleBonusEntries(
+    stats.characterRole,
+    stats.specialRules,
+  );
 
   const managedLists = LIST_FIELDS.filter(
     (field) => !TEXTAREA_LISTS.has(field.key),
@@ -365,7 +382,7 @@ export default function CharacterValuesEditor({
           />
           <div className="stat-editor-body">
             <div className="stat-editor-grid">
-              {TEXT_FIELDS.map((field) => (
+              {TEXT_FIELDS.filter((field) => field.key !== "characterRole").map((field) => (
                 <div key={field.key} className="stat-editor-field">
                   <label
                     htmlFor={`${idPrefix}-${field.key}`}
@@ -389,6 +406,11 @@ export default function CharacterValuesEditor({
                   />
                 </div>
               ))}
+              <CharacterRoleSelect
+                id={`${idPrefix}-characterRole`}
+                value={stats.characterRole}
+                onChange={(value) => patch({ characterRole: value })}
+              />
 
               <div className="stat-editor-field">
                 <label
@@ -679,34 +701,82 @@ export default function CharacterValuesEditor({
             );
           })}
 
-          {/* Spezies-Fähigkeit und Sonderregeln sind ganze Regelsätze, keine
-              Aufzählungen — sie bleiben Textfelder, eine Zeile je Eintrag. */}
-          {LIST_FIELDS.filter((field) => TEXTAREA_LISTS.has(field.key)).map(
-            (field) => (
-              <div key={field.key} className="stat-editor-field">
-                <label
-                  htmlFor={`${idPrefix}-${field.key}`}
-                  className="stat-field-label"
-                >
-                  <span className="stat-label-primary">
-                    {field.original ?? field.label}
+          {(speciesAbilityChoices.length > 0 || legacySpeciesAbilities.length > 0) && (
+            <fieldset className="stat-editor-field character-ability-picker">
+              <legend className="stat-field-label">
+                <span className="stat-label-primary">Species Ability</span>
+                <span className="stat-label-secondary">Spezies-Fähigkeiten</span>
+              </legend>
+              {speciesAbilityChoices.map((choice) => (
+                <label key={choice.value} className="character-ability-option">
+                  <input
+                    type="checkbox"
+                    checked={stats.speciesAbilities.includes(choice.value)}
+                    onChange={(event) =>
+                      setList("speciesAbilities", (previous) =>
+                        event.target.checked
+                          ? [...previous, choice.value]
+                          : previous.filter((entry) => entry !== choice.value),
+                      )
+                    }
+                  />
+                  <span>
+                    <strong>{choice.value}</strong>
+                    <span>{choice.description}</span>
                   </span>
-                  <span className="stat-label-secondary">{field.label}</span>
                 </label>
-                <textarea
-                  id={`${idPrefix}-${field.key}`}
-                  value={(
-                    (stats as unknown as Record<string, string[]>)[field.key] ??
-                    []
-                  ).join("\n")}
-                  onChange={(e) =>
-                    setList(field.key, () => e.target.value.split("\n"))
-                  }
-                  rows={3}
-                  className="stat-field-input font-mono"
-                />
-              </div>
-            ),
+              ))}
+              {legacySpeciesAbilities.length > 0 && (
+                <div className="character-ability-legacy">
+                  <span className="stat-label-secondary">Weitere gespeicherte Einträge</span>
+                  {legacySpeciesAbilities.map((entry) => (
+                    <div className="stat-editor-list-line" key={entry}>
+                      <span>{entry}</span>
+                      <button
+                        type="button"
+                        onClick={() => setList("speciesAbilities", (previous) => previous.filter((item) => item !== entry))}
+                        className="lcars-icon-btn"
+                        aria-label={`${entry} entfernen`}
+                        title={`${entry} entfernen`}
+                      >
+                        <MinusCircleIcon />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </fieldset>
+          )}
+          {(stats.characterRole || stats.specialRules.length > 0) && (
+            <div className="stat-editor-field character-role-bonus">
+              <span className="stat-field-label">
+                <span className="stat-label-primary">Role Bonus</span>
+                <span className="stat-label-secondary">Rollenbonus</span>
+              </span>
+              {roleOption ? (
+                <div className="character-role-bonus-rule">
+                  <strong>{roleOption.label}</strong>
+                  <p>{roleOption.description}</p>
+                </div>
+              ) : (
+                <p className="stat-sheet-rule">
+                  Für diese freie oder Modulrolle ist kein STA-2e-Standardbonus hinterlegt.
+                </p>
+              )}
+              <label htmlFor={`${idPrefix}-roleBonusNotes`} className="stat-label-secondary">
+                Zusätzliche Regelnotizen (optional)
+              </label>
+              <textarea
+                id={`${idPrefix}-roleBonusNotes`}
+                value={getAdditionalRoleBonusNotes(stats.characterRole, stats.specialRules).join("\n")}
+                onChange={(event) => setList("specialRules", () => event.target.value.split("\n"))}
+                rows={2}
+                className="stat-field-input font-mono"
+              />
+              {roleBonusEntries.length > 0 && (
+                <span className="lcars-text text-[13px]">Der Rollenbonus wird automatisch aus der gewählten Rolle übernommen.</span>
+              )}
+            </div>
           )}
         </div>
       </section>

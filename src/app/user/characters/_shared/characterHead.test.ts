@@ -30,6 +30,19 @@ beforeEach(() => {
 });
 
 describe("readCharacterHead — Portrait", () => {
+  it("liest mehrere ausgewählte Spezies und unterstützt kommaseparierte Altwerte", async () => {
+    const data = form({});
+    data.append("species", "Human");
+    data.append("species", "Andorian");
+    data.append("species", "Vulcan, Betazoid");
+
+    const result = await readCharacterHead(data);
+
+    expect(result).toMatchObject({
+      head: { species: ["Human", "Andorian", "Vulcan", "Betazoid"] },
+    });
+  });
+
   it("liest das eigenständige Profilbild-Formular ohne Stammdaten", async () => {
     const data = new FormData();
     data.set("portraitCrop", JSON.stringify({ zoom: 1.5, x: 35, y: 65 }));

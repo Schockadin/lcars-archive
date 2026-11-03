@@ -19,6 +19,8 @@ import { checkOpenCreationStats } from "@/lib/characterStatsRules";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
+import { listCampaignRuleModules, moduleSupportsCharacterRole } from "@/lib/campaignRuleModules";
+import { sanitizeRuleModuleCharacterData } from "@/lib/ruleModuleCharacterData";
 import { readCharacterHead } from "./characterHead";
 import {
   characterEditHref,
@@ -69,10 +71,11 @@ export async function createCharacterWizardAction(
   // Charakter hat noch nichts gesteigert, das zurückgenommen sein könnte.
   stats.pendingAdvancements = [];
 
-  const [rules, catalog, focusCatalog] = await Promise.all([
+  const [rules, catalog, focusCatalog, campaignModules] = await Promise.all([
     getAdvancementRules(),
     listTalents(),
     listFocuses(),
+    listCampaignRuleModules(),
   ]);
   const statsError = checkOpenCreationStats(
     stats,
@@ -82,6 +85,20 @@ export async function createCharacterWizardAction(
     focusCatalog.map((focus) => focus.name),
   );
   if (statsError) return { error: statsError };
+
+  const matchingModules = new Map(
+    campaignModules
+      .filter((module) => module.enabled && moduleSupportsCharacterRole(module.definition, stats.characterRole))
+      .map((module) => [module.definition.id, module.definition]),
+  );
+  stats.ruleModules = Object.fromEntries(
+    Object.entries(stats.ruleModules).flatMap(([moduleId, data]) => {
+      const definition = matchingModules.get(moduleId);
+      return definition
+        ? [[moduleId, sanitizeRuleModuleCharacterData(definition, data)]]
+        : [];
+    }),
+  );
 
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   let bioHtml: string | undefined;

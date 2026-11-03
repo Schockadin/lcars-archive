@@ -443,6 +443,31 @@ export default function RuleModuleBuilder({
           required
           maxLength={1000}
         />
+        <div className="flex flex-col gap-[8px]">
+          <CheckField
+            label="Eigenes Charakter-Tab anzeigen"
+            checked={definition.characterTab?.enabled ?? false}
+            onChange={(enabled) => onChange({
+              ...definition,
+              characterTab: {
+                enabled,
+                label: definition.characterTab?.label || definition.name,
+              },
+            })}
+          />
+          {definition.characterTab?.enabled && (
+            <TextField
+              label="Tab-Beschriftung"
+              value={definition.characterTab.label}
+              onChange={(label) => onChange({
+                ...definition,
+                characterTab: { enabled: true, label },
+              })}
+              required
+              maxLength={80}
+            />
+          )}
+        </div>
         <div className="flex flex-col justify-end gap-[4px] text-sm">
           <span className="font-bold">Feste Modul-ID</span>
           <code className="rounded border border-current/15 px-[8px] py-[6px]">

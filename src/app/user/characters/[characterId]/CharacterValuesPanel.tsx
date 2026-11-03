@@ -43,7 +43,7 @@ export default function CharacterValuesPanel({
 }: {
   userId: number;
   characterId: number;
-  species: string | null;
+  species: string[];
   savedStats: CharacterStats;
   account: ApAccount;
   rules: AdvancementRules;

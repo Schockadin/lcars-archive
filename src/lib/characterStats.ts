@@ -162,7 +162,7 @@ export const LIST_FIELDS: StatFieldSpec<ListKey>[] = [
   { key: "focuses", label: "Schwerpunkte", original: "Focuses" },
   { key: "talents", label: "Talente", original: "Talents" },
   { key: "speciesAbilities", label: "Spezies-Fähigkeiten", original: "Species Ability" },
-  { key: "specialRules", label: "Sonderregeln", original: "Special Rules" },
+  { key: "specialRules", label: "Rollenbonus", original: "Role Bonus" },
   { key: "attacks", label: "Angriffe", original: "Attacks" },
   { key: "equipment", label: "Ausrüstung", original: "Other Equipment" },
   { key: "careerEvents", label: "Karriere-Ereignisse", original: "Career Events" },

@@ -36,7 +36,7 @@ export interface RequirementCheck {
 export interface RequirementContext {
   stats: CharacterStats;
   // Spezies des Charakters (steht an der Akte, nicht in den Werten).
-  species: string | null;
+  species: string | string[] | null;
 }
 
 // Zahlenwerte, die in Voraussetzungen vorkommen: die sechs Attribute und die
@@ -137,9 +137,12 @@ function checkClause(clause: string, context: RequirementContext): ClauseResult 
   // Spezies.
   const species = speciesOfClause(text);
   if (species) {
-    const own = context.species ? speciesOfClause(context.species) : null;
-    if (!own) return "unknown";
-    return own === species ? "met" : "unmet";
+    const own = (Array.isArray(context.species) ? context.species : context.species ? [context.species] : [])
+      .map((entry) => speciesOfClause(entry))
+      .filter((entry): entry is string => entry !== null);
+    if (own.includes(species)) return "met";
+    if (own.length === 0) return "unknown";
+    return "unmet";
   }
 
   // Ein anderes Talent als Voraussetzung ("Testing a Theory"). Verglichen wird
