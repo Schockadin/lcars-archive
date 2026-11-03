@@ -133,8 +133,8 @@ test.describe("Charakter-Assistent", () => {
     await page.locator("#wizard-name").fill("T'Rel");
     await page.locator("#character-wizard ol button").nth(1).click();
 
-    const firstEvent = page.getByLabel("Career Event 1");
-    const secondEvent = page.getByLabel("Career Event 2");
+    const firstEvent = page.locator("#wizard-stats-career-event-1");
+    const secondEvent = page.locator("#wizard-stats-career-event-2");
     await expect(firstEvent.locator("option")).toHaveCount(21);
     await expect(secondEvent).toBeDisabled();
 

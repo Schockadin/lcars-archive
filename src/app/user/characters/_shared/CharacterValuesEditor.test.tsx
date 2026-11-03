@@ -136,7 +136,7 @@ describe("CharacterValuesEditor – Inline-Steigerungen", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText("Career Event 1"), {
+    fireEvent.change(screen.getByRole("combobox", { name: /Career Event 1/ }), {
       target: { value: "first-contact" },
     });
 
