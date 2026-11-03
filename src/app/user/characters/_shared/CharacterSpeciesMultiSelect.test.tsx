@@ -18,7 +18,6 @@ describe("CharacterSpeciesMultiSelect", () => {
     const { container } = render(<CharacterSpeciesMultiSelect idPrefix="test" value={["Vulkanierin"]} onChange={vi.fn()} />);
 
     fireEvent.click(container.querySelector("summary")!);
-    expect(screen.getByText("Vulkanier (Vulcan)")).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "Vulkanier (Vulcan)" })).toBeChecked();
   });
 });

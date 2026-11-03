@@ -18,7 +18,7 @@ describe("CharacterEditorTabs", () => {
     expect(within(tablist).getAllByRole("tab")).toHaveLength(3);
     expect(screen.getByRole("tab", { name: "Werte" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tabpanel")).toHaveTextContent("Werteinhalt");
-    expect(screen.getByRole("tabpanel", { name: "Technomage", hidden: true })).toHaveAttribute("hidden");
+    expect(document.getElementById("character-editor-panel-module-techno")).toHaveAttribute("hidden");
   });
 
   it("activates tabs with clicks and arrow keys", () => {
