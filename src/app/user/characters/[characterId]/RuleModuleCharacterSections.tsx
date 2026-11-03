@@ -1,14 +1,22 @@
 "use client";
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FormError, FormSuccess, SubmitButton } from "@/app/_shared/FormPrimitives";
+import {
+  FormError,
+  FormSuccess,
+  SubmitButton,
+} from "@/app/_shared/FormPrimitives";
 import {
   technomageChaosControlDifficulty,
   technomageChaosPointLimit,
 } from "@/lib/technomageSpellRules";
 import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
-import type { CharacterStats, RuleModuleCharacterData } from "@/types/characterStats";
-import TechnomageSpellsPanel from "./TechnomageSpellsPanel";
+import type {
+  CharacterStats,
+  RuleModuleCharacterData,
+} from "@/types/characterStats";
+import CharacterPanel from "./CharacterPanel";
+import { TechnomagePowerPointTracker } from "./TechnomageSpellsPanel";
 import {
   saveCharacterRuleModuleAction,
   type RuleModuleCharacterState,
@@ -31,17 +39,26 @@ function ModuleEditor({
   earnedAp: number;
   insight: number | null;
 }) {
-  const [state, action, pending] = useActionState(saveCharacterRuleModuleAction, initialState);
+  const [state, action, pending] = useActionState(
+    saveCharacterRuleModuleAction,
+    initialState,
+  );
   const router = useRouter();
-  const [selectedPrestigeClass, setSelectedPrestigeClass] = useState(saved.prestigeClass ?? "");
+  const [selectedPrestigeClass, setSelectedPrestigeClass] = useState(
+    saved.prestigeClass ?? "",
+  );
   useEffect(() => {
     if (state.success) router.refresh();
   }, [router, state]);
-  const prestige = definition.prestigeClasses.find((item) => item.id === selectedPrestigeClass);
-  const unlockedRank = prestige?.abilities.reduce(
-    (rank, ability) => ability.ap <= earnedAp ? Math.max(rank, ability.rank) : rank,
-    0,
-  ) ?? 0;
+  const prestige = definition.prestigeClasses.find(
+    (item) => item.id === selectedPrestigeClass,
+  );
+  const unlockedRank =
+    prestige?.abilities.reduce(
+      (rank, ability) =>
+        ability.ap <= earnedAp ? Math.max(rank, ability.rank) : rank,
+      0,
+    ) ?? 0;
   const isTechnomage = definition.id === "technomage";
   const chaosLimit = isTechnomage
     ? technomageChaosPointLimit(
@@ -50,9 +67,10 @@ function ModuleEditor({
       )
     : null;
   const chaosPoints = saved.resources["chaos-points"] ?? 0;
-  const chaosDifficulty = chaosLimit === null
-    ? null
-    : technomageChaosControlDifficulty(chaosPoints, chaosLimit);
+  const chaosDifficulty =
+    chaosLimit === null
+      ? null
+      : technomageChaosControlDifficulty(chaosPoints, chaosLimit);
 
   return (
     <form action={action} className="flex flex-col gap-[12px]">
@@ -60,14 +78,26 @@ function ModuleEditor({
       <input type="hidden" name="characterId" value={characterId} />
       <input type="hidden" name="moduleId" value={definition.id} />
 
-      {definition.resources.filter((resource) => !(definition.id === "technomage" && resource.id === "power-points")).length > 0 && (
+      {definition.resources.filter(
+        (resource) =>
+          !(definition.id === "technomage" && resource.id === "power-points"),
+      ).length > 0 && (
         <section className="flex flex-col gap-[8px]">
           <h3 className="font-bold">Modul-Ressourcen</h3>
           <div className="grid gap-[10px] sm:grid-cols-2">
             {definition.resources
-              .filter((resource) => !(definition.id === "technomage" && resource.id === "power-points"))
+              .filter(
+                (resource) =>
+                  !(
+                    definition.id === "technomage" &&
+                    resource.id === "power-points"
+                  ),
+              )
               .map((resource) => (
-                <label key={resource.id} className="flex flex-col gap-[4px] text-sm">
+                <label
+                  key={resource.id}
+                  className="flex flex-col gap-[4px] text-sm"
+                >
                   {resource.name} ({resource.abbreviation}) · {resource.maximum}
                   <input
                     className="lcars-input w-full"
@@ -89,8 +119,16 @@ function ModuleEditor({
           <h3 className="font-bold">Modul-Status</h3>
           <div className="flex flex-wrap gap-[10px]">
             {definition.statuses.map((status) => (
-              <label key={status.id} className="flex items-center gap-[6px] text-sm">
-                <input type="checkbox" name="selectedStatus" value={status.id} defaultChecked={saved.selectedStatuses.includes(status.id)} />
+              <label
+                key={status.id}
+                className="flex items-center gap-[6px] text-sm"
+              >
+                <input
+                  type="checkbox"
+                  name="selectedStatus"
+                  value={status.id}
+                  defaultChecked={saved.selectedStatuses.includes(status.id)}
+                />
                 {status.label}
               </label>
             ))}
@@ -101,26 +139,48 @@ function ModuleEditor({
       {definition.collections.map((collection) => {
         const selected = saved.selectedCollectionEntries[collection.id] ?? [];
         return (
-          <section key={collection.id} className="flex flex-col gap-[8px] rounded-[10px] border border-current/20 p-[10px]">
+          <section
+            key={collection.id}
+            className="flex flex-col gap-[8px] rounded-[10px] border border-current/20 p-[10px]"
+          >
             <div>
               <h3 className="font-bold">{collection.title}</h3>
-              {collection.description && <p className="text-sm opacity-75">{collection.description}</p>}
+              {collection.description && (
+                <p className="text-sm opacity-75">{collection.description}</p>
+              )}
             </div>
             {collection.entries.length > 0 ? (
               <div className="grid gap-[8px] md:grid-cols-2">
                 {collection.entries.map((entry) => (
-                  <label key={entry.id} className="flex gap-[8px] rounded border border-current/15 p-[8px] text-sm">
-                    <input type="checkbox" name={`collection:${collection.id}`} value={entry.id} defaultChecked={selected.includes(entry.id)} />
+                  <label
+                    key={entry.id}
+                    className="flex gap-[8px] rounded border border-current/15 p-[8px] text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      name={`collection:${collection.id}`}
+                      value={entry.id}
+                      defaultChecked={selected.includes(entry.id)}
+                    />
                     <span className="min-w-0">
                       <strong>{entry.name}</strong>
                       {collection.fields.length > 0 && (
                         <span className="mt-[3px] block text-xs opacity-75">
                           {collection.fields.map((field) => {
                             const value = entry.values[field.id];
-                            const formatted = field.type === "checkbox"
-                              ? (value === true ? "Ja" : "Nein")
-                              : value === undefined || value === "" ? "—" : String(value);
-                            return <span key={field.id} className="mr-[10px]">{field.label}: {formatted}</span>;
+                            const formatted =
+                              field.type === "checkbox"
+                                ? value === true
+                                  ? "Ja"
+                                  : "Nein"
+                                : value === undefined || value === ""
+                                  ? "—"
+                                  : String(value);
+                            return (
+                              <span key={field.id} className="mr-[10px]">
+                                {field.label}: {formatted}
+                              </span>
+                            );
                           })}
                         </span>
                       )}
@@ -129,7 +189,9 @@ function ModuleEditor({
                 ))}
               </div>
             ) : (
-              <p className="text-sm opacity-75">Für diesen Bereich wurden noch keine Einträge angelegt.</p>
+              <p className="text-sm opacity-75">
+                Für diesen Bereich wurden noch keine Einträge angelegt.
+              </p>
             )}
           </section>
         );
@@ -137,31 +199,61 @@ function ModuleEditor({
 
       {isTechnomage && (
         <p className="text-xs opacity-75">
-          Chaos-Kontrollgrenze: {chaosLimit} CP{chaosDifficulty === null
+          Chaos-Kontrollgrenze: {chaosLimit} CP
+          {chaosDifficulty === null
             ? " · keine Kontrollprobe erforderlich"
             : ` · vor dem nächsten Spell Insight + Command, Schwierigkeit ${chaosDifficulty}`}
         </p>
       )}
 
       {definition.talents.length > 0 && (
-        <details className="rounded-[10px] border border-current/20 p-[10px]">
-          <summary className="cursor-pointer font-bold">Talente ({saved.selectedTalents.length} dokumentiert)</summary>
+        <section className="flex flex-col gap-[8px] rounded-[10px] border border-current/20 p-[10px]">
+          <h3 className="font-bold">
+            Talente ({saved.selectedTalents.length} dokumentiert)
+          </h3>
           <p className="my-[8px] text-xs opacity-75">
-            Markiere hier Module-Talente, die bereits über eine reguläre Talentwahl erworben wurden. Diese Liste vergibt keine Talentwahl und kostet keine zusätzlichen AP.
+            Markiere hier Module-Talente, die bereits über eine reguläre
+            Talentwahl erworben wurden. Diese Liste vergibt keine Talentwahl und
+            kostet keine zusätzlichen AP.
           </p>
           <div className="grid gap-[8px] md:grid-cols-2">
             {definition.talents.map((item) => (
-              <label key={item.id} className="flex gap-[8px] rounded border border-current/15 p-[8px] text-sm">
+              <label
+                key={item.id}
+                className="flex gap-[8px] rounded border border-current/15 p-[8px] text-sm"
+              >
                 {item.repeatable ? (
-                  <input type="number" name={`talentCount:${item.id}`} min={0} max={20} defaultValue={saved.selectedTalents.filter((id) => id === item.id).length} aria-label={`${item.name} Anzahl`} className="lcars-input w-[72px] self-start" />
+                  <input
+                    type="number"
+                    name={`talentCount:${item.id}`}
+                    min={0}
+                    max={20}
+                    defaultValue={
+                      saved.selectedTalents.filter((id) => id === item.id)
+                        .length
+                    }
+                    aria-label={`${item.name} Anzahl`}
+                    className="lcars-input w-[72px] self-start"
+                  />
                 ) : (
-                  <input type="checkbox" name="selectedTalent" value={item.id} defaultChecked={saved.selectedTalents.includes(item.id)} />
+                  <input
+                    type="checkbox"
+                    name="selectedTalent"
+                    value={item.id}
+                    defaultChecked={saved.selectedTalents.includes(item.id)}
+                  />
                 )}
-                <span><strong>{item.name}</strong><span className="block text-xs opacity-70">{item.category} · {item.requirements}</span><span className="block mt-[3px]">{item.description}</span></span>
+                <span>
+                  <strong>{item.name}</strong>
+                  <span className="block text-xs opacity-70">
+                    {item.category} · {item.requirements}
+                  </span>
+                  <span className="block mt-[3px]">{item.description}</span>
+                </span>
               </label>
             ))}
           </div>
-        </details>
+        </section>
       )}
 
       {definition.prestigeClasses.length > 0 && (
@@ -169,23 +261,61 @@ function ModuleEditor({
           <h3 className="font-bold">Prestige-Pfad</h3>
           <label className="flex flex-col gap-[4px] text-sm">
             Zugehörigkeit
-            <select className="lcars-input w-full" name="prestigeClass" value={selectedPrestigeClass} onChange={(event) => setSelectedPrestigeClass(event.target.value)}>
+            <select
+              className="lcars-input w-full"
+              name="prestigeClass"
+              value={selectedPrestigeClass}
+              onChange={(event) => setSelectedPrestigeClass(event.target.value)}
+            >
               <option value="">Kein Prestige-Pfad</option>
-              {definition.prestigeClasses.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              {definition.prestigeClasses.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
             </select>
           </label>
           {prestige && (
             <>
               <p className="text-sm">{prestige.description}</p>
-              <p className="text-xs opacity-75">Aufnahmebedingungen: {prestige.requirements}</p>
-              <p className="text-xs opacity-75">Freigeschalteter Prestige-Rang {unlockedRank} bei {earnedAp} AP. Fähigkeiten werden durch reguläre Talentwahlen erworben.</p>
+              <p className="text-xs opacity-75">
+                Aufnahmebedingungen: {prestige.requirements}
+              </p>
+              <p className="text-xs opacity-75">
+                Freigeschalteter Prestige-Rang {unlockedRank} bei {earnedAp} AP.
+                Fähigkeiten werden durch reguläre Talentwahlen erworben.
+              </p>
               <div className="grid gap-[8px] md:grid-cols-2">
                 {prestige.abilities.map((ability) => {
                   const unlocked = ability.ap <= earnedAp;
                   return (
-                    <label key={ability.id} className={`flex gap-[8px] rounded border border-current/15 p-[8px] text-sm ${unlocked ? "" : "opacity-50"}`}>
-                      <input type="checkbox" name="prestigeAbility" value={ability.id} disabled={!unlocked} defaultChecked={saved.prestigeAbilities.includes(ability.id)} />
-                      <span><strong>Rang {ability.rank} · {ability.name} (ab {ability.ap} AP)</strong>{ability.requirements && <span className="block text-xs opacity-70">Voraussetzung: {ability.requirements}</span>}<span className="block mt-[3px]">{ability.description}</span></span>
+                    <label
+                      key={ability.id}
+                      className={`flex gap-[8px] rounded border border-current/15 p-[8px] text-sm ${unlocked ? "" : "opacity-50"}`}
+                    >
+                      <input
+                        type="checkbox"
+                        name="prestigeAbility"
+                        value={ability.id}
+                        disabled={!unlocked}
+                        defaultChecked={saved.prestigeAbilities.includes(
+                          ability.id,
+                        )}
+                      />
+                      <span>
+                        <strong>
+                          Rang {ability.rank} · {ability.name} (ab {ability.ap}{" "}
+                          AP)
+                        </strong>
+                        {ability.requirements && (
+                          <span className="block text-xs opacity-70">
+                            Voraussetzung: {ability.requirements}
+                          </span>
+                        )}
+                        <span className="block mt-[3px]">
+                          {ability.description}
+                        </span>
+                      </span>
                     </label>
                   );
                 })}
@@ -197,7 +327,13 @@ function ModuleEditor({
 
       <FormError message={state.error} />
       {state.success && <FormSuccess>{state.success}</FormSuccess>}
-      <SubmitButton pending={pending} pendingLabel="Speichert…" className="lcars-pill-btn--outline self-start">Modulwerte speichern</SubmitButton>
+      <SubmitButton
+        pending={pending}
+        pendingLabel="Speichert…"
+        className="lcars-pill-btn--outline self-start"
+      >
+        Modulwerte speichern
+      </SubmitButton>
     </form>
   );
 }
@@ -217,33 +353,63 @@ export default function RuleModuleCharacterSections({
 }) {
   return modules.map((definition) => {
     const saved = stats.ruleModules[definition.id] ?? {
-      resources: {}, selectedTalents: [], selectedStatuses: [], selectedCollectionEntries: {}, prestigeClass: null, prestigeAbilities: [],
+      resources: {},
+      selectedTalents: [],
+      selectedStatuses: [],
+      selectedCollectionEntries: {},
+      prestigeClass: null,
+      prestigeAbilities: [],
     };
-    const hasCharacterFields = definition.resources.length > 0 ||
-      definition.statuses.length > 0 || definition.talents.length > 0 ||
-      definition.prestigeClasses.length > 0 || definition.collections.length > 0 || definition.id === "technomage";
+    const hasCharacterFields =
+      definition.resources.length > 0 ||
+      definition.statuses.length > 0 ||
+      definition.talents.length > 0 ||
+      definition.prestigeClasses.length > 0 ||
+      definition.collections.length > 0 ||
+      definition.id === "technomage";
     return (
-      <section key={definition.id} className="flex flex-col gap-[12px] rounded-[12px] border border-current/30 p-[12px]">
-        <div>
-          <p className="lcars-eyebrow">Regelmodul</p>
-          <h2 className="text-lg font-bold">{definition.name}</h2>
+      <CharacterPanel key={definition.id} en={definition.name} de="Regelmodul">
+        <div className="flex flex-col gap-[12px] px-[14px]">
           <p className="text-sm opacity-75">{definition.summary}</p>
+          {definition.id === "technomage" && (
+            <TechnomagePowerPointTracker
+              userId={userId}
+              characterId={characterId}
+              stats={stats}
+              earnedAp={earnedAp}
+            />
+          )}
+          {hasCharacterFields ? (
+            <ModuleEditor
+              key={`${definition.id}-${JSON.stringify(saved)}`}
+              definition={definition}
+              saved={saved}
+              userId={userId}
+              characterId={characterId}
+              earnedAp={earnedAp}
+              insight={stats.attributes.insight}
+            />
+          ) : (
+            <p className="text-sm opacity-75">
+              Dieses Modul ergänzt den Charakterbogen um Regeln, aber keine
+              eigenen Modulwerte.
+            </p>
+          )}
+          {definition.rules.length > 0 && (
+            <section className="stat-editor-section flex flex-col gap-[10px]">
+              <h3 className="stat-editor-section-title">
+                Modulregeln ({definition.rules.length})
+              </h3>
+              {definition.rules.map((rule) => (
+                <article key={rule.id}>
+                  <h3 className="font-bold">{rule.title}</h3>
+                  <p className="text-sm">{rule.body}</p>
+                </article>
+              ))}
+            </section>
+          )}
         </div>
-        {definition.id === "technomage" && (
-          <TechnomageSpellsPanel userId={userId} characterId={characterId} stats={stats} earnedAp={earnedAp} moduleDefinition={definition} />
-        )}
-        {hasCharacterFields ? (
-          <ModuleEditor key={`${definition.id}-${JSON.stringify(saved)}`} definition={definition} saved={saved} userId={userId} characterId={characterId} earnedAp={earnedAp} insight={stats.attributes.insight} />
-        ) : (
-          <p className="text-sm opacity-75">Dieses Modul ergänzt den Charakterbogen um Regeln, aber keine eigenen Modulwerte.</p>
-        )}
-        <details>
-          <summary className="cursor-pointer font-bold">Regeln des Moduls ({definition.rules.length})</summary>
-          <div className="mt-[8px] flex flex-col gap-[10px]">
-            {definition.rules.map((rule) => <article key={rule.id}><h3 className="font-bold">{rule.title}</h3><p className="text-sm">{rule.body}</p></article>)}
-          </div>
-        </details>
-      </section>
+      </CharacterPanel>
     );
   });
 }

@@ -1,5 +1,11 @@
 "use client";
-import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { LcarsCollapsiblePanel } from "@/components/lcars";
 import ModalOverlay from "@/components/ModalOverlay";
 import EditorDraftForm from "@/components/ContentEditor/EditorDraftForm";
@@ -124,11 +130,11 @@ function RenameDocumentForm({
 }) {
   const [draftGeneration, setDraftGeneration] = useState(0);
   const renameAction = useCallback(
-    async (
-      previousState: CharacterDocumentActionState,
-      formData: FormData,
-    ) => {
-      const result = await renameCharacterDocumentAction(previousState, formData);
+    async (previousState: CharacterDocumentActionState, formData: FormData) => {
+      const result = await renameCharacterDocumentAction(
+        previousState,
+        formData,
+      );
       if (result.success) {
         setDraftGeneration((generation) => generation + 1);
       }
@@ -186,12 +192,14 @@ export default function CharacterDocumentsPanel({
   documents,
   readOnly = false,
   defaultOpen = true,
+  collapsible = true,
   storageId,
 }: {
   characterId: number;
   documents: CharacterDocument[];
   readOnly?: boolean;
   defaultOpen?: boolean;
+  collapsible?: boolean;
   storageId?: string;
 }) {
   const [openDocument, setOpenDocument] = useState<CharacterDocument | null>(
@@ -207,6 +215,7 @@ export default function CharacterDocumentsPanel({
         badge={documents.length}
         storageId={storageId ?? `character:${characterId}:documents`}
         defaultOpen={defaultOpen}
+        collapsible={collapsible}
       >
         {documents.length === 0 ? (
           <p className="lcars-empty-state">Noch keine Dokumente hinterlegt.</p>

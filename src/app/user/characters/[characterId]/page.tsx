@@ -24,14 +24,15 @@ import CharacterDocumentsPanel from "./CharacterDocumentsPanel";
 import { listCharacterDocuments } from "@/lib/characterDocuments";
 import CharacterArchiveExportButton from "./CharacterArchiveExportButton";
 import CharacterJsonTransfer from "./CharacterJsonTransfer";
-import CharacterEditorTabs, {
-  type CharacterEditorTab,
-} from "../_shared/CharacterEditorTabs";
+import CharacterEditorTabs from "../_shared/CharacterEditorTabs";
 import { getCharacterArchiveOptions } from "@/lib/characterArchive";
 import CharacterNpcConversionPanel from "./CharacterNpcConversionPanel";
-import { listCampaignRuleModules, moduleSupportsCharacterRole } from "@/lib/campaignRuleModules";
+import {
+  listCampaignRuleModules,
+  moduleSupportsCharacterRole,
+} from "@/lib/campaignRuleModules";
 import { isTechnomageRole } from "@/lib/technomageSpellCatalog";
-import RuleModuleCharacterSections from "./RuleModuleCharacterSections";
+import { ruleModuleCharacterTabs } from "./ruleModuleCharacterTabs";
 
 export const metadata: Metadata = {
   title: "Charakter",
@@ -89,10 +90,18 @@ export default async function OwnCharacterPage({ params }: Props) {
     listCampaignRuleModules(),
   ]);
   const activeCharacterModules = ruleModules
-    .filter((module) => module.enabled && moduleSupportsCharacterRole(module.definition, sheet.stats.characterRole))
+    .filter(
+      (module) =>
+        module.enabled &&
+        moduleSupportsCharacterRole(
+          module.definition,
+          sheet.stats.characterRole,
+        ),
+    )
     .map((module) => module.definition);
   const technomageModule = isTechnomageRole(sheet.stats.characterRole)
-    ? ruleModules.find((module) => module.definition.id === "technomage")?.definition
+    ? ruleModules.find((module) => module.definition.id === "technomage")
+        ?.definition
     : undefined;
 
   return (
@@ -141,21 +150,13 @@ export default async function OwnCharacterPage({ params }: Props) {
                     />
                   ),
                 },
-                ...activeCharacterModules
-                  .filter((module) => module.characterTab?.enabled)
-                  .map((module): CharacterEditorTab => ({
-                    id: `module-${module.id}`,
-                    label: module.characterTab?.label || module.name,
-                    content: (
-                      <RuleModuleCharacterSections
-                        modules={[module]}
-                        userId={session.userId}
-                        characterId={sheet.id}
-                        stats={sheet.stats}
-                        earnedAp={account.earned}
-                      />
-                    ),
-                  })),
+                ...ruleModuleCharacterTabs({
+                  modules: activeCharacterModules,
+                  userId: session.userId,
+                  characterId: sheet.id,
+                  stats: sheet.stats,
+                  earnedAp: account.earned,
+                }),
                 {
                   id: "personal",
                   label: "Persönliche Daten",
@@ -189,7 +190,7 @@ export default async function OwnCharacterPage({ params }: Props) {
                         contentId={character.id}
                         path={characterEditHref(character.id)}
                         revisions={revisions}
-                        defaultOpen
+                        collapsible={false}
                       />
                     </div>
                   ),
@@ -232,6 +233,7 @@ export default async function OwnCharacterPage({ params }: Props) {
                       <CharacterDocumentsPanel
                         characterId={character.id}
                         documents={documents}
+                        collapsible={false}
                       />
                     </div>
                   ),

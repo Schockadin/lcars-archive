@@ -12,6 +12,7 @@ export default function SettingsPanel({
   hint,
   badge,
   defaultOpen = false,
+  collapsible = true,
   stacked = false,
   children,
 }: {
@@ -21,6 +22,7 @@ export default function SettingsPanel({
   // Kurzinfo rechts in der Kopfzeile, z.B. „3 eigene Farben".
   badge?: ReactNode;
   defaultOpen?: boolean;
+  collapsible?: boolean;
   // Kopfzeile untereinander statt nebeneinander. In breiten Panels stand die
   // Kurzinfo sonst am äußersten rechten Rand — hunderte Pixel von dem Titel
   // entfernt, zu dem sie gehört.
@@ -37,6 +39,31 @@ export default function SettingsPanel({
       <span className="lcars-eyebrow text-lcars-primary-ink">{title}</span>
     </>
   );
+
+  if (!collapsible) {
+    return (
+      <section className="lcars-details rounded-[var(--lcars-radius-pill)] border border-lcars-border bg-lcars-surface px-[16px] py-[10px]">
+        <div
+          className={
+            stacked
+              ? "flex flex-col gap-[6px]"
+              : "flex flex-wrap items-baseline justify-between gap-[8px]"
+          }
+        >
+          <span className="lcars-eyebrow text-lcars-primary-ink">{title}</span>
+          {hint && (
+            <span className="text-lcars-ink-dim text-[12px]">{hint}</span>
+          )}
+          {badge && (
+            <span className="text-lcars-ink-dim font-lcars-mono text-[12px]">
+              {badge}
+            </span>
+          )}
+        </div>
+        <div className="mt-[12px] flex flex-col gap-[10px]">{children}</div>
+      </section>
+    );
+  }
 
   return (
     <details

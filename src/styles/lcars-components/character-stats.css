@@ -75,34 +75,38 @@
   margin-inline: 0;
 }
 
-/* Die obersten Bereiche der eigenen Charakterseite sind native
-   <details>-Elemente. Geschlossen bleibt nur die farbige Titelleiste stehen;
-   geöffnet gilt derselbe Abstand wie bei den festen Unterabschnitten des
-   Wertebogens. */
+/* Feste Panels in den Charakter-Tabs verwenden dieselbe farbige Titelleiste
+   wie der Charakterbogen, bleiben aber immer vollständig sichtbar. */
 .stat-sheet-panel {
-  padding-bottom: 0;
+  padding-bottom: 14px;
 }
 
 .stat-sheet-panel > .stat-sheet-section-title {
+  margin-bottom: 14px;
+}
+
+/* Nur ausdrücklich einklappbare Bereiche (der Spell-Kauf) behalten die
+   native Disclosure-Bedienung innerhalb eines Charakter-Tabs. */
+.stat-sheet-collapsible {
+  padding-bottom: 0;
+}
+
+.stat-sheet-collapsible > .stat-sheet-section-title {
   margin-bottom: 0;
   cursor: pointer;
   list-style: none;
 }
 
-.stat-sheet-panel > .stat-sheet-section-title::-webkit-details-marker {
+.stat-sheet-collapsible > .stat-sheet-section-title::-webkit-details-marker {
   display: none;
 }
 
-.stat-sheet-panel[open] {
+.stat-sheet-collapsible[open] {
   padding-bottom: 14px;
 }
 
-.stat-sheet-panel[open] > .stat-sheet-section-title {
+.stat-sheet-collapsible[open] > .stat-sheet-section-title {
   margin-bottom: 14px;
-}
-
-.stat-sheet-panel[open] > .stat-sheet-section-title .stat-sheet-panel-chevron {
-  transform: rotate(-135deg);
 }
 
 .stat-sheet-panel-heading {
@@ -230,7 +234,8 @@
   color: var(--lcars-ink-data);
 }
 
-.character-species-picker-dropdown[open] .character-species-picker-summary::after {
+.character-species-picker-dropdown[open]
+  .character-species-picker-summary::after {
   content: "▴";
 }
 
@@ -524,7 +529,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px 12px;
-  border-bottom: 2px solid color-mix(in srgb, var(--lcars-ink-data) 35%, transparent);
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--lcars-ink-data) 35%, transparent);
 }
 
 .character-editor-tab {
@@ -540,7 +546,9 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-align: left;
-  transition: color 160ms, border-color 160ms;
+  transition:
+    color 160ms,
+    border-color 160ms;
 }
 
 .character-editor-tab:hover,
