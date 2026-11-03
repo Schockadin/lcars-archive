@@ -226,6 +226,28 @@ test.describe("Charakter-Assistent", () => {
   });
 });
 
+test.describe("Persönliche Angaben im Charakter-Assistenten", () => {
+  test("übernimmt Eingaben im Standardmodus ohne Browserfehler", async ({ page }) => {
+    await page.goto("/dev-gallery");
+
+    await expect(page.locator("#wizard-creation-method")).toHaveValue("ap");
+    const personalTab = page.getByRole("tab", { name: "Persönliche Daten" });
+    await expect(personalTab).toHaveAttribute("aria-selected", "false");
+    const pageErrors: string[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await personalTab.click();
+
+    const pronouns = page.locator("#wizard-personal-pronouns");
+    await pronouns.fill("they/them");
+    await expect(pronouns).toHaveValue("they/them");
+
+    const experience = page.locator("#wizard-personal-experience");
+    await experience.selectOption("experienced");
+    await expect(experience).toHaveValue("experienced");
+    expect(pageErrors).toEqual([]);
+  });
+});
+
 // Die Schrittleiste ist auf schmalen Geräten reine Icon-Leiste (Breakpoint
 // 520px in character-stats.css) — hier geprüft an den beiden Viewports, die
 // playwright.config.ts ohnehin fährt (mobile 375px, desktop 1280px).

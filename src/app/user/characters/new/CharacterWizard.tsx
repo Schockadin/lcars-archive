@@ -307,10 +307,13 @@ export default function CharacterWizard({
                   className="stat-field-input"
                   type="text"
                   value={stats[field.key] ?? ""}
-                  onChange={(event) => setStats((current) => ({
-                    ...current,
-                    [field.key]: event.currentTarget.value || null,
-                  }))}
+                  onChange={(event) => {
+                    const value = event.currentTarget.value || null;
+                    setStats((current) => ({
+                      ...current,
+                      [field.key]: value,
+                    }));
+                  }}
                 />
               </label>
             ))}
@@ -333,10 +336,11 @@ export default function CharacterWizard({
                 id="wizard-personal-experience"
                 className="stat-field-input"
                 value={stats.experience ?? ""}
-                onChange={(event) => setStats((current) => ({
-                  ...current,
-                  experience: (event.currentTarget.value || null) as CharacterStats["experience"],
-                }))}
+                onChange={(event) => {
+                  const experience = (event.currentTarget.value ||
+                    null) as CharacterStats["experience"];
+                  setStats((current) => ({ ...current, experience }));
+                }}
               >
                 <option value="">— keine Angabe —</option>
                 {EXPERIENCE_OPTIONS.map((option) => (
