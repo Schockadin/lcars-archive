@@ -166,7 +166,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "charaktererschaffung",
       },
       {
-        text: "Charaktere lassen sich nach dem STA-2e-Lifepath mit Spezies, Herkunft, Karriere, Erfahrung und Career Events regelkonform erschaffen; das bisherige AP-Budget-Verfahren bleibt als Alternative verfügbar.",
+        text: "Für neue Charaktere stehen drei Erschaffungswege bereit: direkte AP-Vergabe (Standard), STA-2e-Punkteverteilung für 56 Attributs- und 16 Disziplinpunkte sowie der geführte Lifepath.",
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },

@@ -506,7 +506,10 @@ export function parseCharacterStats(raw: unknown): CharacterStats {
     attributes,
     departments,
     creationLocked: source.creationLocked === true,
-    creationMethod: source.creationMethod === "sta2e-lifepath" ? "sta2e-lifepath" : "ap",
+    creationMethod:
+      source.creationMethod === "sta2e-lifepath" || source.creationMethod === "sta2e-point-buy"
+        ? source.creationMethod
+        : "ap",
     lifepath: normalizeLifepath(source.lifepath),
     pendingAdvancements: normalizePendingAdvancements(source.pendingAdvancements),
     experience:

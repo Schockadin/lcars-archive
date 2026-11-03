@@ -29,7 +29,7 @@ export interface CharacterDepartments {
 // englische Schlüssel, angezeigt das deutsche Label (siehe EXPERIENCE_OPTIONS).
 export type CharacterExperience = "novice" | "experienced" | "veteran";
 
-export type CharacterCreationMethod = "ap" | "sta2e-lifepath";
+export type CharacterCreationMethod = "ap" | "sta2e-point-buy" | "sta2e-lifepath";
 
 export interface LifepathCareerEvent {
   id: string;

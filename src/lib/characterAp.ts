@@ -22,6 +22,7 @@ import {
 } from "@/lib/creationReset";
 import type { CharacterStats } from "@/types/characterStats";
 import { applySta2eLifepath, checkSta2eLifepath } from "@/lib/sta2eLifepath";
+import { checkSta2ePointBuy } from "@/lib/sta2ePointBuy";
 
 // Die Buchungsgründe und Kontotypen selbst liegen DB-frei in
 // src/lib/apReasons.ts (Client-Komponenten brauchen die Labels) und werden
@@ -323,6 +324,19 @@ export async function lockOwnCharacterCreation(
         focusCatalog.map((focus) => focus.name),
       );
       if (catalogError) throw new CreationIncompleteError(catalogError);
+    } else if (stats.creationMethod === "sta2e-point-buy") {
+      const pointBuyErrors = checkSta2ePointBuy(stats);
+      if (pointBuyErrors.length > 0) {
+        throw new CreationIncompleteError(pointBuyErrors.join(" "));
+      }
+      const catalogError = checkOpenCreationStats(
+        stats,
+        rules,
+        talentCatalog.map((talent) => talent.name),
+        [],
+        focusCatalog.map((focus) => focus.name),
+      );
+      if (catalogError) throw new CreationIncompleteError(catalogError);
     } else if (creationBudget(stats, rules).overBudget) {
       throw new CreationOverBudgetError(
         "Das Erschaffungsbudget ist überzogen — bitte zuerst Werte zurücknehmen.",
@@ -341,7 +355,7 @@ export async function lockOwnCharacterCreation(
       );
     }
 
-    const carryOver = stats.creationMethod === "sta2e-lifepath"
+    const carryOver = stats.creationMethod !== "ap"
       ? 0
       : creationCarryOver(stats, rules);
 

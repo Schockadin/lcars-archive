@@ -26,6 +26,10 @@ import {
 } from "../_shared/characterHeadFields";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
 import { applySta2eLifepath, EMPTY_STA2E_LIFEPATH } from "@/lib/sta2eLifepath";
+import {
+  STA2E_POINT_BUY_BASE_ATTRIBUTES,
+  STA2E_POINT_BUY_BASE_DEPARTMENTS,
+} from "@/lib/sta2ePointBuy";
 import { getSpeciesAbilityChoices, getSpeciesLabel, SPECIES_OPTIONS } from "@/lib/sta2eCharacterOptions";
 import { moduleSupportsCharacterRole, type RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
@@ -83,11 +87,7 @@ export default function CharacterWizard({
   );
   const formRef = useRef<HTMLFormElement>(null);
   const [activeTabId, setActiveTabId] = useState("values");
-  const [stats, setStats] = useState<CharacterStats>(() => applySta2eLifepath({
-    ...EMPTY_CHARACTER_STATS,
-    creationMethod: "sta2e-lifepath",
-    lifepath: EMPTY_STA2E_LIFEPATH,
-  }));
+  const [stats, setStats] = useState<CharacterStats>(EMPTY_CHARACTER_STATS);
   const [isDraft, setIsDraft] = useState(false);
   const [head, setHead] = useState<HeadSnapshot | null>(null);
   const [bioHtml, setBioHtml] = useState<string | null>(null);
@@ -116,6 +116,33 @@ export default function CharacterWizard({
     if (method === stats.creationMethod) return;
     if (method === "ap") {
       setStats((current) => ({ ...current, creationMethod: "ap", lifepath: null }));
+      return;
+    }
+    if (method === "sta2e-point-buy") {
+      setStats((current) => {
+        const base = current.creationMethod === "sta2e-lifepath"
+          ? {
+              ...current,
+              environment: null,
+              upbringing: null,
+              careerPath: null,
+              experience: null,
+              traits: null,
+              careerEvents: [],
+              values: [],
+              focuses: [],
+              talents: [],
+              pastimes: [],
+            }
+          : current;
+        return {
+          ...base,
+          creationMethod: "sta2e-point-buy",
+          lifepath: null,
+          attributes: { ...STA2E_POINT_BUY_BASE_ATTRIBUTES },
+          departments: { ...STA2E_POINT_BUY_BASE_DEPARTMENTS },
+        };
+      });
       return;
     }
     setStats((current) => applySta2eLifepath({
@@ -195,11 +222,18 @@ export default function CharacterWizard({
                 <span className="stat-label-secondary">Charaktererschaffung</span>
               </span>
               <select id="wizard-creation-method" className="stat-field-input" value={stats.creationMethod} onChange={(event) => setCreationMethod(event.currentTarget.value as CharacterStats["creationMethod"])}>
+                <option value="ap">Direkte AP-Vergabe</option>
+                <option value="sta2e-point-buy">STA 2e Punkte-System</option>
                 <option value="sta2e-lifepath">STA 2e Lifepath</option>
-                <option value="ap">AP-Budget (Kampagnenregel)</option>
               </select>
             </label>
-            <p className="stat-sheet-rule">Der STA-2e-Lifepath ist vorausgewählt. Die AP-Budget-Methode bleibt als kampagnenspezifische Alternative verfügbar.</p>
+            <p className="stat-sheet-rule">
+              {stats.creationMethod === "ap"
+                ? "Attribute und Disziplinen werden direkt aus den kampagnenweiten AP-Budgets verteilt."
+                : stats.creationMethod === "sta2e-point-buy"
+                  ? "Verteile nach STA 2e insgesamt 56 Attributs- und 16 Disziplinpunkte."
+                  : "Der STA-2e-Lifepath führt Schritt für Schritt durch die klassische Charaktererschaffung."}
+            </p>
           </section>
           <CharacterValuesEditor
             stats={stats}

@@ -17,6 +17,7 @@ import {
 } from "../_shared/advancementAction";
 import { hasCompleteCreationValues } from "@/lib/characterStats";
 import { creationBudget, creationCarryOver } from "@/lib/advancement";
+import { checkSta2ePointBuy } from "@/lib/sta2ePointBuy";
 import type { CharacterStats } from "@/types/characterStats";
 import type { AdvancementRules } from "@/lib/advancement";
 import type { ApAccount } from "@/lib/apReasons";
@@ -76,6 +77,12 @@ export default function CharacterValuesPanel({
   const budget = creationBudget(stats, rules);
   const carryOver = creationCarryOver(stats, rules);
   const savedComplete = hasCompleteCreationValues(savedStats);
+  const pointBuyErrors = checkSta2ePointBuy(stats);
+  const lockOverBudget = stats.creationMethod === "ap"
+    ? budget.overBudget
+    : stats.creationMethod === "sta2e-point-buy"
+      ? pointBuyErrors.length > 0
+      : false;
 
   return (
     <>
@@ -90,7 +97,7 @@ export default function CharacterValuesPanel({
 
           <p className="stat-ap-inline-balance">
             <strong>{account.available}</strong> AP verfügbar
-            {!stats.creationLocked && rules.creationCarryOverMax > 0
+            {!stats.creationLocked && stats.creationMethod === "ap" && rules.creationCarryOverMax > 0
               ? ` · nach der Erschaffung bis zu ${account.available + carryOver} AP`
               : ""}
           </p>
@@ -136,10 +143,11 @@ export default function CharacterValuesPanel({
         {!stats.creationLocked && (
           <div className="stat-creation-controls">
             <p className="stat-sheet-rule">
-              Erschaffungsbudget: {budget.attributeCost} /{" "}
-              {rules.creationAttributeBudget} AP für Attribute und{" "}
-              {budget.departmentCost} / {rules.creationDepartmentBudget} AP für
-              Disziplinen.
+              {stats.creationMethod === "ap"
+                ? <>Erschaffungsbudget: {budget.attributeCost} / {rules.creationAttributeBudget} AP für Attribute und {budget.departmentCost} / {rules.creationDepartmentBudget} AP für Disziplinen.</>
+                : stats.creationMethod === "sta2e-point-buy"
+                  ? "Das STA-2e-Punktesystem verlangt eine Attributsumme von 56 und eine Disziplinensumme von 16."
+                  : "Die Attribute und Disziplinen wurden nach dem STA-2e-Lifepath berechnet."}
             </p>
             {stats.pendingAdvancements.length > 0 && (
               <p className="stat-sheet-rule">
@@ -148,6 +156,11 @@ export default function CharacterValuesPanel({
                 {stats.pendingAdvancements.length === 1 ? "" : "en"} wieder
                 angewandt, soweit Regeln und AP es zulassen.
               </p>
+            )}
+            {stats.creationMethod === "sta2e-point-buy" && pointBuyErrors.length > 0 && (
+              <ul className="stat-sheet-errors">
+                {pointBuyErrors.map((error) => <li key={error}>{error}</li>)}
+              </ul>
             )}
             {!savedComplete && (
               <p className="stat-sheet-rule">
@@ -158,7 +171,7 @@ export default function CharacterValuesPanel({
               <input type="hidden" name="characterId" value={characterId} />
               <button
                 type="submit"
-                disabled={lockPending || budget.overBudget || !savedComplete}
+                disabled={lockPending || lockOverBudget || !savedComplete}
                 className="lcars-pill-btn--outline disabled:opacity-50"
                 onClick={(event) => {
                   if (

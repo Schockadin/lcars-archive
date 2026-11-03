@@ -39,6 +39,12 @@ import {
 } from "@/lib/sta2eCareerEvents";
 import Sta2eLifepathBuilder from "./Sta2eLifepathBuilder";
 import { applySta2eLifepath } from "@/lib/sta2eLifepath";
+import {
+  checkSta2ePointBuy,
+  sta2ePointBuyTotals,
+  STA2E_POINT_BUY_ATTRIBUTE_TOTAL,
+  STA2E_POINT_BUY_DEPARTMENT_TOTAL,
+} from "@/lib/sta2ePointBuy";
 
 export interface InlineAdvancement {
   characterId: number;
@@ -91,13 +97,18 @@ function BudgetMeter({
   cost,
   total,
   remaining,
+  unit = "AP",
 }: {
   label: string;
   cost: number;
   total: number;
   remaining: number;
+  unit?: "AP" | "Punkte";
 }) {
   const over = remaining < 0;
+  const verb = unit === "AP" ? "verbraucht" : "verteilt";
+  const remainingLabel = unit === "AP" ? "AP übrig" : "Punkte zu verteilen";
+  const overLabel = unit === "AP" ? "AP zu viel" : "Punkte zu viel";
   // Ohne Budget (0 AP eingestellt) gibt es nichts zu füllen — sonst führte
   // die Division zu NaN und der Balken verschwände.
   const filled =
@@ -108,12 +119,12 @@ function BudgetMeter({
       <div className="stat-budget-head">
         <span className="stat-budget-label">{label}</span>
         <span className="stat-budget-spent">
-          {cost} / {total} AP verbraucht
+          {cost} / {total} {unit} {verb}
         </span>
       </div>
       <div className="stat-budget-figure">
         <strong>{over ? -remaining : remaining}</strong>
-        <span>{over ? "AP zu viel" : "AP übrig"}</span>
+        <span>{over ? overLabel : remainingLabel}</span>
       </div>
       <div
         className="stat-budget-meter"
@@ -121,7 +132,7 @@ function BudgetMeter({
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={cost}
-        aria-label={`${label}: ${cost} von ${total} AP verbraucht`}
+        aria-label={`${label}: ${cost} von ${total} ${unit} ${verb}`}
       >
         <span style={{ width: `${over ? 100 : filled}%` }} />
       </div>
@@ -272,6 +283,7 @@ export default function CharacterValuesEditor({
   // Editor zeigt sie dann nur noch an. Verbindlich ist die Prüfung im Server.
   const locked = stats.creationLocked;
   const lifepathMode = stats.creationMethod === "sta2e-lifepath";
+  const pointBuyMode = stats.creationMethod === "sta2e-point-buy";
 
   function patch(next: Partial<CharacterStats>) {
     const updated = { ...stats, ...next };
@@ -396,17 +408,19 @@ export default function CharacterValuesEditor({
 
   // Regelverstöße live anzeigen — verbindlich geprüft wird in der Action.
   const ruleErrors = useMemo(
-    () => [
+    () => [...new Set([
       ...validateDistribution(attributeValues, ATTRIBUTE_RULE, "Attribute"),
       ...validateDistribution(departmentValues, DEPARTMENT_RULE, "Disziplinen"),
-    ],
+      ...(pointBuyMode ? checkSta2ePointBuy(stats) : []),
+    ])],
     // eslint-disable-next-line react-hooks/exhaustive-deps -- abgeleitet aus den beiden Wertegruppen
-    [stats.attributes, stats.departments],
+    [stats.attributes, stats.departments, pointBuyMode],
   );
 
   const attributeOver = overfilledValues(attributeValues, ATTRIBUTE_RULE);
   const departmentOver = overfilledValues(departmentValues, DEPARTMENT_RULE);
   const budget = creationBudget(stats, rules);
+  const pointTotals = sta2ePointBuyTotals(stats);
   const maxStress = computeStress(stats);
   const speciesAbilityChoices = getSpeciesAbilityChoices(species);
   const knownAbilityValues = new Set(
@@ -520,7 +534,16 @@ export default function CharacterValuesEditor({
       {/* ── Attribute ─────────────────────────────────────────────── */}
       <section className={sectionClassName}>
         <SectionTitle en="Attributes" de="Attribute" flat={flatSections} />
-        {!locked && !lifepathMode && (
+        {!locked && pointBuyMode && (
+          <BudgetMeter
+            label="Attributsumme"
+            cost={pointTotals.attributes}
+            total={STA2E_POINT_BUY_ATTRIBUTE_TOTAL}
+            remaining={STA2E_POINT_BUY_ATTRIBUTE_TOTAL - pointTotals.attributes}
+            unit="Punkte"
+          />
+        )}
+        {!locked && !lifepathMode && !pointBuyMode && (
           <BudgetMeter
             label="Attribute"
             cost={budget.attributeCost}
@@ -529,6 +552,7 @@ export default function CharacterValuesEditor({
           />
         )}
         <p className="stat-sheet-rule">
+          {pointBuyMode && <>Punktesystem: Startwert 7, Gesamt 56 (14 Punkte zusätzlich verteilen). </>}
           Werte von {ATTRIBUTE_RULE.min} bis {ATTRIBUTE_RULE.max}; höchstens{" "}
           {ATTRIBUTE_RULE.maxAtMax} Attribut auf {ATTRIBUTE_RULE.max} und{" "}
           {ATTRIBUTE_RULE.maxAtSecond} auf {ATTRIBUTE_RULE.max - 1}.
@@ -561,7 +585,16 @@ export default function CharacterValuesEditor({
       {/* ── Disziplinen ───────────────────────────────────────────── */}
       <section className={sectionClassName}>
         <SectionTitle en="Departments" de="Disziplinen" flat={flatSections} />
-        {!locked && !lifepathMode && (
+        {!locked && pointBuyMode && (
+          <BudgetMeter
+            label="Disziplinensumme"
+            cost={pointTotals.departments}
+            total={STA2E_POINT_BUY_DEPARTMENT_TOTAL}
+            remaining={STA2E_POINT_BUY_DEPARTMENT_TOTAL - pointTotals.departments}
+            unit="Punkte"
+          />
+        )}
+        {!locked && !lifepathMode && !pointBuyMode && (
           <BudgetMeter
             label="Disziplinen"
             cost={budget.departmentCost}
@@ -570,6 +603,7 @@ export default function CharacterValuesEditor({
           />
         )}
         <p className="stat-sheet-rule">
+          {pointBuyMode && <>Punktesystem: Startwert 1, Gesamt 16 (10 Punkte zusätzlich verteilen). </>}
           Werte von {DEPARTMENT_RULE.min} bis {DEPARTMENT_RULE.max}; höchstens{" "}
           {DEPARTMENT_RULE.maxAtMax} Disziplin auf {DEPARTMENT_RULE.max} und{" "}
           {DEPARTMENT_RULE.maxAtSecond} auf {DEPARTMENT_RULE.max - 1}.

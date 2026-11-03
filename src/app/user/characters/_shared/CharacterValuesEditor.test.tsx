@@ -76,6 +76,35 @@ function renderEditor(
 }
 
 describe("CharacterValuesEditor – Inline-Steigerungen", () => {
+  it("zeigt beim STA-2e-Punktesystem die 56/16-Gesamtsummen an", () => {
+    const stats = parseCharacterStats({
+      creationMethod: "sta2e-point-buy",
+      attributes: {
+        control: 7,
+        daring: 7,
+        fitness: 7,
+        insight: 7,
+        presence: 7,
+        reason: 7,
+      },
+      departments: {
+        command: 1,
+        conn: 1,
+        engineering: 1,
+        security: 1,
+        medicine: 1,
+        science: 1,
+      },
+    });
+
+    renderEditor(0, vi.fn(), false, stats);
+
+    expect(screen.getByText("42 / 56 Punkte verteilt")).toBeInTheDocument();
+    expect(screen.getByText("6 / 16 Punkte verteilt")).toBeInTheDocument();
+    expect(screen.getByText("14")).toBeInTheDocument();
+    expect(screen.getByText("10")).toBeInTheDocument();
+  });
+
   it("zeigt die Spezies-Abilities der gewählten Spezies und den Rollenbonus", () => {
     const stats = lockedStats();
     stats.characterRole = "Communications Officer";

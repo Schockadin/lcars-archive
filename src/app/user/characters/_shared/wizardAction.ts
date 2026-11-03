@@ -17,6 +17,7 @@ import { userCan } from "@/lib/permissions";
 import { parseStatsPayload } from "@/lib/characterStatsPayload";
 import { checkOpenCreationStats } from "@/lib/characterStatsRules";
 import { applySta2eLifepath, checkSta2eLifepath } from "@/lib/sta2eLifepath";
+import { checkSta2ePointBuy } from "@/lib/sta2ePointBuy";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
@@ -76,6 +77,9 @@ export async function createCharacterWizardAction(
     const lifepathErrors = checkSta2eLifepath(stats, head.species, head.rank);
     if (lifepathErrors.length > 0) return { error: lifepathErrors.join(" ") };
     stats = applySta2eLifepath(stats, head.species);
+  } else if (stats.creationMethod === "sta2e-point-buy") {
+    const pointBuyErrors = checkSta2ePointBuy(stats);
+    if (pointBuyErrors.length > 0) return { error: pointBuyErrors.join(" ") };
   }
 
   const [rules, catalog, focusCatalog, campaignModules] = await Promise.all([

@@ -104,6 +104,7 @@ test.describe("Charakter-Assistent", () => {
   }) => {
     await page.locator("#wizard-name").fill("T'Rel");
     await page.locator("#character-wizard ol button").nth(1).click();
+    await expect(page.locator("#wizard-creation-method")).toHaveValue("ap");
 
     // Je ein Budget-Block direkt unter der Kopfleiste des Abschnitts, den er
     // betrifft (DEFAULT_ADVANCEMENT_RULES: je 320 AP).
@@ -125,6 +126,34 @@ test.describe("Charakter-Assistent", () => {
       "220",
     );
     await expect(attributes).not.toHaveClass(/stat-budget--over/);
+  });
+
+  test("bietet das STA-2e-Punktesystem zusätzlich zur AP-Vergabe an", async ({ page }) => {
+    await page.locator("#wizard-name").fill("T'Rel");
+    await page.locator("#character-wizard ol button").nth(1).click();
+
+    const method = page.locator("#wizard-creation-method");
+    await expect(method.locator("option")).toHaveCount(3);
+    await method.selectOption("sta2e-point-buy");
+
+    await expect(page.locator("#wizard-stats-attr-control")).toHaveValue("7");
+    await expect(page.locator("#wizard-stats-dep-command")).toHaveValue("1");
+    await expect(page.locator("#character-wizard .stat-budget").nth(0)).toContainText("42 / 56 Punkte verteilt");
+    await expect(page.locator("#character-wizard .stat-budget").nth(1)).toContainText("6 / 16 Punkte verteilt");
+
+    for (const [key, value] of Object.entries({
+      control: "12", daring: "10", fitness: "10", insight: "9", presence: "8", reason: "7",
+    })) {
+      await page.locator(`#wizard-stats-attr-${key}`).fill(value);
+    }
+    for (const [key, value] of Object.entries({
+      command: "5", conn: "4", engineering: "3", security: "2", medicine: "1", science: "1",
+    })) {
+      await page.locator(`#wizard-stats-dep-${key}`).fill(value);
+    }
+
+    await expect(page.getByText("Die Attributsumme muss 56 betragen")).toHaveCount(0);
+    await expect(page.getByText("Die Disziplinensumme muss 16 betragen")).toHaveCount(0);
   });
 
   test("wählt Career Events aus der STA-2e-Tabelle und zeigt ihre Boni", async ({
