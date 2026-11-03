@@ -205,6 +205,21 @@ function overfilledValues(
   return over;
 }
 
+function advancementWouldExceedDistribution(
+  values: (number | null)[],
+  targetIndex: number,
+  nextValue: number,
+  rule: DistributionRule,
+): boolean {
+  const after = values.map((value, index) =>
+    index === targetIndex ? nextValue : value,
+  );
+  return (
+    after.filter((value) => value === rule.max).length > rule.maxAtMax ||
+    after.filter((value) => value === rule.max - 1).length > rule.maxAtSecond
+  );
+}
+
 export default function CharacterValuesEditor({
   stats,
   onChange,
@@ -286,6 +301,26 @@ export default function CharacterValuesEditor({
     current: number | null,
   ): ReactNode {
     if (!locked || !advancement) return undefined;
+    const fields = kind === "attribute" ? ATTRIBUTE_FIELDS : DEPARTMENT_FIELDS;
+    const rule = kind === "attribute" ? ATTRIBUTE_RULE : DEPARTMENT_RULE;
+    const values =
+      kind === "attribute"
+        ? ATTRIBUTE_FIELDS.map((field) => stats.attributes[field.key])
+        : DEPARTMENT_FIELDS.map((field) => stats.departments[field.key]);
+    const targetIndex = fields.findIndex((field) => field.key === key);
+    if (targetIndex < 0) return undefined;
+    if (
+      current !== null &&
+      (current >= rule.max ||
+        advancementWouldExceedDistribution(
+          values,
+          targetIndex,
+          current + 1,
+          rule,
+        ))
+    ) {
+      return undefined;
+    }
     const next = current === null ? null : current + 1;
     const cost =
       next === null

@@ -51,10 +51,11 @@ function renderEditor(
   availableAp: number,
   submit = vi.fn(),
   flatSections = false,
+  stats = lockedStats(),
 ) {
   const result = render(
     <CharacterValuesEditor
-      stats={lockedStats()}
+      stats={stats}
       onChange={vi.fn()}
       rules={DEFAULT_ADVANCEMENT_RULES}
       talents={[talent]}
@@ -129,6 +130,78 @@ describe("CharacterValuesEditor – Inline-Steigerungen", () => {
       expect(button).toBeDisabled();
       expect(button).toHaveClass("stat-inline-advance--blocked");
     }
+  });
+
+  it("blendet Steigern bei erreichtem Maximalwert aus", () => {
+    const stats = lockedStats();
+    stats.attributes.reason = 12;
+    stats.departments.command = 5;
+
+    const { container } = renderEditor(100, vi.fn(), false, stats);
+
+    expect(
+      screen.getByLabelText(/Reason/).parentElement?.querySelector("button"),
+    ).toBeNull();
+    expect(
+      screen.getByLabelText(/Command/).parentElement?.querySelector("button"),
+    ).toBeNull();
+    expect(
+      container.querySelectorAll(".stat-editor-value-control > button"),
+    ).toHaveLength(10);
+  });
+
+  it("blendet eine Steigerung auf 12 oder 5 aus, wenn der Gruppenhöchstwert belegt ist", () => {
+    const stats = lockedStats();
+    stats.attributes.reason = 12;
+    stats.attributes.control = 11;
+    stats.departments.command = 5;
+    stats.departments.conn = 4;
+
+    const { container } = renderEditor(100, vi.fn(), false, stats);
+
+    expect(
+      screen.getByLabelText(/Control/).parentElement?.querySelector("button"),
+    ).toBeNull();
+    expect(
+      screen.getByLabelText(/Conn/).parentElement?.querySelector("button"),
+    ).toBeNull();
+    expect(
+      screen.getByLabelText(/Daring/).parentElement?.querySelector("button"),
+    ).not.toBeNull();
+    expect(
+      screen.getByLabelText(/Engineering/).parentElement?.querySelector("button"),
+    ).not.toBeNull();
+    expect(
+      container.querySelectorAll(".stat-editor-value-control > button"),
+    ).toHaveLength(8);
+  });
+
+  it("blendet Steigern aus, wenn die nächste Stufe die Verteilungsgrenze überschreitet", () => {
+    const stats = lockedStats();
+    stats.attributes.control = 10;
+    stats.attributes.daring = 11;
+    stats.attributes.fitness = 11;
+    stats.departments.command = 3;
+    stats.departments.conn = 4;
+    stats.departments.engineering = 4;
+
+    const { container } = renderEditor(100, vi.fn(), false, stats);
+
+    expect(
+      screen.getByLabelText(/Control/).parentElement?.querySelector("button"),
+    ).toBeNull();
+    expect(
+      screen.getByLabelText(/Command/).parentElement?.querySelector("button"),
+    ).toBeNull();
+    expect(
+      screen.getByLabelText(/Daring/).parentElement?.querySelector("button"),
+    ).not.toBeNull();
+    expect(
+      screen.getByLabelText(/Conn/).parentElement?.querySelector("button"),
+    ).not.toBeNull();
+    expect(
+      container.querySelectorAll(".stat-editor-value-control > button"),
+    ).toHaveLength(10);
   });
 
   it("vermeidet im bestehenden Werte-Panel zusätzliche Panelrahmen", () => {
