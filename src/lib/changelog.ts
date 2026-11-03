@@ -160,6 +160,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },
+      {
+        text: "Career Events lassen sich aus der STA-2e-W20-Tabelle wählen oder würfeln; ihre Attributs- und Disziplinboni, Fokusvorschläge sowie optionale Traits werden direkt angezeigt.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
     ],
   },
   {

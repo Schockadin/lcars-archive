@@ -81,10 +81,9 @@ export default function CharacterCreationGuide() {
         <p>
           Im Schritt <strong>Werte</strong> trägst du die sechs Attribute und
           sechs Disziplinen in Zahlenkästen ein; daneben läuft mit, was deine
-          Verteilung kostet und wie viel Budget übrig ist. Dazu kommen die
-          Schutz, Entschlossenheit, Ansehen und den Stress-Bonus. Die Listen —
-          Werte, Schwerpunkte, Talente, Angriffe,
-          Ausrüstung, Hobbys, Karriere-Ereignisse — füllst du über{" "}
+          Verteilung kostet und wie viel Budget übrig ist. Dazu kommen
+          Schutz, Entschlossenheit, Ansehen und den Stress-Bonus. Werte,
+          Talente, Angriffe, Ausrüstung und Hobbys füllst du über{" "}
           <strong>„Hinzufügen“</strong>; jeder Eintrag hat ein rotes Minus zum
           Entfernen. Talente <em>und Schwerpunkte</em> kommen aus ihrem Katalog
           (siehe unten). Bei Werten, Schwerpunkten und Talenten steht dabei, wie
@@ -96,6 +95,15 @@ export default function CharacterCreationGuide() {
           Spezies verfügbaren <strong>Species Abilities</strong> markieren.
           Der maximale Stress ist kein Eingabefeld, sondern ergibt sich aus
           Fitness und dem Bonus aus Talenten.
+        </p>
+        <p>
+          Die <strong>Career Events</strong> wählst du aus der STA-2e-W20-Tabelle
+          oder würfelst sie mit dem W20. Zu jedem Ereignis zeigt der Editor den
+          Attributs- und Disziplinzuwachs, einen Fokus sowie Fokusvorschläge;
+          bei manchen Ereignissen ist außerdem ein passendes Trait optional.
+          Die zwei Ereignisse geben je einen Attributs- und Disziplinpunkt sowie
+          einen Fokus. Trage diese Zuwächse in Attribute, Disziplinen und
+          Schwerpunkte ein; ein optionales Trait kommt zu den Merkmalen.
         </p>
         <p>
           Ist die gespeicherte Rolle <strong>Technomage</strong>, erscheint auf

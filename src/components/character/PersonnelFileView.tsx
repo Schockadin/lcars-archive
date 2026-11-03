@@ -11,6 +11,7 @@ import {
 import type { CharacterStats } from "@/types/characterStats";
 import { parseTalentEntry } from "@/lib/talentCatalog";
 import { getRoleBonusEntries, getRoleLabel, getSpeciesListLabel } from "@/lib/sta2eCharacterOptions";
+import { careerEventTitle } from "@/lib/sta2eCareerEvents";
 import {
   DEFAULT_CROP,
   previewStyle,
@@ -210,12 +211,12 @@ export default function PersonnelFileView({
           {/* Der Bogen hat genau zwei Kästen für Karriere-Ereignisse. */}
           <StaticField
             box={HEAD_BOXES.careerEvent1}
-            value={stats.careerEvents[0] ?? ""}
+            value={stats.careerEvents[0] ? careerEventTitle(stats.careerEvents[0]) : ""}
             label="Karriere-Ereignis 1"
           />
           <StaticField
             box={HEAD_BOXES.careerEvent2}
-            value={stats.careerEvents[1] ?? ""}
+            value={stats.careerEvents[1] ? careerEventTitle(stats.careerEvents[1]) : ""}
             label="Karriere-Ereignis 2"
           />
 

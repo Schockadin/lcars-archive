@@ -143,6 +143,17 @@ describe("parseCharacterStats", () => {
     expect(stats.talents).toEqual([]);
   });
 
+  it("normalisiert bekannte Career Events und erhält individuelle Alt-Einträge", () => {
+    const stats = parseCharacterStats({
+      careerEvents: ["First Contact", "Eine persönliche Notiz"],
+    });
+
+    expect(stats.careerEvents).toEqual([
+      "first-contact",
+      "Eine persönliche Notiz",
+    ]);
+  });
+
   it("akzeptiert nur die drei bekannten Erfahrungsstufen", () => {
     expect(parseCharacterStats({ experience: "veteran" }).experience).toBe(
       "veteran",

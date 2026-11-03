@@ -98,6 +98,81 @@ describe("CharacterValuesEditor – Inline-Steigerungen", () => {
     expect(screen.getByText("Role Bonus")).toBeInTheDocument();
   });
 
+  it("bietet die STA-2e-Career-Events mit ihren Boni an", () => {
+    const stats = lockedStats();
+    stats.careerEvents = ["breakthrough-or-invention"];
+
+    render(
+      <CharacterValuesEditor
+        stats={stats}
+        onChange={vi.fn()}
+        rules={DEFAULT_ADVANCEMENT_RULES}
+        talents={[talent]}
+        focuses={[focus]}
+        species={[]}
+        idPrefix="test-values"
+        showPersonnelFields={false}
+      />,
+    );
+
+    expect(screen.getAllByRole("option", { name: /Transporter Accident/ })).toHaveLength(2);
+    expect(screen.getByText(/\+1 Attribut \(beliebig\), \+1 Disziplin \(Technik\), 1 Fokus/)).toBeInTheDocument();
+    expect(screen.getByText(/Inventor of X/)).toBeInTheDocument();
+    expect(screen.getByText(/Experimental Technology/)).toBeInTheDocument();
+  });
+
+  it("speichert eine gewählte Career Event Option als Katalogeintrag", () => {
+    const onChange = vi.fn();
+    render(
+      <CharacterValuesEditor
+        stats={lockedStats()}
+        onChange={onChange}
+        rules={DEFAULT_ADVANCEMENT_RULES}
+        talents={[talent]}
+        focuses={[focus]}
+        species={[]}
+        idPrefix="test-values"
+        showPersonnelFields={false}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Career Event 1"), {
+      target: { value: "first-contact" },
+    });
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ careerEvents: ["first-contact"] }),
+    );
+  });
+
+  it("würfelt ein Career Event mit dem W20 für den ausgewählten Platz", () => {
+    const onChange = vi.fn();
+    const random = vi.spyOn(Math, "random").mockReturnValue(0.999999);
+    const stats = lockedStats();
+    stats.careerEvents = ["first-contact"];
+    render(
+      <CharacterValuesEditor
+        stats={stats}
+        onChange={onChange}
+        rules={DEFAULT_ADVANCEMENT_RULES}
+        talents={[talent]}
+        focuses={[focus]}
+        species={[]}
+        idPrefix="test-values"
+        showPersonnelFields={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Career Event 2 mit einem W20 würfeln" }));
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        careerEvents: ["first-contact", "transporter-accident"],
+      }),
+    );
+    random.mockRestore();
+  });
+
   it("zeigt Kosten am Wert und sendet die konkrete Steigerung", () => {
     const { submit } = renderEditor(100);
     const input = screen.getByLabelText(/Control/);

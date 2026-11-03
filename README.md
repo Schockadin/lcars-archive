@@ -41,7 +41,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   werden beim Anlegen und Bearbeiten in denselben Bereichen gepflegt. Module
   können bei passenden Charakterrollen eigene Tabs beisteuern. Spezies lassen
   sich mehrfach auswählen; dazu passende Species Abilities sowie die STA-2e-
-  Rollenboni werden im Wertebereich angezeigt.
+  Rollenboni werden im Wertebereich angezeigt. Career Events können aus der
+  STA-2e-W20-Tabelle gewählt oder gewürfelt werden; Boni, Fokusvorschläge und
+  optionale Traits stehen direkt am jeweiligen Ereignis.
 - **Missionen & Mission-Logs** — Logbucheinträge sind Charakteren und Missionen zugeordnet
   und chronologisch nach Session-Nummer sortiert.
 - **Nutzerkonten & granulares Rechtesystem (RBAC)** — die Autorisierung läuft über

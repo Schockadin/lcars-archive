@@ -74,6 +74,7 @@ import {
 import { PERSONNEL_FILE_ART_PNG } from "./personnelFileArt";
 import { CORE_RULES } from "@/lib/coreRules";
 import { getRoleBonusEntries, getRoleLabel, getSpeciesListLabel } from "@/lib/sta2eCharacterOptions";
+import { careerEventTitle } from "@/lib/sta2eCareerEvents";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
 import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import {
@@ -546,8 +547,8 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
       <Field box={HEAD_BOXES.upbringing} value={stats.upbringing} />
       <Field box={HEAD_BOXES.careerPath} value={stats.careerPath} />
       <Field box={HEAD_BOXES.experience} value={experienceLabel(stats) || null} />
-      <Field box={HEAD_BOXES.careerEvent1} value={stats.careerEvents[0] ?? null} />
-      <Field box={HEAD_BOXES.careerEvent2} value={stats.careerEvents[1] ?? null} />
+      <Field box={HEAD_BOXES.careerEvent1} value={stats.careerEvents[0] ? careerEventTitle(stats.careerEvents[0]) : null} />
+      <Field box={HEAD_BOXES.careerEvent2} value={stats.careerEvents[1] ? careerEventTitle(stats.careerEvents[1]) : null} />
 
       {ATTRIBUTE_FIELDS.map((field) => {
         const value = attributes[field.key];

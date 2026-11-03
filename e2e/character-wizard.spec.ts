@@ -127,6 +127,26 @@ test.describe("Charakter-Assistent", () => {
     await expect(attributes).not.toHaveClass(/stat-budget--over/);
   });
 
+  test("wählt Career Events aus der STA-2e-Tabelle und zeigt ihre Boni", async ({
+    page,
+  }) => {
+    await page.locator("#wizard-name").fill("T'Rel");
+    await page.locator("#character-wizard ol button").nth(1).click();
+
+    const firstEvent = page.getByLabel("Career Event 1");
+    const secondEvent = page.getByLabel("Career Event 2");
+    await expect(firstEvent.locator("option")).toHaveCount(21);
+    await expect(secondEvent).toBeDisabled();
+
+    await firstEvent.selectOption("first-contact");
+    await expect(secondEvent).toBeEnabled();
+    await expect(
+      page.getByText(/\+1 Attribut \(Präsenz\), \+1 Disziplin \(beliebig\), 1 Fokus/),
+    ).toBeVisible();
+    await secondEvent.selectOption("breakthrough-or-invention");
+    await expect(page.getByText(/Inventor of X/)).toBeVisible();
+  });
+
   test("markiert ein überzogenes Budget", async ({ page }) => {
     await page.locator("#wizard-name").fill("T'Rel");
     await page.locator("#character-wizard ol button").nth(1).click();

@@ -31,6 +31,12 @@ import { FocusModal } from "./FocusPicker";
 import EntryAddModal from "./EntryAddModal";
 import CharacterRoleSelect from "./CharacterRoleSelect";
 import { getAdditionalRoleBonusNotes, getRoleBonusEntries, getSpeciesAbilityChoices, findRoleOption } from "@/lib/sta2eCharacterOptions";
+import {
+  careerEventByIdOrTitle,
+  careerEventTitle,
+  rollCareerEvent,
+  STA2E_CAREER_EVENTS,
+} from "@/lib/sta2eCareerEvents";
 
 export interface InlineAdvancement {
   characterId: number;
@@ -63,7 +69,6 @@ const LIST_PLACEHOLDERS: Record<string, string> = {
   pastimes: "z.B. Jazz-Klarinette",
   attacks: "z.B. Phaser Typ 2 (Strahl)",
   equipment: "z.B. Tricorder",
-  careerEvents: "z.B. Erste Begegnung mit den Borg",
 };
 
 // Freikontingent der Ersterschaffung je Liste, soweit es eines gibt.
@@ -291,6 +296,23 @@ export default function CharacterValuesEditor({
     patch({ [key]: update(prev) } as unknown as Partial<CharacterStats>);
   }
 
+  function setCareerEvent(index: number, value: string) {
+    const next = [...stats.careerEvents];
+    if (!value) {
+      // Beim Entfernen rückt ein eventuell vorhandenes zweites Ereignis in
+      // den ersten Platz nach — die beiden Lifepath-Schritte bleiben kompakt.
+      next.splice(index, 1);
+    } else {
+      next[index] = value;
+    }
+    patch({ careerEvents: next });
+  }
+
+  function drawCareerEvent(index: number) {
+    const event = rollCareerEvent();
+    setCareerEvent(index, event.id);
+  }
+
   function numberValue(value: number | null): string {
     return value === null ? "" : String(value);
   }
@@ -400,7 +422,7 @@ export default function CharacterValuesEditor({
   );
 
   const managedLists = LIST_FIELDS.filter(
-    (field) => !TEXTAREA_LISTS.has(field.key),
+    (field) => !TEXTAREA_LISTS.has(field.key) && field.key !== "careerEvents",
   );
   const sectionClassName = flatSections
     ? "stat-editor-section"
@@ -735,6 +757,125 @@ export default function CharacterValuesEditor({
               </div>
             );
           })}
+
+          <div className="stat-editor-list">
+            <div className="stat-editor-list-head">
+              <span className="stat-field-label">
+                <span className="stat-label-primary">Career Events</span>
+                <span className="stat-label-secondary">Karriere-Ereignisse</span>
+              </span>
+            </div>
+            <p className="stat-sheet-rule">
+              Wähle oder würfle zwei Ereignisse. Jedes gewährt +1 auf das
+              angegebene Attribut und die Disziplin sowie einen Fokus; die
+              Ereignisse nennen passende Fokusvorschläge. Die Zuwächse trägst
+              du in den jeweiligen Wertefeldern ein.
+            </p>
+            <div className="stat-editor-grid">
+              {[0, 1].map((index) => {
+                const selectedValue = stats.careerEvents[index] ?? "";
+                const event = selectedValue
+                  ? careerEventByIdOrTitle(selectedValue)
+                  : null;
+                const legacyValue =
+                  selectedValue && !event ? selectedValue : null;
+                const attribute = event
+                  ? event.attribute === "any"
+                    ? "beliebig"
+                    : ATTRIBUTE_FIELDS.find((field) => field.key === event.attribute)?.label ?? event.attribute
+                  : null;
+                const department = event
+                  ? event.department === "any"
+                    ? "beliebig"
+                    : DEPARTMENT_FIELDS.find((field) => field.key === event.department)?.label ?? event.department
+                  : null;
+
+                return (
+                  <div className="stat-editor-field" key={index}>
+                    <label
+                      className="stat-field-label"
+                      htmlFor={`${idPrefix}-career-event-${index + 1}`}
+                    >
+                      <span className="stat-label-primary">Career Event {index + 1}</span>
+                      <span className="stat-label-secondary">Karriere-Ereignis {index + 1}</span>
+                    </label>
+                    <div className="flex flex-wrap items-center gap-[8px]">
+                      <select
+                        id={`${idPrefix}-career-event-${index + 1}`}
+                        value={selectedValue}
+                        disabled={index === 1 && !stats.careerEvents[0]}
+                        onChange={(e) => setCareerEvent(index, e.target.value)}
+                        className="stat-field-input min-w-0 flex-1"
+                      >
+                        <option value="">— Ereignis wählen —</option>
+                        {legacyValue && (
+                          <option value={legacyValue}>{legacyValue} (Alt-Eintrag)</option>
+                        )}
+                        {STA2E_CAREER_EVENTS.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.roll}. {option.title}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        disabled={index === 1 && !stats.careerEvents[0]}
+                        onClick={() => drawCareerEvent(index)}
+                        className="lcars-pill-btn--outline"
+                        aria-label={`Career Event ${index + 1} mit einem W20 würfeln`}
+                      >
+                        W20 würfeln
+                      </button>
+                    </div>
+                    {event && (
+                      <div className="character-role-bonus-rule mt-[8px]">
+                        <p>{event.summary}</p>
+                        <p>
+                          <strong>Bonus:</strong> +1 Attribut ({attribute}), +1
+                          Disziplin ({department}), 1 Fokus.
+                        </p>
+                        <p>
+                          <strong>Fokusvorschläge:</strong>{" "}
+                          {event.focusSuggestions.join(" · ")}
+                        </p>
+                        {event.optionalTrait && (
+                          <p>
+                            <strong>Optionales Trait:</strong> {event.optionalTrait}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {legacyValue && (
+                      <p className="stat-sheet-rule mt-[8px]">
+                        Dieser ältere Freitext bleibt erhalten. Für die
+                        STA-2e-Boni kannst du ein Ereignis aus der Auswahl
+                        übernehmen.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {stats.careerEvents.length > 2 && (
+              <div className="character-ability-legacy">
+                <span className="stat-label-secondary">Weitere gespeicherte Einträge</span>
+                {stats.careerEvents.slice(2).map((entry, index) => (
+                  <div className="stat-editor-list-line" key={`${entry}-${index}`}>
+                    <span>{careerEventTitle(entry)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setCareerEvent(index + 2, "")}
+                      className="lcars-icon-btn"
+                      aria-label={`${careerEventTitle(entry)} entfernen`}
+                      title={`${careerEventTitle(entry)} entfernen`}
+                    >
+                      <MinusCircleIcon />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {(speciesAbilityChoices.length > 0 || legacySpeciesAbilities.length > 0) && (
             <fieldset className="stat-editor-field character-ability-picker">

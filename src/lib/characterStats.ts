@@ -17,6 +17,7 @@ import type {
   TechnomageSchool,
 } from "@/types/characterStats";
 import { TECHNOMAGE_SCHOOL_IDS } from "@/types/characterStats";
+import { normalizeCareerEventEntry } from "@/lib/sta2eCareerEvents";
 
 // Labels: deutsches Label plus der englische Begriff des offiziellen Bogens —
 // die Spielrunde nutzt beides gemischt (siehe Beispielbogen). Das Formular
@@ -295,6 +296,10 @@ function normalizeList(value: unknown): string[] {
     .filter(Boolean);
 }
 
+function normalizeCareerEvents(value: unknown): string[] {
+  return normalizeList(value).map(normalizeCareerEventEntry);
+}
+
 function normalizeTechnomage(value: unknown): TechnomageCharacterData {
   const source = asRecord(value);
   const primarySchool =
@@ -416,7 +421,10 @@ export function parseCharacterStats(raw: unknown): CharacterStats {
     stats[field.key] = normalizeNumber(source[field.key], field.min, field.max);
   }
   for (const field of LIST_FIELDS) {
-    stats[field.key] = normalizeList(source[field.key]);
+    stats[field.key] =
+      field.key === "careerEvents"
+        ? normalizeCareerEvents(source[field.key])
+        : normalizeList(source[field.key]);
   }
 
   return stats;
