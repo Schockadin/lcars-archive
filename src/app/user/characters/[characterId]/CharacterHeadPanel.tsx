@@ -55,6 +55,8 @@ export default function CharacterHeadPanel({
     updateCharacterHeadAction,
     initialState,
   );
+  const lifepathMode = stats.creationMethod === "sta2e-lifepath";
+  const lifepathLocked = lifepathMode && stats.creationLocked;
 
   // Nach einem erfolgreichen Speichern zurück in die Übersicht — die Seite
   // selbst lädt durch revalidatePath frisch, das Panel muss die Werte also
@@ -178,8 +180,9 @@ export default function CharacterHeadPanel({
                 idPrefix="head-panel"
                 value={species}
                 onChange={setSpecies}
+                disabled={lifepathLocked}
               />
-              {TEXT_FIELDS.filter((field) => field.key !== "characterRole").map((field) => (
+              {TEXT_FIELDS.filter((field) => field.key !== "characterRole" && (!lifepathMode || field.key === "pronouns" || field.key === "assignment")).map((field) => (
                 <div key={field.key} className="stat-editor-field">
                   <label
                     htmlFor={`head-panel-${field.key}`}
@@ -203,8 +206,9 @@ export default function CharacterHeadPanel({
                 id="head-panel-characterRole"
                 value={characterRole}
                 onChange={setCharacterRole}
+                disabled={lifepathLocked}
               />
-              <div className="stat-editor-field">
+              {!lifepathMode && <div className="stat-editor-field">
                 <label
                   htmlFor="head-panel-experience"
                   className="stat-field-label"
@@ -225,7 +229,7 @@ export default function CharacterHeadPanel({
                     </option>
                   ))}
                 </select>
-              </div>
+              </div>}
             </div>
 
             <div className="flex items-center gap-[8px]">

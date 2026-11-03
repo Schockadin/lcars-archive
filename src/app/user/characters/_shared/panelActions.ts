@@ -18,6 +18,8 @@ import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { parseStatsPayload } from "@/lib/characterStatsPayload";
 import { checkOpenCreationStats } from "@/lib/characterStatsRules";
+import { applySta2eLifepath } from "@/lib/sta2eLifepath";
+import { getSpeciesAbilityChoices, getSpeciesLabel, SPECIES_OPTIONS } from "@/lib/sta2eCharacterOptions";
 import {
   TEXT_FIELDS,
   isCharacterExperience,
@@ -204,13 +206,35 @@ export async function updateCharacterHeadAction(
   if ("error" in headResult) return { error: headResult.error };
 
   const isDraft = formData.get("isDraft") === "on";
-  const stats = { ...currentSheet.stats };
+  let stats = { ...currentSheet.stats };
+  const lifepathMode = stats.creationMethod === "sta2e-lifepath";
+  if (
+    lifepathMode && stats.creationLocked &&
+    [...new Set(headResult.head.species.map(getSpeciesLabel))].sort().join("\u0000") !== [...new Set(current.species.map(getSpeciesLabel))].sort().join("\u0000")
+  ) {
+    return { error: "Die Spezies ist nach Abschluss der Lifepath-Erstellung gesperrt." };
+  }
   const textStats = stats as unknown as Record<string, string | null>;
   for (const field of TEXT_FIELDS) {
+    if (lifepathMode && !["pronouns", "assignment"].includes(field.key)) continue;
     textStats[field.key] = String(formData.get(field.key) ?? "").trim() || null;
   }
-  const experience = String(formData.get("experience") ?? "");
-  stats.experience = isCharacterExperience(experience) ? experience : null;
+  if (lifepathMode) {
+    if (stats.creationLocked) {
+      stats.characterRole = currentSheet.stats.characterRole;
+      stats.lifepath = currentSheet.stats.lifepath;
+      stats.speciesAbilities = currentSheet.stats.speciesAbilities;
+    } else {
+      stats.characterRole = String(formData.get("characterRole") ?? "").trim() || null;
+      const allAbilities = new Set(getSpeciesAbilityChoices(SPECIES_OPTIONS.map((species) => species.name)).map((ability) => ability.value));
+      const availableAbilities = new Set(getSpeciesAbilityChoices(headResult.head.species).map((ability) => ability.value));
+      stats.speciesAbilities = stats.speciesAbilities.filter((entry) => !allAbilities.has(entry) || availableAbilities.has(entry));
+      stats = applySta2eLifepath(stats, headResult.head.species);
+    }
+  } else {
+    const experience = String(formData.get("experience") ?? "");
+    stats.experience = isCharacterExperience(experience) ? experience : null;
+  }
 
   const result = await updateOwnCharacterContent(session.userId, characterId, {
     ...headResult.head,
@@ -321,7 +345,7 @@ export async function saveCharacterStatsAction(
 
   const payload = parseStatsPayload(formData.get("statsJson"));
   if ("error" in payload) return { error: payload.error };
-  const stats = payload.stats;
+  let stats = payload.stats;
 
   const current = await getOwnCharacterStats(session.userId, characterId);
   if (!current) {
@@ -329,6 +353,7 @@ export async function saveCharacterStatsAction(
   }
 
   stats.creationLocked = current.stats.creationLocked;
+  stats.creationMethod = current.stats.creationMethod;
   // Das Spell-Panel speichert seinen Teilbaum separat. Ein gleichzeitig
   // offenes Werte-Formular darf diese Änderungen nicht zurücksetzen.
   stats.technomage = current.stats.technomage;
@@ -336,6 +361,17 @@ export async function saveCharacterStatsAction(
   // aus dem Formular — sie entsteht beim Zurücksetzen der Erschaffung durch
   // die Spielleitung und wird beim Abschließen abgearbeitet.
   stats.pendingAdvancements = current.stats.pendingAdvancements;
+  if (stats.creationMethod === "sta2e-lifepath") {
+    if (current.stats.creationLocked) {
+      stats.lifepath = current.stats.lifepath;
+      stats.characterRole = current.stats.characterRole;
+      stats.speciesAbilities = current.stats.speciesAbilities;
+    }
+    stats = applySta2eLifepath(
+      stats,
+      (current.species ?? "").split(",").map((entry) => entry.trim()).filter(Boolean),
+    );
+  }
   if (current.stats.creationLocked) {
     stats.attributes = current.stats.attributes;
     stats.departments = current.stats.departments;

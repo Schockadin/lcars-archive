@@ -29,6 +29,73 @@ export interface CharacterDepartments {
 // englische Schlüssel, angezeigt das deutsche Label (siehe EXPERIENCE_OPTIONS).
 export type CharacterExperience = "novice" | "experienced" | "veteran";
 
+export type CharacterCreationMethod = "ap" | "sta2e-lifepath";
+
+export interface LifepathCareerEvent {
+  id: string;
+  attribute: keyof CharacterAttributes | null;
+  department: keyof CharacterDepartments | null;
+  focus: string;
+  trait: string | null;
+  attributeBonus: boolean;
+  departmentBonus: boolean;
+  focusBonus: boolean;
+}
+
+export interface LifepathCorrection {
+  kind: "attribute" | "department";
+  from: string;
+  to: string;
+}
+
+/** Choices used by the STA 2e Lifepath builder; calculated totals live in the usual sheet fields. */
+export interface Sta2eLifepath {
+  speciesAttributes: (keyof CharacterAttributes)[];
+  environment: {
+    choice: string | null;
+    attribute: keyof CharacterAttributes | null;
+    department: keyof CharacterDepartments | null;
+    value: string;
+    otherSpecies: string;
+    otherSpeciesAttributes: (keyof CharacterAttributes)[];
+  };
+  upbringing: {
+    choice: string | null;
+    accepted: boolean | null;
+    department: keyof CharacterDepartments | null;
+    focus: string;
+    talent: string;
+  };
+  career: {
+    path: string | null;
+    track: string | null;
+    attributes: (keyof CharacterAttributes)[];
+    majorDepartment: keyof CharacterDepartments | null;
+    minorDepartments: (keyof CharacterDepartments)[];
+    reallocation: { from: keyof CharacterDepartments; to: keyof CharacterDepartments } | null;
+    trait: string;
+    value: string;
+    focuses: string[];
+    talent: string;
+  };
+  experience: {
+    value: CharacterExperience | null;
+    statement: string;
+    talent: string;
+    noviceAttribute: keyof CharacterAttributes | null;
+  };
+  careerEvents: LifepathCareerEvent[];
+  finishing: {
+    value: string;
+    talent: string;
+    attributes: (keyof CharacterAttributes)[];
+    departments: (keyof CharacterDepartments)[];
+    pastimes: string[];
+  };
+  corrections: LifepathCorrection[];
+  roleBonus: { values: string[]; focuses: string[] };
+}
+
 export const TECHNOMAGE_SCHOOL_IDS = [
   "defence",
   "elements",
@@ -97,6 +164,8 @@ export interface CharacterStats {
   // (320/320 AP, siehe src/lib/advancement.ts). Danach lassen sie sich nur
   // noch über AP-Steigerungen erhöhen.
   creationLocked: boolean;
+  creationMethod: CharacterCreationMethod;
+  lifepath: Sta2eLifepath | null;
 
   // Zurückgenommene Steigerungen einer wieder geöffneten Erschaffung. Leer,
   // solange die Erschaffung nie zurückgesetzt wurde; beim Abschließen wird die

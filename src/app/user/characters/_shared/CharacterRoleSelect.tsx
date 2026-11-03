@@ -8,11 +8,13 @@ export default function CharacterRoleSelect({
   name = "characterRole",
   value,
   onChange,
+  disabled = false,
 }: {
   id: string;
   name?: string;
   value: string | null;
   onChange: (value: string | null) => void;
+  disabled?: boolean;
 }) {
   const [customMode, setCustomMode] = useState(
     Boolean(value && !findRoleOption(value)),
@@ -29,6 +31,7 @@ export default function CharacterRoleSelect({
       <select
         id={id}
         name={isCustom ? undefined : name}
+        disabled={disabled}
         value={isCustom ? "__custom__" : selectedRole?.name ?? ""}
         onChange={(event) => {
           if (event.currentTarget.value === "__custom__") {
@@ -47,6 +50,7 @@ export default function CharacterRoleSelect({
         ))}
         <option value="__custom__">Andere oder Modulrolle …</option>
       </select>
+      {disabled && <input type="hidden" name={name} value={value ?? ""} />}
       {isCustom && (
         <input
           type="text"
@@ -54,6 +58,7 @@ export default function CharacterRoleSelect({
           aria-label="Eigene Rolle oder Modulrolle"
           placeholder="z. B. Technomage"
           value={value ?? ""}
+          disabled={disabled}
           onChange={(event) => onChange(event.currentTarget.value || null)}
           className="stat-field-input"
         />

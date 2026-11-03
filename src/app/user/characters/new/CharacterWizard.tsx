@@ -25,6 +25,7 @@ import {
   characterMetadataFields,
 } from "../_shared/characterHeadFields";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
+import { applySta2eLifepath, EMPTY_STA2E_LIFEPATH } from "@/lib/sta2eLifepath";
 import { getSpeciesAbilityChoices, getSpeciesLabel, SPECIES_OPTIONS } from "@/lib/sta2eCharacterOptions";
 import { moduleSupportsCharacterRole, type RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
@@ -82,7 +83,11 @@ export default function CharacterWizard({
   );
   const formRef = useRef<HTMLFormElement>(null);
   const [activeTabId, setActiveTabId] = useState("values");
-  const [stats, setStats] = useState<CharacterStats>(EMPTY_CHARACTER_STATS);
+  const [stats, setStats] = useState<CharacterStats>(() => applySta2eLifepath({
+    ...EMPTY_CHARACTER_STATS,
+    creationMethod: "sta2e-lifepath",
+    lifepath: EMPTY_STA2E_LIFEPATH,
+  }));
   const [isDraft, setIsDraft] = useState(false);
   const [head, setHead] = useState<HeadSnapshot | null>(null);
   const [bioHtml, setBioHtml] = useState<string | null>(null);
@@ -105,6 +110,31 @@ export default function CharacterWizard({
       portrait,
       portraitCrop: parsePortraitCrop(safeJson(text("portraitCrop"))),
     };
+  }
+
+  function setCreationMethod(method: CharacterStats["creationMethod"]) {
+    if (method === stats.creationMethod) return;
+    if (method === "ap") {
+      setStats((current) => ({ ...current, creationMethod: "ap", lifepath: null }));
+      return;
+    }
+    setStats((current) => applySta2eLifepath({
+      ...current,
+      creationMethod: "sta2e-lifepath",
+      lifepath: EMPTY_STA2E_LIFEPATH,
+      environment: null,
+      upbringing: null,
+      careerPath: null,
+      experience: null,
+      traits: null,
+      careerEvents: [],
+      attributes: { control: null, daring: null, fitness: null, insight: null, presence: null, reason: null },
+      departments: { command: null, conn: null, engineering: null, security: null, medicine: null, science: null },
+      values: [],
+      focuses: [],
+      talents: [],
+      pastimes: [],
+    }, species));
   }
 
   async function goToTab(nextId: string) {
@@ -156,16 +186,32 @@ export default function CharacterWizard({
       id: "values",
       label: "Werte",
       content: (
-        <CharacterValuesEditor
-          stats={stats}
-          onChange={setStats}
-          rules={rules}
-          talents={talents}
-          focuses={focuses}
-          species={species}
-          idPrefix="wizard-stats"
-          showPersonnelFields={false}
-        />
+        <div className="flex flex-col gap-[16px]">
+          <section className="stat-editor-section">
+            <h3 className="stat-editor-section-title">Erstellungsmethode</h3>
+            <label className="stat-editor-field" htmlFor="wizard-creation-method">
+              <span className="stat-field-label">
+                <span className="stat-label-primary">Character Creation</span>
+                <span className="stat-label-secondary">Charaktererschaffung</span>
+              </span>
+              <select id="wizard-creation-method" className="stat-field-input" value={stats.creationMethod} onChange={(event) => setCreationMethod(event.currentTarget.value as CharacterStats["creationMethod"])}>
+                <option value="sta2e-lifepath">STA 2e Lifepath</option>
+                <option value="ap">AP-Budget (Kampagnenregel)</option>
+              </select>
+            </label>
+            <p className="stat-sheet-rule">Der STA-2e-Lifepath ist vorausgewählt. Die AP-Budget-Methode bleibt als kampagnenspezifische Alternative verfügbar.</p>
+          </section>
+          <CharacterValuesEditor
+            stats={stats}
+            onChange={setStats}
+            rules={rules}
+            talents={talents}
+            focuses={focuses}
+            species={species}
+            idPrefix="wizard-stats"
+            showPersonnelFields={false}
+          />
+        </div>
       ),
     },
     ...moduleTabs,
@@ -187,12 +233,17 @@ export default function CharacterWizard({
                 const availableValues = new Set(
                   getSpeciesAbilityChoices(nextSpecies).map((ability) => ability.value),
                 );
-                setStats((current) => ({
-                  ...current,
+                setStats((current) => {
+                  const updated = {
+                    ...current,
                   speciesAbilities: current.speciesAbilities.filter(
                     (entry) => !abilityValues.has(entry) || availableValues.has(entry),
                   ),
-                }));
+                  };
+                  return current.creationMethod === "sta2e-lifepath"
+                    ? applySta2eLifepath(updated, nextSpecies)
+                    : updated;
+                });
               }}
             />
             {headFields.map((field) => (
@@ -211,7 +262,7 @@ export default function CharacterWizard({
                 defaultValue={undefined}
               />
             ))}
-            {TEXT_FIELDS.filter((field) => field.key !== "characterRole").map((field) => (
+            {TEXT_FIELDS.filter((field) => field.key !== "characterRole" && (!stats.creationMethod || stats.creationMethod !== "sta2e-lifepath" || field.key === "pronouns" || field.key === "assignment")).map((field) => (
               <label key={field.key} className="stat-editor-field" htmlFor={`wizard-personal-${field.key}`}>
                 <span className="stat-field-label">
                   <span className="stat-label-primary">{field.original ?? field.label}</span>
@@ -232,9 +283,14 @@ export default function CharacterWizard({
             <CharacterRoleSelect
               id="wizard-personal-characterRole"
               value={stats.characterRole}
-              onChange={(value) => setStats((current) => ({ ...current, characterRole: value }))}
+              onChange={(value) => setStats((current) => {
+                const updated = { ...current, characterRole: value };
+                return current.creationMethod === "sta2e-lifepath"
+                  ? applySta2eLifepath(updated, species)
+                  : updated;
+              })}
             />
-            <label className="stat-editor-field" htmlFor="wizard-personal-experience">
+            {stats.creationMethod !== "sta2e-lifepath" && <label className="stat-editor-field" htmlFor="wizard-personal-experience">
               <span className="stat-field-label">
                 <span className="stat-label-primary">Experience</span>
                 <span className="stat-label-secondary">Erfahrungsstufe</span>
@@ -253,7 +309,7 @@ export default function CharacterWizard({
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
-            </label>
+            </label>}
           </div>
         </div>
       ),

@@ -165,6 +165,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },
+      {
+        text: "Charaktere lassen sich nach dem STA-2e-Lifepath mit Spezies, Herkunft, Karriere, Erfahrung und Career Events regelkonform erschaffen; das bisherige AP-Budget-Verfahren bleibt als Alternative verfügbar.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
     ],
   },
   {

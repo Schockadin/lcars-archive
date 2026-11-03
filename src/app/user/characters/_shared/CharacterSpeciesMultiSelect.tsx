@@ -8,10 +8,12 @@ export default function CharacterSpeciesMultiSelect({
   value,
   onChange,
   idPrefix,
+  disabled = false,
 }: {
   value: string[];
   onChange: (value: string[]) => void;
   idPrefix: string;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const canonicalValue = value.map((name) => findSpeciesOption(name)?.name ?? name);
@@ -45,7 +47,7 @@ export default function CharacterSpeciesMultiSelect({
         >
           {selectedLabels.length ? selectedLabels.join(", ") : "Spezies auswählen …"}
         </summary>
-        <fieldset className="character-species-picker-options">
+        <fieldset disabled={disabled} className="character-species-picker-options">
           <legend className="lcars-eyebrow">Verfügbare Spezies</legend>
           {SPECIES_OPTIONS.map((species) => (
             <label key={species.id} className="character-species-picker-option">
@@ -61,12 +63,14 @@ export default function CharacterSpeciesMultiSelect({
           ))}
         </fieldset>
       </details>
+      {disabled && canonicalValue.filter((name) => findSpeciesOption(name)).map((name) => <input key={name} type="hidden" name="species" value={name} />)}
       {unknown.map((name) => (
         <div className="character-species-picker-legacy" key={name}>
           <input type="hidden" name="species" value={name} />
           <span>{name} (eigene Spezies)</span>
           <button
             type="button"
+            disabled={disabled}
             className="lcars-icon-btn"
             aria-label={`${name} entfernen`}
             title={`${name} entfernen`}

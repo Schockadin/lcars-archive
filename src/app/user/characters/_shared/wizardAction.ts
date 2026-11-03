@@ -16,6 +16,7 @@ import { synopsisExcerpt } from "@/lib/missionFormat";
 import { userCan } from "@/lib/permissions";
 import { parseStatsPayload } from "@/lib/characterStatsPayload";
 import { checkOpenCreationStats } from "@/lib/characterStatsRules";
+import { applySta2eLifepath, checkSta2eLifepath } from "@/lib/sta2eLifepath";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
@@ -62,7 +63,7 @@ export async function createCharacterWizardAction(
 
   const statsResult = parseStatsPayload(formData.get("statsJson"));
   if ("error" in statsResult) return { error: statsResult.error };
-  const stats = statsResult.stats;
+  let stats = statsResult.stats;
   // creationLocked kommt nie aus dem Formular: ein frisch angelegter Charakter
   // steht immer am Anfang seiner Erschaffung, abgeschlossen wird sie später
   // ausdrücklich (siehe lockCreationAction).
@@ -70,6 +71,12 @@ export async function createCharacterWizardAction(
   // Dasselbe gilt für die Notiz zurückgenommener Steigerungen: ein neuer
   // Charakter hat noch nichts gesteigert, das zurückgenommen sein könnte.
   stats.pendingAdvancements = [];
+
+  if (stats.creationMethod === "sta2e-lifepath") {
+    const lifepathErrors = checkSta2eLifepath(stats, head.species, head.rank);
+    if (lifepathErrors.length > 0) return { error: lifepathErrors.join(" ") };
+    stats = applySta2eLifepath(stats, head.species);
+  }
 
   const [rules, catalog, focusCatalog, campaignModules] = await Promise.all([
     getAdvancementRules(),

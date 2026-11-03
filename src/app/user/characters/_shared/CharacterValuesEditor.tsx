@@ -37,6 +37,8 @@ import {
   rollCareerEvent,
   STA2E_CAREER_EVENTS,
 } from "@/lib/sta2eCareerEvents";
+import Sta2eLifepathBuilder from "./Sta2eLifepathBuilder";
+import { applySta2eLifepath } from "@/lib/sta2eLifepath";
 
 export interface InlineAdvancement {
   characterId: number;
@@ -269,9 +271,11 @@ export default function CharacterValuesEditor({
   // Schwerpunkte nur noch über AP veränderbar (siehe advancementAction) — der
   // Editor zeigt sie dann nur noch an. Verbindlich ist die Prüfung im Server.
   const locked = stats.creationLocked;
+  const lifepathMode = stats.creationMethod === "sta2e-lifepath";
 
   function patch(next: Partial<CharacterStats>) {
-    onChange({ ...stats, ...next });
+    const updated = { ...stats, ...next };
+    onChange(lifepathMode ? applySta2eLifepath(updated, species) : updated);
   }
 
   function setNumber(
@@ -430,7 +434,18 @@ export default function CharacterValuesEditor({
 
   return (
     <div className="flex flex-col gap-[16px]">
-      {showPersonnelFields && (
+      {lifepathMode && (
+        <Sta2eLifepathBuilder
+          stats={stats}
+          onChange={onChange}
+          species={species}
+          talents={talents}
+          focuses={focuses}
+          readOnly={locked}
+        />
+      )}
+
+      {showPersonnelFields && !lifepathMode && (
         <section className={sectionClassName}>
           <SectionTitle
             en="Personnel File"
@@ -505,7 +520,7 @@ export default function CharacterValuesEditor({
       {/* ── Attribute ─────────────────────────────────────────────── */}
       <section className={sectionClassName}>
         <SectionTitle en="Attributes" de="Attribute" flat={flatSections} />
-        {!locked && (
+        {!locked && !lifepathMode && (
           <BudgetMeter
             label="Attribute"
             cost={budget.attributeCost}
@@ -526,7 +541,7 @@ export default function CharacterValuesEditor({
                 field={field}
                 idPrefix={`${idPrefix}-attr`}
                 value={numberValue(stats.attributes[field.key])}
-                readOnly={locked}
+                readOnly={locked || lifepathMode}
                 invalid={
                   stats.attributes[field.key] !== null &&
                   attributeOver.has(stats.attributes[field.key] as number)
@@ -546,7 +561,7 @@ export default function CharacterValuesEditor({
       {/* ── Disziplinen ───────────────────────────────────────────── */}
       <section className={sectionClassName}>
         <SectionTitle en="Departments" de="Disziplinen" flat={flatSections} />
-        {!locked && (
+        {!locked && !lifepathMode && (
           <BudgetMeter
             label="Disziplinen"
             cost={budget.departmentCost}
@@ -567,7 +582,7 @@ export default function CharacterValuesEditor({
                 field={field}
                 idPrefix={`${idPrefix}-dep`}
                 value={numberValue(stats.departments[field.key])}
-                readOnly={locked}
+                readOnly={locked || lifepathMode}
                 invalid={
                   stats.departments[field.key] !== null &&
                   departmentOver.has(stats.departments[field.key] as number)
@@ -649,7 +664,9 @@ export default function CharacterValuesEditor({
             const isFocus = field.key === FOCUS_LIST;
             // Talente und Schwerpunkte sind nach dem Festschreiben nur noch
             // über AP zu haben; die übrigen Listen bleiben frei pflegbar.
-            const listLocked = locked && (isCatalog || isFocus);
+            const listLocked = (locked && (isCatalog || isFocus)) ||
+              (lifepathMode && ["values", "focuses", "talents"].includes(field.key)) ||
+              (locked && lifepathMode && field.key === "speciesAbilities");
             const listCost = isCatalog ? rules.talentCost : rules.focusCost;
             const hasCatalogEntries = isCatalog
               ? talents.length > 0
@@ -666,7 +683,7 @@ export default function CharacterValuesEditor({
                     <span className="stat-label-secondary">{field.label}</span>
                   </span>
                   <span className="flex items-center gap-[8px]">
-                    {free !== null && !locked && (
+                    {free !== null && !locked && !lifepathMode && (
                       <span className="stat-editor-list-count">
                         {entries.length} / {free} frei
                       </span>
@@ -758,7 +775,7 @@ export default function CharacterValuesEditor({
             );
           })}
 
-          <div className="stat-editor-list">
+          {!lifepathMode && <div className="stat-editor-list">
             <div className="stat-editor-list-head">
               <span className="stat-field-label">
                 <span className="stat-label-primary">Career Events</span>
@@ -875,7 +892,7 @@ export default function CharacterValuesEditor({
                 ))}
               </div>
             )}
-          </div>
+          </div>}
 
           {(speciesAbilityChoices.length > 0 || legacySpeciesAbilities.length > 0) && (
             <fieldset className="stat-editor-field character-ability-picker">
