@@ -923,7 +923,7 @@ export async function updateOwnCharacterContent(
     stats?: CharacterStats;
     // Für Teilformulare, die nur einzelne persönliche Werte pflegen: Der
     // JSONB-Unterbaum wird beim Update mit dem dann aktuellen Stand gemischt.
-    statsPatch?: Partial<Pick<CharacterStats, "pronouns" | "assignment" | "traits">>;
+    statsPatch?: Partial<Pick<CharacterStats, "pronouns" | "assignment">>;
     // Das Personalakten-Panel bearbeitet Species nicht. Es soll deshalb beim
     // gleichzeitigen Speichern im Werte-Tab keinen älteren Stand zurückschreiben.
     preserveSpecies?: boolean;

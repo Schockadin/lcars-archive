@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
-import HeadFieldRenderer from "@/components/ContentEditor/HeadFieldRenderer";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import AutoLinkCheckbox from "@/app/_shared/AutoLinkCheckbox";
 import { SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
@@ -14,6 +13,7 @@ import CharacterValuesEditor from "../_shared/CharacterValuesEditor";
 import CharacterEditorTabs, { type CharacterEditorTab } from "../_shared/CharacterEditorTabs";
 import CharacterModuleCreationReference from "../_shared/CharacterModuleCreationReference";
 import PortraitPicker from "../_shared/PortraitPicker";
+import CharacterHeadFieldRenderer from "../_shared/CharacterHeadFieldRenderer";
 import { CharacterField, CharacterSelectInput, CharacterTextInput } from "../_shared/CharacterFormControls";
 import {
   createCharacterWizardAction,
@@ -258,7 +258,7 @@ export default function CharacterWizard({
           <div className="content-editor-head-grid">
             <PortraitPicker idPrefix="wizard" />
             {headFields.map((field) => (
-              <HeadFieldRenderer
+              <CharacterHeadFieldRenderer
                 key={field.name}
                 field={field}
                 idPrefix="wizard"
@@ -266,16 +266,14 @@ export default function CharacterWizard({
               />
             ))}
             {characterMetadataFields.map((field) => (
-              <HeadFieldRenderer
+              <CharacterHeadFieldRenderer
                 key={field.name}
                 field={field}
                 idPrefix="wizard"
                 defaultValue={undefined}
               />
             ))}
-            {PERSONAL_TEXT_FIELDS.filter((field) =>
-              stats.creationMethod !== "sta2e-lifepath" || field.key !== "traits",
-            ).map((field) => (
+            {PERSONAL_TEXT_FIELDS.map((field) => (
               <CharacterField key={field.key} label={field.original ?? field.label} secondary={field.label}>
                 <CharacterTextInput
                   id={`wizard-personal-${field.key}`}

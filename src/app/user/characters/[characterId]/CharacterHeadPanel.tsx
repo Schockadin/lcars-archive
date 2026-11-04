@@ -1,6 +1,5 @@
 "use client";
 import { useActionState, useState } from "react";
-import HeadFieldRenderer from "@/components/ContentEditor/HeadFieldRenderer";
 import { SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
 import CharacterPanel from "./CharacterPanel";
 import {
@@ -16,6 +15,7 @@ import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
 import { PERSONAL_TEXT_FIELDS } from "@/lib/characterStats";
 import type { CharacterStats } from "@/types/characterStats";
 import { CharacterField, CharacterTextInput } from "../_shared/CharacterFormControls";
+import CharacterHeadFieldRenderer from "../_shared/CharacterHeadFieldRenderer";
 
 const initialState: CharacterPanelState = {};
 
@@ -99,9 +99,7 @@ export default function CharacterHeadPanel({
               <Row label="Schiffe" value={list(character.ships)} />
               <Row label="Division" value={character.division} />
               <Row label="Tags" value={list(character.tags)} />
-              {PERSONAL_TEXT_FIELDS.filter((field) =>
-                stats.creationMethod !== "sta2e-lifepath" || field.key !== "traits",
-              ).map((field) => (
+              {PERSONAL_TEXT_FIELDS.map((field) => (
                 <Row
                   key={field.key}
                   label={field.label}
@@ -123,7 +121,7 @@ export default function CharacterHeadPanel({
             <div className="content-editor-head-grid">
               {[...characterHeadFields, ...characterMetadataFields].map(
                 (field) => (
-                  <HeadFieldRenderer
+                  <CharacterHeadFieldRenderer
                     key={field.name}
                     field={field}
                     idPrefix="head-panel"
@@ -148,9 +146,7 @@ export default function CharacterHeadPanel({
                   />
                 ),
               )}
-              {PERSONAL_TEXT_FIELDS.filter((field) =>
-                stats.creationMethod !== "sta2e-lifepath" || field.key !== "traits",
-              ).map((field) => (
+              {PERSONAL_TEXT_FIELDS.map((field) => (
                 <CharacterField key={field.key} label={field.original ?? field.label} secondary={field.label}>
                   <CharacterTextInput
                     id={`head-panel-${field.key}`}

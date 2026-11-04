@@ -11,11 +11,13 @@ export function CharacterField({
   label,
   secondary,
   children,
+  hint,
   className = "",
 }: {
   label: string;
   secondary?: string;
   children: ReactNode;
+  hint?: ReactNode;
   className?: string;
 }) {
   const labelId = `character-field-label-${useId()}`;
@@ -27,6 +29,7 @@ export function CharacterField({
       </span>
       <CharacterFieldLabelContext.Provider value={labelId}>
         {children}
+        {hint && <p className="text-lcars-ink-dim text-[12px]">{hint}</p>}
       </CharacterFieldLabelContext.Provider>
     </div>
   );
@@ -43,17 +46,21 @@ export function CharacterTextInput({
   ariaLabel,
   disabled = false,
   type = "text",
+  min,
+  required = false,
 }: {
   id?: string;
   list?: string;
   name?: string;
   value?: string;
-  defaultValue?: string;
+  defaultValue?: string | number;
   onChange?: (value: string) => void;
   placeholder?: string;
   ariaLabel?: string;
   disabled?: boolean;
-  type?: "text" | "search";
+  type?: "text" | "search" | "date" | "number";
+  min?: number;
+  required?: boolean;
 }) {
   const labelId = useContext(CharacterFieldLabelContext);
   return (
@@ -67,6 +74,8 @@ export function CharacterTextInput({
       type={type}
       value={value}
       defaultValue={defaultValue}
+      min={type === "number" ? min : undefined}
+      required={required}
       placeholder={placeholder}
       disabled={disabled}
       onChange={onChange ? (event) => onChange(event.currentTarget.value) : undefined}
@@ -78,33 +87,41 @@ export function CharacterSelectInput({
   id,
   name,
   value,
+  defaultValue,
   onChange,
   options,
   placeholder = "— auswählen —",
   disabled = false,
   includePlaceholder = true,
   className = "",
+  required = false,
 }: {
   id?: string;
   name?: string;
-  value: string;
-  onChange: (value: string) => void;
+  value?: string;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
   options: readonly CharacterFormOption[];
   placeholder?: string;
   disabled?: boolean;
   includePlaceholder?: boolean;
   className?: string;
+  required?: boolean;
 }) {
   const labelId = useContext(CharacterFieldLabelContext);
+  const selectionProps = value === undefined
+    ? { defaultValue: defaultValue ?? "" }
+    : { value };
   return (
     <select
       id={id}
       name={name}
       aria-labelledby={labelId}
       className={`stat-field-input ${className}`.trim()}
-      value={value}
+      {...selectionProps}
       disabled={disabled}
-      onChange={(event) => onChange(event.currentTarget.value)}
+      required={required}
+      onChange={onChange ? (event) => onChange(event.currentTarget.value) : undefined}
     >
       {includePlaceholder && <option value="">{placeholder}</option>}
       {options.map((option) => (
@@ -113,6 +130,31 @@ export function CharacterSelectInput({
         </option>
       ))}
     </select>
+  );
+}
+
+export function CharacterFileInput({
+  id,
+  name,
+  accept,
+  required = false,
+}: {
+  id?: string;
+  name?: string;
+  accept?: string;
+  required?: boolean;
+}) {
+  const labelId = useContext(CharacterFieldLabelContext);
+  return (
+    <input
+      id={id}
+      name={name}
+      type="file"
+      accept={accept}
+      required={required}
+      aria-labelledby={labelId}
+      className="stat-field-input lcars-file-input"
+    />
   );
 }
 

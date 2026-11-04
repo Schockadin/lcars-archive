@@ -191,11 +191,8 @@ export async function updateCharacterHeadAction(
   // Der bisherige Stand wird zuerst gebraucht: Das Personalaktenformular
   // enthält weder das Portrait noch die Spezies und übernimmt beides daher
   // aus dem gespeicherten Datensatz.
-  const [current, currentSheet] = await Promise.all([
-    getOwnCharacterForEdit(session.userId, characterId),
-    getOwnCharacterStats(session.userId, characterId),
-  ]);
-  if (!current || !currentSheet) {
+  const current = await getOwnCharacterForEdit(session.userId, characterId);
+  if (!current) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
   }
 
@@ -212,9 +209,8 @@ export async function updateCharacterHeadAction(
   if ("error" in headResult) return { error: headResult.error };
 
   const isDraft = formData.get("isDraft") === "on";
-  const statsPatch: Partial<Pick<CharacterStats, "pronouns" | "assignment" | "traits">> = {};
+  const statsPatch: Partial<Pick<CharacterStats, "pronouns" | "assignment">> = {};
   for (const field of PERSONAL_TEXT_FIELDS) {
-    if (field.key === "traits" && currentSheet.stats.creationMethod === "sta2e-lifepath") continue;
     statsPatch[field.key] = String(formData.get(field.key) ?? "").trim() || null;
   }
 
