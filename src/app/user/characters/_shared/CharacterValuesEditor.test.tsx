@@ -358,6 +358,6 @@ describe("CharacterValuesEditor – Inline-Steigerungen", () => {
   it("vermeidet im bestehenden Werte-Panel zusätzliche Panelrahmen", () => {
     const { container } = renderEditor(100, vi.fn(), true);
     expect(container.querySelector(".stat-sheet-section")).toBeNull();
-    expect(container.querySelectorAll(".stat-editor-section")).toHaveLength(4);
+    expect(container.querySelectorAll(".stat-editor-section")).toHaveLength(5);
   });
 });
