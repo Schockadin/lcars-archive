@@ -35,7 +35,7 @@ const initialAdvancementState: AdvancementActionResult = {};
 export default function CharacterValuesPanel({
   userId,
   characterId,
-  species,
+  species: savedSpecies,
   savedStats,
   account,
   rules,
@@ -52,6 +52,7 @@ export default function CharacterValuesPanel({
   focuses: Focus[];
 }) {
   const [stats, setStats] = useState<CharacterStats>(savedStats);
+  const [species, setSpecies] = useState(savedSpecies);
   const [saveState, saveAction, savePending] = useActionState(
     saveCharacterStatsAction,
     initialState,
@@ -67,11 +68,12 @@ export default function CharacterValuesPanel({
   // dem Festschreiben der Erschaffung), zieht der lokale Stand nach.
   // Anpassung während des Renders, siehe React-Doku „Adjusting state when a
   // prop changes" — ein setState im Effekt löste einen zusätzlichen Render aus.
-  const snapshot = JSON.stringify(savedStats);
+  const snapshot = JSON.stringify({ stats: savedStats, species: savedSpecies });
   const [seenSnapshot, setSeenSnapshot] = useState(snapshot);
   if (snapshot !== seenSnapshot) {
     setSeenSnapshot(snapshot);
     setStats(savedStats);
+    setSpecies(savedSpecies);
   }
 
   const budget = creationBudget(stats, rules);
@@ -109,8 +111,8 @@ export default function CharacterValuesPanel({
             talents={talents}
             focuses={focuses}
             species={species}
+            onSpeciesChange={setSpecies}
             idPrefix="values-panel"
-            showPersonnelFields={false}
             flatSections
             advancement={
               stats.creationLocked

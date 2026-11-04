@@ -3,6 +3,7 @@ import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
 import {
   applySta2eLifepath,
   checkSta2eLifepath,
+  checkSta2eProfileChoices,
   EMPTY_STA2E_LIFEPATH,
 } from "@/lib/sta2eLifepath";
 
@@ -21,6 +22,18 @@ describe("STA 2e Lifepath", () => {
     expect(checkSta2eLifepath(stats, ["Human"])).toEqual([
       "Der Lifepath ist nicht vollständig gespeichert.",
     ]);
+  });
+
+  it("validates the predefined profile choices while preserving stored legacy text", () => {
+    const chosen = { ...EMPTY_CHARACTER_STATS, environment: "Homeworld" };
+    expect(checkSta2eProfileChoices(chosen)).toBeNull();
+    expect(checkSta2eProfileChoices({ ...chosen, environment: "Unknown world" })).toBe(
+      "Ungültige Environment-Auswahl.",
+    );
+    expect(checkSta2eProfileChoices(
+      { ...chosen, environment: "Unknown world" },
+      { ...chosen, environment: "Unknown world" },
+    )).toBeNull();
   });
 
   it("rebuilds sheet ratings and origin fields from recorded choices", () => {

@@ -209,12 +209,10 @@
    ungebremsten Intrinsic-Größe (Browser-Default 300×150) statt kompakt
    neben dem Text — anders als .lcars-icon-btn, das seine SVGs bereits fest
    sizt. */
-/* Gilt für alle beschrifteten Bedienelemente mit Icon — auch die Schritt-/
-   Blätter-Knöpfe des Anlege-Assistenten (character-stats.css), damit ein Icon
-   überall gleich groß neben seinem Text steht. */
+/* Gilt für beschriftete Bedienelemente mit Icon, einschließlich der
+   Navigation im Charakter-Assistenten. */
 .lcars-pill-btn svg,
 .lcars-pill-btn--outline svg,
-.wizard-step svg,
 .wizard-nav-btn svg {
   width: 18px;
   height: 18px;

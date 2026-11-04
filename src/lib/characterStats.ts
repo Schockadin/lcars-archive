@@ -134,6 +134,14 @@ export const TEXT_FIELDS: StatFieldSpec<TextKey>[] = [
   { key: "traits", label: "Merkmale", original: "Species & Traits" },
 ];
 
+export type PersonalTextKey = "pronouns" | "assignment" | "traits";
+
+export const PERSONAL_TEXT_FIELDS: StatFieldSpec<PersonalTextKey>[] = [
+  { key: "pronouns", label: "Pronomen", original: "Pronouns" },
+  { key: "assignment", label: "Zuweisung", original: "Assignment" },
+  { key: "traits", label: "Merkmale", original: "Species & Traits" },
+];
+
 export const EXPERIENCE_OPTIONS: { value: CharacterExperience; label: string }[] =
   [
     { value: "novice", label: "Neuling (Novice)" },

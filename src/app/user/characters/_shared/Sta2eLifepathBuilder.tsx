@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState, type ReactNode } from "react";
-import { ATTRIBUTE_FIELDS } from "@/lib/characterStats";
+import { ATTRIBUTE_FIELDS, EXPERIENCE_OPTIONS } from "@/lib/characterStats";
 import { FocusModal } from "./FocusPicker";
 import { TalentModal } from "./TalentPicker";
 import type { Focus } from "@/lib/focusCatalog";
@@ -26,24 +26,17 @@ import {
 } from "@/lib/sta2eLifepath";
 import { rollCareerEvent, STA2E_CAREER_EVENTS } from "@/lib/sta2eCareerEvents";
 import { findRoleOption } from "@/lib/sta2eCharacterOptions";
+import { CharacterField, CharacterSelectInput, CharacterTextInput } from "./CharacterFormControls";
 
 type TalentSlot = "upbringing" | "career" | "experience" | "finishing";
 type FocusSlot = { kind: "upbringing" } | { kind: "career"; index: number } | { kind: "event"; index: number } | { kind: "role"; index: number };
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    <label className="stat-editor-field">
-      <span className="stat-field-label">
-        <span className="stat-label-primary">{label}</span>
-        {hint && <span className="stat-label-secondary">{hint}</span>}
-      </span>
-      {children}
-    </label>
-  );
+  return <CharacterField label={label} secondary={hint}>{children}</CharacterField>;
 }
 
 function TextInput({ value, onChange, placeholder = "" }: { value: string; onChange: (value: string) => void; placeholder?: string }) {
-  return <input className="stat-field-input" type="text" value={value} placeholder={placeholder} onChange={(event) => onChange(event.currentTarget.value)} />;
+  return <CharacterTextInput value={value} onChange={onChange} placeholder={placeholder} />;
 }
 
 function SelectField({
@@ -61,10 +54,7 @@ function SelectField({
 }) {
   return (
     <Field label={label}>
-      <select className="stat-field-input" value={value} onChange={(event) => onChange(event.currentTarget.value)}>
-        <option value="">{placeholder}</option>
-        {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-      </select>
+      <CharacterSelectInput value={value} onChange={onChange} options={options} placeholder={placeholder} />
     </Field>
   );
 }
@@ -85,7 +75,7 @@ function ChoiceInput({
   const listId = `lifepath-focus-${useId()}`;
   return (
     <>
-      <input list={listId} className="stat-field-input" value={value} placeholder={placeholder} disabled={disabled} onChange={(event) => onChange(event.currentTarget.value)} />
+      <CharacterTextInput list={listId} value={value} placeholder={placeholder} disabled={disabled} onChange={onChange} />
       <datalist id={listId}>{options.map((option) => <option key={option} value={option} />)}</datalist>
     </>
   );
@@ -308,7 +298,7 @@ export default function Sta2eLifepathBuilder({
 
       <section className="stat-editor-section">
         <h4 className="stat-editor-section-title">1 · Species / Spezies</h4>
-        <p className="stat-sheet-rule">Alle Werte beginnen bei Attribut 7 und Disziplin 1. Wähle die drei Attribute, die durch deine Spezies jeweils +1 erhalten. Die Spezies und Species Abilities werden im Tab „Persönliche Daten“ gewählt.</p>
+        <p className="stat-sheet-rule">Alle Werte beginnen bei Attribut 7 und Disziplin 1. Wähle die drei Attribute, die durch deine Spezies jeweils +1 erhalten. Spezies und Species Abilities werden im Tab „Werte“ gewählt.</p>
         <div className="stat-editor-grid">
           {ATTRIBUTE_FIELDS.map((field) => (
             <label key={field.key} className="character-ability-option">
@@ -373,7 +363,7 @@ export default function Sta2eLifepathBuilder({
       <section className="stat-editor-section">
         <h4 className="stat-editor-section-title">5 · Experience / Erfahrung</h4>
         <div className="stat-editor-grid">
-          <SelectField label="Erfahrungsstufe" value={lp.experience.value ?? ""} options={[{ value: "novice", label: "Novice / Neuling" }, { value: "experienced", label: "Experienced / Erfahren" }, { value: "veteran", label: "Veteran" }]} onChange={(value) => updateSection("experience", (section) => ({ ...section, value: (value || null) as typeof section.value, statement: "", talent: "", noviceAttribute: null }))} />
+          <SelectField label="Erfahrungsstufe" value={lp.experience.value ?? ""} options={EXPERIENCE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))} onChange={(value) => updateSection("experience", (section) => ({ ...section, value: (value || null) as typeof section.value, statement: "", talent: "", noviceAttribute: null }))} />
           <Field label="Wert"><TextInput value={lp.experience.statement} onChange={(statement) => updateSection("experience", (section) => ({ ...section, statement }))} placeholder="Ein Satz, der diese Erfahrung ausdrückt" /></Field>
           {lp.experience.value === "novice" && <SingleKeyChoice label="Untapped Potential: Attribut" value={lp.experience.noviceAttribute} options={ATTRIBUTE_KEYS} labels={ATTRIBUTE_LABELS} onChange={(noviceAttribute) => updateSection("experience", (section) => ({ ...section, noviceAttribute }))} />}
           {lp.experience.value === "experienced" && <Field label="Talent"><div className="flex gap-[8px]"><span className="stat-field-input flex-1">{lp.experience.talent || "Noch nicht gewählt"}</span><button type="button" disabled={readOnly} className="lcars-pill-btn--outline" onClick={() => talentModalTarget("experience")}>Talent wählen</button></div></Field>}
@@ -394,7 +384,7 @@ export default function Sta2eLifepathBuilder({
             return <div key={index} className="stat-editor-field">
               <span className="stat-field-label"><span className="stat-label-primary">Career Event {index + 1}</span></span>
               <div className="flex gap-[8px]">
-                <select className="stat-field-input flex-1" value={selection.id} onChange={(e) => chooseEvent(index, e.currentTarget.value)}><option value="">— Ereignis wählen —</option>{STA2E_CAREER_EVENTS.map((entry) => <option key={entry.id} value={entry.id}>{entry.roll}. {entry.title}</option>)}</select>
+                <CharacterSelectInput className="flex-1" value={selection.id} onChange={(value) => chooseEvent(index, value)} placeholder="— Ereignis wählen —" options={STA2E_CAREER_EVENTS.map((entry) => ({ value: entry.id, label: `${entry.roll}. ${entry.title}` }))} />
                 <button type="button" className="lcars-pill-btn--outline" onClick={() => chooseEvent(index, rollCareerEvent().id)}>W20</button>
               </div>
               {index >= 2 && <button type="button" className="lcars-pill-btn--outline mt-[8px]" onClick={() => chooseEvent(index, "")}>Ereignis entfernen</button>}

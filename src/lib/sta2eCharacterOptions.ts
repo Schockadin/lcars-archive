@@ -148,6 +148,46 @@ export function getSpeciesAbilityChoices(speciesNames: string[]): SpeciesAbility
     })));
 }
 
+/** Keeps catalog abilities only while at least one selected species grants them. */
+export function filterSpeciesAbilitiesForSpecies(
+  abilities: string[],
+  speciesNames: string[],
+  alreadyStored: string[] = [],
+): string[] {
+  const allCatalogAbilities = new Set(
+    getSpeciesAbilityChoices(SPECIES_OPTIONS.map((species) => species.name))
+      .map((ability) => ability.value),
+  );
+  const availableAbilities = new Set(
+    getSpeciesAbilityChoices(speciesNames).map((ability) => ability.value),
+  );
+  const storedLegacyAbilities = new Set(alreadyStored);
+  return abilities.filter(
+    (ability) => allCatalogAbilities.has(ability)
+      ? availableAbilities.has(ability)
+      : storedLegacyAbilities.has(ability),
+  );
+}
+
+/** Canonicalizes catalog names and preserves only previously stored custom species. */
+export function normalizeSpeciesSelection(
+  speciesNames: string[],
+  existingSpecies: string[] = [],
+): string[] | null {
+  const existingCustom = new Set(
+    existingSpecies.filter((name) => !findSpeciesOption(name)).map((name) => name.trim()),
+  );
+  const result: string[] = [];
+  for (const raw of speciesNames) {
+    const value = raw.trim();
+    if (!value) continue;
+    const canonical = findSpeciesOption(value)?.name ?? (existingCustom.has(value) ? value : null);
+    if (!canonical) return null;
+    if (!result.includes(canonical)) result.push(canonical);
+  }
+  return result;
+}
+
 export function findRoleOption(value: string | null | undefined): RoleOption | undefined {
   if (!value) return undefined;
   const candidate = normalized(value);

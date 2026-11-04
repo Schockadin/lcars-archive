@@ -16,13 +16,14 @@ import { synopsisExcerpt } from "@/lib/missionFormat";
 import { userCan } from "@/lib/permissions";
 import { parseStatsPayload } from "@/lib/characterStatsPayload";
 import { checkOpenCreationStats } from "@/lib/characterStatsRules";
-import { applySta2eLifepath, checkSta2eLifepath } from "@/lib/sta2eLifepath";
+import { applySta2eLifepath, checkSta2eLifepath, checkSta2eProfileChoices } from "@/lib/sta2eLifepath";
 import { checkSta2ePointBuy } from "@/lib/sta2ePointBuy";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
 import { listCampaignRuleModules, moduleSupportsCharacterRole } from "@/lib/campaignRuleModules";
 import { sanitizeRuleModuleCharacterData } from "@/lib/ruleModuleCharacterData";
+import { filterSpeciesAbilitiesForSpecies, normalizeSpeciesSelection } from "@/lib/sta2eCharacterOptions";
 import { readCharacterHead } from "./characterHead";
 import {
   characterEditHref,
@@ -61,6 +62,9 @@ export async function createCharacterWizardAction(
   const headResult = await readCharacterHead(formData, undefined, session.userId);
   if ("error" in headResult) return { error: headResult.error };
   const head = headResult.head;
+  const selectedSpecies = normalizeSpeciesSelection(head.species);
+  if (!selectedSpecies) return { error: "Ungültige Spezies-Auswahl." };
+  head.species = selectedSpecies;
 
   const statsResult = parseStatsPayload(formData.get("statsJson"));
   if ("error" in statsResult) return { error: statsResult.error };
@@ -72,6 +76,12 @@ export async function createCharacterWizardAction(
   // Dasselbe gilt für die Notiz zurückgenommener Steigerungen: ein neuer
   // Charakter hat noch nichts gesteigert, das zurückgenommen sein könnte.
   stats.pendingAdvancements = [];
+  stats.speciesAbilities = filterSpeciesAbilitiesForSpecies(
+    stats.speciesAbilities,
+    selectedSpecies,
+  );
+  const profileError = checkSta2eProfileChoices(stats);
+  if (profileError) return { error: profileError };
 
   if (stats.creationMethod === "sta2e-lifepath") {
     const lifepathErrors = checkSta2eLifepath(stats, head.species, head.rank);

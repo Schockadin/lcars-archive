@@ -9,6 +9,7 @@ import {
   updateOwnCharacterStats,
   type OwnCharacterForEdit,
 } from "@/lib/characters";
+import type { CharacterStats } from "@/types/characterStats";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { autoLinkMarkdown } from "@/lib/autolink";
@@ -18,11 +19,10 @@ import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { parseStatsPayload } from "@/lib/characterStatsPayload";
 import { checkOpenCreationStats } from "@/lib/characterStatsRules";
-import { applySta2eLifepath } from "@/lib/sta2eLifepath";
-import { getSpeciesAbilityChoices, getSpeciesLabel, SPECIES_OPTIONS } from "@/lib/sta2eCharacterOptions";
+import { applySta2eLifepath, checkSta2eProfileChoices } from "@/lib/sta2eLifepath";
+import { filterSpeciesAbilitiesForSpecies, getSpeciesLabel, normalizeSpeciesSelection } from "@/lib/sta2eCharacterOptions";
 import {
-  TEXT_FIELDS,
-  isCharacterExperience,
+  PERSONAL_TEXT_FIELDS,
   validateCharacterStats,
 } from "@/lib/characterStats";
 import { getAdvancementRules } from "@/lib/advancementSettings";
@@ -30,6 +30,7 @@ import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
 import { readCharacterHead, readCharacterPortrait } from "./characterHead";
 import { characterEditHref } from "@/lib/contentRoutes";
+import { parseList } from "@/lib/formParsing";
 
 // Die vier Bereiche der eigenen Charakterseite speichern jeweils für sich:
 // Profilbild, Personalakte, Biografie und Werte. Der frühere ContentEditor
@@ -187,9 +188,9 @@ export async function updateCharacterHeadAction(
   const characterId = readCharacterId(formData);
   if (characterId === null) return { error: "Ungültiger Charakter." };
 
-  // Der bisherige Stand wird ZUERST gebraucht: das Portrait steht nicht mehr
-  // im Formular (siehe characterHead.ts), ein Speichern ohne neues Bild
-  // übernimmt deshalb das gespeicherte.
+  // Der bisherige Stand wird zuerst gebraucht: Das Personalaktenformular
+  // enthält weder das Portrait noch die Spezies und übernimmt beides daher
+  // aus dem gespeicherten Datensatz.
   const [current, currentSheet] = await Promise.all([
     getOwnCharacterForEdit(session.userId, characterId),
     getOwnCharacterStats(session.userId, characterId),
@@ -198,7 +199,12 @@ export async function updateCharacterHeadAction(
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
   }
 
-  const headResult = await readCharacterHead(formData, {
+  const headFormData = new FormData();
+  for (const [key, value] of formData.entries()) {
+    if (key !== "species") headFormData.append(key, value);
+  }
+  for (const species of current.species) headFormData.append("species", species);
+  const headResult = await readCharacterHead(headFormData, {
     portrait: current.portrait,
     portraitSource: current.portraitSource,
     portraitCrop: current.portraitCrop,
@@ -206,41 +212,19 @@ export async function updateCharacterHeadAction(
   if ("error" in headResult) return { error: headResult.error };
 
   const isDraft = formData.get("isDraft") === "on";
-  let stats = { ...currentSheet.stats };
-  const lifepathMode = stats.creationMethod === "sta2e-lifepath";
-  if (
-    lifepathMode && stats.creationLocked &&
-    [...new Set(headResult.head.species.map(getSpeciesLabel))].sort().join("\u0000") !== [...new Set(current.species.map(getSpeciesLabel))].sort().join("\u0000")
-  ) {
-    return { error: "Die Spezies ist nach Abschluss der Lifepath-Erstellung gesperrt." };
-  }
-  const textStats = stats as unknown as Record<string, string | null>;
-  for (const field of TEXT_FIELDS) {
-    if (lifepathMode && !["pronouns", "assignment"].includes(field.key)) continue;
-    textStats[field.key] = String(formData.get(field.key) ?? "").trim() || null;
-  }
-  if (lifepathMode) {
-    if (stats.creationLocked) {
-      stats.characterRole = currentSheet.stats.characterRole;
-      stats.lifepath = currentSheet.stats.lifepath;
-      stats.speciesAbilities = currentSheet.stats.speciesAbilities;
-    } else {
-      stats.characterRole = String(formData.get("characterRole") ?? "").trim() || null;
-      const allAbilities = new Set(getSpeciesAbilityChoices(SPECIES_OPTIONS.map((species) => species.name)).map((ability) => ability.value));
-      const availableAbilities = new Set(getSpeciesAbilityChoices(headResult.head.species).map((ability) => ability.value));
-      stats.speciesAbilities = stats.speciesAbilities.filter((entry) => !allAbilities.has(entry) || availableAbilities.has(entry));
-      stats = applySta2eLifepath(stats, headResult.head.species);
-    }
-  } else {
-    const experience = String(formData.get("experience") ?? "");
-    stats.experience = isCharacterExperience(experience) ? experience : null;
+  const statsPatch: Partial<Pick<CharacterStats, "pronouns" | "assignment" | "traits">> = {};
+  for (const field of PERSONAL_TEXT_FIELDS) {
+    if (field.key === "traits" && currentSheet.stats.creationMethod === "sta2e-lifepath") continue;
+    statsPatch[field.key] = String(formData.get(field.key) ?? "").trim() || null;
   }
 
   const result = await updateOwnCharacterContent(session.userId, characterId, {
     ...headResult.head,
+    species: current.species,
     bodyMarkdown: current.sourceMarkdown,
     isDraft,
-    stats,
+    statsPatch,
+    preserveSpecies: true,
   });
   if (!result) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
@@ -347,13 +331,32 @@ export async function saveCharacterStatsAction(
   if ("error" in payload) return { error: payload.error };
   let stats = payload.stats;
 
-  const current = await getOwnCharacterStats(session.userId, characterId);
-  if (!current) {
+  const [current, currentCharacter] = await Promise.all([
+    getOwnCharacterStats(session.userId, characterId),
+    getOwnCharacterForEdit(session.userId, characterId),
+  ]);
+  if (!current || !currentCharacter) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
+  }
+
+  const selectedSpecies = normalizeSpeciesSelection(
+    formData.getAll("species").flatMap((entry) => parseList(entry)),
+    currentCharacter.species,
+  );
+  if (!selectedSpecies) return { error: "Ungültige Spezies-Auswahl." };
+  if (
+    current.stats.creationMethod === "sta2e-lifepath" &&
+    current.stats.creationLocked &&
+    [...new Set(selectedSpecies.map(getSpeciesLabel))].sort().join("\u0000") !==
+      [...new Set(currentCharacter.species.map(getSpeciesLabel))].sort().join("\u0000")
+  ) {
+    return { error: "Die Spezies ist nach Abschluss der Lifepath-Erstellung gesperrt." };
   }
 
   stats.creationLocked = current.stats.creationLocked;
   stats.creationMethod = current.stats.creationMethod;
+  const profileError = checkSta2eProfileChoices(stats, current.stats);
+  if (profileError) return { error: profileError };
   // Das Spell-Panel speichert seinen Teilbaum separat. Ein gleichzeitig
   // offenes Werte-Formular darf diese Änderungen nicht zurücksetzen.
   stats.technomage = current.stats.technomage;
@@ -367,9 +370,20 @@ export async function saveCharacterStatsAction(
       stats.characterRole = current.stats.characterRole;
       stats.speciesAbilities = current.stats.speciesAbilities;
     }
+    stats.speciesAbilities = filterSpeciesAbilitiesForSpecies(
+      stats.speciesAbilities,
+      selectedSpecies,
+      current.stats.speciesAbilities,
+    );
     stats = applySta2eLifepath(
       stats,
-      (current.species ?? "").split(",").map((entry) => entry.trim()).filter(Boolean),
+      selectedSpecies,
+    );
+  } else {
+    stats.speciesAbilities = filterSpeciesAbilitiesForSpecies(
+      stats.speciesAbilities,
+      selectedSpecies,
+      current.stats.speciesAbilities,
     );
   }
   if (current.stats.creationLocked) {
@@ -403,6 +417,7 @@ export async function saveCharacterStatsAction(
     session.userId,
     characterId,
     stats,
+    selectedSpecies,
   );
   if (!result) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };

@@ -13,11 +13,9 @@ import {
 } from "../_shared/characterHeadFields";
 import type { OwnCharacterForEdit } from "@/lib/characters";
 import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
-import { EXPERIENCE_OPTIONS, TEXT_FIELDS } from "@/lib/characterStats";
+import { PERSONAL_TEXT_FIELDS } from "@/lib/characterStats";
 import type { CharacterStats } from "@/types/characterStats";
-import CharacterRoleSelect from "../_shared/CharacterRoleSelect";
-import CharacterSpeciesMultiSelect from "../_shared/CharacterSpeciesMultiSelect";
-import { getRoleLabel, getSpeciesLabel } from "@/lib/sta2eCharacterOptions";
+import { CharacterField, CharacterTextInput } from "../_shared/CharacterFormControls";
 
 const initialState: CharacterPanelState = {};
 
@@ -49,14 +47,10 @@ export default function CharacterHeadPanel({
   stats: CharacterStats;
 }) {
   const [editing, setEditing] = useState(false);
-  const [species, setSpecies] = useState(character.species);
-  const [characterRole, setCharacterRole] = useState(stats.characterRole);
   const [state, formAction, pending] = useActionState(
     updateCharacterHeadAction,
     initialState,
   );
-  const lifepathMode = stats.creationMethod === "sta2e-lifepath";
-  const lifepathLocked = lifepathMode && stats.creationLocked;
 
   // Nach einem erfolgreichen Speichern zurück in die Übersicht — die Seite
   // selbst lädt durch revalidatePath frisch, das Panel muss die Werte also
@@ -67,19 +61,6 @@ export default function CharacterHeadPanel({
   if (state !== seenState) {
     setSeenState(state);
     if (state?.success) setEditing(false);
-  }
-
-  const speciesSnapshot = JSON.stringify(character.species);
-  const [seenSpeciesSnapshot, setSeenSpeciesSnapshot] = useState(speciesSnapshot);
-  if (speciesSnapshot !== seenSpeciesSnapshot) {
-    setSeenSpeciesSnapshot(speciesSnapshot);
-    setSpecies(character.species);
-  }
-  const roleSnapshot = stats.characterRole ?? "";
-  const [seenRoleSnapshot, setSeenRoleSnapshot] = useState(roleSnapshot);
-  if (roleSnapshot !== seenRoleSnapshot) {
-    setSeenRoleSnapshot(roleSnapshot);
-    setCharacterRole(stats.characterRole);
   }
 
   const list = (entries: string[]) =>
@@ -103,7 +84,6 @@ export default function CharacterHeadPanel({
                 value={STATUS_LABELS[character.status] ?? character.status}
               />
               <Row label="Rang" value={character.rank} />
-              <Row label="Spezies" value={list(character.species.map(getSpeciesLabel))} />
               <Row label="Heimatwelt" value={character.homeworld} />
               <Row label="Aliase" value={list(character.aliases)} />
               <Row label="Geburtsdatum" value={character.dateOfBirth} />
@@ -119,22 +99,15 @@ export default function CharacterHeadPanel({
               <Row label="Schiffe" value={list(character.ships)} />
               <Row label="Division" value={character.division} />
               <Row label="Tags" value={list(character.tags)} />
-              {TEXT_FIELDS.filter((field) => field.key !== "characterRole").map((field) => (
+              {PERSONAL_TEXT_FIELDS.filter((field) =>
+                stats.creationMethod !== "sta2e-lifepath" || field.key !== "traits",
+              ).map((field) => (
                 <Row
                   key={field.key}
                   label={field.label}
                   value={stats[field.key]}
                 />
               ))}
-              <Row label="Rolle" value={getRoleLabel(stats.characterRole) || null} />
-              <Row
-                label="Erfahrungsstufe"
-                value={
-                  EXPERIENCE_OPTIONS.find(
-                    (option) => option.value === stats.experience,
-                  )?.label ?? null
-                }
-              />
             </div>
             {character.isDraft && (
               <p className="stat-sheet-rule">
@@ -160,7 +133,6 @@ export default function CharacterHeadPanel({
                           name: character.name,
                           status: character.status,
                           rank: character.rank ?? undefined,
-                          species: species.join(", "),
                           homeworld: character.homeworld ?? undefined,
                           aliases: character.aliases.join(", "),
                           age: character.age ?? undefined,
@@ -176,60 +148,17 @@ export default function CharacterHeadPanel({
                   />
                 ),
               )}
-              <CharacterSpeciesMultiSelect
-                idPrefix="head-panel"
-                value={species}
-                onChange={setSpecies}
-                disabled={lifepathLocked}
-              />
-              {TEXT_FIELDS.filter((field) => field.key !== "characterRole" && (!lifepathMode || field.key === "pronouns" || field.key === "assignment")).map((field) => (
-                <div key={field.key} className="stat-editor-field">
-                  <label
-                    htmlFor={`head-panel-${field.key}`}
-                    className="stat-field-label"
-                  >
-                    <span className="stat-label-primary">
-                      {field.original ?? field.label}
-                    </span>
-                    <span className="stat-label-secondary">{field.label}</span>
-                  </label>
-                  <input
+              {PERSONAL_TEXT_FIELDS.filter((field) =>
+                stats.creationMethod !== "sta2e-lifepath" || field.key !== "traits",
+              ).map((field) => (
+                <CharacterField key={field.key} label={field.original ?? field.label} secondary={field.label}>
+                  <CharacterTextInput
                     id={`head-panel-${field.key}`}
                     name={field.key}
-                    type="text"
                     defaultValue={stats[field.key] ?? ""}
-                    className="stat-field-input"
                   />
-                </div>
+                </CharacterField>
               ))}
-              <CharacterRoleSelect
-                id="head-panel-characterRole"
-                value={characterRole}
-                onChange={setCharacterRole}
-                disabled={lifepathLocked}
-              />
-              {!lifepathMode && <div className="stat-editor-field">
-                <label
-                  htmlFor="head-panel-experience"
-                  className="stat-field-label"
-                >
-                  <span className="stat-label-primary">Experience</span>
-                  <span className="stat-label-secondary">Erfahrungsstufe</span>
-                </label>
-                <select
-                  id="head-panel-experience"
-                  name="experience"
-                  defaultValue={stats.experience ?? ""}
-                  className="stat-field-input"
-                >
-                  <option value="">— keine Angabe —</option>
-                  {EXPERIENCE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>}
             </div>
 
             <div className="flex items-center gap-[8px]">

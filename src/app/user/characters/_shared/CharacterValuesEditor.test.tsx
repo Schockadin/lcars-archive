@@ -5,6 +5,8 @@ import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
 import { parseCharacterStats } from "@/lib/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
+import { ROLE_OPTIONS, SPECIES_OPTIONS } from "@/lib/sta2eCharacterOptions";
+import { CAREER_PATH_OPTIONS, ENVIRONMENT_OPTIONS, UPBRINGING_OPTIONS } from "@/lib/sta2eLifepath";
 
 const talent: Talent = {
   id: 1,
@@ -62,7 +64,6 @@ function renderEditor(
       focuses={[focus]}
       species={[]}
       idPrefix="test-values"
-      showPersonnelFields={false}
       flatSections={flatSections}
       advancement={{
         characterId: 42,
@@ -76,6 +77,56 @@ function renderEditor(
 }
 
 describe("CharacterValuesEditor – Inline-Steigerungen", () => {
+  it("zeigt Spezies und die vorgegebenen Profilfelder im Wertebereich", () => {
+    const { container } = renderEditor(0);
+
+    const optionValues = (element: HTMLElement) =>
+      Array.from((element as HTMLSelectElement).options)
+        .map((option) => option.value)
+        .filter(Boolean);
+    const environment = screen.getByLabelText(/Environment/);
+    const upbringing = screen.getByLabelText(/Upbringing/);
+    const careerPath = screen.getByLabelText(/Career Path/);
+    const experience = screen.getByLabelText(/Experience/);
+    const role = screen.getByLabelText(/Character Role/);
+
+    expect(screen.getByText("Species")).toBeInTheDocument();
+    expect(container.querySelector(".character-species-picker summary")).toBeInTheDocument();
+    expect(container.querySelectorAll(".character-species-picker input[type='checkbox']")).toHaveLength(SPECIES_OPTIONS.length);
+    expect(optionValues(environment)).toEqual(ENVIRONMENT_OPTIONS.map((option) => option.name));
+    expect(optionValues(upbringing)).toEqual(UPBRINGING_OPTIONS.map((option) => option.name));
+    expect(optionValues(careerPath)).toEqual(CAREER_PATH_OPTIONS.map((option) => option.name));
+    expect(optionValues(experience)).toEqual(["novice", "experienced", "veteran"]);
+    expect(optionValues(role)).toEqual([...ROLE_OPTIONS.map((option) => option.name), "__custom__"]);
+  });
+
+  it("entfernt Spezies-Fähigkeiten direkt beim Abwählen ihrer Spezies", () => {
+    const onChange = vi.fn();
+    const onSpeciesChange = vi.fn();
+    const stats = lockedStats();
+    stats.speciesAbilities = ["Human — Faith of the Heart"];
+    const { container } = render(
+      <CharacterValuesEditor
+        stats={stats}
+        onChange={onChange}
+        rules={DEFAULT_ADVANCEMENT_RULES}
+        talents={[talent]}
+        focuses={[focus]}
+        species={["Human"]}
+        onSpeciesChange={onSpeciesChange}
+        idPrefix="test-values"
+      />,
+    );
+
+    fireEvent.click(container.querySelector("summary")!);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Mensch (Human)" }));
+
+    expect(onSpeciesChange).toHaveBeenCalledWith([]);
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ speciesAbilities: [] }),
+    );
+  });
+
   it("zeigt beim STA-2e-Punktesystem die 56/16-Gesamtsummen an", () => {
     const stats = parseCharacterStats({
       creationMethod: "sta2e-point-buy",
@@ -118,7 +169,6 @@ describe("CharacterValuesEditor – Inline-Steigerungen", () => {
         focuses={[focus]}
         species={["Human"]}
         idPrefix="test-values"
-        showPersonnelFields={false}
       />,
     );
 
@@ -140,7 +190,6 @@ describe("CharacterValuesEditor – Inline-Steigerungen", () => {
         focuses={[focus]}
         species={[]}
         idPrefix="test-values"
-        showPersonnelFields={false}
       />,
     );
 
@@ -161,7 +210,6 @@ describe("CharacterValuesEditor – Inline-Steigerungen", () => {
         focuses={[focus]}
         species={[]}
         idPrefix="test-values"
-        showPersonnelFields={false}
       />,
     );
 
@@ -188,7 +236,6 @@ describe("CharacterValuesEditor – Inline-Steigerungen", () => {
         focuses={[focus]}
         species={[]}
         idPrefix="test-values"
-        showPersonnelFields={false}
       />,
     );
 

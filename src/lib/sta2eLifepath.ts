@@ -112,6 +112,30 @@ export const CAREER_PATH_OPTIONS: readonly CareerPathOption[] = [
   { id: "civilian-trader", name: "Civilian (Trader)", trait: "Merchant", military: false, majors: ["command"], minors: DEPARTMENT_KEYS, attributeRequirementAny: ["insight", "presence"], reallocation: true },
 ];
 
+export function checkSta2eProfileChoices(
+  stats: CharacterStats,
+  alreadyStored?: CharacterStats,
+): string | null {
+  if (stats.creationMethod === "sta2e-lifepath") return null;
+  const choices = [
+    { key: "environment", label: "Environment", values: ENVIRONMENT_OPTIONS.map((option) => option.name) },
+    { key: "upbringing", label: "Upbringing", values: UPBRINGING_OPTIONS.map((option) => option.name) },
+    { key: "careerPath", label: "Career Path", values: CAREER_PATH_OPTIONS.map((option) => option.name) },
+  ] as const;
+  for (const choice of choices) {
+    const value = stats[choice.key];
+    const validValues: readonly string[] = choice.values;
+    if (
+      value &&
+      !validValues.includes(value) &&
+      value !== alreadyStored?.[choice.key]
+    ) {
+      return `Ungültige ${choice.label}-Auswahl.`;
+    }
+  }
+  return null;
+}
+
 export function newLifepathEvent(): LifepathCareerEvent {
   return { id: "", attribute: null, department: null, focus: "", trait: null, attributeBonus: true, departmentBonus: true, focusBonus: true };
 }

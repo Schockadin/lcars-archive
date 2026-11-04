@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ROLE_OPTIONS, findRoleOption } from "@/lib/sta2eCharacterOptions";
+import { CharacterField, CharacterSelectInput, CharacterTextInput } from "./CharacterFormControls";
 
 export default function CharacterRoleSelect({
   id,
@@ -23,46 +24,37 @@ export default function CharacterRoleSelect({
   const isCustom = customMode || Boolean(value && !selectedRole);
 
   return (
-    <div className="stat-editor-field">
-      <label htmlFor={id} className="stat-field-label">
-        <span className="stat-label-primary">Character Role</span>
-        <span className="stat-label-secondary">Rolle</span>
-      </label>
-      <select
+    <CharacterField label="Character Role" secondary="Rolle">
+      <CharacterSelectInput
         id={id}
         name={isCustom ? undefined : name}
         disabled={disabled}
         value={isCustom ? "__custom__" : selectedRole?.name ?? ""}
-        onChange={(event) => {
-          if (event.currentTarget.value === "__custom__") {
+        onChange={(next) => {
+          if (next === "__custom__") {
             setCustomMode(true);
-            onChange(value ?? null);
             return;
           }
           setCustomMode(false);
-          onChange(event.currentTarget.value || null);
+          onChange(next || null);
         }}
-        className="stat-field-input"
-      >
-        <option value="">— keine Angabe —</option>
-        {ROLE_OPTIONS.map((role) => (
-          <option key={role.id} value={role.name}>{role.label}</option>
-        ))}
-        <option value="__custom__">Andere oder Modulrolle …</option>
-      </select>
+        options={[
+          ...ROLE_OPTIONS.map((role) => ({ value: role.name, label: role.label })),
+          { value: "__custom__", label: "Andere oder Modulrolle …" },
+        ]}
+        placeholder="— keine Angabe —"
+      />
       {disabled && <input type="hidden" name={name} value={value ?? ""} />}
       {isCustom && (
-        <input
-          type="text"
-          name={isCustom ? name : undefined}
-          aria-label="Eigene Rolle oder Modulrolle"
+        <CharacterTextInput
+          name={name}
+          ariaLabel="Eigene Rolle oder Modulrolle"
           placeholder="z. B. Technomage"
           value={value ?? ""}
           disabled={disabled}
-          onChange={(event) => onChange(event.currentTarget.value || null)}
-          className="stat-field-input"
+          onChange={(next) => onChange(next || null)}
         />
       )}
-    </div>
+    </CharacterField>
   );
 }

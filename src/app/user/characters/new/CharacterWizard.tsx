@@ -9,13 +9,12 @@ import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
 import { renderMarkdownPreview } from "@/app/actions/markdownPreview";
 import CharacterSheetPreview from "@/components/character/CharacterSheetPreview";
 import { parsePortraitCrop, type PortraitCrop } from "@/lib/portraitCrop";
-import { EXPERIENCE_OPTIONS, TEXT_FIELDS } from "@/lib/characterStats";
+import { PERSONAL_TEXT_FIELDS } from "@/lib/characterStats";
 import CharacterValuesEditor from "../_shared/CharacterValuesEditor";
 import CharacterEditorTabs, { type CharacterEditorTab } from "../_shared/CharacterEditorTabs";
 import CharacterModuleCreationReference from "../_shared/CharacterModuleCreationReference";
 import PortraitPicker from "../_shared/PortraitPicker";
-import CharacterRoleSelect from "../_shared/CharacterRoleSelect";
-import CharacterSpeciesMultiSelect from "../_shared/CharacterSpeciesMultiSelect";
+import { CharacterField, CharacterSelectInput, CharacterTextInput } from "../_shared/CharacterFormControls";
 import {
   createCharacterWizardAction,
   type CharacterWizardState,
@@ -30,7 +29,7 @@ import {
   STA2E_POINT_BUY_BASE_ATTRIBUTES,
   STA2E_POINT_BUY_BASE_DEPARTMENTS,
 } from "@/lib/sta2ePointBuy";
-import { getSpeciesAbilityChoices, getSpeciesLabel, SPECIES_OPTIONS } from "@/lib/sta2eCharacterOptions";
+import { getSpeciesLabel } from "@/lib/sta2eCharacterOptions";
 import { moduleSupportsCharacterRole, type RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
 import type { CharacterStats } from "@/types/characterStats";
@@ -216,17 +215,19 @@ export default function CharacterWizard({
         <div className="flex flex-col gap-[16px]">
           <section className="stat-editor-section">
             <h3 className="stat-editor-section-title">Erstellungsmethode</h3>
-            <label className="stat-editor-field" htmlFor="wizard-creation-method">
-              <span className="stat-field-label">
-                <span className="stat-label-primary">Character Creation</span>
-                <span className="stat-label-secondary">Charaktererschaffung</span>
-              </span>
-              <select id="wizard-creation-method" className="stat-field-input" value={stats.creationMethod} onChange={(event) => setCreationMethod(event.currentTarget.value as CharacterStats["creationMethod"])}>
-                <option value="ap">Direkte AP-Vergabe</option>
-                <option value="sta2e-point-buy">STA 2e Punkte-System</option>
-                <option value="sta2e-lifepath">STA 2e Lifepath</option>
-              </select>
-            </label>
+            <CharacterField label="Character Creation" secondary="Charaktererschaffung">
+              <CharacterSelectInput
+                id="wizard-creation-method"
+                value={stats.creationMethod}
+                onChange={(value) => setCreationMethod(value as CharacterStats["creationMethod"])}
+                includePlaceholder={false}
+                options={[
+                  { value: "ap", label: "Direkte AP-Vergabe" },
+                  { value: "sta2e-point-buy", label: "STA 2e Punkte-System" },
+                  { value: "sta2e-lifepath", label: "STA 2e Lifepath" },
+                ]}
+              />
+            </CharacterField>
             <p className="stat-sheet-rule">
               {stats.creationMethod === "ap"
                 ? "Attribute und Disziplinen werden direkt aus den kampagnenweiten AP-Budgets verteilt."
@@ -242,8 +243,8 @@ export default function CharacterWizard({
             talents={talents}
             focuses={focuses}
             species={species}
+            onSpeciesChange={setSpecies}
             idPrefix="wizard-stats"
-            showPersonnelFields={false}
           />
         </div>
       ),
@@ -256,30 +257,6 @@ export default function CharacterWizard({
         <div className="flex flex-col gap-[12px]">
           <div className="content-editor-head-grid">
             <PortraitPicker idPrefix="wizard" />
-            <CharacterSpeciesMultiSelect
-              idPrefix="wizard"
-              value={species}
-              onChange={(nextSpecies) => {
-                setSpecies(nextSpecies);
-                const abilityValues = new Set(
-                  getSpeciesAbilityChoices(SPECIES_OPTIONS.map((option) => option.name)).map((ability) => ability.value),
-                );
-                const availableValues = new Set(
-                  getSpeciesAbilityChoices(nextSpecies).map((ability) => ability.value),
-                );
-                setStats((current) => {
-                  const updated = {
-                    ...current,
-                  speciesAbilities: current.speciesAbilities.filter(
-                    (entry) => !abilityValues.has(entry) || availableValues.has(entry),
-                  ),
-                  };
-                  return current.creationMethod === "sta2e-lifepath"
-                    ? applySta2eLifepath(updated, nextSpecies)
-                    : updated;
-                });
-              }}
-            />
             {headFields.map((field) => (
               <HeadFieldRenderer
                 key={field.name}
@@ -296,58 +273,17 @@ export default function CharacterWizard({
                 defaultValue={undefined}
               />
             ))}
-            {TEXT_FIELDS.filter((field) => field.key !== "characterRole" && (!stats.creationMethod || stats.creationMethod !== "sta2e-lifepath" || field.key === "pronouns" || field.key === "assignment")).map((field) => (
-              <label key={field.key} className="stat-editor-field" htmlFor={`wizard-personal-${field.key}`}>
-                <span className="stat-field-label">
-                  <span className="stat-label-primary">{field.original ?? field.label}</span>
-                  <span className="stat-label-secondary">{field.label}</span>
-                </span>
-                <input
+            {PERSONAL_TEXT_FIELDS.filter((field) =>
+              stats.creationMethod !== "sta2e-lifepath" || field.key !== "traits",
+            ).map((field) => (
+              <CharacterField key={field.key} label={field.original ?? field.label} secondary={field.label}>
+                <CharacterTextInput
                   id={`wizard-personal-${field.key}`}
-                  className="stat-field-input"
-                  type="text"
                   value={stats[field.key] ?? ""}
-                  onChange={(event) => {
-                    const value = event.currentTarget.value || null;
-                    setStats((current) => ({
-                      ...current,
-                      [field.key]: value,
-                    }));
-                  }}
+                  onChange={(value) => setStats((current) => ({ ...current, [field.key]: value || null }))}
                 />
-              </label>
+              </CharacterField>
             ))}
-            <CharacterRoleSelect
-              id="wizard-personal-characterRole"
-              value={stats.characterRole}
-              onChange={(value) => setStats((current) => {
-                const updated = { ...current, characterRole: value };
-                return current.creationMethod === "sta2e-lifepath"
-                  ? applySta2eLifepath(updated, species)
-                  : updated;
-              })}
-            />
-            {stats.creationMethod !== "sta2e-lifepath" && <label className="stat-editor-field" htmlFor="wizard-personal-experience">
-              <span className="stat-field-label">
-                <span className="stat-label-primary">Experience</span>
-                <span className="stat-label-secondary">Erfahrungsstufe</span>
-              </span>
-              <select
-                id="wizard-personal-experience"
-                className="stat-field-input"
-                value={stats.experience ?? ""}
-                onChange={(event) => {
-                  const experience = (event.currentTarget.value ||
-                    null) as CharacterStats["experience"];
-                  setStats((current) => ({ ...current, experience }));
-                }}
-              >
-                <option value="">— keine Angabe —</option>
-                {EXPERIENCE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            </label>}
           </div>
         </div>
       ),

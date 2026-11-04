@@ -212,6 +212,11 @@
 
 .character-species-picker-dropdown {
   position: relative;
+  width: 100%;
+}
+
+.character-species-picker {
+  grid-column: 1 / -1;
 }
 
 .character-species-picker-summary {
@@ -247,7 +252,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 2px 12px;
-  width: min(680px, calc(100vw - 48px));
+  box-sizing: border-box;
+  width: min(680px, 100%);
   max-height: min(360px, 55vh);
   overflow-y: auto;
   margin: 0;
@@ -516,15 +522,7 @@
   }
 }
 
-/* ── Anlege-Assistent (/user/characters/new) ──────────────────────────
-   Schrittleiste und Blätter-Knöpfe: Icon plus Beschriftung, auf schmalen
-   Geräten nur noch das Icon (die Beschriftung steht dort weiterhin im
-   aria-label/title). Ohne das brachen vier beschriftete Pillen auf einem
-   Telefon in vier Zeilen um und schoben das Formular nach unten. */
-/* Kopfzeile des Assistenten: links die Schrittleiste, rechts dieselben
-   Blätter-Knöpfe, die auch unter dem Schritt stehen. Auf den langen
-   Schritten (Werte, Biografie) liegt der untere Knopf sonst weit unterhalb
-   des sichtbaren Bereichs. */
+/* ── Charaktereditor-Tabs und Assistent-Navigation ─────────────────── */
 .character-editor-tabs-list {
   display: flex;
   flex-wrap: wrap;
@@ -562,24 +560,6 @@
   outline-offset: 2px;
 }
 
-.wizard-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.wizard-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.wizard-step,
 .wizard-nav-btn {
   display: inline-flex;
   align-items: center;
@@ -600,7 +580,6 @@
   transition: 200ms;
 }
 
-.wizard-step:hover,
 .wizard-nav-btn:hover:not(:disabled) {
   background: var(--lcars-primary-light);
   border-color: var(--lcars-primary-light);
@@ -609,7 +588,6 @@
 
 /* Der Schritt, auf dem der Assistent gerade steht — gefüllt statt
    umrandet, damit die Position auch ohne Beschriftung ablesbar bleibt. */
-.wizard-step--active,
 .wizard-nav-btn:not(.wizard-nav-btn--outline) {
   background: var(--lcars-primary);
   border-color: var(--lcars-primary);
@@ -719,38 +697,21 @@
 }
 
 @media (max-width: 520px) {
-  /* Nur noch die Icons: die Beschriftung steht im aria-label/title. */
-  .wizard-step-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  .wizard-step,
   .wizard-nav-btn {
     justify-content: center;
     padding: 0;
     width: 44px;
     gap: 0;
+    font-size: 0;
   }
 
-  /* Die vier Schritte und die Blätter-Knöpfe teilen sich eine Zeile,
-     statt auf einem Telefon umzubrechen. */
-  .wizard-steps,
   .wizard-nav {
     flex-wrap: nowrap;
   }
 
-  /* Als Icon-Knöpfe passen Schrittleiste UND Blätter-Knöpfe zusammen in
-     die Kopfzeile (4 × 44 + 2 × 44 plus Abstände). */
-  .wizard-bar {
-    flex-wrap: nowrap;
+  .wizard-nav-btn svg {
+    width: 18px;
+    height: 18px;
   }
 
   /* Wertekästen: zwei je Zeile statt einer — 110px Mindestbreite plus

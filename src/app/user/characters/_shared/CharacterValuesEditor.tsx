@@ -9,7 +9,6 @@ import {
   EXPERIENCE_OPTIONS,
   LIST_FIELDS,
   SCALAR_NUMBER_FIELDS,
-  TEXT_FIELDS,
   computeStress,
   isCharacterExperience,
   validateDistribution,
@@ -30,7 +29,10 @@ import { TalentModal } from "./TalentPicker";
 import { FocusModal } from "./FocusPicker";
 import EntryAddModal from "./EntryAddModal";
 import CharacterRoleSelect from "./CharacterRoleSelect";
-import { getAdditionalRoleBonusNotes, getRoleBonusEntries, getSpeciesAbilityChoices, findRoleOption } from "@/lib/sta2eCharacterOptions";
+import CharacterSpeciesMultiSelect from "./CharacterSpeciesMultiSelect";
+import { CharacterSelectField, CharacterSelectInput } from "./CharacterFormControls";
+import { CAREER_PATH_OPTIONS, ENVIRONMENT_OPTIONS, UPBRINGING_OPTIONS } from "@/lib/sta2eLifepath";
+import { filterSpeciesAbilitiesForSpecies, getAdditionalRoleBonusNotes, getRoleBonusEntries, getSpeciesAbilityChoices, findRoleOption } from "@/lib/sta2eCharacterOptions";
 import {
   careerEventByIdOrTitle,
   careerEventTitle,
@@ -245,9 +247,9 @@ export default function CharacterValuesEditor({
   talents,
   focuses,
   species,
+  onSpeciesChange = () => {},
   idPrefix,
   advancement,
-  showPersonnelFields = true,
   flatSections = false,
 }: {
   stats: CharacterStats;
@@ -260,16 +262,13 @@ export default function CharacterValuesEditor({
   focuses: Focus[];
   // Spezies der Akte — für Voraussetzungen wie „Vulcan".
   species: string[];
+  onSpeciesChange?: (species: string[]) => void;
   // Präfix der Feld-IDs; auf einer Seite können zwei Editoren stehen.
   idPrefix: string;
   // Nur auf der eigenen Charakterseite nach abgeschlossener Erschaffung:
   // Inline-Steigerungen verwenden dieselbe Action und dieselbe Kostenprüfung
   // wie früher das separate Advancement-Panel.
   advancement?: InlineAdvancement;
-  // Der Anlege-Assistent führt diese Angaben weiterhin in seinem Werte-
-  // Schritt. Auf der bestehenden Charakterseite liegen sie dagegen in der
-  // zusammengeführten Personalakte und würden hier doppelt erscheinen.
-  showPersonnelFields?: boolean;
   // Auf der bestehenden Charakterseite liegt der Editor bereits in einem
   // gerahmten, aufklappbaren Werte-Panel. Dort brauchen die Untergruppen
   // keine weiteren Panelrahmen; im Anlege-Assistenten bleiben sie erhalten.
@@ -288,6 +287,19 @@ export default function CharacterValuesEditor({
   function patch(next: Partial<CharacterStats>) {
     const updated = { ...stats, ...next };
     onChange(lifepathMode ? applySta2eLifepath(updated, species) : updated);
+  }
+
+  function changeSpecies(nextSpecies: string[]) {
+    onSpeciesChange(nextSpecies);
+    const updated = {
+      ...stats,
+      speciesAbilities: filterSpeciesAbilitiesForSpecies(
+        stats.speciesAbilities,
+        nextSpecies,
+        stats.speciesAbilities,
+      ),
+    };
+    onChange(lifepathMode ? applySta2eLifepath(updated, nextSpecies) : updated);
   }
 
   function setNumber(
@@ -423,15 +435,8 @@ export default function CharacterValuesEditor({
   const pointTotals = sta2ePointBuyTotals(stats);
   const maxStress = computeStress(stats);
   const speciesAbilityChoices = getSpeciesAbilityChoices(species);
-  const knownAbilityValues = new Set(
-    getSpeciesAbilityChoices(
-      // Nur zum Erkennen und Erhalt älterer Einträge, die nicht mehr zu einer
-      // aktuell ausgewählten Spezies gehören.
-      species,
-    ).map((choice) => choice.value),
-  );
   const legacySpeciesAbilities = stats.speciesAbilities.filter(
-    (entry) => !knownAbilityValues.has(entry),
+    (entry) => !speciesAbilityChoices.some((choice) => choice.value === entry),
   );
   const roleOption = findRoleOption(stats.characterRole);
   const roleBonusEntries = getRoleBonusEntries(
@@ -448,6 +453,64 @@ export default function CharacterValuesEditor({
 
   return (
     <div className="flex flex-col gap-[16px]">
+      <section className={sectionClassName}>
+        <SectionTitle en="Character Profile" de="Charakterprofil" flat={flatSections} />
+        <div className="stat-editor-body">
+          <div className="stat-editor-grid">
+            <CharacterSpeciesMultiSelect
+              idPrefix={idPrefix}
+              value={species}
+              onChange={changeSpecies}
+              disabled={lifepathMode && locked}
+            />
+            <CharacterRoleSelect
+              id={`${idPrefix}-characterRole`}
+              value={stats.characterRole}
+              onChange={(value) => patch({ characterRole: value })}
+              disabled={lifepathMode && locked}
+            />
+            {!lifepathMode && <>
+              <CharacterSelectField
+                id={`${idPrefix}-environment`}
+                label="Environment"
+                secondary="Herkunft"
+                value={stats.environment ?? ""}
+                legacyValue={stats.environment}
+                options={ENVIRONMENT_OPTIONS.map((option) => ({ value: option.name, label: `${option.label} (${option.name})` }))}
+                onChange={(value) => patch({ environment: value || null })}
+              />
+              <CharacterSelectField
+                id={`${idPrefix}-upbringing`}
+                label="Upbringing"
+                secondary="Erziehung"
+                value={stats.upbringing ?? ""}
+                legacyValue={stats.upbringing}
+                options={UPBRINGING_OPTIONS.map((option) => ({ value: option.name, label: option.name }))}
+                onChange={(value) => patch({ upbringing: value || null })}
+              />
+              <CharacterSelectField
+                id={`${idPrefix}-careerPath`}
+                label="Career Path"
+                secondary="Laufbahn"
+                value={stats.careerPath ?? ""}
+                legacyValue={stats.careerPath}
+                options={CAREER_PATH_OPTIONS.map((option) => ({ value: option.name, label: option.name }))}
+                onChange={(value) => patch({ careerPath: value || null })}
+              />
+              <CharacterSelectField
+                id={`${idPrefix}-experience`}
+                label="Experience"
+                secondary="Erfahrungsstufe"
+                value={stats.experience ?? ""}
+                options={EXPERIENCE_OPTIONS}
+                placeholder="— keine Angabe —"
+                onChange={(value) => patch({ experience: isCharacterExperience(value) ? value : null })}
+              />
+            </>}
+          </div>
+        </div>
+      </section>
+
       {lifepathMode && (
         <Sta2eLifepathBuilder
           stats={stats}
@@ -457,78 +520,6 @@ export default function CharacterValuesEditor({
           focuses={focuses}
           readOnly={locked}
         />
-      )}
-
-      {showPersonnelFields && !lifepathMode && (
-        <section className={sectionClassName}>
-          <SectionTitle
-            en="Personnel File"
-            de="Kopfdaten"
-            flat={flatSections}
-          />
-          <div className="stat-editor-body">
-            <div className="stat-editor-grid">
-              {TEXT_FIELDS.filter((field) => field.key !== "characterRole").map((field) => (
-                <div key={field.key} className="stat-editor-field">
-                  <label
-                    htmlFor={`${idPrefix}-${field.key}`}
-                    className="stat-field-label"
-                  >
-                    <span className="stat-label-primary">
-                      {field.original ?? field.label}
-                    </span>
-                    <span className="stat-label-secondary">{field.label}</span>
-                  </label>
-                  <input
-                    id={`${idPrefix}-${field.key}`}
-                    type="text"
-                    value={stats[field.key] ?? ""}
-                    onChange={(event) =>
-                      patch({
-                        [field.key]: event.target.value,
-                      } as Partial<CharacterStats>)
-                    }
-                    className="stat-field-input"
-                  />
-                </div>
-              ))}
-              <CharacterRoleSelect
-                id={`${idPrefix}-characterRole`}
-                value={stats.characterRole}
-                onChange={(value) => patch({ characterRole: value })}
-              />
-
-              <div className="stat-editor-field">
-                <label
-                  htmlFor={`${idPrefix}-experience`}
-                  className="stat-field-label"
-                >
-                  <span className="stat-label-primary">Experience</span>
-                  <span className="stat-label-secondary">Erfahrungsstufe</span>
-                </label>
-                <select
-                  id={`${idPrefix}-experience`}
-                  value={stats.experience ?? ""}
-                  onChange={(event) =>
-                    patch({
-                      experience: isCharacterExperience(event.target.value)
-                        ? event.target.value
-                        : null,
-                    })
-                  }
-                  className="stat-field-input"
-                >
-                  <option value="">— keine Angabe —</option>
-                  {EXPERIENCE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        </section>
       )}
 
       {/* ── Attribute ─────────────────────────────────────────────── */}
@@ -851,23 +842,18 @@ export default function CharacterValuesEditor({
                       <span className="stat-label-secondary">Karriere-Ereignis {index + 1}</span>
                     </label>
                     <div className="flex flex-wrap items-center gap-[8px]">
-                      <select
+                      <CharacterSelectInput
                         id={`${idPrefix}-career-event-${index + 1}`}
                         value={selectedValue}
                         disabled={index === 1 && !stats.careerEvents[0]}
-                        onChange={(e) => setCareerEvent(index, e.target.value)}
-                        className="stat-field-input min-w-0 flex-1"
-                      >
-                        <option value="">— Ereignis wählen —</option>
-                        {legacyValue && (
-                          <option value={legacyValue}>{legacyValue} (Alt-Eintrag)</option>
-                        )}
-                        {STA2E_CAREER_EVENTS.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.roll}. {option.title}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(value) => setCareerEvent(index, value)}
+                        placeholder="— Ereignis wählen —"
+                        className="min-w-0 flex-1"
+                        options={[
+                          ...(legacyValue ? [{ value: legacyValue, label: `${legacyValue} (Alt-Eintrag)` }] : []),
+                          ...STA2E_CAREER_EVENTS.map((option) => ({ value: option.id, label: `${option.roll}. ${option.title}` })),
+                        ]}
+                      />
                       <button
                         type="button"
                         disabled={index === 1 && !stats.careerEvents[0]}

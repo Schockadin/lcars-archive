@@ -12,98 +12,74 @@ test.describe("Charakter-Assistent", () => {
     await page.goto("/dev-gallery");
     // Client-Hydration abwarten: vor ihr reagiert kein Schritt-Knopf.
     await expect(
-      page.locator("#character-wizard ol button").first(),
-    ).toHaveAttribute("aria-current", "step");
+      page.getByRole("tab", { name: "Werte" }),
+    ).toHaveAttribute("aria-selected", "true");
   });
 
-  test("zeigt vier Schritte und startet bei den Stammdaten", async ({
+  test("zeigt die vier Standard-Tabs und startet bei den Werten", async ({
     page,
   }) => {
     const steps = page.locator(
-      "#character-wizard ol[aria-label='Schritte'] button",
+      "#character-wizard [role='tablist'] button[role='tab']",
     );
     await expect(steps).toHaveCount(4);
-    // Die Beschriftung steht im aria-label, weil sie auf schmalen Geräten
-    // ausgeblendet wird (Icon-Knöpfe) — dort wäre sonst nichts mehr zu
-    // unterscheiden.
     for (const [index, label] of [
-      "Stammdaten",
       "Werte",
+      "Persönliche Daten",
       "Biografie",
-      "Vorschau",
+      "Dateien",
     ].entries()) {
-      await expect(steps.nth(index)).toHaveAttribute(
-        "aria-label",
-        `Schritt ${index + 1}: ${label}`,
-      );
-      await expect(steps.nth(index).locator("svg")).toHaveCount(1);
+      await expect(steps.nth(index)).toHaveText(label);
     }
 
-    // Nur der aktive Schritt ist sichtbar — die übrigen bleiben im DOM
-    // (hidden), damit Eingaben beim Blättern nicht verloren gehen.
-    await expect(page.locator("#wizard-name")).toBeVisible();
-    await expect(page.locator("#wizard-stats-attr-control")).toBeHidden();
+    await expect(steps.first()).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#wizard-stats-attr-control")).toBeVisible();
+    await expect(page.locator("#wizard-name")).toBeHidden();
   });
 
-  test("zeigt die Blätter-Knöpfe oben neben der Schrittleiste und unten", async ({
+  test("zeigt die Tab-Navigation oben und unten", async ({
     page,
   }) => {
-    // Auf den langen Schritten (Werte, Biografie) liegt der untere Knopf weit
-    // unterhalb des Bildschirms — deshalb steht dieselbe Gruppe zusätzlich
-    // oben in der Kopfzeile.
     const navs = page.locator("#character-wizard .wizard-nav");
     await expect(navs).toHaveCount(2);
-    await expect(
-      page.locator("#character-wizard .wizard-bar .wizard-nav"),
-    ).toHaveCount(1);
 
-    // Beide Kopien blättern dieselbe Form: der obere „Weiter"-Knopf bringt
-    // den Assistenten genauso auf Schritt 2 wie der untere.
-    await page.locator("#wizard-name").fill("T'Rel");
-    await page
-      .locator("#character-wizard .wizard-bar button[aria-label='Weiter']")
-      .click();
-    await expect(page.locator("#wizard-stats-attr-control")).toBeVisible();
-    await navs.last().locator("button[aria-label='Zurück']").click();
+    await navs.first().getByRole("button", { name: "Zum nächsten Tab" }).click();
     await expect(page.locator("#wizard-name")).toBeVisible();
+    await navs.last().getByRole("button", { name: "Zum vorherigen Tab" }).click();
+    await expect(page.locator("#wizard-stats-attr-control")).toBeVisible();
+    await expect(page.locator("#wizard-name")).toBeHidden();
   });
 
-  test("blättert erst mit Namen weiter", async ({ page }) => {
-    await page
-      .locator("#character-wizard .wizard-bar button[aria-label='Weiter']")
-      .click();
-    await expect(
-      page.getByText("Bitte zuerst einen Namen angeben."),
-    ).toBeVisible();
+  test("kann zwischen Tabs wechseln ohne Eingaben zu verlieren", async ({ page }) => {
+    await page.getByRole("tab", { name: "Persönliche Daten" }).click();
+    await page.locator("#wizard-name").fill("T'Rel");
+    await page.getByRole("tab", { name: "Werte" }).click();
+    await page.getByRole("tab", { name: "Persönliche Daten" }).click();
     await expect(page.locator("#wizard-name")).toBeVisible();
+    await expect(page.locator("#wizard-name")).toHaveValue("T'Rel");
   });
 
   test("behält Eingaben beim Vor- und Zurückblättern", async ({ page }) => {
+    await page.getByRole("tab", { name: "Persönliche Daten" }).click();
     await page.locator("#wizard-name").fill("T'Rel");
-    await page
-      .locator("#character-wizard .wizard-bar button[aria-label='Weiter']")
-      .click();
+    await page.getByRole("tab", { name: "Werte" }).click();
 
     const control = page.locator("#wizard-stats-attr-control");
     await expect(control).toBeVisible();
     await control.fill("11");
 
-    // Zurück zu den Stammdaten …
-    await page
-      .locator("#character-wizard .wizard-bar button[aria-label='Zurück']")
-      .click();
+    // Zurück zu den persönlichen Daten …
+    await page.getByRole("tab", { name: "Persönliche Daten" }).click();
     await expect(page.locator("#wizard-name")).toHaveValue("T'Rel");
 
     // … und wieder vor: der Wert im zweiten Schritt steht noch.
-    await page.locator("#character-wizard ol button").nth(1).click();
+    await page.getByRole("tab", { name: "Werte" }).click();
     await expect(control).toHaveValue("11");
   });
 
   test("zeigt im Werte-Schritt die Erschaffungsbudgets prominent an", async ({
     page,
   }) => {
-    await page.locator("#wizard-name").fill("T'Rel");
-    await page.locator("#character-wizard ol button").nth(1).click();
     await expect(page.locator("#wizard-creation-method")).toHaveValue("ap");
 
     // Je ein Budget-Block direkt unter der Kopfleiste des Abschnitts, den er
@@ -129,9 +105,6 @@ test.describe("Charakter-Assistent", () => {
   });
 
   test("bietet das STA-2e-Punktesystem zusätzlich zur AP-Vergabe an", async ({ page }) => {
-    await page.locator("#wizard-name").fill("T'Rel");
-    await page.locator("#character-wizard ol button").nth(1).click();
-
     const method = page.locator("#wizard-creation-method");
     await expect(method.locator("option")).toHaveCount(3);
     await method.selectOption("sta2e-point-buy");
@@ -159,9 +132,6 @@ test.describe("Charakter-Assistent", () => {
   test("wählt Career Events aus der STA-2e-Tabelle und zeigt ihre Boni", async ({
     page,
   }) => {
-    await page.locator("#wizard-name").fill("T'Rel");
-    await page.locator("#character-wizard ol button").nth(1).click();
-
     const firstEvent = page.locator("#wizard-stats-career-event-1");
     const secondEvent = page.locator("#wizard-stats-career-event-2");
     await expect(firstEvent.locator("option")).toHaveCount(21);
@@ -177,9 +147,6 @@ test.describe("Charakter-Assistent", () => {
   });
 
   test("markiert ein überzogenes Budget", async ({ page }) => {
-    await page.locator("#wizard-name").fill("T'Rel");
-    await page.locator("#character-wizard ol button").nth(1).click();
-
     // Eine Disziplin von 1 auf 4 kostet (2+3+4) × 10 = 90 AP. Drei davon
     // bleiben mit 270 im Budget …
     const departments = page.locator("#character-wizard .stat-budget").nth(1);
@@ -203,9 +170,10 @@ test.describe("Charakter-Assistent", () => {
   test("zeigt im letzten Schritt die vier Blätter mit den Eingaben", async ({
     page,
   }) => {
+    await page.getByRole("tab", { name: "Persönliche Daten" }).click();
     await page.locator("#wizard-name").fill("T'Rel");
     await page.locator("#wizard-rank").fill("Lieutenant");
-    await page.locator("#character-wizard ol button").nth(3).click();
+    await page.getByRole("tab", { name: "Dateien" }).click();
 
     const preview = page.locator("#character-wizard .pf-preview");
     await expect(preview).toBeVisible();
@@ -221,7 +189,7 @@ test.describe("Charakter-Assistent", () => {
     await expect(preview.locator(".pf-doc-wordmark")).toHaveCount(3);
     await expect(preview.getByText("T'Rel").first()).toBeVisible();
     await expect(
-      page.locator("#character-wizard .wizard-bar button[type='submit']"),
+      page.locator("#character-wizard [role='tabpanel'] button[type='submit']"),
     ).toBeVisible();
   });
 });
@@ -241,30 +209,51 @@ test.describe("Persönliche Angaben im Charakter-Assistenten", () => {
     await pronouns.fill("they/them");
     await expect(pronouns).toHaveValue("they/them");
 
-    const experience = page.locator("#wizard-personal-experience");
+    const personalPanel = page.locator("#character-editor-panel-personal");
+    await expect(personalPanel.locator("#wizard-personal-experience")).toHaveCount(0);
+    await expect(personalPanel.locator("#wizard-personal-characterRole")).toHaveCount(0);
+    await expect(personalPanel.locator("#wizard-personal-environment")).toHaveCount(0);
+    await expect(personalPanel.locator("#wizard-personal-careerPath")).toHaveCount(0);
+    await page.getByRole("tab", { name: "Werte" }).click();
+    await expect(page.locator("#wizard-stats-characterRole")).toBeVisible();
+    const experience = page.locator("#wizard-stats-experience");
     await experience.selectOption("experienced");
     await expect(experience).toHaveValue("experienced");
     expect(pageErrors).toEqual([]);
   });
+
+  test("hält Spezies, Laufbahnauswahlen und Fähigkeiten gemeinsam im Werte-Tab", async ({ page }) => {
+    await page.goto("/dev-gallery");
+    const valuesPanel = page.locator("#character-editor-panel-values");
+    const personalPanel = page.locator("#character-editor-panel-personal");
+
+    await expect(valuesPanel.locator(".character-species-picker")).toBeVisible();
+    await expect(valuesPanel.locator("#wizard-stats-environment")).toBeVisible();
+    await expect(valuesPanel.locator("#wizard-stats-upbringing")).toBeVisible();
+    await expect(valuesPanel.locator("#wizard-stats-careerPath")).toBeVisible();
+    await expect(personalPanel.locator(".character-species-picker")).toHaveCount(0);
+
+    await valuesPanel.locator(".character-species-picker summary").click();
+    await valuesPanel.getByRole("checkbox", { name: "Mensch (Human)" }).check();
+    await expect(valuesPanel.getByRole("checkbox", { name: /Human — Faith of the Heart/ })).toBeVisible();
+  });
 });
 
-// Die Schrittleiste ist auf schmalen Geräten reine Icon-Leiste (Breakpoint
-// 520px in character-stats.css) — hier geprüft an den beiden Viewports, die
-// playwright.config.ts ohnehin fährt (mobile 375px, desktop 1280px).
+// Die Tab-Leiste und die langen Eingabebereiche bleiben auf schmalen Geräten
+// innerhalb des Viewports.
 test.describe("Breite auf schmalen Geräten", () => {
-  test("Assistent läuft in jedem Schritt ohne Querscrollen", async ({
+  test("Assistent läuft in jedem Tab ohne Querscrollen", async ({
     page,
     viewport,
   }) => {
     test.skip(!viewport || viewport.width > 520, "nur im mobilen Projekt");
     await page.goto("/dev-gallery");
     await expect(
-      page.locator("#character-wizard ol button").first(),
-    ).toHaveAttribute("aria-current", "step");
-    await page.locator("#wizard-name").fill("T'Rel");
+      page.getByRole("tab", { name: "Werte" }),
+    ).toHaveAttribute("aria-selected", "true");
 
-    for (const step of [0, 1, 2, 3]) {
-      await page.locator("#character-wizard ol button").nth(step).click();
+    for (const label of ["Werte", "Persönliche Daten", "Biografie", "Dateien"]) {
+      await page.getByRole("tab", { name: label }).click();
       const overflowing = await page.evaluate(() => {
         const doc = document.documentElement;
         return [...document.querySelectorAll("#character-wizard *")].filter(
@@ -273,7 +262,7 @@ test.describe("Breite auf schmalen Geräten", () => {
             el.getBoundingClientRect().right > doc.clientWidth + 1,
         ).length;
       });
-      expect(overflowing, `Schritt ${step + 1}`).toBe(0);
+      expect(overflowing, `Tab ${label}`).toBe(0);
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth),
       ).toBeLessThanOrEqual(
@@ -282,46 +271,30 @@ test.describe("Breite auf schmalen Geräten", () => {
     }
   });
 
-  test("Schrittleiste zeigt mobil nur die Icons", async ({
+  test("Tab-Leiste bleibt mobil lesbar und im Viewport", async ({
     page,
     viewport,
   }) => {
     test.skip(!viewport || viewport.width > 520, "nur im mobilen Projekt");
     await page.goto("/dev-gallery");
-    const first = page.locator("#character-wizard ol button").first();
-    await expect(first).toHaveAttribute("aria-current", "step");
-
-    // Alle vier Schritte plus die Blätter-Knöpfe stehen nebeneinander in
-    // einer Zeile, statt umzubrechen.
-    const tops = await page
-      .locator("#character-wizard ol button")
-      .evaluateAll((els) =>
-        els.map((el) => Math.round(el.getBoundingClientRect().top)),
-      );
-    expect(new Set(tops).size).toBe(1);
-
-    // Icon ja, sichtbare Beschriftung nein (sie bleibt im aria-label).
-    // Geprüft an der Fläche statt über toBeHidden: die Beschriftung wird
-    // per clip-path weggeschnitten und bleibt damit für Screenreader
-    // lesbar — für Playwright ist so ein Element weiterhin „visible".
-    await expect(first.locator("svg")).toBeVisible();
-    const labelBox = await first.locator(".wizard-step-label").boundingBox();
-    expect(labelBox?.width ?? 0).toBeLessThanOrEqual(1);
-    const buttonBox = await first.boundingBox();
-    expect(buttonBox?.width ?? 0).toBeLessThanOrEqual(48);
+    const tabs = page.locator("#character-wizard [role='tablist'] [role='tab']");
+    await expect(tabs).toHaveCount(4);
+    await expect(tabs).toHaveText(["Werte", "Persönliche Daten", "Biografie", "Dateien"]);
+    const rightEdges = await tabs.evaluateAll((elements) =>
+      elements.map((element) => element.getBoundingClientRect().right),
+    );
+    const viewportWidth = await page.evaluate(() => document.documentElement.clientWidth);
+    expect(rightEdges.every((right) => right <= viewportWidth + 1)).toBe(true);
   });
 
-  test("Schrittleiste zeigt auf dem Desktop die Beschriftung", async ({
+  test("Tab-Leiste zeigt auf dem Desktop alle Beschriftungen", async ({
     page,
     viewport,
   }) => {
     test.skip(!viewport || viewport.width <= 520, "nur im Desktop-Projekt");
     await page.goto("/dev-gallery");
-    const first = page.locator("#character-wizard ol button").first();
-    await expect(first).toHaveAttribute("aria-current", "step");
-    await expect(first.locator(".wizard-step-label")).toHaveText(
-      "1. Stammdaten",
-    );
+    const tabs = page.locator("#character-wizard [role='tablist'] [role='tab']");
+    await expect(tabs).toHaveText(["Werte", "Persönliche Daten", "Biografie", "Dateien"]);
   });
 });
 
