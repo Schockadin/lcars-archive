@@ -19,7 +19,9 @@ import { test, expect } from "@playwright/test";
 // ans Element findet.
 const FONT_VARS = [
   { name: "--font-antonio", expect: "Antonio" },
-  { name: "--font-share-tech-mono", expect: "Share Tech Mono" },
+  // next/font gibt in der CSS-Variable die generierte Font-Familie aus; der
+  // lesbare Name wird weiter unten am tatsächlich berechneten Stil geprüft.
+  { name: "--font-share-tech-mono", expect: "shareTechMono" },
 ];
 
 for (const { name, expect: expected } of FONT_VARS) {

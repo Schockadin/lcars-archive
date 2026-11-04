@@ -8,7 +8,7 @@ on:
 # Wird die Prüfung für denselben Branch erneut angestoßen, zählt nur der
 # jüngste Lauf.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:

@@ -156,6 +156,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "charaktererschaffung",
       },
       {
+        text: "Der Werte-Tab bündelt Spezies, Herkunft, Erziehung, Laufbahn, Rolle und Erfahrungsstufe. Die STA-2e-Werte dafür werden aus passenden Auswahllisten übernommen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
         text: "Spezies lassen sich mehrfach auswählen; verfügbare Species Abilities richten sich nach der Auswahl. STA-2e-Rollen zeigen ihren passenden Role Bonus automatisch an.",
         category: "charaktere",
         tutorial: "charaktererschaffung",
