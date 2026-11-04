@@ -1084,9 +1084,9 @@ export default function TutorialPage() {
               </p>
               <p>
                 Nicht als Markdown gedacht sind drei Stellen, an denen der Text
-                eine andere Bedeutung hat: die <strong>Listenfelder</strong> des
-                Charakterbogens („Spezies-Fähigkeit“, „Sonderregeln“ — dort ist
-                jede Zeile ein eigener Eintrag), die Feldwerte im{" "}
+                eine andere Bedeutung hat: ergänzende{" "}
+                <strong>Regelnotizen</strong> zum automatisch bestimmten{" "}
+                <strong>Role Bonus</strong>, die Feldwerte im{" "}
                 <strong>Datenbank-Bereich</strong> der Administration (dort
                 steht der rohe Wert der Spalte) und die Zusammenfassung beim{" "}
                 <strong>Markdown-Import</strong> (sie wird als reiner Text

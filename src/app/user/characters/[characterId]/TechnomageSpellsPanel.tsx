@@ -24,10 +24,7 @@ import {
   technomageLevelFromAp,
   technomagePowerPointMaximum,
 } from "@/lib/technomageSpellRules";
-import type {
-  CharacterStats,
-  TechnomageSchool,
-} from "@/types/characterStats";
+import type { CharacterStats, TechnomageSchool } from "@/types/characterStats";
 import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import {
   buyTechnomageSpellAction,
@@ -109,10 +106,7 @@ function SchoolSetup({
       </label>
       <div className="grid gap-[10px] sm:grid-cols-3">
         {weak.map((value, index) => (
-          <label
-            key={index}
-            className="flex flex-col gap-[4px] text-sm"
-          >
+          <label key={index} className="flex flex-col gap-[4px] text-sm">
             Schwache Schule {index + 1}
             <select
               name="weakSchool"
@@ -171,8 +165,11 @@ function SpellTooltip({
 }) {
   const spell = getTechnomageSpell(spellId, spells);
   if (!spell) return null;
-  const requirementGroups = spellPrerequisiteGroups(spell.id, spells).map((group) =>
-    group.map((id) => getTechnomageSpell(id, spells)).filter((entry) => entry !== undefined),
+  const requirementGroups = spellPrerequisiteGroups(spell.id, spells).map(
+    (group) =>
+      group
+        .map((id) => getTechnomageSpell(id, spells))
+        .filter((entry) => entry !== undefined),
   );
   const details = technomageSpellDetails(spell, primarySchool, weakSchools);
 
@@ -194,7 +191,9 @@ function SpellTooltip({
         </dl>
       )}
       <p className="mb-[8px]">
-        <strong className="block text-lcars-senary-ink">Spell-Beschreibung</strong>
+        <strong className="block text-lcars-senary-ink">
+          Spell-Beschreibung
+        </strong>
         {details.mechanics}
       </p>
       <p className="mb-[8px]">
@@ -219,9 +218,7 @@ function SpellTooltip({
           Elementarkategorie: {spell.elementalCategory}
         </p>
       )}
-      <p className="mt-[6px] opacity-60">
-        Fact Book, S. {spell.sourcePage}
-      </p>
+      <p className="mt-[6px] opacity-60">Fact Book, S. {spell.sourcePage}</p>
     </div>
   );
 }
@@ -251,7 +248,8 @@ function SpellTree({
 }) {
   const orderedSpells = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase();
-    return moduleSpells.filter((spell) => spell.school === schoolId)
+    return moduleSpells
+      .filter((spell) => spell.school === schoolId)
       .map((spell) => ({
         spell,
         slotCost: getSpellPurchaseSlotCost({
@@ -310,7 +308,10 @@ function SpellTree({
       )}
       {orderedSpells.map(({ spell, slotCost }) => {
         const learned = known.has(spell.id);
-        const prerequisiteGroups = spellPrerequisiteGroups(spell.id, moduleSpells);
+        const prerequisiteGroups = spellPrerequisiteGroups(
+          spell.id,
+          moduleSpells,
+        );
         const prerequisiteIds = prerequisiteGroups.flat();
         const foreignDependencies = prerequisiteIds
           .map((id) => getTechnomageSpell(id, moduleSpells))
@@ -354,13 +355,21 @@ function SpellTree({
                   {schoolId === "elements" && spell.elementalCategory
                     ? spell.elementalCategory
                     : "Stufe " +
-                      (spellTreeDepth(spell.id, schoolId, new Set(), moduleSpells) + 1)}
+                      (spellTreeDepth(
+                        spell.id,
+                        schoolId,
+                        new Set(),
+                        moduleSpells,
+                      ) +
+                        1)}
                 </span>
                 {localRequirementGroups.length > 0 && (
                   <span className="block text-[11px] opacity-70">
                     Voraussetzung:{" "}
                     {localRequirementGroups
-                      .map((group) => group.map((entry) => entry.name).join(" oder "))
+                      .map((group) =>
+                        group.map((entry) => entry.name).join(" oder "),
+                      )
                       .join(" + ")}
                   </span>
                 )}
@@ -372,7 +381,10 @@ function SpellTree({
                     title={foreignDependencies
                       .map(
                         (entry) =>
-                          entry.name + " · " + (getTechnomageSchool(entry.school, moduleSchools)?.label ?? entry.school),
+                          entry.name +
+                          " · " +
+                          (getTechnomageSchool(entry.school, moduleSchools)
+                            ?.label ?? entry.school),
                       )
                       .join(", ")}
                   >
@@ -404,7 +416,7 @@ function SpellTree({
   );
 }
 
-function PowerPointTracker({
+export function TechnomagePowerPointTracker({
   userId,
   characterId,
   stats,
@@ -440,11 +452,14 @@ function PowerPointTracker({
           <h3 className="font-bold">Power Points</h3>
           <p className="text-xs opacity-75">
             Maximum: 10 + 1d6 + Fitness-Mod. + Presence-Mod.; je weitere Stufe
-            1d4 + Presence-Mod., auf Stufe 5/10/15/20 zusätzlich +3.
-            Modifikator = Attributwert − 7.
+            1d4 + Presence-Mod., auf Stufe 5/10/15/20 zusätzlich +3. Modifikator
+            = Attributwert − 7.
           </p>
         </div>
-        <p className="rounded-full border border-current/50 px-[12px] py-[6px] font-bold" role="status">
+        <p
+          className="rounded-full border border-current/50 px-[12px] py-[6px] font-bold"
+          role="status"
+        >
           {current} / {maximum} PP
         </p>
       </div>
@@ -480,8 +495,14 @@ function PowerPointTracker({
         <input type="hidden" name="operation" value="recover" />
         <label className="flex flex-col gap-[4px] text-sm">
           Aktivität
-          <select className="lcars-input w-full" name="activity" defaultValue="meditation">
-            <option value="meditation">Ruhige Meditation / Schlaf · 10 Min. je PP</option>
+          <select
+            className="lcars-input w-full"
+            name="activity"
+            defaultValue="meditation"
+          >
+            <option value="meditation">
+              Ruhige Meditation / Schlaf · 10 Min. je PP
+            </option>
             <option value="light">Leichte Aktivität · 30 Min. je PP</option>
             <option value="strenuous">Anstrengung · 60 Min. je PP</option>
           </select>
@@ -561,7 +582,8 @@ export default function TechnomageSpellsPanel({
   const moduleSchools = moduleDefinition.schools;
   const level = technomageLevelFromAp(earnedAp);
   const total = technomageKnownSpellLimit(level, stats.attributes.reason);
-  const selectedModuleTalents = stats.ruleModules["technomage"]?.selectedTalents ?? [];
+  const selectedModuleTalents =
+    stats.ruleModules["technomage"]?.selectedTalents ?? [];
   const concurrentSpellCapacity = technomageConcurrentSpellCapacity(
     stats.attributes.fitness,
     selectedModuleTalents.filter((id) => id === "multi-tasking").length,
@@ -575,192 +597,7 @@ export default function TechnomageSpellsPanel({
   );
 
   return (
-    <section
-      aria-labelledby="technomage-spells-title"
-      className="flex flex-col gap-[12px] rounded-[12px] border border-current/30 p-[12px]"
-    >
-      <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-[8px] rounded-[8px] bg-black/90 px-[10px] py-[8px]">
-        <div>
-          <h2 id="technomage-spells-title" className="text-lg font-bold">
-            Spells
-          </h2>
-          <p className="text-xs opacity-75">
-            Techno-Mage-Stufe {level} · {earnedAp} AP vergeben
-            {" · "}{concurrentSpellCapacity} gleichzeitig aktive Spells
-            {nextLevelAp === null
-              ? " · höchste Stufe"
-              : ` · Stufe ${level + 1} ab ${nextLevelAp} AP`}
-          </p>
-        </div>
-        <p
-          className="rounded-full border border-current/50 px-[12px] py-[6px] font-bold"
-          role="status"
-          aria-live="polite"
-        >
-          Bekannte Spells: {learnedCount} / {total} · noch {available} lernbar
-        </p>
-      </div>
-
-      <p className="text-xs opacity-75">
-        Das Fact Book kennt keine Spellgrade oder täglichen Slots. Die AP-Stufen
-        folgen der AP-Formel aus dem STA-2e-Fact-Book; 40 AP ergeben Stufe 4.
-        Würfelwerte für Spell- und PP-Zuwachs werden als Erwartungswert
-        berechnet und kumuliert gerundet. STA-2e-Modifikatoren sind jeweils
-        Attributwert − 7; Reason bestimmt die Spell-Kapazität, Fitness und
-        Presence das PP-Maximum. Magery nutzt Reason oder Daring + Science.
-        Bekannte Spells können mit ausreichenden PP gewirkt werden; ihre
-        individuellen Casting- und Maintenance-Kosten werden bei der PP-Ausgabe
-        manuell gebucht.
-      </p>
-
-      <PowerPointTracker
-        userId={userId}
-        characterId={characterId}
-        stats={stats}
-        earnedAp={earnedAp}
-      />
-
-      <div className="flex flex-wrap gap-[6px] text-xs">
-        {moduleSchools.map((school) => (
-          <span
-            key={school.id}
-            className={
-              "rounded-full border px-[8px] py-[4px] " +
-              (school.id === technomage.primarySchool
-                ? "border-lcars-senary-ink text-lcars-senary-ink"
-                : technomage.weakSchools.includes(school.id)
-                  ? "border-current/40 opacity-70"
-                  : "border-current/20 opacity-80")
-            }
-          >
-            {school.label}
-            {school.id === technomage.primarySchool
-              ? " · Primär"
-              : technomage.weakSchools.includes(school.id)
-                ? " · Schwach"
-                : ""}
-          </span>
-        ))}
-      </div>
-
-      {!configured ? (
-        <SchoolSetup userId={userId} characterId={characterId} schools={moduleSchools} />
-      ) : (
-        <>
-          <p className="text-sm">
-            Primär:{" "}
-            {getTechnomageSchool(technomage.primarySchool, moduleSchools)?.label ?? "—"} ·
-            Schwach:{" "}
-            {technomage.weakSchools
-              .map((school) => getTechnomageSchool(school, moduleSchools)?.label ?? school)
-              .join(", ")}
-          </p>
-          <div
-            className="flex items-center gap-[8px]"
-            aria-label="Spell-Schulen"
-          >
-            <button
-              type="button"
-              aria-label="Vorherige Schule"
-              onClick={() =>
-                setSchoolIndex(
-                  (current) =>
-                    (current + moduleSchools.length - 1) %
-                    moduleSchools.length,
-                )
-              }
-              className="lcars-pill-btn--outline"
-            >
-              ‹
-            </button>
-            <div
-              role="tablist"
-              aria-label="Techno-Magie-Schulen"
-              className="flex min-w-0 flex-1 gap-[6px] overflow-x-auto py-[2px]"
-            >
-              {moduleSchools.map((school, index) => (
-                <button
-                  key={school.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={schoolIndex === index}
-                  onClick={() => setSchoolIndex(index)}
-                  className={
-                    "whitespace-nowrap rounded-full border px-[10px] py-[6px] text-sm " +
-                    (schoolIndex === index
-                      ? "border-lcars-senary-ink bg-lcars-senary-ink/15"
-                      : "border-current/25 opacity-75")
-                  }
-                >
-                  {school.label}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              aria-label="Nächste Schule"
-              onClick={() => setSchoolIndex((current) => (current + 1) % moduleSchools.length)}
-              className="lcars-pill-btn--outline"
-            >
-              ›
-            </button>
-          </div>
-          <p className="text-sm opacity-75">
-            {activeSchool.label} · {activeSchool.original} ·{" "}
-            {
-              moduleSpells.filter(
-                (spell) => spell.school === activeSchool.id,
-              ).length
-            }{" "}
-            Spells
-          </p>
-          <label className="flex flex-col gap-[4px] text-sm">
-            Spell-Liste durchsuchen
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Name, Voraussetzung oder STA-Mechanik"
-              className="w-full rounded-[8px] border border-current/30 bg-black/20 px-[10px] py-[8px] placeholder:opacity-60"
-            />
-          </label>
-          <label className="flex items-center gap-[8px] text-sm">
-            <input
-              type="checkbox"
-              checked={reachableOnly}
-              onChange={(event) => setReachableOnly(event.target.checked)}
-              className="accent-lcars-primary"
-            />
-            Nur mit den freien Spellplätzen erreichbare Spells
-          </label>
-          <p className="text-xs opacity-70">
-            Die Kosten berücksichtigen Spells, die beim Kauf als Voraussetzung
-            automatisch mitgelernt werden.
-          </p>
-          <form action={action} className="flex flex-col gap-[10px]">
-            <input type="hidden" name="userId" value={userId} />
-            <input type="hidden" name="characterId" value={characterId} />
-            <SpellTree
-              schoolId={activeSchool.id}
-              knownSpellIds={technomage.spells}
-              primarySchool={technomage.primarySchool}
-              weakSchools={technomage.weakSchools}
-              pending={pending}
-              searchQuery={searchQuery}
-              availableSlots={available}
-              reachableOnly={reachableOnly}
-              moduleSpells={moduleSpells}
-              moduleSchools={moduleSchools}
-            />
-            <FormError message={state.error} />
-          </form>
-          {state.success && (
-            <p className="text-sm text-lcars-senary-ink" role="status">
-              {state.success}
-            </p>
-          )}
-        </>
-      )}
+    <div className="flex flex-col gap-[12px]">
       <LearnedSpellsSection
         learnedSpellIds={technomage.spells}
         primarySchool={technomage.primarySchool}
@@ -768,6 +605,190 @@ export default function TechnomageSpellsPanel({
         spells={moduleSpells}
         schools={moduleSchools}
       />
-    </section>
+
+      <details className="stat-sheet-section stat-sheet-collapsible">
+        <summary className="stat-sheet-section-title">
+          <span className="lcars-data-row-chevron" aria-hidden="true" />
+          <h2 className="stat-sheet-panel-heading">Spells kaufen</h2>
+          <span className="ml-auto text-xs normal-case tracking-normal">
+            Stufe {level} · {earnedAp} AP · {concurrentSpellCapacity}{" "}
+            gleichzeitig aktive Spells
+            {nextLevelAp === null
+              ? " · höchste Stufe"
+              : ` · Stufe ${level + 1} ab ${nextLevelAp} AP`}
+            {" · "}Bekannte Spells: {learnedCount} / {total} · noch {available}{" "}
+            lernbar
+          </span>
+        </summary>
+        <div className="flex flex-col gap-[12px] px-[14px]">
+          <p className="text-xs opacity-75">
+            Das Fact Book kennt keine Spellgrade oder täglichen Slots. Die
+            AP-Stufen folgen der AP-Formel aus dem STA-2e-Fact-Book; 40 AP
+            ergeben Stufe 4. Würfelwerte für Spell- und PP-Zuwachs werden als
+            Erwartungswert berechnet und kumuliert gerundet.
+            STA-2e-Modifikatoren sind jeweils Attributwert − 7; Reason bestimmt
+            die Spell-Kapazität, Fitness und Presence das PP-Maximum. Magery
+            nutzt Reason oder Daring + Science. Bekannte Spells können mit
+            ausreichenden PP gewirkt werden; ihre individuellen Casting- und
+            Maintenance-Kosten werden bei der PP-Ausgabe manuell gebucht.
+          </p>
+
+          <div className="flex flex-wrap gap-[6px] text-xs">
+            {moduleSchools.map((school) => (
+              <span
+                key={school.id}
+                className={
+                  "rounded-full border px-[8px] py-[4px] " +
+                  (school.id === technomage.primarySchool
+                    ? "border-lcars-senary-ink text-lcars-senary-ink"
+                    : technomage.weakSchools.includes(school.id)
+                      ? "border-current/40 opacity-70"
+                      : "border-current/20 opacity-80")
+                }
+              >
+                {school.label}
+                {school.id === technomage.primarySchool
+                  ? " · Primär"
+                  : technomage.weakSchools.includes(school.id)
+                    ? " · Schwach"
+                    : ""}
+              </span>
+            ))}
+          </div>
+
+          {!configured ? (
+            <SchoolSetup
+              userId={userId}
+              characterId={characterId}
+              schools={moduleSchools}
+            />
+          ) : (
+            <>
+              <p className="text-sm">
+                Primär:{" "}
+                {getTechnomageSchool(technomage.primarySchool, moduleSchools)
+                  ?.label ?? "—"}{" "}
+                · Schwach:{" "}
+                {technomage.weakSchools
+                  .map(
+                    (school) =>
+                      getTechnomageSchool(school, moduleSchools)?.label ??
+                      school,
+                  )
+                  .join(", ")}
+              </p>
+              <div
+                className="flex items-center gap-[8px]"
+                aria-label="Spell-Schulen"
+              >
+                <button
+                  type="button"
+                  aria-label="Vorherige Schule"
+                  onClick={() =>
+                    setSchoolIndex(
+                      (current) =>
+                        (current + moduleSchools.length - 1) %
+                        moduleSchools.length,
+                    )
+                  }
+                  className="lcars-pill-btn--outline"
+                >
+                  ‹
+                </button>
+                <div
+                  role="tablist"
+                  aria-label="Techno-Magie-Schulen"
+                  className="flex min-w-0 flex-1 gap-[6px] overflow-x-auto py-[2px]"
+                >
+                  {moduleSchools.map((school, index) => (
+                    <button
+                      key={school.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={schoolIndex === index}
+                      onClick={() => setSchoolIndex(index)}
+                      className={
+                        "whitespace-nowrap rounded-full border px-[10px] py-[6px] text-sm " +
+                        (schoolIndex === index
+                          ? "border-lcars-senary-ink bg-lcars-senary-ink/15"
+                          : "border-current/25 opacity-75")
+                      }
+                    >
+                      {school.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Nächste Schule"
+                  onClick={() =>
+                    setSchoolIndex(
+                      (current) => (current + 1) % moduleSchools.length,
+                    )
+                  }
+                  className="lcars-pill-btn--outline"
+                >
+                  ›
+                </button>
+              </div>
+              <p className="text-sm opacity-75">
+                {activeSchool.label} · {activeSchool.original} ·{" "}
+                {
+                  moduleSpells.filter(
+                    (spell) => spell.school === activeSchool.id,
+                  ).length
+                }{" "}
+                Spells
+              </p>
+              <label className="flex flex-col gap-[4px] text-sm">
+                Spell-Liste durchsuchen
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Name, Voraussetzung oder STA-Mechanik"
+                  className="w-full rounded-[8px] border border-current/30 bg-black/20 px-[10px] py-[8px] placeholder:opacity-60"
+                />
+              </label>
+              <label className="flex items-center gap-[8px] text-sm">
+                <input
+                  type="checkbox"
+                  checked={reachableOnly}
+                  onChange={(event) => setReachableOnly(event.target.checked)}
+                  className="accent-lcars-primary"
+                />
+                Nur mit den freien Spellplätzen erreichbare Spells
+              </label>
+              <p className="text-xs opacity-70">
+                Die Kosten berücksichtigen Spells, die beim Kauf als
+                Voraussetzung automatisch mitgelernt werden.
+              </p>
+              <form action={action} className="flex flex-col gap-[10px]">
+                <input type="hidden" name="userId" value={userId} />
+                <input type="hidden" name="characterId" value={characterId} />
+                <SpellTree
+                  schoolId={activeSchool.id}
+                  knownSpellIds={technomage.spells}
+                  primarySchool={technomage.primarySchool}
+                  weakSchools={technomage.weakSchools}
+                  pending={pending}
+                  searchQuery={searchQuery}
+                  availableSlots={available}
+                  reachableOnly={reachableOnly}
+                  moduleSpells={moduleSpells}
+                  moduleSchools={moduleSchools}
+                />
+                <FormError message={state.error} />
+              </form>
+              {state.success && (
+                <p className="text-sm text-lcars-senary-ink" role="status">
+                  {state.success}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      </details>
+    </div>
   );
 }

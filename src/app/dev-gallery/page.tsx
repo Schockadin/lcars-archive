@@ -575,6 +575,7 @@ export default function DevGalleryPage() {
           talents={DEMO_TALENTS}
           focuses={DEMO_FOCUSES}
           campaignRules={DEMO_RULES}
+          ruleModules={[]}
         />
       </section>
 

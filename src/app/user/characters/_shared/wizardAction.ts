@@ -16,9 +16,14 @@ import { synopsisExcerpt } from "@/lib/missionFormat";
 import { userCan } from "@/lib/permissions";
 import { parseStatsPayload } from "@/lib/characterStatsPayload";
 import { checkOpenCreationStats } from "@/lib/characterStatsRules";
+import { applySta2eLifepath, checkSta2eLifepath, checkSta2eProfileChoices } from "@/lib/sta2eLifepath";
+import { checkSta2ePointBuy } from "@/lib/sta2ePointBuy";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
+import { listCampaignRuleModules, moduleSupportsCharacterRole } from "@/lib/campaignRuleModules";
+import { sanitizeRuleModuleCharacterData } from "@/lib/ruleModuleCharacterData";
+import { filterSpeciesAbilitiesForSpecies, normalizeSpeciesSelection } from "@/lib/sta2eCharacterOptions";
 import { readCharacterHead } from "./characterHead";
 import {
   characterEditHref,
@@ -57,10 +62,13 @@ export async function createCharacterWizardAction(
   const headResult = await readCharacterHead(formData, undefined, session.userId);
   if ("error" in headResult) return { error: headResult.error };
   const head = headResult.head;
+  const selectedSpecies = normalizeSpeciesSelection(head.species);
+  if (!selectedSpecies) return { error: "Ungültige Spezies-Auswahl." };
+  head.species = selectedSpecies;
 
   const statsResult = parseStatsPayload(formData.get("statsJson"));
   if ("error" in statsResult) return { error: statsResult.error };
-  const stats = statsResult.stats;
+  let stats = statsResult.stats;
   // creationLocked kommt nie aus dem Formular: ein frisch angelegter Charakter
   // steht immer am Anfang seiner Erschaffung, abgeschlossen wird sie später
   // ausdrücklich (siehe lockCreationAction).
@@ -68,11 +76,27 @@ export async function createCharacterWizardAction(
   // Dasselbe gilt für die Notiz zurückgenommener Steigerungen: ein neuer
   // Charakter hat noch nichts gesteigert, das zurückgenommen sein könnte.
   stats.pendingAdvancements = [];
+  stats.speciesAbilities = filterSpeciesAbilitiesForSpecies(
+    stats.speciesAbilities,
+    selectedSpecies,
+  );
+  const profileError = checkSta2eProfileChoices(stats);
+  if (profileError) return { error: profileError };
 
-  const [rules, catalog, focusCatalog] = await Promise.all([
+  if (stats.creationMethod === "sta2e-lifepath") {
+    const lifepathErrors = checkSta2eLifepath(stats, head.species, head.rank);
+    if (lifepathErrors.length > 0) return { error: lifepathErrors.join(" ") };
+    stats = applySta2eLifepath(stats, head.species);
+  } else if (stats.creationMethod === "sta2e-point-buy") {
+    const pointBuyErrors = checkSta2ePointBuy(stats);
+    if (pointBuyErrors.length > 0) return { error: pointBuyErrors.join(" ") };
+  }
+
+  const [rules, catalog, focusCatalog, campaignModules] = await Promise.all([
     getAdvancementRules(),
     listTalents(),
     listFocuses(),
+    listCampaignRuleModules(),
   ]);
   const statsError = checkOpenCreationStats(
     stats,
@@ -82,6 +106,20 @@ export async function createCharacterWizardAction(
     focusCatalog.map((focus) => focus.name),
   );
   if (statsError) return { error: statsError };
+
+  const matchingModules = new Map(
+    campaignModules
+      .filter((module) => module.enabled && moduleSupportsCharacterRole(module.definition, stats.characterRole))
+      .map((module) => [module.definition.id, module.definition]),
+  );
+  stats.ruleModules = Object.fromEntries(
+    Object.entries(stats.ruleModules).flatMap(([moduleId, data]) => {
+      const definition = matchingModules.get(moduleId);
+      return definition
+        ? [[moduleId, sanitizeRuleModuleCharacterData(definition, data)]]
+        : [];
+    }),
+  );
 
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   let bioHtml: string | undefined;

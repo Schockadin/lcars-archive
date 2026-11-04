@@ -1,15 +1,14 @@
 name: CI
 
 on:
-  # Bewusst nur manuell: Der vollständige Lauf wird unmittelbar vor einem
-  # Merge für den aktuellen PR-Branch gestartet. Pushes und PR-Aktualisierungen
-  # verbrauchen dadurch keine Runner-Zeit, solange noch gearbeitet wird.
+  push:
+  pull_request:
   workflow_dispatch:
 
 # Wird die Prüfung für denselben Branch erneut angestoßen, zählt nur der
 # jüngste Lauf.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -50,9 +49,14 @@ jobs:
 
       - run: npm ci
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - run: npm run lint
 
       - run: npm test
+
+      - run: npm run test:e2e
 
       # DB-Integrationstests (tests/integration/). Sie liefen lange gar nicht
       # mit — und genau deshalb blieb eine veraltete Erwartung über zehn

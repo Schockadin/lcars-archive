@@ -37,6 +37,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   deaktivieren, anlegen und löschen. Eigene Module können frei benannte
   Inhaltsbereiche mit eigenen Feldern und von Charakteren auswählbaren
   Einträgen enthalten.
+- **Charaktereditor mit Tabs** — Werte, persönliche Daten, Biografie und Dateien
+  werden beim Anlegen und Bearbeiten in denselben Bereichen gepflegt. Module
+  können bei passenden Charakterrollen eigene Tabs beisteuern. Spezies lassen
+  sich mehrfach auswählen; dazu passende Species Abilities sowie die STA-2e-
+  Rollenboni werden im Wertebereich angezeigt. Career Events können aus der
+  STA-2e-W20-Tabelle gewählt oder gewürfelt werden; Boni, Fokusvorschläge und
+  optionale Traits stehen direkt am jeweiligen Ereignis.
 - **Missionen & Mission-Logs** — Logbucheinträge sind Charakteren und Missionen zugeordnet
   und chronologisch nach Session-Nummer sortiert.
 - **Nutzerkonten & granulares Rechtesystem (RBAC)** — die Autorisierung läuft über
@@ -219,9 +226,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   nicht die Primärrolle; serverseitig maßgeblich bleibt
   `createCharacterWizardAction`.
 
-- **Anlegen als Assistent** (`/user/characters/new`) — vier Schritte:
-  Stammdaten, Werte, Biografie, Vorschau. Alle vier liegen in **einem**
-  Formular und bleiben im DOM (nur ausgeblendet): das Blättern verliert keine
+- **Anlegen als Assistent** (`/user/characters/new`) — Tabs für Werte,
+  persönliche Daten, Biografie und Dateien; passende aktivierte Regelmodule
+  ergänzen eigene Tabs. Alles liegt in **einem** Formular und bleibt im DOM
+  (nur ausgeblendet): das Blättern verliert keine
   Eingabe, und am Ende schickt ein einziger Submit alles zusammen ab
   (`createCharacterWizardAction` legt Akte und Werte in derselben `INSERT`).
   Vor „Fertig" ist nichts gespeichert — ein abgebrochener Assistent
@@ -238,14 +246,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (`statsJson`) statt als vierzig Einzelfelder; `parseStatsPayload`
   (`src/lib/characterStatsPayload.ts`) normalisiert ihn und meldet dabei jede
   Zahl außerhalb ihres Bereichs mit Feldnamen, statt sie stillschweigend zu
-  verwerfen. Gepflegt werden: Personalakte (Pronomen, Rolle, Zuweisung,
-  Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale), sechs Attribute und
-  sechs Disziplinen, Protection/Determination/Reputation/Stress-Bonus sowie die
-  Listenfelder (Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten,
-  Sonderregeln, Angriffe, Ausrüstung, Hobbys, Karriere-Ereignisse).
-- **Die eigene Charakterseite** (`/user/characters/[id]`) — Profilbild,
-  Personalakte, Werte, Biografie und Versionen als standardmäßig offene
-  **Klapp-Panels untereinander** statt getrennter Seiten mit Umschalter. Das
+  verwerfen. Gepflegt werden: sechs Attribute und sechs Disziplinen,
+  Protection/Determination/Reputation/Stress-Bonus sowie Listenfelder (Werte,
+  Schwerpunkte, Talente, Angriffe, Ausrüstung, Hobbys, Karriere-Ereignisse).
+  Die Personalakte liegt im eigenen
+  Tab und enthält Rolle, Zuweisung, Herkunft, Erziehung, Laufbahn und Erfahrung.
+  Spezies sind mehrfach auswählbar; passende Species Abilities und der
+  rollenabhängige Role Bonus werden im Wertebereich angezeigt.
+- **Die eigene Charakterseite** (`/user/characters/[id]`) — Tabs für Werte,
+  optionale Regelmodule, persönliche Daten, Biografie und Dateien. Regelmodule
+  können eigene Tabs für passende Charakterrollen beisteuern. Das
   Profilbild hat einen eigenen Speicherweg; die Personalakte führt Stammdaten
   und die früher doppelten Personnel-File-Kopfdaten zusammen. Personalakte und
   Biografie haben je einen Stift-Knopf und werden an
@@ -493,9 +503,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Listen im Werte-Editor** — dasselbe Muster für alle: Einträge als Zeilen
   mit rotem Minus, „Hinzufügen" öffnet ein Fenster mit freiem Eingabefeld
   (`EntryAddModal.tsx`), Talente stattdessen den Katalog (`TalentPicker.tsx`).
-  Spezies-Fähigkeiten und Sonderregeln bleiben bewusst Fließtext-Felder, dort
-  stehen ganze Regelsätze statt Aufzählungen. Werte und Schwerpunkte zeigen ihr
-  Freikontingent
+  Species Abilities werden aus den gewählten Spezies angeboten; der Role Bonus
+  folgt der STA-2e-Rolle und lässt ergänzende Regelnotizen zu. Werte und
+  Schwerpunkte zeigen ihr Freikontingent
   aus der Ersterschaffung an — bei den Schwerpunkten als harte Grenze (sie
   kosten danach AP, serverseitig geprüft), bei den Werten nur als Orientierung,
   da sie sich später nicht kaufen lassen. Die reine Hälfte (Kategorien,

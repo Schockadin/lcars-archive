@@ -3,16 +3,17 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import CharacterPanel from "./CharacterPanel";
 
 describe("CharacterPanel", () => {
-  it("ist ein standardmäßig geöffnetes Klapp-Panel", () => {
+  it("zeigt Überschrift und Inhalt in einem festen Panel", () => {
     const { container } = render(
       <CharacterPanel en="Biography" de="Biografie">
         <p>Inhalt</p>
       </CharacterPanel>,
     );
 
-    const panel = container.querySelector("details");
-    expect(panel).toBeInstanceOf(HTMLDetailsElement);
-    expect(panel).toHaveAttribute("open");
+    expect(container.querySelector("details")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Biography Biografie" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Inhalt")).toBeInTheDocument();
   });
 
@@ -32,6 +33,6 @@ describe("CharacterPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Bearbeiten" }));
 
     expect(onToggleEdit).toHaveBeenCalledTimes(1);
-    expect(container.querySelector("details")).toHaveAttribute("open");
+    expect(container.querySelector("details")).not.toBeInTheDocument();
   });
 });

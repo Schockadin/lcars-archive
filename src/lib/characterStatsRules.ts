@@ -21,9 +21,11 @@ export function checkTalentsFromCatalog(
 ): string | null {
   const known = new Set(catalogNames.map((name) => name.toLowerCase()));
   const stored = new Set(alreadyStored.map((entry) => entry.toLowerCase()));
+  const coreTalents = new Set(["untapped potential", "veteran"]);
   const unknown = talents.filter(
     (entry) =>
       !known.has(parseTalentEntry(entry).original.toLowerCase()) &&
+      !coreTalents.has(parseTalentEntry(entry).original.toLowerCase()) &&
       !stored.has(entry.toLowerCase()),
   );
   if (unknown.length === 0) return null;
@@ -85,6 +87,10 @@ export function checkOpenCreationStats(
   focusCatalogNames: string[] = [],
   focusesAlreadyStored: string[] = [],
 ): string | null {
+  if (stats.creationMethod === "sta2e-lifepath" && !stats.lifepath) {
+    return "Der STA-2e-Lifepath fehlt oder ist beschädigt.";
+  }
+
   const talentError = checkTalentsFromCatalog(
     stats.talents,
     catalogNames,
@@ -106,8 +112,10 @@ export function checkOpenCreationStats(
   );
   if (focusError) return focusError;
 
-  const freeError = checkCreationFreeCounts(stats, rules);
-  if (freeError) return freeError;
+  if (stats.creationMethod !== "sta2e-lifepath") {
+    const freeError = checkCreationFreeCounts(stats, rules);
+    if (freeError) return freeError;
+  }
 
   const ruleErrors = validateCharacterStats(stats);
   return ruleErrors.length > 0 ? ruleErrors.join(" ") : null;

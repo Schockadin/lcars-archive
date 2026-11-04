@@ -29,7 +29,7 @@ export default function CharacterNpcConversionPanel({
   if (!npcSlug && status === "active") return null;
 
   return (
-    <CharacterPanel en="NPC Conversion" de="NPC-Umwandlung" defaultOpen>
+    <CharacterPanel en="NPC Conversion" de="NPC-Umwandlung">
       <div className="flex flex-col gap-[12px] p-[12px]">
         {npcSlug ? (
           <>

@@ -11,12 +11,16 @@ import type {
   CharacterDepartments,
   CharacterExperience,
   CharacterStats,
+  LifepathCareerEvent,
+  LifepathCorrection,
   PendingAdvancement,
   RuleModuleCharacterData,
+  Sta2eLifepath,
   TechnomageCharacterData,
   TechnomageSchool,
 } from "@/types/characterStats";
 import { TECHNOMAGE_SCHOOL_IDS } from "@/types/characterStats";
+import { normalizeCareerEventEntry } from "@/lib/sta2eCareerEvents";
 
 // Labels: deutsches Label plus der englische Begriff des offiziellen Bogens —
 // die Spielrunde nutzt beides gemischt (siehe Beispielbogen). Das Formular
@@ -130,6 +134,13 @@ export const TEXT_FIELDS: StatFieldSpec<TextKey>[] = [
   { key: "traits", label: "Merkmale", original: "Species & Traits" },
 ];
 
+export type PersonalTextKey = "pronouns" | "assignment";
+
+export const PERSONAL_TEXT_FIELDS: StatFieldSpec<PersonalTextKey>[] = [
+  { key: "pronouns", label: "Pronomen", original: "Pronouns" },
+  { key: "assignment", label: "Zuweisung", original: "Assignment" },
+];
+
 export const EXPERIENCE_OPTIONS: { value: CharacterExperience; label: string }[] =
   [
     { value: "novice", label: "Neuling (Novice)" },
@@ -162,7 +173,7 @@ export const LIST_FIELDS: StatFieldSpec<ListKey>[] = [
   { key: "focuses", label: "Schwerpunkte", original: "Focuses" },
   { key: "talents", label: "Talente", original: "Talents" },
   { key: "speciesAbilities", label: "Spezies-Fähigkeiten", original: "Species Ability" },
-  { key: "specialRules", label: "Sonderregeln", original: "Special Rules" },
+  { key: "specialRules", label: "Rollenbonus", original: "Role Bonus" },
   { key: "attacks", label: "Angriffe", original: "Attacks" },
   { key: "equipment", label: "Ausrüstung", original: "Other Equipment" },
   { key: "careerEvents", label: "Karriere-Ereignisse", original: "Career Events" },
@@ -171,6 +182,8 @@ export const LIST_FIELDS: StatFieldSpec<ListKey>[] = [
 
 export const EMPTY_CHARACTER_STATS: CharacterStats = {
   creationLocked: false,
+  creationMethod: "ap",
+  lifepath: null,
   pendingAdvancements: [],
   pronouns: null,
   characterRole: null,
@@ -295,6 +308,10 @@ function normalizeList(value: unknown): string[] {
     .filter(Boolean);
 }
 
+function normalizeCareerEvents(value: unknown): string[] {
+  return normalizeList(value).map(normalizeCareerEventEntry);
+}
+
 function normalizeTechnomage(value: unknown): TechnomageCharacterData {
   const source = asRecord(value);
   const primarySchool =
@@ -366,6 +383,104 @@ function normalizeRuleModules(value: unknown): Record<string, RuleModuleCharacte
   return result;
 }
 
+function normalizeLifepath(value: unknown): Sta2eLifepath | null {
+  if (value === null || value === undefined) return null;
+  const source = asRecord(value);
+  const environment = asRecord(source.environment);
+  const upbringing = asRecord(source.upbringing);
+  const career = asRecord(source.career);
+  const experience = asRecord(source.experience);
+  const finishing = asRecord(source.finishing);
+  const roleBonus = asRecord(source.roleBonus);
+  const reallocation = asRecord(career.reallocation);
+  const careerEvents: LifepathCareerEvent[] = Array.isArray(source.careerEvents)
+    ? source.careerEvents.slice(0, 8).flatMap((raw): LifepathCareerEvent[] => {
+        const event = asRecord(raw);
+        const id = normalizeText(event.id);
+        if (!id) return [];
+        return [{
+          id,
+          attribute: normalizeText(event.attribute) as LifepathCareerEvent["attribute"],
+          department: normalizeText(event.department) as LifepathCareerEvent["department"],
+          focus: normalizeText(event.focus) ?? "",
+          trait: normalizeText(event.trait),
+          attributeBonus: event.attributeBonus !== false,
+          departmentBonus: event.departmentBonus !== false,
+          focusBonus: event.focusBonus !== false,
+        }];
+      })
+    : [];
+  const corrections: LifepathCorrection[] = Array.isArray(source.corrections)
+    ? source.corrections.slice(0, 24).flatMap((raw): LifepathCorrection[] => {
+        const correction = asRecord(raw);
+        const kind = correction.kind === "attribute" || correction.kind === "department"
+          ? correction.kind
+          : null;
+        const from = normalizeText(correction.from);
+        const to = normalizeText(correction.to);
+        return kind && from && to ? [{ kind, from, to }] : [];
+      })
+    : [];
+  const experienceValue = normalizeText(experience.value);
+
+  return {
+    speciesAttributes: normalizeList(source.speciesAttributes).slice(0, 6) as Sta2eLifepath["speciesAttributes"],
+    environment: {
+      choice: normalizeText(environment.choice),
+      attribute: normalizeText(environment.attribute) as Sta2eLifepath["environment"]["attribute"],
+      department: normalizeText(environment.department) as Sta2eLifepath["environment"]["department"],
+      value: normalizeText(environment.value) ?? "",
+      otherSpecies: normalizeText(environment.otherSpecies) ?? "",
+      otherSpeciesAttributes: normalizeList(environment.otherSpeciesAttributes).slice(0, 6) as Sta2eLifepath["environment"]["otherSpeciesAttributes"],
+    },
+    upbringing: {
+      choice: normalizeText(upbringing.choice),
+      accepted: typeof upbringing.accepted === "boolean" ? upbringing.accepted : null,
+      department: normalizeText(upbringing.department) as Sta2eLifepath["upbringing"]["department"],
+      focus: normalizeText(upbringing.focus) ?? "",
+      talent: normalizeText(upbringing.talent) ?? "",
+    },
+    career: {
+      path: normalizeText(career.path),
+      track: normalizeText(career.track),
+      attributes: normalizeList(career.attributes).slice(0, 6) as Sta2eLifepath["career"]["attributes"],
+      majorDepartment: normalizeText(career.majorDepartment) as Sta2eLifepath["career"]["majorDepartment"],
+      minorDepartments: normalizeList(career.minorDepartments).slice(0, 6) as Sta2eLifepath["career"]["minorDepartments"],
+      reallocation: normalizeText(reallocation.from) && normalizeText(reallocation.to)
+        ? {
+            from: normalizeText(reallocation.from) as keyof CharacterDepartments,
+            to: normalizeText(reallocation.to) as keyof CharacterDepartments,
+          }
+        : null,
+      trait: normalizeText(career.trait) ?? "",
+      value: normalizeText(career.value) ?? "",
+      focuses: normalizeList(career.focuses).slice(0, 6),
+      talent: normalizeText(career.talent) ?? "",
+    },
+    experience: {
+      value: experienceValue === "novice" || experienceValue === "experienced" || experienceValue === "veteran"
+        ? experienceValue
+        : null,
+      statement: normalizeText(experience.statement) ?? "",
+      talent: normalizeText(experience.talent) ?? "",
+      noviceAttribute: normalizeText(experience.noviceAttribute) as Sta2eLifepath["experience"]["noviceAttribute"],
+    },
+    careerEvents,
+    finishing: {
+      value: normalizeText(finishing.value) ?? "",
+      talent: normalizeText(finishing.talent) ?? "",
+      attributes: normalizeList(finishing.attributes).slice(0, 6) as Sta2eLifepath["finishing"]["attributes"],
+      departments: normalizeList(finishing.departments).slice(0, 6) as Sta2eLifepath["finishing"]["departments"],
+      pastimes: normalizeList(finishing.pastimes).slice(0, 20),
+    },
+    corrections,
+    roleBonus: {
+      values: normalizeList(roleBonus.values).slice(0, 8),
+      focuses: normalizeList(roleBonus.focuses).slice(0, 12),
+    },
+  };
+}
+
 // Tolerante Normalisierung beliebiger jsonb-Daten auf die vollständige
 // CharacterStats-Form: fehlende/kaputte Felder werden zu null bzw. [], nie zu
 // undefined — die Anzeige und das Formular können sich so auf jedes Feld
@@ -398,6 +513,11 @@ export function parseCharacterStats(raw: unknown): CharacterStats {
     attributes,
     departments,
     creationLocked: source.creationLocked === true,
+    creationMethod:
+      source.creationMethod === "sta2e-lifepath" || source.creationMethod === "sta2e-point-buy"
+        ? source.creationMethod
+        : "ap",
+    lifepath: normalizeLifepath(source.lifepath),
     pendingAdvancements: normalizePendingAdvancements(source.pendingAdvancements),
     experience:
       typeof source.experience === "string" &&
@@ -416,7 +536,10 @@ export function parseCharacterStats(raw: unknown): CharacterStats {
     stats[field.key] = normalizeNumber(source[field.key], field.min, field.max);
   }
   for (const field of LIST_FIELDS) {
-    stats[field.key] = normalizeList(source[field.key]);
+    stats[field.key] =
+      field.key === "careerEvents"
+        ? normalizeCareerEvents(source[field.key])
+        : normalizeList(source[field.key]);
   }
 
   return stats;

@@ -147,7 +147,8 @@ describe("createCharacterWizardAction", () => {
     expect(sheet?.stats.creationLocked).toBe(false);
     // Rang und Spezies kommen aus metadata und stehen damit auf dem Bogen.
     expect(sheet?.rank).toBe("Lieutenant");
-    expect(sheet?.species).toBe("Andorianer");
+    // Der Auswahlwert wird auf den kanonischen Katalognamen normalisiert.
+    expect(sheet?.species).toBe("Andorian");
   });
 
   it("lehnt einen Wertesatz ab, der die Verteilungsregeln verletzt", async () => {

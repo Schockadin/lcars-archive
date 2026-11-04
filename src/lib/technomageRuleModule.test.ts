@@ -21,6 +21,18 @@ describe("Technomage STA 2e rule module", () => {
     expect(validateRuleModuleDefinition({ ...TECHNOMAGE_RULE_MODULE, schools: [] }, "technomage")).toBeNull();
   });
 
+  it("enables the Technomage character tab for existing saved module definitions", () => {
+    const legacy = { ...TECHNOMAGE_RULE_MODULE, characterTab: undefined };
+    expect(validateRuleModuleDefinition(legacy, "technomage")?.characterTab).toEqual({
+      enabled: true,
+      label: "Technomage",
+    });
+    expect(validateRuleModuleDefinition({
+      ...TECHNOMAGE_RULE_MODULE,
+      characterTab: { enabled: true, label: "" },
+    }, "technomage")).toBeNull();
+  });
+
   it("accepts a reusable campaign module with only custom rules and resources", () => {
     const definition = {
       id: "xenobiology",

@@ -147,6 +147,37 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.8",
+    title: "Charaktereditor mit Spezies und STA-2e-Rollen",
+    items: [
+      {
+        text: "Charaktere werden in denselben Tabs für Werte, persönliche Daten, Biografie und Dateien angelegt und bearbeitet. Aktivierte Regelmodule können passende eigene Charakter-Tabs ergänzen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Der Werte-Tab bündelt Spezies, Herkunft, Erziehung, Laufbahn, Rolle und Erfahrungsstufe. Die STA-2e-Werte dafür werden aus passenden Auswahllisten übernommen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Spezies lassen sich mehrfach auswählen; verfügbare Species Abilities richten sich nach der Auswahl. STA-2e-Rollen zeigen ihren passenden Role Bonus automatisch an.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Career Events lassen sich aus der STA-2e-W20-Tabelle wählen oder würfeln; ihre Attributs- und Disziplinboni, Fokusvorschläge sowie optionale Traits werden direkt angezeigt.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Für neue Charaktere stehen drei Erschaffungswege bereit: direkte AP-Vergabe (Standard), STA-2e-Punkteverteilung für 56 Attributs- und 16 Disziplinpunkte sowie der geführte Lifepath.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+    ],
+  },
+  {
     version: "2.7",
     title: "STA 2e als bearbeitbares Basismodul",
     items: [

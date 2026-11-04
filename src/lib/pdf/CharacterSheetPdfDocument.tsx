@@ -73,6 +73,8 @@ import {
 } from "@/lib/portraitCrop";
 import { PERSONNEL_FILE_ART_PNG } from "./personnelFileArt";
 import { CORE_RULES } from "@/lib/coreRules";
+import { getRoleBonusEntries, getRoleLabel, getSpeciesListLabel } from "@/lib/sta2eCharacterOptions";
+import { careerEventTitle } from "@/lib/sta2eCareerEvents";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
 import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import {
@@ -532,21 +534,21 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
       <Field box={HEAD_BOXES.pronouns} value={stats.pronouns} />
       <Field box={HEAD_BOXES.rank} value={input.rank} />
       <Field box={HEAD_BOXES.assignment} value={stats.assignment} />
-      <Field box={HEAD_BOXES.characterRole} value={stats.characterRole} />
+      <Field box={HEAD_BOXES.characterRole} value={getRoleLabel(stats.characterRole)} />
       <Field
         box={HEAD_BOXES.reputation}
         value={stats.reputation === null ? null : String(stats.reputation)}
       />
       <Field
         box={HEAD_BOXES.traits}
-        value={[input.species, stats.traits].filter(Boolean).join(" · ") || null}
+        value={[getSpeciesListLabel(input.species), stats.traits].filter(Boolean).join(" · ") || null}
       />
       <Field box={HEAD_BOXES.environment} value={stats.environment} />
       <Field box={HEAD_BOXES.upbringing} value={stats.upbringing} />
       <Field box={HEAD_BOXES.careerPath} value={stats.careerPath} />
       <Field box={HEAD_BOXES.experience} value={experienceLabel(stats) || null} />
-      <Field box={HEAD_BOXES.careerEvent1} value={stats.careerEvents[0] ?? null} />
-      <Field box={HEAD_BOXES.careerEvent2} value={stats.careerEvents[1] ?? null} />
+      <Field box={HEAD_BOXES.careerEvent1} value={stats.careerEvents[0] ? careerEventTitle(stats.careerEvents[0]) : null} />
+      <Field box={HEAD_BOXES.careerEvent2} value={stats.careerEvents[1] ? careerEventTitle(stats.careerEvents[1]) : null} />
 
       {ATTRIBUTE_FIELDS.map((field) => {
         const value = attributes[field.key];
@@ -608,7 +610,7 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
         box={LIST_BOXES.talents}
         entries={stats.talents.map((entry) => parseTalentEntry(entry).name)}
       />
-      <ListBox box={LIST_BOXES.specialRules} entries={stats.specialRules} />
+      <ListBox box={LIST_BOXES.specialRules} entries={getRoleBonusEntries(stats.characterRole, stats.specialRules)} />
       <ListBox box={LIST_BOXES.equipment} entries={stats.equipment} />
     </Page>
   );

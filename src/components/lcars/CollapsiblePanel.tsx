@@ -42,6 +42,7 @@ export default function CollapsiblePanel({
   storageId,
   htmlId,
   defaultOpen = true,
+  collapsible = true,
   children,
 }: {
   title: string;
@@ -60,6 +61,7 @@ export default function CollapsiblePanel({
   // (siehe unten).
   htmlId?: string;
   defaultOpen?: boolean;
+  collapsible?: boolean;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -84,7 +86,7 @@ export default function CollapsiblePanel({
   // sie also.
   /* eslint-disable react-hooks/set-state-in-effect, react-you-might-not-need-an-effect/no-derived-state, react-you-might-not-need-an-effect/no-event-handler */
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !collapsible) return;
 
     const ziel = ankerZiel(wrapperRef.current, window.location.hash, htmlId);
     if (ziel) {
@@ -100,13 +102,34 @@ export default function CollapsiblePanel({
     if (!storageId) return;
     const gemerkt = readPanelOpen(storageId);
     if (gemerkt !== null) setOpen(gemerkt);
-  }, [htmlId, storageId]);
+  }, [collapsible, htmlId, storageId]);
   /* eslint-enable react-hooks/set-state-in-effect, react-you-might-not-need-an-effect/no-derived-state, react-you-might-not-need-an-effect/no-event-handler */
 
   // <details> statt Knopf plus eigenem Auf-/Zuklapp-Zustand: Die
   // Tastaturbedienung, die Rollen und das „im zugeklappten Text suchen" des
   // Browsers gibt es damit geschenkt. Gesteuert wird es trotzdem (open als
   // Prop), weil der gemerkte Zustand sonst nicht greifen könnte.
+  if (!collapsible) {
+    return (
+      <section
+        id={htmlId}
+        className="lcars-details rounded-[var(--lcars-radius-pill)] border border-lcars-border bg-lcars-surface px-[16px] py-[10px]"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-[8px]">
+          <span className="lcars-eyebrow flex-1 text-lcars-primary-ink">
+            {title}
+          </span>
+          {badge !== undefined && badge !== null && (
+            <span className="font-lcars-mono text-[13px] text-lcars-ink-dim">
+              {badge}
+            </span>
+          )}
+        </div>
+        <div className="mt-[12px] flex flex-col gap-[10px]">{children}</div>
+      </section>
+    );
+  }
+
   return (
     <details
       id={htmlId}

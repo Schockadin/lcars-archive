@@ -178,6 +178,7 @@ const TALENT_SELECTION_RULES: readonly TalentSelectionRule[] = [
   { name: "Cautious", kind: "department", selectionGroup: "department" },
   { name: "Collaboration", kind: "department", selectionGroup: "department" },
   { name: "Augmented Ability", kind: "attribute" },
+  { name: "Untapped Potential", kind: "attribute" },
   { name: "Dedicated Focus X", kind: "focus" },
 ];
 

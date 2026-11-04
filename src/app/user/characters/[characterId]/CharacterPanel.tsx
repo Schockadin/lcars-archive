@@ -2,10 +2,8 @@
 import type { ReactNode } from "react";
 import { PencilIcon, XIcon } from "@/lib/icons";
 
-// Gemeinsame aufklappbare Hülle der Panels der eigenen Charakterseite:
-// Titelleiste im Bogen-Stil, rechts optional der Bearbeiten-Knopf. Natives
-// <details> hält Tastaturbedienung und Verhalten ohne zusätzlichen State
-// bereit; alle Panels beginnen offen.
+// Gemeinsame feste Hülle der Panels der eigenen Charakterseite: Titelleiste
+// im Bogen-Stil, rechts optional der Bearbeiten-Knopf.
 export default function CharacterPanel({
   en,
   de,
@@ -13,7 +11,6 @@ export default function CharacterPanel({
   onToggleEdit,
   editLabel = "Bearbeiten",
   children,
-  defaultOpen = true,
 }: {
   en: string;
   de: string;
@@ -23,15 +20,10 @@ export default function CharacterPanel({
   onToggleEdit?: () => void;
   editLabel?: string;
   children: ReactNode;
-  defaultOpen?: boolean;
 }) {
   return (
-    <details className="stat-sheet-section stat-sheet-panel" open={defaultOpen}>
-      <summary className="stat-sheet-section-title">
-        <span
-          className="lcars-data-row-chevron stat-sheet-panel-chevron"
-          aria-hidden="true"
-        />
+    <section className="stat-sheet-section stat-sheet-panel">
+      <div className="stat-sheet-section-title">
         <h2 className="stat-sheet-panel-heading">
           {en} <span className="stat-label-secondary">{de}</span>
         </h2>
@@ -39,9 +31,6 @@ export default function CharacterPanel({
           <button
             type="button"
             onClick={(event) => {
-              // Der Stift liegt in <summary>, soll aber ausschließlich den
-              // Bearbeitungsmodus wechseln und nicht zugleich zuklappen.
-              event.preventDefault();
               event.stopPropagation();
               onToggleEdit();
             }}
@@ -53,8 +42,8 @@ export default function CharacterPanel({
             {editing ? <XIcon /> : <PencilIcon />}
           </button>
         )}
-      </summary>
+      </div>
       {children}
-    </details>
+    </section>
   );
 }

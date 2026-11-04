@@ -65,7 +65,7 @@ export function TalentModal({
 }: {
   talents: Talent[];
   stats: CharacterStats;
-  species: string | null;
+  species: string[];
   taken: string[];
   focuses: string[];
   // Was das Talent kostet (Steigern) — null während der Ersterschaffung, wo
@@ -343,7 +343,7 @@ export function TalentModal({
 export default function TalentPicker({
   talents,
   stats,
-  species = null,
+  species = [],
   taken = [],
   focuses = [],
   cost = null,
@@ -357,7 +357,7 @@ export default function TalentPicker({
   // Voraussetzungs-Prüfung.
   stats: CharacterStats;
   // Spezies der Akte, für Voraussetzungen wie „Vulcan".
-  species?: string | null;
+  species?: string[];
   // Einträge, die schon auf dem Bogen stehen — sie fehlen in der Auswahl.
   taken?: string[];
   // Vorhandene Schwerpunkte, aus denen „Dedicated Focus X“ wählen kann.

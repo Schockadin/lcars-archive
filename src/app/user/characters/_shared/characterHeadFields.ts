@@ -15,7 +15,6 @@ export const characterHeadFields: HeadField[] = [
   // Portrait steht NICHT in dieser Liste: Beim Anlegen hat es im Wizard einen
   // eigenen Editor, danach ein eigenes Panel. Beide verwenden PortraitPicker
   // und den gemeinsamen readCharacterPortrait-Parser.
-  { kind: "text", name: "species", label: "Spezies (kommagetrennt)" },
   { kind: "text", name: "rank", label: "Rang (optional)" },
   { kind: "text", name: "homeworld", label: "Heimatwelt (optional)" },
   { kind: "text", name: "aliases", label: "Aliase (kommagetrennt)" },

@@ -56,7 +56,7 @@ describe("HelpButton", () => {
     expect(
       screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent),
     ).toEqual([
-      "Die vier Schritte",
+      "Die Charakter-Tabs",
       "Das Portrait und sein Ausschnitt",
       "Werte eintragen",
       "Erfahrungspunkte (AP)",

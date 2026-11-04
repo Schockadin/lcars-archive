@@ -1,6 +1,5 @@
 "use client";
 import { useActionState, useState } from "react";
-import HeadFieldRenderer from "@/components/ContentEditor/HeadFieldRenderer";
 import { SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
 import CharacterPanel from "./CharacterPanel";
 import {
@@ -13,8 +12,10 @@ import {
 } from "../_shared/characterHeadFields";
 import type { OwnCharacterForEdit } from "@/lib/characters";
 import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
-import { EXPERIENCE_OPTIONS, TEXT_FIELDS } from "@/lib/characterStats";
+import { PERSONAL_TEXT_FIELDS } from "@/lib/characterStats";
 import type { CharacterStats } from "@/types/characterStats";
+import { CharacterField, CharacterTextInput } from "../_shared/CharacterFormControls";
+import CharacterHeadFieldRenderer from "../_shared/CharacterHeadFieldRenderer";
 
 const initialState: CharacterPanelState = {};
 
@@ -83,7 +84,6 @@ export default function CharacterHeadPanel({
                 value={STATUS_LABELS[character.status] ?? character.status}
               />
               <Row label="Rang" value={character.rank} />
-              <Row label="Spezies" value={list(character.species)} />
               <Row label="Heimatwelt" value={character.homeworld} />
               <Row label="Aliase" value={list(character.aliases)} />
               <Row label="Geburtsdatum" value={character.dateOfBirth} />
@@ -99,21 +99,13 @@ export default function CharacterHeadPanel({
               <Row label="Schiffe" value={list(character.ships)} />
               <Row label="Division" value={character.division} />
               <Row label="Tags" value={list(character.tags)} />
-              {TEXT_FIELDS.map((field) => (
+              {PERSONAL_TEXT_FIELDS.map((field) => (
                 <Row
                   key={field.key}
                   label={field.label}
                   value={stats[field.key]}
                 />
               ))}
-              <Row
-                label="Erfahrungsstufe"
-                value={
-                  EXPERIENCE_OPTIONS.find(
-                    (option) => option.value === stats.experience,
-                  )?.label ?? null
-                }
-              />
             </div>
             {character.isDraft && (
               <p className="stat-sheet-rule">
@@ -129,7 +121,7 @@ export default function CharacterHeadPanel({
             <div className="content-editor-head-grid">
               {[...characterHeadFields, ...characterMetadataFields].map(
                 (field) => (
-                  <HeadFieldRenderer
+                  <CharacterHeadFieldRenderer
                     key={field.name}
                     field={field}
                     idPrefix="head-panel"
@@ -139,7 +131,6 @@ export default function CharacterHeadPanel({
                           name: character.name,
                           status: character.status,
                           rank: character.rank ?? undefined,
-                          species: character.species.join(", "),
                           homeworld: character.homeworld ?? undefined,
                           aliases: character.aliases.join(", "),
                           age: character.age ?? undefined,
@@ -155,48 +146,15 @@ export default function CharacterHeadPanel({
                   />
                 ),
               )}
-              {TEXT_FIELDS.map((field) => (
-                <div key={field.key} className="stat-editor-field">
-                  <label
-                    htmlFor={`head-panel-${field.key}`}
-                    className="stat-field-label"
-                  >
-                    <span className="stat-label-primary">
-                      {field.original ?? field.label}
-                    </span>
-                    <span className="stat-label-secondary">{field.label}</span>
-                  </label>
-                  <input
+              {PERSONAL_TEXT_FIELDS.map((field) => (
+                <CharacterField key={field.key} label={field.original ?? field.label} secondary={field.label}>
+                  <CharacterTextInput
                     id={`head-panel-${field.key}`}
                     name={field.key}
-                    type="text"
                     defaultValue={stats[field.key] ?? ""}
-                    className="stat-field-input"
                   />
-                </div>
+                </CharacterField>
               ))}
-              <div className="stat-editor-field">
-                <label
-                  htmlFor="head-panel-experience"
-                  className="stat-field-label"
-                >
-                  <span className="stat-label-primary">Experience</span>
-                  <span className="stat-label-secondary">Erfahrungsstufe</span>
-                </label>
-                <select
-                  id="head-panel-experience"
-                  name="experience"
-                  defaultValue={stats.experience ?? ""}
-                  className="stat-field-input"
-                >
-                  <option value="">— keine Angabe —</option>
-                  {EXPERIENCE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
             <div className="flex items-center gap-[8px]">
