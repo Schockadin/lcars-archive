@@ -1084,9 +1084,9 @@ export default function TutorialPage() {
               </p>
               <p>
                 Nicht als Markdown gedacht sind drei Stellen, an denen der Text
-                eine andere Bedeutung hat: die <strong>Listenfelder</strong> des
-                Charakterbogens („Spezies-Fähigkeit“, „Sonderregeln“ — dort ist
-                jede Zeile ein eigener Eintrag), die Feldwerte im{" "}
+                eine andere Bedeutung hat: ergänzende{" "}
+                <strong>Regelnotizen</strong> zum automatisch bestimmten{" "}
+                <strong>Role Bonus</strong>, die Feldwerte im{" "}
                 <strong>Datenbank-Bereich</strong> der Administration (dort
                 steht der rohe Wert der Spalte) und die Zusammenfassung beim{" "}
                 <strong>Markdown-Import</strong> (sie wird als reiner Text
@@ -1251,6 +1251,14 @@ export default function TutorialPage() {
                   umwandeln und typografische Hochkommata sowie
                   apostrophähnliche Akzentzeichen in gerade Apostrophe
                   umwandeln (alles blockweise mit Fortschrittsbalken).
+                </li>
+                <li>
+                  Unter <strong>„Statistiken“</strong> Zugriffe und neue Konten
+                  der letzten sieben Tage vergleichen. Eine filterbare Liste
+                  zeigt, welche angemeldeten Nutzer:innen zuletzt welche
+                  Charaktere, Missionen, Missionsberichte und Archiv-Einträge
+                  geöffnet haben. Gesprächsinhalte werden nicht protokolliert;
+                  die Aufrufdaten werden nach 90 Tagen gelöscht.
                 </li>
                 <li>
                   Unter <strong>„Audit-Log“</strong> nachvollziehen, wer wann

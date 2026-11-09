@@ -12,6 +12,7 @@ import {
   ATTRIBUTE_FIELDS,
   DEPARTMENT_FIELDS,
   SCALAR_NUMBER_FIELDS,
+  PERSONAL_TEXT_FIELDS,
   TEXT_FIELDS,
   LIST_FIELDS,
 } from "./characterStats";
@@ -141,6 +142,17 @@ describe("parseCharacterStats", () => {
     expect(stats.traits).toBe("Human/Centauri");
     expect(stats.values).toEqual(["Wert", "Zweiter"]);
     expect(stats.talents).toEqual([]);
+  });
+
+  it("normalisiert bekannte Career Events und erhält individuelle Alt-Einträge", () => {
+    const stats = parseCharacterStats({
+      careerEvents: ["First Contact", "Eine persönliche Notiz"],
+    });
+
+    expect(stats.careerEvents).toEqual([
+      "first-contact",
+      "Eine persönliche Notiz",
+    ]);
   });
 
   it("akzeptiert nur die drei bekannten Erfahrungsstufen", () => {
@@ -292,6 +304,13 @@ describe("computeStress", () => {
 // Die Feldlisten steuern Formular, Einlesen in der Server-Action UND Anzeige —
 // Tippfehler in einem Schlüssel würden dort still ein Feld verschlucken.
 describe("Feldkatalog", () => {
+  it("hält die gewählte Species im Werte-Tab statt als doppeltes Personalaktenfeld", () => {
+    expect(PERSONAL_TEXT_FIELDS.map((field) => field.key)).toEqual([
+      "pronouns",
+      "assignment",
+    ]);
+  });
+
   it("deckt sich mit den Schlüsseln von CharacterStats", () => {
     for (const field of ATTRIBUTE_FIELDS) {
       expect(EMPTY_CHARACTER_STATS.attributes).toHaveProperty(field.key);

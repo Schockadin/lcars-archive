@@ -24,12 +24,15 @@ import CharacterDocumentsPanel from "./CharacterDocumentsPanel";
 import { listCharacterDocuments } from "@/lib/characterDocuments";
 import CharacterArchiveExportButton from "./CharacterArchiveExportButton";
 import CharacterJsonTransfer from "./CharacterJsonTransfer";
-import CharacterManagementTabs from "./CharacterManagementTabs";
+import CharacterEditorTabs from "../_shared/CharacterEditorTabs";
 import { getCharacterArchiveOptions } from "@/lib/characterArchive";
 import CharacterNpcConversionPanel from "./CharacterNpcConversionPanel";
-import { listCampaignRuleModules, moduleSupportsCharacterRole } from "@/lib/campaignRuleModules";
+import {
+  listCampaignRuleModules,
+  moduleSupportsCharacterRole,
+} from "@/lib/campaignRuleModules";
 import { isTechnomageRole } from "@/lib/technomageSpellCatalog";
-import RuleModuleCharacterSections from "./RuleModuleCharacterSections";
+import { ruleModuleCharacterTabs } from "./ruleModuleCharacterTabs";
 
 export const metadata: Metadata = {
   title: "Charakter",
@@ -87,10 +90,18 @@ export default async function OwnCharacterPage({ params }: Props) {
     listCampaignRuleModules(),
   ]);
   const activeCharacterModules = ruleModules
-    .filter((module) => module.enabled && moduleSupportsCharacterRole(module.definition, sheet.stats.characterRole))
+    .filter(
+      (module) =>
+        module.enabled &&
+        moduleSupportsCharacterRole(
+          module.definition,
+          sheet.stats.characterRole,
+        ),
+    )
     .map((module) => module.definition);
   const technomageModule = isTechnomageRole(sheet.stats.characterRole)
-    ? ruleModules.find((module) => module.definition.id === "technomage")?.definition
+    ? ruleModules.find((module) => module.definition.id === "technomage")
+        ?.definition
     : undefined;
 
   return (
@@ -121,94 +132,113 @@ export default async function OwnCharacterPage({ params }: Props) {
 
         {!character.npcSlug && (
           <>
-            <div className="flex flex-wrap gap-[8px]">
-              <CharacterSheetButton
-                characterId={sheet.id}
-                input={{
-                  characterName: sheet.name,
-                  rank: sheet.rank,
-                  species: sheet.species,
-                  portrait: sheet.portrait,
-                  portraitCrop: sheet.portraitCrop,
+            <CharacterEditorTabs
+              tabs={[
+                {
+                  id: "values",
+                  label: "Werte",
+                  content: (
+                    <CharacterValuesPanel
+                      userId={session.userId}
+                      characterId={sheet.id}
+                      species={character.species}
+                      savedStats={sheet.stats}
+                      account={account}
+                      rules={rules}
+                      talents={talents}
+                      focuses={focuses}
+                    />
+                  ),
+                },
+                ...ruleModuleCharacterTabs({
+                  modules: activeCharacterModules,
+                  userId: session.userId,
+                  characterId: sheet.id,
                   stats: sheet.stats,
                   earnedAp: account.earned,
-                  bioHtml: character.bioHtml,
-                  talents,
-                  campaignRules,
-                  technomageSpells: technomageModule?.spells,
-                  technomageSchools: technomageModule?.schools,
-                }}
-              />
-              <CharacterArchiveExportButton
-                characterId={character.id}
-                characterName={character.name}
-                documents={documents}
-                missions={archiveOptions}
-              />
-            </div>
-
-            <CharacterJsonTransfer
-              characterId={character.id}
-              userId={session.userId}
-              characterName={character.name}
-            />
-
-            <CharacterPortraitPanel
-              userId={session.userId}
-              character={character}
-            />
-
-            <CharacterHeadPanel
-              userId={session.userId}
-              character={character}
-              stats={sheet.stats}
-            />
-
-            <CharacterManagementTabs
-              values={
-                <CharacterValuesPanel
-                  userId={session.userId}
-                  characterId={sheet.id}
-                  species={sheet.species}
-                  savedStats={sheet.stats}
-                  account={account}
-                  rules={rules}
-                  talents={talents}
-                  focuses={focuses}
-                />
-              }
-              biography={
-                <CharacterBioPanel
-                  userId={session.userId}
-                  characterId={character.id}
-                  bioHtml={character.bioHtml}
-                  sourceMarkdown={character.sourceMarkdown}
-                />
-              }
-              modules={
-                activeCharacterModules.length > 0 ? (
-                  <RuleModuleCharacterSections
-                    modules={activeCharacterModules}
-                    userId={session.userId}
-                    characterId={sheet.id}
-                    stats={sheet.stats}
-                    earnedAp={account.earned}
-                  />
-                ) : undefined
-              }
-            />
-
-            <CharacterDocumentsPanel
-              characterId={character.id}
-              documents={documents}
-            />
-
-            <RevisionsPanel
-              contentType="character"
-              contentId={character.id}
-              path={characterEditHref(character.id)}
-              revisions={revisions}
-              defaultOpen
+                }),
+                {
+                  id: "personal",
+                  label: "Persönliche Daten",
+                  content: (
+                    <div className="flex flex-col gap-[12px]">
+                      <CharacterPortraitPanel
+                        userId={session.userId}
+                        character={character}
+                      />
+                      <CharacterHeadPanel
+                        userId={session.userId}
+                        character={character}
+                        stats={sheet.stats}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  id: "biography",
+                  label: "Biografie",
+                  content: (
+                    <div className="flex flex-col gap-[12px]">
+                      <CharacterBioPanel
+                        userId={session.userId}
+                        characterId={character.id}
+                        bioHtml={character.bioHtml}
+                        sourceMarkdown={character.sourceMarkdown}
+                      />
+                      <RevisionsPanel
+                        contentType="character"
+                        contentId={character.id}
+                        path={characterEditHref(character.id)}
+                        revisions={revisions}
+                        collapsible={false}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  id: "files",
+                  label: "Dateien",
+                  content: (
+                    <div className="flex flex-col gap-[12px]">
+                      <div className="flex flex-wrap gap-[8px]">
+                        <CharacterSheetButton
+                          characterId={sheet.id}
+                          input={{
+                            characterName: sheet.name,
+                            rank: sheet.rank,
+                            species: sheet.species,
+                            portrait: sheet.portrait,
+                            portraitCrop: sheet.portraitCrop,
+                            stats: sheet.stats,
+                            earnedAp: account.earned,
+                            bioHtml: character.bioHtml,
+                            talents,
+                            campaignRules,
+                            technomageSpells: technomageModule?.spells,
+                            technomageSchools: technomageModule?.schools,
+                          }}
+                        />
+                        <CharacterArchiveExportButton
+                          characterId={character.id}
+                          characterName={character.name}
+                          documents={documents}
+                          missions={archiveOptions}
+                        />
+                      </div>
+                      <CharacterJsonTransfer
+                        characterId={character.id}
+                        userId={session.userId}
+                        characterName={character.name}
+                      />
+                      <CharacterDocumentsPanel
+                        characterId={character.id}
+                        documents={documents}
+                        collapsible={false}
+                      />
+                    </div>
+                  ),
+                },
+              ]}
             />
           </>
         )}

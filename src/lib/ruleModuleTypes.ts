@@ -82,6 +82,31 @@ export interface RuleModuleDefinition {
     original: string;
   }[];
   spells: TechnomageSpell[];
+  /** Opt a module into a dedicated tab on matching character sheets. */
+  characterTab?: {
+    enabled: boolean;
+    label: string;
+  };
+}
+
+/** Shared role matching for server pages and client-side character creation. */
+export function moduleSupportsCharacterRole(
+  definition: RuleModuleDefinition,
+  role: string | null,
+): boolean {
+  if (!role) return definition.characterRoles.some((item) => item.trim() === "*");
+  const normalize = (value: string) => value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  const candidate = normalize(role);
+  return definition.characterRoles.some((item) => {
+    if (item.trim() === "*") return true;
+    const expected = normalize(item);
+    return candidate === expected ||
+      (expected.length >= 5 && candidate.includes(expected));
+  });
 }
 
 export interface CampaignRuleModule {
@@ -132,6 +157,8 @@ export function validateRuleModuleDefinition(
   const talents = value.talents;
   const prestigeClasses = value.prestigeClasses;
   const collections = value.collections ?? [];
+  const characterTab = value.characterTab;
+  const tabConfig = characterTab === undefined ? null : record(characterTab);
   const schools = value.schools;
   const spells = value.spells;
   if (
@@ -144,6 +171,11 @@ export function validateRuleModuleDefinition(
     !Array.isArray(schools) || schools.length > 30 || !uniqueIds(schools) ||
     !Array.isArray(spells) || spells.length > 2000 || !uniqueIds(spells)
   ) return null;
+  if (characterTab !== undefined && (
+    !tabConfig || typeof tabConfig.enabled !== "boolean" ||
+    typeof tabConfig.label !== "string" || tabConfig.label.length > 80 ||
+    (tabConfig.enabled && tabConfig.label.trim().length === 0)
+  )) return null;
   if (expectedId === "technomage" && schools.length === 0) return null;
   if (!entriesHaveStrings(rules, ["id", "title", "body"])) return null;
   if (!entriesHaveStrings(resources, ["id", "name", "abbreviation", "maximum"])) return null;
@@ -222,6 +254,12 @@ export function validateRuleModuleDefinition(
         Number.isInteger(row.ap) && Number(row.ap) >= 0;
     })) return null;
   }
-  return { ...value, collections } as unknown as RuleModuleDefinition;
+  return {
+    ...value,
+    collections,
+    ...(characterTab === undefined && expectedId === "technomage"
+      ? { characterTab: { enabled: true, label: "Technomage" } }
+      : {}),
+  } as unknown as RuleModuleDefinition;
 }
 

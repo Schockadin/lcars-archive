@@ -13,11 +13,16 @@ import {
   type AdvancementRules,
 } from "@/lib/advancement";
 import { getAdvancementRules } from "@/lib/advancementSettings";
+import { listTalents } from "@/lib/talents";
+import { listFocuses } from "@/lib/focuses";
+import { checkOpenCreationStats } from "@/lib/characterStatsRules";
 import {
   revertAdvancements,
   reapplyAdvancements,
 } from "@/lib/creationReset";
 import type { CharacterStats } from "@/types/characterStats";
+import { applySta2eLifepath, checkSta2eLifepath } from "@/lib/sta2eLifepath";
+import { checkSta2ePointBuy } from "@/lib/sta2ePointBuy";
 
 // Die Buchungsgründe und Kontotypen selbst liegen DB-frei in
 // src/lib/apReasons.ts (Client-Komponenten brauchen die Labels) und werden
@@ -261,11 +266,27 @@ export async function lockOwnCharacterCreation(
   characterId: number,
 ): Promise<LockCreationResult | null> {
   // Regelwerk VOR der Transaktion laden — siehe advanceOwnCharacter.
-  const rules = await getAdvancementRules();
+  const [rules, talentCatalog, focusCatalog] = await Promise.all([
+    getAdvancementRules(),
+    listTalents(),
+    listFocuses(),
+  ]);
 
   return sql.begin(async (tx) => {
-    const rows = await tx<{ slug: string; stats: unknown }[]>`
-      SELECT slug, metadata -> 'stats' AS stats
+    const rows = await tx<{ slug: string; stats: unknown; rank: string | null; species: string | null }[]>`
+      SELECT slug, metadata -> 'stats' AS stats,
+             COALESCE(NULLIF(metadata ->> 'rank', ''), rank) AS rank,
+             COALESCE(
+               NULLIF(
+                 (SELECT string_agg(value, ', ')
+                  FROM jsonb_array_elements_text(
+                    CASE WHEN jsonb_typeof(metadata -> 'species') = 'array'
+                         THEN metadata -> 'species' ELSE '[]'::jsonb END
+                  ) AS value),
+                 ''
+               ),
+               species
+             ) AS species
       FROM characters
       WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
       FOR UPDATE
@@ -273,7 +294,7 @@ export async function lockOwnCharacterCreation(
     const row = rows[0];
     if (!row) return null;
 
-    const stats = parseCharacterStats(
+    let stats = parseCharacterStats(
       typeof row.stats === "string" ? JSON.parse(row.stats) : row.stats,
     );
 
@@ -288,7 +309,35 @@ export async function lockOwnCharacterCreation(
     // POST würde den Charakter sonst dauerhaft überzogen festschreiben — und
     // dabei sogar noch Rest-AP gutschreiben, weil creationCarryOver
     // Überziehungen als 0 zählt statt negativ.
-    if (creationBudget(stats, rules).overBudget) {
+    const species = (row.species ?? "").split(",").map((entry) => entry.trim()).filter(Boolean);
+    if (stats.creationMethod === "sta2e-lifepath") {
+      const lifepathErrors = checkSta2eLifepath(stats, species, row.rank);
+      if (lifepathErrors.length > 0) {
+        throw new CreationIncompleteError(lifepathErrors.join(" "));
+      }
+      stats = applySta2eLifepath(stats, species);
+      const catalogError = checkOpenCreationStats(
+        stats,
+        rules,
+        talentCatalog.map((talent) => talent.name),
+        [],
+        focusCatalog.map((focus) => focus.name),
+      );
+      if (catalogError) throw new CreationIncompleteError(catalogError);
+    } else if (stats.creationMethod === "sta2e-point-buy") {
+      const pointBuyErrors = checkSta2ePointBuy(stats);
+      if (pointBuyErrors.length > 0) {
+        throw new CreationIncompleteError(pointBuyErrors.join(" "));
+      }
+      const catalogError = checkOpenCreationStats(
+        stats,
+        rules,
+        talentCatalog.map((talent) => talent.name),
+        [],
+        focusCatalog.map((focus) => focus.name),
+      );
+      if (catalogError) throw new CreationIncompleteError(catalogError);
+    } else if (creationBudget(stats, rules).overBudget) {
       throw new CreationOverBudgetError(
         "Das Erschaffungsbudget ist überzogen — bitte zuerst Werte zurücknehmen.",
       );
@@ -306,7 +355,9 @@ export async function lockOwnCharacterCreation(
       );
     }
 
-    const carryOver = creationCarryOver(stats, rules);
+    const carryOver = stats.creationMethod !== "ap"
+      ? 0
+      : creationCarryOver(stats, rules);
 
     // Hat die Spielleitung die Erschaffung zurückgesetzt, stehen die damals
     // zurückgenommenen Steigerungen als Notiz am Bogen (siehe

@@ -27,6 +27,8 @@ import {
   technomagePowerPointMaximum,
 } from "@/lib/technomageSpellRules";
 import { checkOpenCreationStats } from "@/lib/characterStatsRules";
+import { applySta2eLifepath } from "@/lib/sta2eLifepath";
+import { getSpeciesLabel } from "@/lib/sta2eCharacterOptions";
 import { validateCharacterStats } from "@/lib/characterStats";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { revalidatePathAndNotify } from "@/lib/realtimeServer";
@@ -264,9 +266,25 @@ export async function importCharacterJsonAction(
   }
 
   const imported = parsed.character satisfies CharacterJsonData;
-  const stats = imported.stats;
+  let stats = imported.stats;
   stats.creationLocked = currentSheet.stats.creationLocked;
+  stats.creationMethod = currentSheet.stats.creationMethod;
   stats.pendingAdvancements = currentSheet.stats.pendingAdvancements;
+  if (
+    currentSheet.stats.creationLocked &&
+    currentSheet.stats.creationMethod === "sta2e-lifepath" &&
+    [...new Set(imported.species.map(getSpeciesLabel))].sort().join("\u0000") !== [...new Set(current.species.map(getSpeciesLabel))].sort().join("\u0000")
+  ) {
+    return { error: "Die Spezies ist nach Abschluss der Lifepath-Erstellung gesperrt." };
+  }
+  if (stats.creationMethod === "sta2e-lifepath") {
+    if (currentSheet.stats.creationLocked) {
+      stats.lifepath = currentSheet.stats.lifepath;
+      stats.characterRole = currentSheet.stats.characterRole;
+      stats.speciesAbilities = currentSheet.stats.speciesAbilities;
+    }
+    stats = applySta2eLifepath(stats, imported.species);
+  }
   if (currentSheet.stats.creationLocked) {
     const protectedFields: (keyof CharacterStats)[] = [
       "attributes", "departments", "talents", "focuses",

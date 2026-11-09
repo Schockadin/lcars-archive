@@ -16,6 +16,7 @@ import { listNotes } from "@/lib/contentNotes";
 import { ARCHIVE_REFERENCES_ID } from "@/lib/archiveToc";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import { addStoredContentLinkPreviews } from "@/lib/autolink";
+import ContentViewTracker from "@/components/ContentViewTracker";
 import { getDialogueMessages } from "@/lib/dialogues";
 import DialogueHeader from "@/components/DialogueHeader";
 import DialogueContentView from "@/app/characters/dialogues/[slug]/DialogueContentView";
@@ -122,6 +123,12 @@ export default async function ArchiveEntryPage({ params }: Props) {
     >
       <PageMeta title={title} section="archive" />
       <MarkNewsSeen type="archive_entry" slug={entry.slug} />
+      {viewer && entry.category !== "dialogue" && (
+        <ContentViewTracker
+          contentType="archive_entry"
+          slug={entry.slug}
+        />
+      )}
 
       {/* Zurück in die Liste, aus der der Eintrag stammt — auf seine
           Kategorie vorgefiltert, wie „‹ Missionen" auf der Missionsseite und

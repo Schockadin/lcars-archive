@@ -241,6 +241,15 @@ export const DB_TABLE_COLUMNS = {
     "updated_at",
   ],
   news_seen: ["user_id", "target_type", "target_key", "seen_at"],
+  content_view_events: [
+    "id",
+    "user_id",
+    "content_type",
+    "content_slug",
+    "content_title",
+    "route_path",
+    "viewed_at",
+  ],
 
   // ── Kampagne und Regelwerk ───────────────────────────────────────
   character_ap_entries: [
@@ -463,7 +472,12 @@ export function tableColumns(table: TableName): readonly string[] {
 // Relationstabellen (mission_participants & Co.), deren Zeilen echte
 // Zuordnungen sind, und users (ohne Passwort-Hash, siehe OMITTED_COLUMNS;
 // Schreibzugriff sperrt PROTECTED_WRITE_TABLES).
-export const HIDDEN_FROM_VIEW: readonly TableName[] = ["password_setup_tokens"];
+export const HIDDEN_FROM_VIEW: readonly TableName[] = [
+  "password_setup_tokens",
+  // Das personenbezogene Leseprotokoll wird nicht in der Tabellenübersicht
+  // aufgeführt; das dedizierte Dashboard prüft admin.access.
+  "content_view_events",
+];
 
 export const VIEWABLE_TABLES: TableName[] = DB_TABLES.filter(
   (table) => !(HIDDEN_FROM_VIEW as readonly string[]).includes(table),
@@ -586,6 +600,10 @@ export const BACKUP_EXCLUDED_TABLES = [
   // Pro Person gelesene Neuigkeiten: hängen an Konten, die dieses Backup
   // nicht anfasst, und sind nach einem Restore ohnehin bedeutungslos.
   "news_seen",
+
+  // Personenbezogene Inhaltsaufrufe mit begrenzter Aufbewahrungszeit — werden
+  // täglich bereinigt und sind kein Kampagnenstand, der restauriert werden soll.
+  "content_view_events",
 
   // Entsteht neu aus dem Inhalt (Einbettungen, src/lib/embeddingSync.ts) —
   // eine Kopie wäre nur groß, nicht wertvoll.

@@ -69,11 +69,23 @@ export default function ImpressumContent() {
           auf den Standard zurücksetzen. Weitere Regelmodule lassen sich
           hinzufügen, aktivieren, deaktivieren und löschen. Eigene Module
           können zusätzliche Inhaltslisten mit individuellen Feldern und
-          auswählbaren Einträgen enthalten. Die Charakterseite führt außerdem
+          auswählbaren Einträgen enthalten und für passende Charaktere eigene
+          Tabs anzeigen. Beim Anlegen und Bearbeiten sind Charakterwerte,
+          persönliche Daten, Biografie und Dateien jeweils in eigenen Tabs
+          organisiert. Spezies können mehrfach gewählt werden; passende
+          Species Abilities sowie STA-2e-Rollenboni werden zum Charakter
+          angezeigt. Die Charakterseite führt außerdem
           PP, Chaos Points, Verletzungsstress, Talente und Prestige-Pfade.
           Charakterbogen und PDF enthalten detaillierte Beschreibungen der
           gelernten Spells für Star Trek Adventures (2. Edition) und verwenden
           dafür die aktuelle Spell- und Schuldefinition des Regelmoduls.
+        </p>
+        <p>
+          Für Administrator:innen gibt es ein Statistik-Dashboard mit
+          Zugriffszahlen, Anmeldungen der letzten Woche und einer Übersicht
+          zuletzt angesehener Inhalte. Die personenbezogene Aufrufliste ist auf
+          angemeldete Konten beschränkt und wird nach 90 Tagen gelöscht; Details
+          stehen in der <a href="/datenschutz">Datenschutzerklärung</a>.
         </p>
         <p>
           Spieler:innen können Personalakte, Biografie sowie Charakter- und

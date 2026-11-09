@@ -921,6 +921,12 @@ export async function updateOwnCharacterContent(
     // Personnel-File-Felder werden zusammen mit den Stammdaten gespeichert.
     // Die übrigen Werte bleiben dabei aus dem gespeicherten Stand erhalten.
     stats?: CharacterStats;
+    // Für Teilformulare, die nur einzelne persönliche Werte pflegen: Der
+    // JSONB-Unterbaum wird beim Update mit dem dann aktuellen Stand gemischt.
+    statsPatch?: Partial<Pick<CharacterStats, "pronouns" | "assignment">>;
+    // Das Personalakten-Panel bearbeitet Species nicht. Es soll deshalb beim
+    // gleichzeitigen Speichern im Werte-Tab keinen älteren Stand zurückschreiben.
+    preserveSpecies?: boolean;
   },
 ): Promise<UpdateOwnCharacterResult | null> {
   const trimmedBody = input.bodyMarkdown.trim();
@@ -938,7 +944,7 @@ export async function updateOwnCharacterContent(
 
   const metadataPatch = {
     rank: input.rank,
-    species: input.species,
+    ...(!input.preserveSpecies ? { species: input.species } : {}),
     homeworld: input.homeworld,
     aliases: input.aliases,
     age: input.age,
@@ -949,6 +955,13 @@ export async function updateOwnCharacterContent(
     ...portraitMetadata(input),
     ...(input.stats ? { stats: input.stats } : {}),
   };
+  const statsPatch = input.statsPatch
+    ? sql`jsonb_build_object(
+        'stats',
+        COALESCE(metadata -> 'stats', '{}'::jsonb) ||
+          ${sql.json(input.statsPatch as ReturnType<typeof JSON.parse>)}
+      )`
+    : sql`'{}'::jsonb`;
 
   // "wasDraft" (Stand VOR diesem Update) per CTE mitgeliefert — der
   // Aufrufer (contentAction.ts) braucht ihn, um einen Entwurf→Veröffentlicht-
@@ -961,7 +974,7 @@ export async function updateOwnCharacterContent(
     )
     UPDATE characters
     SET name = ${input.name}, status = ${input.status}, portrait = ${input.portrait},
-        metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)},
+        metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)} || ${statsPatch},
         bio = ${bio}, source_md = ${sourceMd}, is_draft = ${input.isDraft},
         updated_at = NOW()
     FROM old
@@ -1146,13 +1159,14 @@ export async function getCharacterStatsForGm(
   };
 }
 
-// Schreibt ausschließlich metadata.stats (jsonb-Merge auf oberster Ebene) —
-// Rang/Spezies/Alter & Co. im selben metadata-Objekt bleiben unangetastet.
+// Schreibt metadata.stats und die Speziesauswahl atomar; übrige Angaben wie
+// Rang, Alter & Co. im selben metadata-Objekt bleiben unangetastet.
 // Owner-gescoped im WHERE wie updateOwnCharacterContent.
 export async function updateOwnCharacterStats(
   userId: number,
   characterId: number,
   stats: CharacterStats,
+  species: string[],
 ): Promise<{ slug: string; name: string } | null> {
   const rows = await sql<{ slug: string; name: string }[]>`
     UPDATE characters
@@ -1172,7 +1186,7 @@ export async function updateOwnCharacterStats(
                   ${sql.json(stats.ruleModules as ReturnType<typeof JSON.parse>)}
                 )
               )
-          ),
+          ) || jsonb_build_object('species', ${sql.json(species as ReturnType<typeof JSON.parse>)}),
         updated_at = NOW()
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
     RETURNING slug, name

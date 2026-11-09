@@ -10,7 +10,7 @@ import {
 
 // Kleine Schema-Bilder für die Anleitung zur Charaktererschaffung (siehe
 // CharacterCreationGuide.tsx). Sie zeigen den AUFBAU der jeweiligen Maske —
-// vier Schritt-Knöpfe, ein Bildkasten mit seiner Schräge, Zahlenfelder mit
+// fünf Tab-Reiter, ein Bildkasten mit seiner Schräge, Zahlenfelder mit
 // Budget-Leiste —, nicht ihren Inhalt.
 //
 // Rahmen, Farben und die „Textzeile" kommen aus dem gemeinsamen Baukasten
@@ -18,21 +18,21 @@ import {
 // Bereichs-Anleitungen teilen — dort steht auch, warum es Inline-SVG und
 // keine Screenshots sind.
 
-// ── Die vier Schritte ────────────────────────────────────────────────
-// Vier Reiter nebeneinander, der erste aktiv — darunter die Felder des
-// gerade offenen Schritts und der „Fertig"-Knopf.
+// ── Charakter-Tabs ───────────────────────────────────────────────────
+// Fünf Reiter nebeneinander, der erste aktiv — darunter die Felder des
+// gerade offenen Tabs und der „Fertig"-Knopf.
 export function StepsFigure() {
   return (
     <GuideFigure
-      label="Vier Schritt-Knöpfe nebeneinander, der erste hervorgehoben, darunter Eingabefelder und der Knopf „Fertig“."
-      caption="Die vier Schritte — oben umschalten, unten „Fertig“"
+      label="Fünf Charakter-Tabs nebeneinander, der erste hervorgehoben, darunter Eingabefelder und der Knopf „Fertig“."
+      caption="Charakter-Tabs — oben umschalten, unten „Fertig“"
     >
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1, 2, 3, 4].map((i) => (
         <rect
           key={i}
-          x={10 + i * 46}
+          x={10 + i * 36}
           y={12}
-          width={40}
+          width={32}
           height={14}
           rx={7}
           fill={i === 0 ? PRIMARY : BORDER}

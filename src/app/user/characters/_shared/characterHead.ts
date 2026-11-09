@@ -168,7 +168,9 @@ export async function readCharacterHead(
       status: status as Character["status"],
       ...portraitResult.portrait,
       rank: String(formData.get("rank") ?? "").trim() || null,
-      species: parseList(formData.get("species")),
+      species: Array.from(
+        new Set(formData.getAll("species").flatMap((entry) => parseList(entry))),
+      ),
       homeworld: String(formData.get("homeworld") ?? "").trim() || null,
       aliases: parseList(formData.get("aliases")),
       age,

@@ -46,7 +46,7 @@ function renderPanel() {
       contentId={3}
       path="/user/archive/3/edit"
       revisions={[revision]}
-      defaultOpen
+      collapsible={false}
     />,
   );
 }
@@ -58,9 +58,10 @@ async function wiederherstellen() {
 }
 
 describe("RevisionsPanel", () => {
-  it("beginnt auf der Charakterseite geöffnet", () => {
+  it("bleibt als Panel ohne Disclosure auf der Charakterseite sichtbar", () => {
     renderPanel();
-    expect(document.querySelector("details")).toHaveAttribute("open");
+    expect(document.querySelector("details")).not.toBeInTheDocument();
+    expect(screen.getByText("Versionen")).toBeInTheDocument();
   });
 
   it("lädt nach erfolgreicher Wiederherstellung die Seite neu", async () => {

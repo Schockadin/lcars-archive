@@ -17,6 +17,22 @@ const longName =
   "Ausführlicher Bericht über die gesamte Forschungsmission der U.S.S. Beispiel.pdf";
 
 describe("CharacterDocumentsPanel", () => {
+  it("zeigt Dokumente im Charakter-Tab als festes Panel", () => {
+    const { container } = render(
+      <CharacterDocumentsPanel
+        characterId={4}
+        documents={[]}
+        collapsible={false}
+      />,
+    );
+
+    expect(container.querySelector("details")).not.toBeInTheDocument();
+    expect(screen.getByText("Zusätzliche Dokumente")).toBeInTheDocument();
+    expect(
+      screen.getByText("Noch keine Dokumente hinterlegt."),
+    ).toBeInTheDocument();
+  });
+
   it("lässt PDF-Vorschauen ohne Sandbox im Browser-Viewer öffnen", () => {
     const document = {
       id: 8,

@@ -35,15 +35,16 @@ import GuideSection, { GuideBody } from "@/components/help/GuideSection";
 export default function CharacterCreationGuide() {
   return (
     <GuideBody>
-      <GuideSection title="Die vier Schritte" figure={<StepsFigure />}>
+      <GuideSection title="Die Charakter-Tabs" figure={<StepsFigure />}>
         <p>
-          <strong>Einen neuen Charakter</strong> legst du in vier Schritten an:
-          zuerst die <strong>Stammdaten</strong> (Name, Rang, Spezies und was
-          sonst zur Akte gehört), dann die <strong>Werte</strong>, dann die{" "}
-          <strong>Biografie</strong> und zuletzt eine <strong>Vorschau</strong>{" "}
-          des fertigen Charakterbogens. Über die Schaltflächen ganz oben
-          springst du jederzeit zwischen den Schritten hin und her; was du schon
-          eingetragen hast, bleibt dabei stehen. Gespeichert wird alles erst mit{" "}
+          <strong>Einen neuen Charakter</strong> legst du in Tabs an:
+          <strong> Werte</strong>, optional passende Regelmodule,{" "}
+          <strong>Persönliche Daten</strong>, <strong>Biografie</strong> und{" "}
+          <strong>Dateien</strong>. Dieselben Tabs verwendest du später beim
+          Bearbeiten. Aktivierte Module können einen eigenen Tab beitragen;
+          dieser erscheint nur für passende Charakterrollen. Über die Reiter
+          springst du jederzeit zwischen den Bereichen hin und her, und deine
+          Eingaben bleiben dabei erhalten. Gespeichert wird alles erst mit{" "}
           <strong>„Fertig“</strong> — brichst du vorher ab, ist nichts angelegt.
         </p>
       </GuideSection>
@@ -80,19 +81,29 @@ export default function CharacterCreationGuide() {
         <p>
           Im Schritt <strong>Werte</strong> trägst du die sechs Attribute und
           sechs Disziplinen in Zahlenkästen ein; daneben läuft mit, was deine
-          Verteilung kostet und wie viel Budget übrig ist. Dazu kommen die
-          Personalakte (Pronomen, Rolle, Zuweisung, Herkunft, Erziehung,
-          Laufbahn, Erfahrung, Merkmale), Schutz, Entschlossenheit, Ansehen und
-          der Stress-Bonus. Die Listen — Werte, Schwerpunkte, Talente, Angriffe,
-          Ausrüstung, Hobbys, Karriere-Ereignisse — füllst du über{" "}
+          Verteilung kostet und wie viel Budget übrig ist. Dazu kommen
+          Schutz, Entschlossenheit, Ansehen und den Stress-Bonus. Werte,
+          Talente, Angriffe, Ausrüstung und Hobbys füllst du über{" "}
           <strong>„Hinzufügen“</strong>; jeder Eintrag hat ein rotes Minus zum
           Entfernen. Talente <em>und Schwerpunkte</em> kommen aus ihrem Katalog
           (siehe unten). Bei Werten, Schwerpunkten und Talenten steht dabei, wie
           viele der freien Plätze aus der Ersterschaffung du schon vergeben
-          hast. Spezies-Fähigkeiten und Sonderregeln bleiben Textfelder — dort
-          stehen meist ganze Regelsätze. Leere Felder gelten als „nicht
-          angegeben“; der maximale Stress ist kein Eingabefeld, sondern ergibt
-          sich aus Fitness und dem Bonus aus Talenten.
+          hast. Deine Rolle wählst du in den persönlichen Daten aus einer Liste
+          der STA-2e-Rollen oder trägst eine Modulrolle ein. Der dazugehörige
+          <strong> Role Bonus</strong> erscheint automatisch. Spezies wählst du
+          dort als Mehrfachauswahl; unter „Werte“ kannst du die für diese
+          Spezies verfügbaren <strong>Species Abilities</strong> markieren.
+          Der maximale Stress ist kein Eingabefeld, sondern ergibt sich aus
+          Fitness und dem Bonus aus Talenten.
+        </p>
+        <p>
+          Die <strong>Career Events</strong> wählst du aus der STA-2e-W20-Tabelle
+          oder würfelst sie mit dem W20. Zu jedem Ereignis zeigt der Editor den
+          Attributs- und Disziplinzuwachs, einen Fokus sowie Fokusvorschläge;
+          bei manchen Ereignissen ist außerdem ein passendes Trait optional.
+          Die zwei Ereignisse geben je einen Attributs- und Disziplinpunkt sowie
+          einen Fokus. Trage diese Zuwächse in Attribute, Disziplinen und
+          Schwerpunkte ein; ein optionales Trait kommt zu den Merkmalen.
         </p>
         <p>
           Ist die gespeicherte Rolle <strong>Technomage</strong>, erscheint auf

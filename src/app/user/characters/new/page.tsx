@@ -11,6 +11,7 @@ import CharacterWizard from "./CharacterWizard";
 import HelpButton from "@/components/help/HelpButton";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
 import CharacterCreationGuide from "@/components/character/CharacterCreationGuide";
+import { listCampaignRuleModules } from "@/lib/campaignRuleModules";
 
 export const metadata: Metadata = {
   title: "Neuer Charakter",
@@ -58,11 +59,12 @@ export default async function NewCharacterPage() {
   // Regelwerk und Talent-Katalog braucht erst der zweite Schritt — sie hängen
   // aber an nichts, was der Assistent unterwegs ändert, und werden deshalb
   // gleich mitgeladen statt nachträglich nachgereicht.
-  const [rules, talents, focuses, campaignRules] = await Promise.all([
+  const [rules, talents, focuses, campaignRules, ruleModules] = await Promise.all([
     getAdvancementRules(),
     listTalents(),
     listFocuses(),
     listCampaignRules(),
+    listCampaignRuleModules(),
   ]);
 
   return (
@@ -86,10 +88,9 @@ export default async function NewCharacterPage() {
           <h1>Neuen Charakter anlegen</h1>
         </HelpTitleRow>
         <p className="lcars-text">
-          In vier Schritten: Stammdaten, Werte, Biografie und zum Schluss eine
-          Vorschau des fertigen Charakterbogens. Zwischen den Schritten kannst
-          du jederzeit hin und her wechseln — angelegt wird der Charakter erst
-          mit „Fertig“.
+          Bearbeite Werte, passende Regelmodule, persönliche Daten und
+          Biografie in eigenen Tabs. Unter Dateien prüfst du die Vorschau und
+          legst den Charakter an.
         </p>
 
         <CharacterWizard
@@ -98,6 +99,9 @@ export default async function NewCharacterPage() {
           talents={talents}
           focuses={focuses}
           campaignRules={campaignRules}
+          ruleModules={ruleModules
+            .filter((module) => module.enabled)
+            .map((module) => module.definition)}
         />
       </article>
     </>

@@ -8,6 +8,7 @@ import type {
   RuleModuleDefinition,
 } from "@/lib/ruleModuleTypes";
 import { validateRuleModuleDefinition } from "@/lib/ruleModuleTypes";
+export { moduleSupportsCharacterRole } from "@/lib/ruleModuleTypes";
 
 const DEFINITIONS: Record<string, RuleModuleDefinition> = {
   [BASE_RULE_MODULE_ID]: BASE_RULE_MODULE,
@@ -140,23 +141,3 @@ export async function resetBaseCampaignRuleModule(): Promise<void> {
   await sql`DELETE FROM campaign_rule_modules WHERE id = ${BASE_RULE_MODULE_ID}`;
   revalidateTag(RULE_MODULES_TAG, { expire: 0 });
 }
-
-export function moduleSupportsCharacterRole(
-  definition: RuleModuleDefinition,
-  role: string | null,
-): boolean {
-  if (!role) return definition.characterRoles.some((item) => item.trim() === "*");
-  const normalize = (value: string) => value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-  const candidate = normalize(role);
-  return definition.characterRoles.some((item) => {
-    if (item.trim() === "*") return true;
-    const expected = normalize(item);
-    return candidate === expected ||
-      (expected.length >= 5 && candidate.includes(expected));
-  });
-}
-

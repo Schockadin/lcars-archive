@@ -25,20 +25,23 @@ export default function RevisionsPanel({
   path,
   revisions,
   defaultOpen = false,
+  collapsible = true,
 }: {
   contentType: RevisionContentType;
   contentId: number;
   // Pfad für revalidatePath nach dem Wiederherstellen.
   path: string;
   revisions: ContentRevision[];
-  // Auf der eigenen Charakterseite sind alle Panels per Vorgabe offen; auf
-  // den übrigen Bearbeiten-Seiten bleibt das bisherige Verhalten erhalten.
+  // Auf der eigenen Charakterseite ist die Historie fest sichtbar; auf den
+  // übrigen Bearbeiten-Seiten bleibt sie standardmäßig eingeklappt.
   defaultOpen?: boolean;
+  collapsible?: boolean;
 }) {
   return (
     <SettingsPanel
       title="Versionen"
       defaultOpen={defaultOpen}
+      collapsible={collapsible}
       hint={`Frühere Fassungen des Textes — die letzten ${REVISION_KEEP} werden aufgehoben`}
       badge={
         revisions.length === 0

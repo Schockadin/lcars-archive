@@ -9,7 +9,6 @@ import {
   EXPERIENCE_OPTIONS,
   LIST_FIELDS,
   SCALAR_NUMBER_FIELDS,
-  TEXT_FIELDS,
   computeStress,
   isCharacterExperience,
   validateDistribution,
@@ -29,6 +28,25 @@ import type { Focus } from "@/lib/focusCatalog";
 import { TalentModal } from "./TalentPicker";
 import { FocusModal } from "./FocusPicker";
 import EntryAddModal from "./EntryAddModal";
+import CharacterRoleSelect from "./CharacterRoleSelect";
+import CharacterSpeciesMultiSelect from "./CharacterSpeciesMultiSelect";
+import { CharacterSelectField, CharacterSelectInput } from "./CharacterFormControls";
+import { CAREER_PATH_OPTIONS, ENVIRONMENT_OPTIONS, UPBRINGING_OPTIONS } from "@/lib/sta2eLifepath";
+import { filterSpeciesAbilitiesForSpecies, getAdditionalRoleBonusNotes, getRoleBonusEntries, getSpeciesAbilityChoices, findRoleOption } from "@/lib/sta2eCharacterOptions";
+import {
+  careerEventByIdOrTitle,
+  careerEventTitle,
+  rollCareerEvent,
+  STA2E_CAREER_EVENTS,
+} from "@/lib/sta2eCareerEvents";
+import Sta2eLifepathBuilder from "./Sta2eLifepathBuilder";
+import { applySta2eLifepath } from "@/lib/sta2eLifepath";
+import {
+  checkSta2ePointBuy,
+  sta2ePointBuyTotals,
+  STA2E_POINT_BUY_ATTRIBUTE_TOTAL,
+  STA2E_POINT_BUY_DEPARTMENT_TOTAL,
+} from "@/lib/sta2ePointBuy";
 
 export interface InlineAdvancement {
   characterId: number;
@@ -47,9 +65,8 @@ export interface InlineAdvancement {
 // Budget-Anzeige, Vorschau und das abschickende Formular alle mit demselben
 // Stand, ohne ihn zu kopieren.
 
-// Freitextlisten, die als ganze Regelsätze gepflegt werden (Spezies-Fähigkeit,
-// Sonderregeln) — dort steht in der Runde ein Absatz, keine Aufzählung. Alle
-// übrigen Listen laufen über das Hinzufügen-Fenster.
+// Diese Bereiche werden aus Spezies- und Rollenkatalogen dargestellt und
+// brauchen daher kein allgemeines Listen-Hinzufügen-Fenster.
 const TEXTAREA_LISTS = new Set(["speciesAbilities", "specialRules"]);
 // Talente und Schwerpunkte kommen ausschließlich aus ihrem Katalog und haben
 // je ein eigenes Auswahlfenster (TalentPicker/FocusPicker) statt des freien
@@ -62,7 +79,6 @@ const LIST_PLACEHOLDERS: Record<string, string> = {
   pastimes: "z.B. Jazz-Klarinette",
   attacks: "z.B. Phaser Typ 2 (Strahl)",
   equipment: "z.B. Tricorder",
-  careerEvents: "z.B. Erste Begegnung mit den Borg",
 };
 
 // Freikontingent der Ersterschaffung je Liste, soweit es eines gibt.
@@ -83,13 +99,18 @@ function BudgetMeter({
   cost,
   total,
   remaining,
+  unit = "AP",
 }: {
   label: string;
   cost: number;
   total: number;
   remaining: number;
+  unit?: "AP" | "Punkte";
 }) {
   const over = remaining < 0;
+  const verb = unit === "AP" ? "verbraucht" : "verteilt";
+  const remainingLabel = unit === "AP" ? "AP übrig" : "Punkte zu verteilen";
+  const overLabel = unit === "AP" ? "AP zu viel" : "Punkte zu viel";
   // Ohne Budget (0 AP eingestellt) gibt es nichts zu füllen — sonst führte
   // die Division zu NaN und der Balken verschwände.
   const filled =
@@ -100,12 +121,12 @@ function BudgetMeter({
       <div className="stat-budget-head">
         <span className="stat-budget-label">{label}</span>
         <span className="stat-budget-spent">
-          {cost} / {total} AP verbraucht
+          {cost} / {total} {unit} {verb}
         </span>
       </div>
       <div className="stat-budget-figure">
         <strong>{over ? -remaining : remaining}</strong>
-        <span>{over ? "AP zu viel" : "AP übrig"}</span>
+        <span>{over ? overLabel : remainingLabel}</span>
       </div>
       <div
         className="stat-budget-meter"
@@ -113,7 +134,7 @@ function BudgetMeter({
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={cost}
-        aria-label={`${label}: ${cost} von ${total} AP verbraucht`}
+        aria-label={`${label}: ${cost} von ${total} ${unit} ${verb}`}
       >
         <span style={{ width: `${over ? 100 : filled}%` }} />
       </div>
@@ -204,6 +225,21 @@ function overfilledValues(
   return over;
 }
 
+function advancementWouldExceedDistribution(
+  values: (number | null)[],
+  targetIndex: number,
+  nextValue: number,
+  rule: DistributionRule,
+): boolean {
+  const after = values.map((value, index) =>
+    index === targetIndex ? nextValue : value,
+  );
+  return (
+    after.filter((value) => value === rule.max).length > rule.maxAtMax ||
+    after.filter((value) => value === rule.max - 1).length > rule.maxAtSecond
+  );
+}
+
 export default function CharacterValuesEditor({
   stats,
   onChange,
@@ -211,9 +247,9 @@ export default function CharacterValuesEditor({
   talents,
   focuses,
   species,
+  onSpeciesChange = () => {},
   idPrefix,
   advancement,
-  showPersonnelFields = true,
   flatSections = false,
 }: {
   stats: CharacterStats;
@@ -225,17 +261,14 @@ export default function CharacterValuesEditor({
   // Schwerpunkt-Katalog für die Auswahl (gepflegt unter /gm/focuses).
   focuses: Focus[];
   // Spezies der Akte — für Voraussetzungen wie „Vulcan".
-  species: string | null;
+  species: string[];
+  onSpeciesChange?: (species: string[]) => void;
   // Präfix der Feld-IDs; auf einer Seite können zwei Editoren stehen.
   idPrefix: string;
   // Nur auf der eigenen Charakterseite nach abgeschlossener Erschaffung:
   // Inline-Steigerungen verwenden dieselbe Action und dieselbe Kostenprüfung
   // wie früher das separate Advancement-Panel.
   advancement?: InlineAdvancement;
-  // Der Anlege-Assistent führt diese Angaben weiterhin in seinem Werte-
-  // Schritt. Auf der bestehenden Charakterseite liegen sie dagegen in der
-  // zusammengeführten Personalakte und würden hier doppelt erscheinen.
-  showPersonnelFields?: boolean;
   // Auf der bestehenden Charakterseite liegt der Editor bereits in einem
   // gerahmten, aufklappbaren Werte-Panel. Dort brauchen die Untergruppen
   // keine weiteren Panelrahmen; im Anlege-Assistenten bleiben sie erhalten.
@@ -248,9 +281,25 @@ export default function CharacterValuesEditor({
   // Schwerpunkte nur noch über AP veränderbar (siehe advancementAction) — der
   // Editor zeigt sie dann nur noch an. Verbindlich ist die Prüfung im Server.
   const locked = stats.creationLocked;
+  const lifepathMode = stats.creationMethod === "sta2e-lifepath";
+  const pointBuyMode = stats.creationMethod === "sta2e-point-buy";
 
   function patch(next: Partial<CharacterStats>) {
-    onChange({ ...stats, ...next });
+    const updated = { ...stats, ...next };
+    onChange(lifepathMode ? applySta2eLifepath(updated, species) : updated);
+  }
+
+  function changeSpecies(nextSpecies: string[]) {
+    onSpeciesChange(nextSpecies);
+    const updated = {
+      ...stats,
+      speciesAbilities: filterSpeciesAbilitiesForSpecies(
+        stats.speciesAbilities,
+        nextSpecies,
+        stats.speciesAbilities,
+      ),
+    };
+    onChange(lifepathMode ? applySta2eLifepath(updated, nextSpecies) : updated);
   }
 
   function setNumber(
@@ -275,6 +324,23 @@ export default function CharacterValuesEditor({
     patch({ [key]: update(prev) } as unknown as Partial<CharacterStats>);
   }
 
+  function setCareerEvent(index: number, value: string) {
+    const next = [...stats.careerEvents];
+    if (!value) {
+      // Beim Entfernen rückt ein eventuell vorhandenes zweites Ereignis in
+      // den ersten Platz nach — die beiden Lifepath-Schritte bleiben kompakt.
+      next.splice(index, 1);
+    } else {
+      next[index] = value;
+    }
+    patch({ careerEvents: next });
+  }
+
+  function drawCareerEvent(index: number) {
+    const event = rollCareerEvent();
+    setCareerEvent(index, event.id);
+  }
+
   function numberValue(value: number | null): string {
     return value === null ? "" : String(value);
   }
@@ -285,6 +351,26 @@ export default function CharacterValuesEditor({
     current: number | null,
   ): ReactNode {
     if (!locked || !advancement) return undefined;
+    const fields = kind === "attribute" ? ATTRIBUTE_FIELDS : DEPARTMENT_FIELDS;
+    const rule = kind === "attribute" ? ATTRIBUTE_RULE : DEPARTMENT_RULE;
+    const values =
+      kind === "attribute"
+        ? ATTRIBUTE_FIELDS.map((field) => stats.attributes[field.key])
+        : DEPARTMENT_FIELDS.map((field) => stats.departments[field.key]);
+    const targetIndex = fields.findIndex((field) => field.key === key);
+    if (targetIndex < 0) return undefined;
+    if (
+      current !== null &&
+      (current >= rule.max ||
+        advancementWouldExceedDistribution(
+          values,
+          targetIndex,
+          current + 1,
+          rule,
+        ))
+    ) {
+      return undefined;
+    }
     const next = current === null ? null : current + 1;
     const cost =
       next === null
@@ -334,21 +420,32 @@ export default function CharacterValuesEditor({
 
   // Regelverstöße live anzeigen — verbindlich geprüft wird in der Action.
   const ruleErrors = useMemo(
-    () => [
+    () => [...new Set([
       ...validateDistribution(attributeValues, ATTRIBUTE_RULE, "Attribute"),
       ...validateDistribution(departmentValues, DEPARTMENT_RULE, "Disziplinen"),
-    ],
+      ...(pointBuyMode ? checkSta2ePointBuy(stats) : []),
+    ])],
     // eslint-disable-next-line react-hooks/exhaustive-deps -- abgeleitet aus den beiden Wertegruppen
-    [stats.attributes, stats.departments],
+    [stats.attributes, stats.departments, pointBuyMode],
   );
 
   const attributeOver = overfilledValues(attributeValues, ATTRIBUTE_RULE);
   const departmentOver = overfilledValues(departmentValues, DEPARTMENT_RULE);
   const budget = creationBudget(stats, rules);
+  const pointTotals = sta2ePointBuyTotals(stats);
   const maxStress = computeStress(stats);
+  const speciesAbilityChoices = getSpeciesAbilityChoices(species);
+  const legacySpeciesAbilities = stats.speciesAbilities.filter(
+    (entry) => !speciesAbilityChoices.some((choice) => choice.value === entry),
+  );
+  const roleOption = findRoleOption(stats.characterRole);
+  const roleBonusEntries = getRoleBonusEntries(
+    stats.characterRole,
+    stats.specialRules,
+  );
 
   const managedLists = LIST_FIELDS.filter(
-    (field) => !TEXTAREA_LISTS.has(field.key),
+    (field) => !TEXTAREA_LISTS.has(field.key) && field.key !== "careerEvents",
   );
   const sectionClassName = flatSections
     ? "stat-editor-section"
@@ -356,77 +453,88 @@ export default function CharacterValuesEditor({
 
   return (
     <div className="flex flex-col gap-[16px]">
-      {showPersonnelFields && (
-        <section className={sectionClassName}>
-          <SectionTitle
-            en="Personnel File"
-            de="Kopfdaten"
-            flat={flatSections}
-          />
-          <div className="stat-editor-body">
-            <div className="stat-editor-grid">
-              {TEXT_FIELDS.map((field) => (
-                <div key={field.key} className="stat-editor-field">
-                  <label
-                    htmlFor={`${idPrefix}-${field.key}`}
-                    className="stat-field-label"
-                  >
-                    <span className="stat-label-primary">
-                      {field.original ?? field.label}
-                    </span>
-                    <span className="stat-label-secondary">{field.label}</span>
-                  </label>
-                  <input
-                    id={`${idPrefix}-${field.key}`}
-                    type="text"
-                    value={stats[field.key] ?? ""}
-                    onChange={(event) =>
-                      patch({
-                        [field.key]: event.target.value,
-                      } as Partial<CharacterStats>)
-                    }
-                    className="stat-field-input"
-                  />
-                </div>
-              ))}
-
-              <div className="stat-editor-field">
-                <label
-                  htmlFor={`${idPrefix}-experience`}
-                  className="stat-field-label"
-                >
-                  <span className="stat-label-primary">Experience</span>
-                  <span className="stat-label-secondary">Erfahrungsstufe</span>
-                </label>
-                <select
-                  id={`${idPrefix}-experience`}
-                  value={stats.experience ?? ""}
-                  onChange={(event) =>
-                    patch({
-                      experience: isCharacterExperience(event.target.value)
-                        ? event.target.value
-                        : null,
-                    })
-                  }
-                  className="stat-field-input"
-                >
-                  <option value="">— keine Angabe —</option>
-                  {EXPERIENCE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+      <section className={sectionClassName}>
+        <SectionTitle en="Character Profile" de="Charakterprofil" flat={flatSections} />
+        <div className="stat-editor-body">
+          <div className="stat-editor-grid">
+            <CharacterSpeciesMultiSelect
+              idPrefix={idPrefix}
+              value={species}
+              onChange={changeSpecies}
+              disabled={lifepathMode && locked}
+            />
+            <CharacterRoleSelect
+              id={`${idPrefix}-characterRole`}
+              value={stats.characterRole}
+              onChange={(value) => patch({ characterRole: value })}
+              disabled={lifepathMode && locked}
+            />
+            {!lifepathMode && <>
+              <CharacterSelectField
+                id={`${idPrefix}-environment`}
+                label="Environment"
+                secondary="Herkunft"
+                value={stats.environment ?? ""}
+                legacyValue={stats.environment}
+                options={ENVIRONMENT_OPTIONS.map((option) => ({ value: option.name, label: `${option.label} (${option.name})` }))}
+                onChange={(value) => patch({ environment: value || null })}
+              />
+              <CharacterSelectField
+                id={`${idPrefix}-upbringing`}
+                label="Upbringing"
+                secondary="Erziehung"
+                value={stats.upbringing ?? ""}
+                legacyValue={stats.upbringing}
+                options={UPBRINGING_OPTIONS.map((option) => ({ value: option.name, label: option.name }))}
+                onChange={(value) => patch({ upbringing: value || null })}
+              />
+              <CharacterSelectField
+                id={`${idPrefix}-careerPath`}
+                label="Career Path"
+                secondary="Laufbahn"
+                value={stats.careerPath ?? ""}
+                legacyValue={stats.careerPath}
+                options={CAREER_PATH_OPTIONS.map((option) => ({ value: option.name, label: option.name }))}
+                onChange={(value) => patch({ careerPath: value || null })}
+              />
+              <CharacterSelectField
+                id={`${idPrefix}-experience`}
+                label="Experience"
+                secondary="Erfahrungsstufe"
+                value={stats.experience ?? ""}
+                options={EXPERIENCE_OPTIONS}
+                placeholder="— keine Angabe —"
+                onChange={(value) => patch({ experience: isCharacterExperience(value) ? value : null })}
+              />
+            </>}
           </div>
-        </section>
+        </div>
+      </section>
+
+      {lifepathMode && (
+        <Sta2eLifepathBuilder
+          stats={stats}
+          onChange={onChange}
+          species={species}
+          talents={talents}
+          focuses={focuses}
+          readOnly={locked}
+        />
       )}
 
       {/* ── Attribute ─────────────────────────────────────────────── */}
       <section className={sectionClassName}>
         <SectionTitle en="Attributes" de="Attribute" flat={flatSections} />
-        {!locked && (
+        {!locked && pointBuyMode && (
+          <BudgetMeter
+            label="Attributsumme"
+            cost={pointTotals.attributes}
+            total={STA2E_POINT_BUY_ATTRIBUTE_TOTAL}
+            remaining={STA2E_POINT_BUY_ATTRIBUTE_TOTAL - pointTotals.attributes}
+            unit="Punkte"
+          />
+        )}
+        {!locked && !lifepathMode && !pointBuyMode && (
           <BudgetMeter
             label="Attribute"
             cost={budget.attributeCost}
@@ -435,6 +543,7 @@ export default function CharacterValuesEditor({
           />
         )}
         <p className="stat-sheet-rule">
+          {pointBuyMode && <>Punktesystem: Startwert 7, Gesamt 56 (14 Punkte zusätzlich verteilen). </>}
           Werte von {ATTRIBUTE_RULE.min} bis {ATTRIBUTE_RULE.max}; höchstens{" "}
           {ATTRIBUTE_RULE.maxAtMax} Attribut auf {ATTRIBUTE_RULE.max} und{" "}
           {ATTRIBUTE_RULE.maxAtSecond} auf {ATTRIBUTE_RULE.max - 1}.
@@ -447,7 +556,7 @@ export default function CharacterValuesEditor({
                 field={field}
                 idPrefix={`${idPrefix}-attr`}
                 value={numberValue(stats.attributes[field.key])}
-                readOnly={locked}
+                readOnly={locked || lifepathMode}
                 invalid={
                   stats.attributes[field.key] !== null &&
                   attributeOver.has(stats.attributes[field.key] as number)
@@ -467,7 +576,16 @@ export default function CharacterValuesEditor({
       {/* ── Disziplinen ───────────────────────────────────────────── */}
       <section className={sectionClassName}>
         <SectionTitle en="Departments" de="Disziplinen" flat={flatSections} />
-        {!locked && (
+        {!locked && pointBuyMode && (
+          <BudgetMeter
+            label="Disziplinensumme"
+            cost={pointTotals.departments}
+            total={STA2E_POINT_BUY_DEPARTMENT_TOTAL}
+            remaining={STA2E_POINT_BUY_DEPARTMENT_TOTAL - pointTotals.departments}
+            unit="Punkte"
+          />
+        )}
+        {!locked && !lifepathMode && !pointBuyMode && (
           <BudgetMeter
             label="Disziplinen"
             cost={budget.departmentCost}
@@ -476,6 +594,7 @@ export default function CharacterValuesEditor({
           />
         )}
         <p className="stat-sheet-rule">
+          {pointBuyMode && <>Punktesystem: Startwert 1, Gesamt 16 (10 Punkte zusätzlich verteilen). </>}
           Werte von {DEPARTMENT_RULE.min} bis {DEPARTMENT_RULE.max}; höchstens{" "}
           {DEPARTMENT_RULE.maxAtMax} Disziplin auf {DEPARTMENT_RULE.max} und{" "}
           {DEPARTMENT_RULE.maxAtSecond} auf {DEPARTMENT_RULE.max - 1}.
@@ -488,7 +607,7 @@ export default function CharacterValuesEditor({
                 field={field}
                 idPrefix={`${idPrefix}-dep`}
                 value={numberValue(stats.departments[field.key])}
-                readOnly={locked}
+                readOnly={locked || lifepathMode}
                 invalid={
                   stats.departments[field.key] !== null &&
                   departmentOver.has(stats.departments[field.key] as number)
@@ -570,7 +689,9 @@ export default function CharacterValuesEditor({
             const isFocus = field.key === FOCUS_LIST;
             // Talente und Schwerpunkte sind nach dem Festschreiben nur noch
             // über AP zu haben; die übrigen Listen bleiben frei pflegbar.
-            const listLocked = locked && (isCatalog || isFocus);
+            const listLocked = (locked && (isCatalog || isFocus)) ||
+              (lifepathMode && ["values", "focuses", "talents"].includes(field.key)) ||
+              (locked && lifepathMode && field.key === "speciesAbilities");
             const listCost = isCatalog ? rules.talentCost : rules.focusCost;
             const hasCatalogEntries = isCatalog
               ? talents.length > 0
@@ -587,7 +708,7 @@ export default function CharacterValuesEditor({
                     <span className="stat-label-secondary">{field.label}</span>
                   </span>
                   <span className="flex items-center gap-[8px]">
-                    {free !== null && !locked && (
+                    {free !== null && !locked && !lifepathMode && (
                       <span className="stat-editor-list-count">
                         {entries.length} / {free} frei
                       </span>
@@ -679,34 +800,196 @@ export default function CharacterValuesEditor({
             );
           })}
 
-          {/* Spezies-Fähigkeit und Sonderregeln sind ganze Regelsätze, keine
-              Aufzählungen — sie bleiben Textfelder, eine Zeile je Eintrag. */}
-          {LIST_FIELDS.filter((field) => TEXTAREA_LISTS.has(field.key)).map(
-            (field) => (
-              <div key={field.key} className="stat-editor-field">
-                <label
-                  htmlFor={`${idPrefix}-${field.key}`}
-                  className="stat-field-label"
-                >
-                  <span className="stat-label-primary">
-                    {field.original ?? field.label}
-                  </span>
-                  <span className="stat-label-secondary">{field.label}</span>
-                </label>
-                <textarea
-                  id={`${idPrefix}-${field.key}`}
-                  value={(
-                    (stats as unknown as Record<string, string[]>)[field.key] ??
-                    []
-                  ).join("\n")}
-                  onChange={(e) =>
-                    setList(field.key, () => e.target.value.split("\n"))
-                  }
-                  rows={3}
-                  className="stat-field-input font-mono"
-                />
+          {!lifepathMode && <div className="stat-editor-list">
+            <div className="stat-editor-list-head">
+              <span className="stat-field-label">
+                <span className="stat-label-primary">Career Events</span>
+                <span className="stat-label-secondary">Karriere-Ereignisse</span>
+              </span>
+            </div>
+            <p className="stat-sheet-rule">
+              Wähle oder würfle zwei Ereignisse. Jedes gewährt +1 auf das
+              angegebene Attribut und die Disziplin sowie einen Fokus; die
+              Ereignisse nennen passende Fokusvorschläge. Die Zuwächse trägst
+              du in den jeweiligen Wertefeldern ein.
+            </p>
+            <div className="stat-editor-grid">
+              {[0, 1].map((index) => {
+                const selectedValue = stats.careerEvents[index] ?? "";
+                const event = selectedValue
+                  ? careerEventByIdOrTitle(selectedValue)
+                  : null;
+                const legacyValue =
+                  selectedValue && !event ? selectedValue : null;
+                const attribute = event
+                  ? event.attribute === "any"
+                    ? "beliebig"
+                    : ATTRIBUTE_FIELDS.find((field) => field.key === event.attribute)?.label ?? event.attribute
+                  : null;
+                const department = event
+                  ? event.department === "any"
+                    ? "beliebig"
+                    : DEPARTMENT_FIELDS.find((field) => field.key === event.department)?.label ?? event.department
+                  : null;
+
+                return (
+                  <div className="stat-editor-field" key={index}>
+                    <label
+                      className="stat-field-label"
+                      htmlFor={`${idPrefix}-career-event-${index + 1}`}
+                    >
+                      <span className="stat-label-primary">Career Event {index + 1}</span>
+                      <span className="stat-label-secondary">Karriere-Ereignis {index + 1}</span>
+                    </label>
+                    <div className="flex flex-wrap items-center gap-[8px]">
+                      <CharacterSelectInput
+                        id={`${idPrefix}-career-event-${index + 1}`}
+                        value={selectedValue}
+                        disabled={index === 1 && !stats.careerEvents[0]}
+                        onChange={(value) => setCareerEvent(index, value)}
+                        placeholder="— Ereignis wählen —"
+                        className="min-w-0 flex-1"
+                        options={[
+                          ...(legacyValue ? [{ value: legacyValue, label: `${legacyValue} (Alt-Eintrag)` }] : []),
+                          ...STA2E_CAREER_EVENTS.map((option) => ({ value: option.id, label: `${option.roll}. ${option.title}` })),
+                        ]}
+                      />
+                      <button
+                        type="button"
+                        disabled={index === 1 && !stats.careerEvents[0]}
+                        onClick={() => drawCareerEvent(index)}
+                        className="lcars-pill-btn--outline"
+                        aria-label={`Career Event ${index + 1} mit einem W20 würfeln`}
+                      >
+                        W20 würfeln
+                      </button>
+                    </div>
+                    {event && (
+                      <div className="character-role-bonus-rule mt-[8px]">
+                        <p>{event.summary}</p>
+                        <p>
+                          <strong>Bonus:</strong> +1 Attribut ({attribute}), +1
+                          Disziplin ({department}), 1 Fokus.
+                        </p>
+                        <p>
+                          <strong>Fokusvorschläge:</strong>{" "}
+                          {event.focusSuggestions.join(" · ")}
+                        </p>
+                        {event.optionalTrait && (
+                          <p>
+                            <strong>Optionales Trait:</strong> {event.optionalTrait}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {legacyValue && (
+                      <p className="stat-sheet-rule mt-[8px]">
+                        Dieser ältere Freitext bleibt erhalten. Für die
+                        STA-2e-Boni kannst du ein Ereignis aus der Auswahl
+                        übernehmen.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {stats.careerEvents.length > 2 && (
+              <div className="character-ability-legacy">
+                <span className="stat-label-secondary">Weitere gespeicherte Einträge</span>
+                {stats.careerEvents.slice(2).map((entry, index) => (
+                  <div className="stat-editor-list-line" key={`${entry}-${index}`}>
+                    <span>{careerEventTitle(entry)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setCareerEvent(index + 2, "")}
+                      className="lcars-icon-btn"
+                      aria-label={`${careerEventTitle(entry)} entfernen`}
+                      title={`${careerEventTitle(entry)} entfernen`}
+                    >
+                      <MinusCircleIcon />
+                    </button>
+                  </div>
+                ))}
               </div>
-            ),
+            )}
+          </div>}
+
+          {(speciesAbilityChoices.length > 0 || legacySpeciesAbilities.length > 0) && (
+            <fieldset className="stat-editor-field character-ability-picker">
+              <legend className="stat-field-label">
+                <span className="stat-label-primary">Species Ability</span>
+                <span className="stat-label-secondary">Spezies-Fähigkeiten</span>
+              </legend>
+              {speciesAbilityChoices.map((choice) => (
+                <label key={choice.value} className="character-ability-option">
+                  <input
+                    type="checkbox"
+                    checked={stats.speciesAbilities.includes(choice.value)}
+                    onChange={(event) =>
+                      setList("speciesAbilities", (previous) =>
+                        event.target.checked
+                          ? [...previous, choice.value]
+                          : previous.filter((entry) => entry !== choice.value),
+                      )
+                    }
+                  />
+                  <span>
+                    <strong>{choice.value}</strong>
+                    <span>{choice.description}</span>
+                  </span>
+                </label>
+              ))}
+              {legacySpeciesAbilities.length > 0 && (
+                <div className="character-ability-legacy">
+                  <span className="stat-label-secondary">Weitere gespeicherte Einträge</span>
+                  {legacySpeciesAbilities.map((entry) => (
+                    <div className="stat-editor-list-line" key={entry}>
+                      <span>{entry}</span>
+                      <button
+                        type="button"
+                        onClick={() => setList("speciesAbilities", (previous) => previous.filter((item) => item !== entry))}
+                        className="lcars-icon-btn"
+                        aria-label={`${entry} entfernen`}
+                        title={`${entry} entfernen`}
+                      >
+                        <MinusCircleIcon />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </fieldset>
+          )}
+          {(stats.characterRole || stats.specialRules.length > 0) && (
+            <div className="stat-editor-field character-role-bonus">
+              <span className="stat-field-label">
+                <span className="stat-label-primary">Role Bonus</span>
+                <span className="stat-label-secondary">Rollenbonus</span>
+              </span>
+              {roleOption ? (
+                <div className="character-role-bonus-rule">
+                  <strong>{roleOption.label}</strong>
+                  <p>{roleOption.description}</p>
+                </div>
+              ) : (
+                <p className="stat-sheet-rule">
+                  Für diese freie oder Modulrolle ist kein STA-2e-Standardbonus hinterlegt.
+                </p>
+              )}
+              <label htmlFor={`${idPrefix}-roleBonusNotes`} className="stat-label-secondary">
+                Zusätzliche Regelnotizen (optional)
+              </label>
+              <textarea
+                id={`${idPrefix}-roleBonusNotes`}
+                value={getAdditionalRoleBonusNotes(stats.characterRole, stats.specialRules).join("\n")}
+                onChange={(event) => setList("specialRules", () => event.target.value.split("\n"))}
+                rows={2}
+                className="stat-field-input font-mono"
+              />
+              {roleBonusEntries.length > 0 && (
+                <span className="lcars-text text-[13px]">Der Rollenbonus wird automatisch aus der gewählten Rolle übernommen.</span>
+              )}
+            </div>
           )}
         </div>
       </section>

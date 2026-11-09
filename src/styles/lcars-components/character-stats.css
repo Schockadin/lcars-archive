@@ -75,34 +75,38 @@
   margin-inline: 0;
 }
 
-/* Die obersten Bereiche der eigenen Charakterseite sind native
-   <details>-Elemente. Geschlossen bleibt nur die farbige Titelleiste stehen;
-   geöffnet gilt derselbe Abstand wie bei den festen Unterabschnitten des
-   Wertebogens. */
+/* Feste Panels in den Charakter-Tabs verwenden dieselbe farbige Titelleiste
+   wie der Charakterbogen, bleiben aber immer vollständig sichtbar. */
 .stat-sheet-panel {
-  padding-bottom: 0;
+  padding-bottom: 14px;
 }
 
 .stat-sheet-panel > .stat-sheet-section-title {
+  margin-bottom: 14px;
+}
+
+/* Nur ausdrücklich einklappbare Bereiche (der Spell-Kauf) behalten die
+   native Disclosure-Bedienung innerhalb eines Charakter-Tabs. */
+.stat-sheet-collapsible {
+  padding-bottom: 0;
+}
+
+.stat-sheet-collapsible > .stat-sheet-section-title {
   margin-bottom: 0;
   cursor: pointer;
   list-style: none;
 }
 
-.stat-sheet-panel > .stat-sheet-section-title::-webkit-details-marker {
+.stat-sheet-collapsible > .stat-sheet-section-title::-webkit-details-marker {
   display: none;
 }
 
-.stat-sheet-panel[open] {
+.stat-sheet-collapsible[open] {
   padding-bottom: 14px;
 }
 
-.stat-sheet-panel[open] > .stat-sheet-section-title {
+.stat-sheet-collapsible[open] > .stat-sheet-section-title {
   margin-bottom: 14px;
-}
-
-.stat-sheet-panel[open] > .stat-sheet-section-title .stat-sheet-panel-chevron {
-  transform: rotate(-135deg);
 }
 
 .stat-sheet-panel-heading {
@@ -204,6 +208,125 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+}
+
+.character-species-picker-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.character-species-picker {
+  grid-column: 1 / -1;
+}
+
+.character-species-picker-summary {
+  display: block;
+  min-height: 40px;
+  padding-right: 34px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.character-species-picker-summary::-webkit-details-marker {
+  display: none;
+}
+
+.character-species-picker-summary::after {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  content: "▾";
+  color: var(--lcars-ink-data);
+}
+
+.character-species-picker-dropdown[open]
+  .character-species-picker-summary::after {
+  content: "▴";
+}
+
+.character-species-picker-options {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 2px 12px;
+  box-sizing: border-box;
+  width: min(680px, 100%);
+  max-height: min(360px, 55vh);
+  overflow-y: auto;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 6px;
+  background: var(--lcars-bg);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 28%);
+}
+
+.character-species-picker-options legend {
+  padding: 0 4px;
+}
+
+.character-species-picker-option,
+.character-ability-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 4px;
+  color: var(--lcars-ink);
+  cursor: pointer;
+}
+
+.character-species-picker-option input,
+.character-ability-option input {
+  flex: none;
+  margin-top: 3px;
+  accent-color: var(--lcars-primary);
+}
+
+.character-species-picker-legacy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.character-ability-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.character-ability-picker legend {
+  margin-bottom: 6px;
+}
+
+.character-ability-option > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.character-ability-option > span > span,
+.character-role-bonus-rule p {
+  color: var(--lcars-ink-data);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.character-ability-legacy,
+.character-role-bonus-rule {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-left: 3px solid var(--lcars-primary);
+  background: var(--lcars-surface);
+}
+
+.character-role-bonus-rule p {
+  margin: 0;
 }
 
 /* Die Zahlenkästen der Attribute und Disziplinen: Beschriftung über einem
@@ -399,33 +522,44 @@
   }
 }
 
-/* ── Anlege-Assistent (/user/characters/new) ──────────────────────────
-   Schrittleiste und Blätter-Knöpfe: Icon plus Beschriftung, auf schmalen
-   Geräten nur noch das Icon (die Beschriftung steht dort weiterhin im
-   aria-label/title). Ohne das brachen vier beschriftete Pillen auf einem
-   Telefon in vier Zeilen um und schoben das Formular nach unten. */
-/* Kopfzeile des Assistenten: links die Schrittleiste, rechts dieselben
-   Blätter-Knöpfe, die auch unter dem Schritt stehen. Auf den langen
-   Schritten (Werte, Biografie) liegt der untere Knopf sonst weit unterhalb
-   des sichtbaren Bereichs. */
-.wizard-bar {
+/* ── Charaktereditor-Tabs und Assistent-Navigation ─────────────────── */
+.character-editor-tabs-list {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 4px 12px;
+  border-bottom: 2px solid
+    color-mix(in srgb, var(--lcars-ink-data) 35%, transparent);
 }
 
-.wizard-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.character-editor-tab {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 4px solid transparent;
+  margin-bottom: -2px;
+  background: transparent;
+  color: var(--lcars-ink-data);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: left;
+  transition:
+    color 160ms,
+    border-color 160ms;
 }
 
-.wizard-step,
+.character-editor-tab:hover,
+.character-editor-tab--active {
+  border-bottom-color: var(--lcars-primary);
+  color: var(--lcars-ink);
+}
+
+.character-editor-tab:focus-visible {
+  outline: 2px solid var(--lcars-primary-light);
+  outline-offset: 2px;
+}
+
 .wizard-nav-btn {
   display: inline-flex;
   align-items: center;
@@ -446,7 +580,6 @@
   transition: 200ms;
 }
 
-.wizard-step:hover,
 .wizard-nav-btn:hover:not(:disabled) {
   background: var(--lcars-primary-light);
   border-color: var(--lcars-primary-light);
@@ -455,7 +588,6 @@
 
 /* Der Schritt, auf dem der Assistent gerade steht — gefüllt statt
    umrandet, damit die Position auch ohne Beschriftung ablesbar bleibt. */
-.wizard-step--active,
 .wizard-nav-btn:not(.wizard-nav-btn--outline) {
   background: var(--lcars-primary);
   border-color: var(--lcars-primary);
@@ -565,38 +697,21 @@
 }
 
 @media (max-width: 520px) {
-  /* Nur noch die Icons: die Beschriftung steht im aria-label/title. */
-  .wizard-step-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  .wizard-step,
   .wizard-nav-btn {
     justify-content: center;
     padding: 0;
     width: 44px;
     gap: 0;
+    font-size: 0;
   }
 
-  /* Die vier Schritte und die Blätter-Knöpfe teilen sich eine Zeile,
-     statt auf einem Telefon umzubrechen. */
-  .wizard-steps,
   .wizard-nav {
     flex-wrap: nowrap;
   }
 
-  /* Als Icon-Knöpfe passen Schrittleiste UND Blätter-Knöpfe zusammen in
-     die Kopfzeile (4 × 44 + 2 × 44 plus Abstände). */
-  .wizard-bar {
-    flex-wrap: nowrap;
+  .wizard-nav-btn svg {
+    width: 18px;
+    height: 18px;
   }
 
   /* Wertekästen: zwei je Zeile statt einer — 110px Mindestbreite plus

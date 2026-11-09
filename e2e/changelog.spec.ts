@@ -6,18 +6,23 @@ import { test, expect } from "@playwright/test";
 // und Sortierung.
 
 test.describe("Changelog", () => {
-  test("zeigt die Rücknahme von Datenbankänderungen mit Tutorial-Link", async ({
+  test("zeigt die aktuelle Charaktereditor-Version mit Tutorial-Link", async ({
     page,
   }) => {
     await page.goto("/changelog");
     const latest = page.locator("article .lcars-accordion").first();
-    await expect(latest).toContainText("Version 2.1");
-    await expect(latest).toContainText(
-      "Bearbeitungen im Datenbank-Zeilen-Overlay",
-    );
+    await expect(latest).toContainText("Version 2.8");
+    await expect(latest).toContainText("Charaktereditor mit Spezies und STA-2e-Rollen");
+    const tutorialLinks = latest.locator(".lcars-changelog-tutorial-link");
     await expect(
-      latest.getByRole("link", { name: "Im Tutorial: Spielleitung & Admins" }),
-    ).toHaveAttribute("href", "/tutorial#spielleitung-admins");
+      latest.locator(
+        '.lcars-changelog-tutorial-link[href="/tutorial#spielleitung-admins"]',
+      ),
+    ).toHaveCount(1);
+    await expect(tutorialLinks.first()).toHaveAttribute(
+      "href",
+      "/tutorial#charaktererschaffung",
+    );
   });
 
   test("führt jede vorkommende Kategorie im Auswahlfeld, „Alle“ ist gewählt", async ({

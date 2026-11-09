@@ -27,6 +27,7 @@ const GESCHUETZT = [
   "/gm/rules",
   "/gm/chronologie",
   "/admin",
+  "/admin/stats",
 ];
 
 for (const pfad of GESCHUETZT) {
