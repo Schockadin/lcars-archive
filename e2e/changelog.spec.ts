@@ -14,7 +14,11 @@ test.describe("Changelog", () => {
     await expect(latest).toContainText("Version 2.8");
     await expect(latest).toContainText("Charaktereditor mit Spezies und STA-2e-Rollen");
     const tutorialLinks = latest.locator(".lcars-changelog-tutorial-link");
-    await expect(tutorialLinks).toHaveCount(5);
+    await expect(
+      latest.locator(
+        '.lcars-changelog-tutorial-link[href="/tutorial#spielleitung-admins"]',
+      ),
+    ).toHaveCount(1);
     await expect(tutorialLinks.first()).toHaveAttribute(
       "href",
       "/tutorial#charaktererschaffung",
