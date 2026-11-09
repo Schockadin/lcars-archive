@@ -277,7 +277,31 @@ describe("Panels der Charakterseite", () => {
   it("speichert die Werte und lässt fremde Charaktere unangetastet", async () => {
     const { user, id } = await setup();
 
-    const changed = fullStats({ pronouns: "she/her", values: ["Mut"] });
+    // Legacy-Bögen können die Modul-Daten noch nicht gespeichert haben. Ein
+    // manipuliertes statsJson darf sie trotzdem nicht ohne die Modul-Action
+    // und deren Regeln einschleusen.
+    await sql`
+      UPDATE characters
+      SET metadata = jsonb_set(
+        metadata, '{stats}',
+        COALESCE(metadata -> 'stats', '{}'::jsonb) - 'ruleModules'
+      )
+      WHERE id = ${id}
+    `;
+    const changed = fullStats({
+      pronouns: "she/her",
+      values: ["Mut"],
+      ruleModules: {
+        technomage: {
+          resources: { "chaos-points": 999 },
+          selectedTalents: ["ordered-mind"],
+          selectedStatuses: ["berserk"],
+          selectedCollectionEntries: {},
+          prestigeClass: null,
+          prestigeAbilities: [],
+        },
+      },
+    });
     const ok = await saveCharacterStatsAction(
       {},
       formData({
@@ -290,6 +314,9 @@ describe("Panels der Charakterseite", () => {
     expect((await getOwnCharacterStats(user.id, id))?.stats.pronouns).toBe(
       "she/her",
     );
+    expect(
+      (await getOwnCharacterStats(user.id, id))?.stats.ruleModules,
+    ).toEqual({});
 
     // Ein anderes Konto darf denselben Charakter nicht speichern — die
     // Berechtigung steckt in der owner-gescopten Abfrage.

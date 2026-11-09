@@ -37,6 +37,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   deaktivieren, anlegen und löschen. Eigene Module können frei benannte
   Inhaltsbereiche mit eigenen Feldern und von Charakteren auswählbaren
   Einträgen enthalten.
+- **Admin-Statistik** — zeigt der Administration Zugriffe, neue Konten der
+  letzten sieben Tage und eine filterbare Liste der zuletzt angesehenen
+  Inhalte mit Nutzer:in und Zeitpunkt. Gespräche werden nicht protokolliert;
+  Aufrufdaten werden nach 90 Tagen gelöscht.
 - **Charaktereditor mit Tabs** — Werte, persönliche Daten, Biografie und Dateien
   werden beim Anlegen und Bearbeiten in denselben Bereichen gepflegt. Module
   können bei passenden Charakterrollen eigene Tabs beisteuern. Spezies lassen

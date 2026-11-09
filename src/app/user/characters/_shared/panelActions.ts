@@ -356,6 +356,9 @@ export async function saveCharacterStatsAction(
   // Das Spell-Panel speichert seinen Teilbaum separat. Ein gleichzeitig
   // offenes Werte-Formular darf diese Änderungen nicht zurücksetzen.
   stats.technomage = current.stats.technomage;
+  // Moduldaten werden im eigenen Modul-Panel mit separater Validierung
+  // gespeichert. Sie dürfen nie ungeprüft aus statsJson übernommen werden.
+  stats.ruleModules = current.stats.ruleModules;
   // Wie creationLocked kommt auch die Notiz zurückgenommener Steigerungen nie
   // aus dem Formular — sie entsteht beim Zurücksetzen der Erschaffung durch
   // die Spielleitung und wird beim Abschließen abgearbeitet.

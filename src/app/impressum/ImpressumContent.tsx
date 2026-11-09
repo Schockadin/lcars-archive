@@ -81,6 +81,13 @@ export default function ImpressumContent() {
           dafür die aktuelle Spell- und Schuldefinition des Regelmoduls.
         </p>
         <p>
+          Für Administrator:innen gibt es ein Statistik-Dashboard mit
+          Zugriffszahlen, Anmeldungen der letzten Woche und einer Übersicht
+          zuletzt angesehener Inhalte. Die personenbezogene Aufrufliste ist auf
+          angemeldete Konten beschränkt und wird nach 90 Tagen gelöscht; Details
+          stehen in der <a href="/datenschutz">Datenschutzerklärung</a>.
+        </p>
+        <p>
           Spieler:innen können Personalakte, Biografie sowie Charakter- und
           Modulwerte auf der eigenen Charakterseite als JSON-Datei herunterladen und in eine
           eigene Figur importieren. Die Datei wird im Browser gespeichert;
