@@ -46,6 +46,7 @@
     "db:pg-dump": "tsx --env-file=.env.local scripts/pg-dump.ts",
     "db:pg-restore": "tsx --env-file=.env.local scripts/pg-restore.ts",
     "db:purge-deleted": "tsx --conditions=react-server scripts/purge-soft-deleted.ts",
+    "db:purge-content-views": "tsx --conditions=react-server scripts/purge-content-views.ts",
     "admin:log-digest": "tsx --conditions=react-server scripts/send-admin-log-digest.ts",
     "assets:migrate-content-images": "tsx --conditions=react-server --env-file=.env.local scripts/migrate-content-images-to-asset-bucket.ts",
     "assets:fix-portrait-urls": "tsx --conditions=react-server --env-file=.env.local scripts/fix-portrait-asset-urls.ts",

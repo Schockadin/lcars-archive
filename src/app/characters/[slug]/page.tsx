@@ -17,6 +17,7 @@ import { getTimeline } from "@/lib/timeline";
 import { filterEvents, type TimelineScope } from "@/lib/timelineTypes";
 import { listCharacterDocuments } from "@/lib/characterDocuments";
 import { addStoredContentLinkPreviews } from "@/lib/autolink";
+import ContentViewTracker from "@/components/ContentViewTracker";
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -118,6 +119,9 @@ export default async function CharakterPage({ params }: Props) {
   return (
     <div className="h-[90%]">
       <MarkNewsSeen type="character" slug={character.slug} />
+      {viewer && (
+        <ContentViewTracker contentType="character" slug={character.slug} />
+      )}
       <CharakterDetailPage
         character={characterWithLinkPreviews}
         documents={documents}

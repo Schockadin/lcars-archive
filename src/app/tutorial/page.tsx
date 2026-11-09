@@ -1253,6 +1253,14 @@ export default function TutorialPage() {
                   umwandeln (alles blockweise mit Fortschrittsbalken).
                 </li>
                 <li>
+                  Unter <strong>„Statistiken“</strong> Zugriffe und neue Konten
+                  der letzten sieben Tage vergleichen. Eine filterbare Liste
+                  zeigt, welche angemeldeten Nutzer:innen zuletzt welche
+                  Charaktere, Missionen, Missionsberichte und Archiv-Einträge
+                  geöffnet haben. Gesprächsinhalte werden nicht protokolliert;
+                  die Aufrufdaten werden nach 90 Tagen gelöscht.
+                </li>
+                <li>
                   Unter <strong>„Audit-Log“</strong> nachvollziehen, wer wann
                   welche sicherheitsrelevante Kontoaktion durchgeführt hat.
                   Bearbeitungen im Zeilen-Overlay unter „Datenbank“ werden dort

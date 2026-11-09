@@ -16,6 +16,7 @@ import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 import { listNotes } from "@/lib/contentNotes";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import { missionLogHref } from "@/lib/contentRoutes";
+import ContentViewTracker from "@/components/ContentViewTracker";
 
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
@@ -70,6 +71,9 @@ export default async function LogPage({ params }: Props) {
     <>
       <PageMeta title={log.mission_title} section="chronologie" />
       <MarkNewsSeen type="mission_log" slug={log.slug} />
+      {viewer && (
+        <ContentViewTracker contentType="mission_log" slug={log.slug} />
+      )}
       <LogDetail log={log} nav={nav} />
       <div className="lcars-text lcars-wide-column mt-[16px] flex flex-col gap-[16px]">
         {viewer && (

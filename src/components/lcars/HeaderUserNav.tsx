@@ -161,6 +161,12 @@ const ADMIN_ITEMS: NavMenuItem[] = [
     group: "System",
   },
   {
+    href: "/admin/stats",
+    label: "Statistiken",
+    permission: "admin.access",
+    group: "Protokolle",
+  },
+  {
     href: "/admin/audit-log",
     label: "Audit-Log",
     permission: "admin.access",

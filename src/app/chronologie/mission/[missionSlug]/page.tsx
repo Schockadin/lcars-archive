@@ -26,6 +26,7 @@ import { listMissionSynopsisBlocks } from "@/lib/gameSessions";
 import HelpButton from "@/components/help/HelpButton";
 import { PublicChronologyGuide } from "@/components/help/guides/PublicGuides";
 import ContentActionsPanel from "@/components/ContentActionsPanel";
+import ContentViewTracker from "@/components/ContentViewTracker";
 interface Props {
   params: Promise<{ missionSlug: string }>;
   searchParams: Promise<{ activateFollow?: string }>;
@@ -112,6 +113,9 @@ export default async function MissionPage({ params, searchParams }: Props) {
     <>
       <PageMeta title={mission.title} section="chronologie" />
       <MarkNewsSeen type="mission" slug={mission.slug} />
+      {viewer && (
+        <ContentViewTracker contentType="mission" slug={mission.slug} />
+      )}
       <MissionSynopsis
         mission={mission}
       />

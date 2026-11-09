@@ -28,9 +28,8 @@ export default function DSGVOContent({ year }: { year: number }) {
 
         <h2>2. Erhobene Daten & Zweck</h2>
         <p>
-          Diese Website betreibt kein Tracking und keine Analysetools mit
-          personenbezogenen Daten. Für die Kampagnen-Teilnehmer:innen gibt es
-          einen passwortgeschützten Login-Bereich (<code>/login</code>,{" "}
+          Für die Kampagnen-Teilnehmer:innen gibt es einen passwortgeschützten
+          Login-Bereich (<code>/login</code>,{" "}
           <code>/user/…</code>). Dort werden E-Mail-Adresse, Name, Rolle(n)
           sowie ein Passwort-Hash gespeichert (Rechtsgrundlage: Art. 6 Abs. 1
           lit. b DSGVO — Erfüllung des Nutzungsverhältnisses der Kampagne). Zur
@@ -47,6 +46,28 @@ export default function DSGVOContent({ year }: { year: number }) {
           geräteübergreifend erhalten bleiben — reine Komfort-Einstellungen
           ohne Rückschluss auf weitere personenbezogene Daten (Rechtsgrundlage:
           Art. 6 Abs. 1 lit. b DSGVO).
+        </p>
+        <p>
+          Für angemeldete Personen werden außerdem Aufrufe einzelner
+          Charaktere, Missionen, Missionsberichte und normaler Archiv-Einträge
+          erfasst. Gespeichert werden die Zuordnung zum Konto, Inhaltstyp,
+          Inhaltstitel und -adresse sowie der Zeitpunkt. Gesprächsinhalte,
+          IP-Adressen und Gerätekennungen werden dabei nicht protokolliert.
+          Die Administration kann daraus Nutzungszahlen und eine nach Konto
+          aufgeschlüsselte Liste der zuletzt angesehenen Inhalte erstellen.
+          Die Aufrufliste ist im Dashboard Administrator:innen vorbehalten;
+          Personen mit gesondertem Datenbankzugang können sie außerdem über
+          ihre privilegierten Datenbankwerkzeuge einsehen.
+          Die Einträge werden nach 90 Tagen automatisch gelöscht. Die
+          Verarbeitung dient der Kampagnenverwaltung und der Einschätzung,
+          welche Inhalte genutzt werden (Rechtsgrundlage: Art. 6 Abs. 1 lit. f
+          DSGVO — berechtigtes Interesse an einer funktionsgerechten
+          Kampagnen-Anwendung).
+        </p>
+        <p>
+          Es gibt keine Drittanbieter- oder websiteübergreifenden
+          Analyse-Dienste. Die Aufrufstatistik wird serverseitig geführt und
+          verwendet keine zusätzlichen Analyse-Cookies.
         </p>
         <p>
           Zum Festlegen eines ersten Passworts (Einladung durch die
@@ -562,8 +583,8 @@ export default function DSGVOContent({ year }: { year: number }) {
           handelt, ist gemäß § 25 Abs. 2 TTDSG keine Einwilligung erforderlich
           (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO). Der Cookie-Hinweis beim
           ersten Besuch informiert lediglich darüber, ohne eine Wahlmöglichkeit
-          anzubieten, da es keine optionalen Cookies (Tracking, Analyse,
-          Marketing) gibt, die man ablehnen könnte.
+          anzubieten, da es keine optionalen Cookies für Tracking, Analyse oder
+          Marketing gibt, die man ablehnen könnte.
         </p>
         <p>
           Netlify kann darüber hinaus technische Cookies für den sicheren

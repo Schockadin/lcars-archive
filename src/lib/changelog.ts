@@ -175,6 +175,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },
+      {
+        text: "Die Administration sieht im Statistik-Dashboard Zugriffe, neue Konten der letzten Woche und eine Liste der zuletzt angesehenen Inhalte mit Nutzer:in und Zeitpunkt.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
     ],
   },
   {
