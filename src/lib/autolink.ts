@@ -419,15 +419,18 @@ export async function getOwnAutolinkableContent(
 export { normalizeWikilinkTarget };
 
 // Apostrophe im href-Attribut können numerisch (&#x27;/&#39;) oder als
-// &apos; kodiert sein. Ein bereits kodiertes Entity kann durch die äußere
-// href-Kodierung nochmals als &amp;... erscheinen; deshalb zuerst &amp;
-// auflösen. decodeURIComponent löst HTML-Entities nicht auf.
-function decodeHtmlEntities(s: string): string {
+// &apos; kodiert sein. Durch eine äußere href-Kodierung stehen sie teils als
+// &amp;... da. Vor dem Trennen eines Fragments muss das Apostroph-Entity
+// aufgelöst werden, da sein # sonst fälschlich als Fragmenttrenner gilt.
+function decodeHtmlApostropheEntities(s: string): string {
   return s
-    .replace(/&amp;/g, "&")
-    .replace(/&#x27;/gi, "'")
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/gi, "'");
+    .replace(/&(?:amp;)?#x27;/gi, "'")
+    .replace(/&(?:amp;)?#39;/gi, "'")
+    .replace(/&(?:amp;)?apos;/gi, "'");
+}
+
+function decodeHtmlEntities(s: string): string {
+  return decodeHtmlApostropheEntities(s).replace(/&amp;/g, "&");
 }
 
 // markdownToHtml() rendert [[Ziel]] (siehe remarkWikiLinks in
@@ -799,9 +802,15 @@ export function splitWikilinkTarget(rawTarget: string): {
   target: string;
   anchor: string;
 } {
-  const hash = rawTarget.indexOf("#");
-  const rawName = hash === -1 ? rawTarget : rawTarget.slice(0, hash);
-  const rawAnchor = hash === -1 ? "" : rawTarget.slice(hash + 1);
+  const targetWithDecodedApostropheEntities =
+    decodeHtmlApostropheEntities(rawTarget);
+  const hash = targetWithDecodedApostropheEntities.indexOf("#");
+  const rawName =
+    hash === -1
+      ? targetWithDecodedApostropheEntities
+      : targetWithDecodedApostropheEntities.slice(0, hash);
+  const rawAnchor =
+    hash === -1 ? "" : targetWithDecodedApostropheEntities.slice(hash + 1);
   return {
     target: decodeHtmlEntities(decodeURIComponent(rawName)),
     anchor: rawAnchor
