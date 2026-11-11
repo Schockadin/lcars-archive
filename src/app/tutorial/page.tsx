@@ -1129,6 +1129,11 @@ export default function TutorialPage() {
                 speicherst.
               </p>
               <p>
+                Auch Apostrophe im Namen sind möglich: <code>[[T&apos;Mok]]</code>{" "}
+                führt zum Charakter mit der Adresse{" "}
+                <code>/characters/t-mok</code>.
+              </p>
+              <p>
                 Die automatische Verlinkung erkennt bei Aliasen auch übliche
                 Genitivformen. Bei einem Wikilink zeigt ein kurzer Hover über
                 den Verweis eine Textvorschau des Ziels, sofern dort eine

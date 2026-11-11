@@ -277,7 +277,9 @@ export default function DSGVOContent({ year }: { year: number }) {
           die eigenen Charaktere, Missionen, Session-Zusammenfassungen,
           Logbücher und Datenbank-Einträge automatisch auf Namen bekannter,
           veröffentlichter Inhalte prüfen lassen. Neue Verweise werden in den
-          gespeicherten Texten ergänzt; Gespräche bleiben unberührt. Die
+          gespeicherten Texten ergänzt; Gespräche bleiben unberührt. Auch
+          manuell gesetzte Wikilinks werden in Vorschau und gespeicherten
+          Inhalten anhand der vorhandenen Namen und Slugs aufgelöst. Die
           Verarbeitung erfolgt innerhalb der Anwendung und Datenbank. Es werden
           dafür keine Inhalte an einen zusätzlichen Dienst übermittelt
           (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO — Bereitstellung der

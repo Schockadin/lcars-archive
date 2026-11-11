@@ -138,8 +138,11 @@ export default function ImpressumContent() {
           unter einer gemeinsamen Datumsüberschrift. In der Missionschronik
           lassen sich die Session-Zusammenfassungen als „Log-Einträge“ anzeigen
           und nach Datum sortieren. Die optionale Sammelverlinkung ergänzt auf
-          Wunsch der angemeldeten Person Verweise auf bekannte Einträge; sie
-          ändert nichts an der Autorenschaft oder den Rechten am Text.
+          Wunsch der angemeldeten Person Verweise auf bekannte Einträge;
+          manuelle Wikilinks werden beim Anzeigen ebenfalls zu passenden
+          Einträgen aufgelöst, auch wenn deren Name einen Apostroph enthält.
+          Diese Verlinkungen ändern nichts an der Autorenschaft oder den
+          Rechten am Text.
           Der Seitenbetreiber stellt lediglich die Plattform zur gemeinsamen
           Dokumentation der Kampagne bereit und beansprucht keine darüber
           hinausgehenden Rechte an diesen nutzergenerierten Beiträgen. Der
