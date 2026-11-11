@@ -1138,6 +1138,8 @@ LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
   jedem Speicher-Pfad, `resolvePublicWikilinks` (nur die öffentlichen Ziele
   aus `getAutolinkTargets`) an der Editor-Vorschau, die ohne Anmeldung
   aufrufbar ist und deshalb keine Entwurfstitel verraten darf.
+  Ein HTML-kodiertes Apostroph im Linkziel wird vor der Slug-Suche dekodiert
+  (`[[T'Mok]]` → `/characters/t-mok`).
   **Auch beim Autolinking**: `renderAutolinkedHtml` löst erst die vom
   Durchlauf selbst erzeugten Marken auf (aus dessen `matches`, ohne weitere
   Abfrage) und danach alles Übrige. Bis v1.44 fehlte der zweite Schritt —

@@ -418,16 +418,16 @@ export async function getOwnAutolinkableContent(
 // Thema dieses Moduls), die Funktion selbst steht in slug.ts.
 export { normalizeWikilinkTarget };
 
-// rehype-stringify kodiert Apostrophe im href-Attribut als numerische
-// HTML-Entity (&#x27;, hex — nicht &#39;, dezimal), was decodeURIComponent
-// nicht auflöst. Dieselbe Notwendigkeit wie decodeEntities() in
-// scripts/ingest/wikilinks.ts, hier nur auf das eine Zeichen reduziert,
-// das bei Namen wie "T'Lorexia" vorkommt.
+// Apostrophe im href-Attribut können numerisch (&#x27;/&#39;) oder als
+// &apos; kodiert sein. Ein bereits kodiertes Entity kann durch die äußere
+// href-Kodierung nochmals als &amp;... erscheinen; deshalb zuerst &amp;
+// auflösen. decodeURIComponent löst HTML-Entities nicht auf.
 function decodeHtmlEntities(s: string): string {
   return s
+    .replace(/&amp;/g, "&")
     .replace(/&#x27;/gi, "'")
     .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, "&");
+    .replace(/&apos;/gi, "'");
 }
 
 // markdownToHtml() rendert [[Ziel]] (siehe remarkWikiLinks in
