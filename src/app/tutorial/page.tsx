@@ -1129,7 +1129,7 @@ export default function TutorialPage() {
                 speicherst.
               </p>
               <p>
-                Auch Apostrophe im Namen sind möglich: <code>[[T'Mok]]</code>{" "}
+                Auch Apostrophe im Namen sind möglich: <code>[[T&apos;Mok]]</code>{" "}
                 führt zum Charakter mit der Adresse{" "}
                 <code>/characters/t-mok</code>.
               </p>
