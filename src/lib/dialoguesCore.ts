@@ -1850,7 +1850,7 @@ export interface DialogueSummary {
   createdAt?: string;
   slug: string;
   title: string;
-  partnerName: string;
+  partnerNames: string[];
   lastMessageCharacterName: string | null;
   updatedAt: string;
   // Ingame-Datum (metadata.logDate, ISO) — Sortierschlüssel der Dialog-Listen.
@@ -1860,6 +1860,19 @@ export interface DialogueSummary {
   characterName: string;
   isDraft: boolean;
   ownerUserId: number | null;
+}
+
+function getDialoguePartnerNames(
+  participants: ArchiveParticipant[],
+  ownSlugs: Set<string>,
+  excludedSlug?: string,
+): string[] {
+  const names = participants
+    .filter((participant) =>
+      participant.slug !== excludedSlug && !ownSlugs.has(participant.slug),
+    )
+    .map((participant) => participant.name);
+  return names.length > 0 ? names : ["Unbekannt"];
 }
 
 // "Deine Gespräche" fürs Dashboard (scope "open", Default) bzw. "Meine
@@ -1983,12 +1996,11 @@ export async function getDialoguesForUser(
       // Reihenfolge), der an diesem Gespräch teilnimmt, benennt die Zeile.
       const own = ownCharacters.find((c) => participantSlugs.has(c.slug));
       if (!own) continue;
-      const partner = participants.find((p) => !ownSlugs.has(p.slug));
       results.set(row.slug, {
         id: row.id,
         slug: row.slug,
         title: row.title,
-        partnerName: partner?.name ?? "Unbekannt",
+        partnerNames: getDialoguePartnerNames(participants, ownSlugs),
         lastMessageCharacterName: row.last_message_character_name,
         updatedAt: row.updated_at,
         createdAt: row.created_at,
@@ -2046,14 +2058,16 @@ export async function getDialoguesForUser(
   `;
   for (const row of npcRows) {
     if (results.has(row.slug)) continue;
-    const partner = parseParticipants(row.metadata).find(
-      (p) => p.slug !== row.character_slug && !ownSlugs.has(p.slug),
-    );
+    const participants = parseParticipants(row.metadata);
     results.set(row.slug, {
       id: row.id,
       slug: row.slug,
       title: row.title,
-      partnerName: partner?.name ?? "Unbekannt",
+      partnerNames: getDialoguePartnerNames(
+        participants,
+        ownSlugs,
+        row.character_slug,
+      ),
       lastMessageCharacterName: row.last_message_character_name,
       updatedAt: row.updated_at,
       createdAt: row.created_at,

@@ -5,6 +5,7 @@ import ChronoRow from "@/components/timeline/ChronoRow";
 import ChronoCard from "@/components/timeline/ChronoCard";
 import type { UserContentLog } from "@/lib/characters";
 import type { DialogueSummary } from "@/lib/dialoguesCore";
+import DialoguePartnerMeta from "@/components/DialoguePartnerMeta";
 import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
 import type { UserContentArchiveEntry } from "@/lib/archive";
 import { fmtDate, sessionLabel, periodLabel } from "@/lib/missionFormat";
@@ -273,9 +274,7 @@ function UserContentBrowserContent({
       characterSlug: d.characterSlug,
       meta: (
         <>
-          <span>
-            <b>Gesprächspartner</b> {d.partnerName}
-          </span>
+          <DialoguePartnerMeta names={d.partnerNames} />
           <span>
             <b>Status</b> {d.open ? "Offen" : "Abgeschlossen"}
           </span>

@@ -8,6 +8,7 @@ import {
   LcarsAkteCard,
   type SortDir,
 } from "@/components/lcars";
+import DialoguePartnerMeta from "@/components/DialoguePartnerMeta";
 import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
 import CharacterWizard from "@/app/user/characters/new/CharacterWizard";
 import LearnedSpellsSection from "@/app/user/characters/[characterId]/LearnedSpellsSection";
@@ -708,9 +709,7 @@ export default function DevGalleryPage() {
           title="Gespräch in der Krankenstation"
           meta={
             <>
-              <span>
-                <b>Gesprächspartner</b> Kira
-              </span>
+              <DialoguePartnerMeta names={["Kira", "Quark"]} />
               <DialogueLastAuthorMeta characterName="Tuvok" />
             </>
           }

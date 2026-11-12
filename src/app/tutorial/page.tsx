@@ -824,7 +824,8 @@ export default function TutorialPage() {
               <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein
                 persönliches Dashboard: offene Gespräche in einer eigenen
-                Sektion sowie einen farbcodierten <strong>News-Feed</strong> mit
+                Sektion mit allen Gesprächspartnern sowie einen farbcodierten
+                <strong>News-Feed</strong> mit
                 neu erstellten (grün), bearbeiteten (blau) und gelöschten (rot)
                 Inhalten — plus deine Lesezeichen und Abos.
               </p>

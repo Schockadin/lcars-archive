@@ -147,6 +147,11 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.9",
+    title: "Übersicht offener Gespräche",
+    items: [],
+  },
+  {
     version: "2.8",
     title: "Charaktereditor mit Spezies und STA-2e-Rollen",
     items: [

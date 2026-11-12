@@ -7,7 +7,7 @@ const dialogue: DialogueSummary = {
   id: 1,
   slug: "raumstation",
   title: "Auf der Station",
-  partnerName: "Kira",
+  partnerNames: ["Kira", "Quark"],
   lastMessageCharacterName: "Spock",
   updatedAt: "2400-05-02",
   logDate: null,
@@ -22,6 +22,7 @@ describe("OpenDialoguesSection", () => {
   it("zeigt, wer zuletzt in einem offenen Gespräch geschrieben hat", () => {
     render(<OpenDialoguesSection items={[dialogue]} />);
 
+    expect(screen.getByText("Kira, Quark")).toBeInTheDocument();
     expect(screen.getByText("Zuletzt geschrieben von")).toBeInTheDocument();
     expect(screen.getByText("Spock")).toBeInTheDocument();
   });

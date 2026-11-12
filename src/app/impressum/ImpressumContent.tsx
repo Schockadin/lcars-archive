@@ -155,7 +155,9 @@ export default function ImpressumContent() {
           In offenen Gesprächen kann der Owner weitere Charaktere und NPCs über
           eine nach Aktivitätsstatus gruppierte, alphabetisch sortierte und
           durchsuchbare Auswahlliste hinzufügen. Die Einladungsfunktion ändert
-          nichts an der Autorenschaft der Gesprächsbeiträge.
+          nichts an der Autorenschaft der Gesprächsbeiträge. In den Karten
+          offener Gespräche werden alle übrigen Teilnehmenden als
+          Gesprächspartner angezeigt.
         </p>
         <p>
           Der Charakterbogen bildet den Personnel-File-Bogen aus{" "}
