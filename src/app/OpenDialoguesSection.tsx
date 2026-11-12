@@ -1,5 +1,6 @@
 import { LcarsAkteCard, LcarsCollapsiblePanel } from "@/components/lcars";
 import type { DialogueSummary } from "@/lib/dialogues";
+import DialoguePartnerMeta from "@/components/DialoguePartnerMeta";
 import {
   dialogueHref,
 } from "@/lib/contentRoutes";
@@ -32,9 +33,7 @@ export default function OpenDialoguesSection({
             title={d.title}
             meta={
               <>
-                <span>
-                  <b>Gesprächspartner</b> {d.partnerName}
-                </span>
+                <DialoguePartnerMeta names={d.partnerNames} />
                 <DialogueLastAuthorMeta
                   characterName={d.lastMessageCharacterName}
                 />

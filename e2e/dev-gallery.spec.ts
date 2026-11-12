@@ -198,6 +198,13 @@ test.describe("ContentDetailHeader", () => {
 });
 
 test.describe("Offene Gesprächskarten", () => {
+  test("zeigt alle Gesprächspartner an", async ({ page }) => {
+    await page.goto("/dev-gallery");
+    const card = page.locator("#open-dialogue-card .mission-akte");
+
+    await expect(card).toContainText("Kira, Quark");
+  });
+
   test("zeigt den Charakter, der die letzte Nachricht geschrieben hat", async ({
     page,
   }) => {

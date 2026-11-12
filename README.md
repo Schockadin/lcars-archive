@@ -130,6 +130,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Teilnehmende, muss man sich das Antwortrecht
   erst per Button für zwei Stunden reservieren, mit Sperr-Anzeige und
   optionaler Mail/Push-Benachrichtigung, sobald die Sperre wieder endet.
+  In den Karten offener Gespräche im Dashboard und unter `/user/content`
+  werden alle Gesprächspartner außerhalb der eigenen Figuren angezeigt.
   Beim nachträglichen Einladen gruppiert die Auswahlliste aktive Charaktere,
   aktive NPCs, inaktive Charaktere und inaktive NPCs, jeweils alphabetisch;
   das Suchfeld findet Figuren über Figuren- oder Spielernamen.

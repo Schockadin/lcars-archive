@@ -994,7 +994,7 @@ describe("Gespräche mit NPCs", () => {
 
     expect(own).toBeDefined();
     expect(own?.characterName).toBe("Barkeeper");
-    expect(own?.partnerName).toBe("Spielerin");
+    expect(own?.partnerNames).toEqual(["Spielerin"]);
   });
 
   // getDialoguesForUser holt seit dem Performance-Umbau ALLE eigenen
@@ -1012,9 +1012,16 @@ describe("Gespräche mit NPCs", () => {
       playerId: partnerUser.id,
       name: "Gegenüber",
     });
+    const secondPartnerChar = await insertCharacter({
+      playerId: partnerUser.id,
+      name: "Zweites Gegenüber",
+    });
 
     const base = {
-      partners: [{ kind: "character" as const, id: partnerChar.id }],
+      partners: [
+        { kind: "character" as const, id: partnerChar.id },
+        { kind: "character" as const, id: secondPartnerChar.id },
+      ],
       authorUserId: ownUser.id,
       setting: null,
       locationSlug: null,
@@ -1041,7 +1048,10 @@ describe("Gespräche mit NPCs", () => {
     expect(bySlug.has(dialogB.slug)).toBe(true);
     expect(bySlug.get(dialogA.slug)?.characterName).toBe("Alpha");
     expect(bySlug.get(dialogB.slug)?.characterName).toBe("Beta");
-    expect(bySlug.get(dialogA.slug)?.partnerName).toBe("Gegenüber");
+    expect(bySlug.get(dialogA.slug)?.partnerNames).toEqual([
+      "Gegenüber",
+      "Zweites Gegenüber",
+    ]);
   });
 
   // Robustheit: eine Dialog-Zeile, deren metadata.participants KEIN Array ist

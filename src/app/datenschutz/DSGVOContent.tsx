@@ -135,7 +135,8 @@ export default function DSGVOContent({ year }: { year: number }) {
           nicht an externe Dienste übermittelt. Erst die ausgewählten Personen
           werden als Teilnehmende im Gespräch hinterlegt (Rechtsgrundlage: Art.
           6 Abs. 1 lit. b DSGVO — Erfüllung des Nutzungsverhältnisses der
-          Kampagne).
+          Kampagne). Angemeldete Beteiligte sehen im Dashboard und in ihrer
+          Inhaltsübersicht die Namen der übrigen Gesprächsteilnehmenden.
         </p>
         <p>
           Zum Charakter einer Person gehören neben der Akte auch ihre{" "}

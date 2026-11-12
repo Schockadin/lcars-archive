@@ -32,7 +32,9 @@ const ownDialogueRow = {
   metadata: {
     participants: [
       { slug: "tuvok", name: "Tuvok" },
+      { slug: "quark", name: "Quark" },
       { slug: "kira", name: "Kira" },
+      { slug: "spock", name: "Spock" },
     ],
   },
   updated_at: "2400-05-02T12:00:00Z",
@@ -65,6 +67,8 @@ describe("conversation summary last-message authors", () => {
                 participants: [
                   { slug: "tuvok", name: "Tuvok" },
                   { slug: "mugato", name: "Mugato" },
+                  { slug: "kira", name: "Kira" },
+                  { slug: "spock", name: "Spock" },
                 ],
               },
               updated_at: "2400-05-03T12:00:00Z",
@@ -83,10 +87,14 @@ describe("conversation summary last-message authors", () => {
 
     const summaries = await getDialoguesForUser(7, "open");
 
-    expect(summaries.find((item) => item.slug === "kantine"))
-      .toMatchObject({ lastMessageCharacterName: "Kira" });
-    expect(summaries.find((item) => item.slug === "npc-dialogue"))
-      .toMatchObject({ lastMessageCharacterName: "Mugato" });
+    expect(summaries.find((item) => item.slug === "kantine")).toMatchObject({
+      lastMessageCharacterName: "Kira",
+      partnerNames: ["Quark", "Kira", "Spock"],
+    });
+    expect(summaries.find((item) => item.slug === "npc-dialogue")).toMatchObject({
+      lastMessageCharacterName: "Mugato",
+      partnerNames: ["Kira", "Spock"],
+    });
     expect(queries).toHaveLength(2);
     for (const { query } of queries) {
       expect(query).toContain("LEFT JOIN LATERAL");

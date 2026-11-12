@@ -63,7 +63,7 @@ const dialogue: DialogueSummary = {
   id: 20,
   slug: "kantine",
   title: "Abend in der Kantine",
-  partnerName: "Kira",
+  partnerNames: ["Kira", "Quark"],
   lastMessageCharacterName: "Spock",
   updatedAt: "2400-05-02",
   logDate: null,
@@ -162,6 +162,7 @@ describe("UserContentBrowser", () => {
 
     expect(screen.getByText("Zuletzt geschrieben von")).toBeInTheDocument();
     expect(screen.getByText("Spock")).toBeInTheDocument();
+    expect(screen.getByText("Kira, Quark")).toBeInTheDocument();
     firstRender.unmount();
 
     renderBrowser({
