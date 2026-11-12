@@ -6,16 +6,21 @@ import { test, expect } from "@playwright/test";
 // und Sortierung.
 
 test.describe("Changelog", () => {
-  test("zeigt die aktuelle Charaktereditor-Version mit Tutorial-Link", async ({
+  test("zeigt die Charaktereditor-Version mit Tutorial-Link", async ({
     page,
   }) => {
     await page.goto("/changelog");
-    const latest = page.locator("article .lcars-accordion").first();
-    await expect(latest).toContainText("Version 2.8");
-    await expect(latest).toContainText("Charaktereditor mit Spezies und STA-2e-Rollen");
-    const tutorialLinks = latest.locator(".lcars-changelog-tutorial-link");
+    const characterEditor = page
+      .locator("article .lcars-accordion")
+      .filter({
+        hasText: "Charaktereditor mit Spezies und STA-2e-Rollen",
+      });
+    await expect(characterEditor).toContainText("Version 2.8");
+    const tutorialLinks = characterEditor.locator(
+      ".lcars-changelog-tutorial-link",
+    );
     await expect(
-      latest.locator(
+      characterEditor.locator(
         '.lcars-changelog-tutorial-link[href="/tutorial#spielleitung-admins"]',
       ),
     ).toHaveCount(1);
