@@ -558,8 +558,9 @@ export function GmDialoguesGuide() {
           Die Übersicht <strong>aller offenen Gespräche</strong> — unabhängig
           davon, ob die Spielleitung selbst beteiligt ist. Je Karte stehen{" "}
           <strong>Titel</strong>, <strong>Teilnehmer</strong>,{" "}
-          <strong>Owner</strong> und wann zuletzt geschrieben wurde; ein Klick
-          führt ins Gespräch.
+          <strong>Owner</strong>, wer zuletzt geschrieben hat und bei
+          Mehrparteiengesprächen mit aktiver Reservierung, wer das Antwortrecht
+          hält; ein Klick führt ins Gespräch.
         </p>
         <p>
           Die Übersicht selbst greift nicht ein: Das Gespräch öffnet sich für

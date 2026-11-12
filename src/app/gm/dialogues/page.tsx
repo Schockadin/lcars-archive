@@ -13,6 +13,7 @@ import {
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmDialoguesGuide } from "@/components/help/guides/GmGuides";
 import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
+import DialogueReservationMeta from "@/components/DialogueReservationMeta";
 
 export const metadata: Metadata = {
   title: "Gespräche",
@@ -70,6 +71,9 @@ export default async function AdminDialoguesPage() {
                         </span>
                         <DialogueLastAuthorMeta
                           characterName={d.lastMessageCharacterName}
+                        />
+                        <DialogueReservationMeta
+                          holderName={d.replyRightHolderName}
                         />
                         <span>
                           <b>Owner</b> {d.ownerName ?? "— kein Owner —"}

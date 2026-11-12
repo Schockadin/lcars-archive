@@ -132,6 +132,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   optionaler Mail/Push-Benachrichtigung, sobald die Sperre wieder endet.
   In den Karten offener Gespräche im Dashboard und unter `/user/content`
   werden alle Gesprächspartner außerhalb der eigenen Figuren angezeigt.
+  Bei aktiver Antwortrecht-Reservierung zeigen sie auch, wer reserviert hat;
+  die Übersicht der Spielleitung unter `/gm/dialogues` zeigt diese Person
+  ebenfalls.
   Beim nachträglichen Einladen gruppiert die Auswahlliste aktive Charaktere,
   aktive NPCs, inaktive Charaktere und inaktive NPCs, jeweils alphabetisch;
   das Suchfeld findet Figuren über Figuren- oder Spielernamen.

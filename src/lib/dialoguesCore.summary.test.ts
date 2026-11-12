@@ -39,6 +39,7 @@ const ownDialogueRow = {
   },
   updated_at: "2400-05-02T12:00:00Z",
   last_message_character_name: "Kira",
+  reply_right_holder_name: "Gul Dukat",
   dialogue_open: true,
   is_draft: false,
   owner_user_id: 7,
@@ -73,6 +74,7 @@ describe("conversation summary last-message authors", () => {
               },
               updated_at: "2400-05-03T12:00:00Z",
               last_message_character_name: "Mugato",
+              reply_right_holder_name: "Jean-Luc Picard",
               dialogue_open: true,
               is_draft: false,
               owner_user_id: 7,
@@ -89,15 +91,19 @@ describe("conversation summary last-message authors", () => {
 
     expect(summaries.find((item) => item.slug === "kantine")).toMatchObject({
       lastMessageCharacterName: "Kira",
+      replyRightHolderName: "Gul Dukat",
       partnerNames: ["Quark", "Kira", "Spock"],
     });
     expect(summaries.find((item) => item.slug === "npc-dialogue")).toMatchObject({
       lastMessageCharacterName: "Mugato",
+      replyRightHolderName: "Jean-Luc Picard",
       partnerNames: ["Kira", "Spock"],
     });
     expect(queries).toHaveLength(2);
     for (const { query } of queries) {
       expect(query).toContain("LEFT JOIN LATERAL");
+      expect(query).toContain("FROM dialogue_reservations r");
+      expect(query).toContain("r.expires_at > NOW()");
       expect(query).toContain("ORDER BY dm.created_at DESC, dm.id DESC");
       expect(query).toContain("dm.deleted_at IS NULL");
       expect(query).toContain("COALESCE(c.name, npc.title) AS character_name");
@@ -120,6 +126,7 @@ describe("conversation summary last-message authors", () => {
             metadata: ownDialogueRow.metadata,
             updated_at: ownDialogueRow.updated_at,
             last_message_character_name: "Kira",
+            reply_right_holder_name: "Gul Dukat",
             owner_name: "Quark",
           },
         ]);
@@ -129,7 +136,10 @@ describe("conversation summary last-message authors", () => {
     const [summary] = await getAllOpenDialoguesForGM();
 
     expect(summary.lastMessageCharacterName).toBe("Kira");
+    expect(summary.replyRightHolderName).toBe("Gul Dukat");
     expect(queries[0].query).toContain("LEFT JOIN LATERAL");
+    expect(queries[0].query).toContain("FROM dialogue_reservations r");
+    expect(queries[0].query).toContain("r.expires_at > NOW()");
     expect(queries[0].query).toContain("dm.character_id");
     expect(queries[0].query).toContain("dm.npc_entry_id");
     expect(queries[0].query).toContain("dm.deleted_at IS NULL");
