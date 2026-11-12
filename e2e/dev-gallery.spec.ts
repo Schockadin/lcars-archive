@@ -203,6 +203,8 @@ test.describe("Offene Gesprächskarten", () => {
     const card = page.locator("#open-dialogue-card .mission-akte");
 
     await expect(card).toContainText("Kira, Quark");
+    await expect(card).toContainText("Antwortrecht reserviert von");
+    await expect(card).toContainText("Jean-Luc Picard");
   });
 
   test("zeigt den Charakter, der die letzte Nachricht geschrieben hat", async ({

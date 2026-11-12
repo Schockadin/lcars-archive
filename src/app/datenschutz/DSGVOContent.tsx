@@ -136,7 +136,10 @@ export default function DSGVOContent({ year }: { year: number }) {
           werden als Teilnehmende im Gespräch hinterlegt (Rechtsgrundlage: Art.
           6 Abs. 1 lit. b DSGVO — Erfüllung des Nutzungsverhältnisses der
           Kampagne). Angemeldete Beteiligte sehen im Dashboard und in ihrer
-          Inhaltsübersicht die Namen der übrigen Gesprächsteilnehmenden.
+          Inhaltsübersicht die Namen der übrigen Gesprächsteilnehmenden. Bei
+          aktiver Antwortrecht-Reservierung wird außerdem der Name des
+          reservierenden Kontos dort und in der Übersicht offener Gespräche für
+          GM/Admin angezeigt.
         </p>
         <p>
           Zum Charakter einer Person gehören neben der Akte auch ihre{" "}

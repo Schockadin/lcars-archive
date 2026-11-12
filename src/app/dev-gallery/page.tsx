@@ -9,6 +9,7 @@ import {
   type SortDir,
 } from "@/components/lcars";
 import DialoguePartnerMeta from "@/components/DialoguePartnerMeta";
+import DialogueReservationMeta from "@/components/DialogueReservationMeta";
 import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
 import CharacterWizard from "@/app/user/characters/new/CharacterWizard";
 import LearnedSpellsSection from "@/app/user/characters/[characterId]/LearnedSpellsSection";
@@ -711,6 +712,7 @@ export default function DevGalleryPage() {
             <>
               <DialoguePartnerMeta names={["Kira", "Quark"]} />
               <DialogueLastAuthorMeta characterName="Tuvok" />
+              <DialogueReservationMeta holderName="Jean-Luc Picard" />
             </>
           }
         />

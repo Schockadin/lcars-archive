@@ -9,6 +9,7 @@ const dialogue: DialogueSummary = {
   title: "Auf der Station",
   partnerNames: ["Kira", "Quark"],
   lastMessageCharacterName: "Spock",
+  replyRightHolderName: "Jean-Luc Picard",
   updatedAt: "2400-05-02",
   logDate: null,
   open: true,
@@ -19,11 +20,15 @@ const dialogue: DialogueSummary = {
 };
 
 describe("OpenDialoguesSection", () => {
-  it("zeigt, wer zuletzt in einem offenen Gespräch geschrieben hat", () => {
+  it("zeigt den letzten Autor und die reservierende Person", () => {
     render(<OpenDialoguesSection items={[dialogue]} />);
 
     expect(screen.getByText("Kira, Quark")).toBeInTheDocument();
     expect(screen.getByText("Zuletzt geschrieben von")).toBeInTheDocument();
     expect(screen.getByText("Spock")).toBeInTheDocument();
+    expect(
+      screen.getByText("Antwortrecht reserviert von"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Jean-Luc Picard")).toBeInTheDocument();
   });
 });

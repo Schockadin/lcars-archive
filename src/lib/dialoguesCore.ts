@@ -1852,6 +1852,7 @@ export interface DialogueSummary {
   title: string;
   partnerNames: string[];
   lastMessageCharacterName: string | null;
+  replyRightHolderName: string | null;
   updatedAt: string;
   // Ingame-Datum (metadata.logDate, ISO) — Sortierschlüssel der Dialog-Listen.
   logDate: string | null;
@@ -1908,6 +1909,7 @@ export async function getDialoguesForUser(
       updated_at: string;
       created_at: string;
       last_message_character_name: string | null;
+      reply_right_holder_name: string | null;
       dialogue_open: boolean;
       is_draft: boolean;
       owner_user_id: number | null;
@@ -1922,6 +1924,7 @@ export async function getDialoguesForUser(
             SELECT ae.id, ae.slug, ae.title, ae.metadata,
                    ae.updated_at::text AS updated_at, ae.created_at::text AS created_at,
                    latest_message.character_name AS last_message_character_name,
+                   current_reservation.holder_name AS reply_right_holder_name,
                    ae.dialogue_open, ae.is_draft, ae.owner_user_id
             FROM archive_entries ae
             LEFT JOIN LATERAL (
@@ -1935,6 +1938,15 @@ export async function getDialoguesForUser(
               ORDER BY dm.created_at DESC, dm.id DESC
               LIMIT 1
             ) latest_message ON TRUE
+            LEFT JOIN LATERAL (
+              SELECT held_user.name AS holder_name
+              FROM dialogue_reservations r
+              JOIN users held_user ON held_user.id = r.held_by_user_id
+              WHERE r.archive_entry_id = ae.id
+                AND r.expires_at > NOW()
+                AND ae.dialogue_open
+              LIMIT 1
+            ) current_reservation ON TRUE
             WHERE ae.category = 'dialogue'
               AND EXISTS (
                 -- CASE-Guard: jsonb_array_elements wirft, wenn participants
@@ -1957,6 +1969,7 @@ export async function getDialoguesForUser(
             SELECT ae.id, ae.slug, ae.title, ae.metadata,
                    ae.updated_at::text AS updated_at, ae.created_at::text AS created_at,
                    latest_message.character_name AS last_message_character_name,
+                   current_reservation.holder_name AS reply_right_holder_name,
                    ae.dialogue_open, ae.is_draft, ae.owner_user_id
             FROM archive_entries ae
             LEFT JOIN LATERAL (
@@ -1970,6 +1983,15 @@ export async function getDialoguesForUser(
               ORDER BY dm.created_at DESC, dm.id DESC
               LIMIT 1
             ) latest_message ON TRUE
+            LEFT JOIN LATERAL (
+              SELECT held_user.name AS holder_name
+              FROM dialogue_reservations r
+              JOIN users held_user ON held_user.id = r.held_by_user_id
+              WHERE r.archive_entry_id = ae.id
+                AND r.expires_at > NOW()
+                AND ae.dialogue_open
+              LIMIT 1
+            ) current_reservation ON TRUE
             WHERE ae.category = 'dialogue'
               AND EXISTS (
                 -- CASE-Guard: jsonb_array_elements wirft, wenn participants
@@ -2002,6 +2024,10 @@ export async function getDialoguesForUser(
         title: row.title,
         partnerNames: getDialoguePartnerNames(participants, ownSlugs),
         lastMessageCharacterName: row.last_message_character_name,
+        replyRightHolderName:
+          row.dialogue_open && participants.length > 2
+            ? row.reply_right_holder_name
+            : null,
         updatedAt: row.updated_at,
         createdAt: row.created_at,
         logDate: parseDialogueLogDate(row.metadata),
@@ -2026,6 +2052,7 @@ export async function getDialoguesForUser(
     updated_at: string;
     created_at: string;
     last_message_character_name: string | null;
+    reply_right_holder_name: string | null;
     dialogue_open: boolean;
     is_draft: boolean;
     owner_user_id: number | null;
@@ -2036,6 +2063,7 @@ export async function getDialoguesForUser(
     SELECT ae.id, ae.slug, ae.title, ae.metadata,
            ae.updated_at::text AS updated_at, ae.created_at::text AS created_at,
            latest_message.character_name AS last_message_character_name,
+           current_reservation.holder_name AS reply_right_holder_name,
            ae.dialogue_open, ae.is_draft, ae.owner_user_id,
            c.slug AS character_slug, c.title AS character_name
     FROM dialogue_npc_speakers s
@@ -2052,6 +2080,15 @@ export async function getDialoguesForUser(
       ORDER BY dm.created_at DESC, dm.id DESC
       LIMIT 1
     ) latest_message ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT held_user.name AS holder_name
+      FROM dialogue_reservations r
+      JOIN users held_user ON held_user.id = r.held_by_user_id
+      WHERE r.archive_entry_id = ae.id
+        AND r.expires_at > NOW()
+        AND ae.dialogue_open
+      LIMIT 1
+    ) current_reservation ON TRUE
     WHERE s.user_id = ${userId}
       AND ae.deleted_at IS NULL
       AND (${scope === "all"} OR ae.dialogue_open)
@@ -2069,6 +2106,10 @@ export async function getDialoguesForUser(
         row.character_slug,
       ),
       lastMessageCharacterName: row.last_message_character_name,
+      replyRightHolderName:
+        row.dialogue_open && participants.length > 2
+          ? row.reply_right_holder_name
+          : null,
       updatedAt: row.updated_at,
       createdAt: row.created_at,
       logDate: parseDialogueLogDate(row.metadata),
@@ -2089,6 +2130,7 @@ export interface GmDialogueOverviewItem {
   title: string;
   participantNames: string[];
   lastMessageCharacterName: string | null;
+  replyRightHolderName: string | null;
   updatedAt: string;
   ownerName: string | null;
 }
@@ -2110,11 +2152,13 @@ export async function getAllOpenDialoguesForGM(): Promise<
       metadata: unknown;
       updated_at: string;
       last_message_character_name: string | null;
+      reply_right_holder_name: string | null;
       owner_name: string | null;
     }[]
   >`
     SELECT ae.id, ae.slug, ae.title, ae.metadata, ae.updated_at::text AS updated_at,
            latest_message.character_name AS last_message_character_name,
+           current_reservation.holder_name AS reply_right_holder_name,
            u.name AS owner_name
     FROM archive_entries ae
     LEFT JOIN users u ON u.id = ae.owner_user_id
@@ -2127,18 +2171,32 @@ export async function getAllOpenDialoguesForGM(): Promise<
       ORDER BY dm.created_at DESC, dm.id DESC
       LIMIT 1
     ) latest_message ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT held_user.name AS holder_name
+      FROM dialogue_reservations r
+      JOIN users held_user ON held_user.id = r.held_by_user_id
+      WHERE r.archive_entry_id = ae.id
+        AND r.expires_at > NOW()
+        AND ae.dialogue_open
+      LIMIT 1
+    ) current_reservation ON TRUE
     WHERE ae.category = 'dialogue' AND ae.dialogue_open AND ae.deleted_at IS NULL
     ORDER BY ae.metadata->>'logDate' DESC NULLS LAST, ae.updated_at DESC
   `;
-  return rows.map((row) => ({
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    participantNames: parseParticipants(row.metadata).map((p) => p.name),
-    lastMessageCharacterName: row.last_message_character_name,
-    updatedAt: row.updated_at,
-    ownerName: row.owner_name,
-  }));
+  return rows.map((row) => {
+    const participants = parseParticipants(row.metadata);
+    return {
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      participantNames: participants.map((p) => p.name),
+      lastMessageCharacterName: row.last_message_character_name,
+      replyRightHolderName:
+        participants.length > 2 ? row.reply_right_holder_name : null,
+      updatedAt: row.updated_at,
+      ownerName: row.owner_name,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------

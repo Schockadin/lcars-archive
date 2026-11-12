@@ -877,6 +877,7 @@ describe("getAllOpenDialoguesForGM", () => {
     // "Own"/"Partner" sind die in setupDialogue() vergebenen Charakternamen.
     expect(item).toBeDefined();
     expect(item?.participantNames.sort()).toEqual(["Own", "Partner"].sort());
+    expect(item?.replyRightHolderName).toBeNull();
   });
 
   it("uses the latest non-deleted message character", async () => {
@@ -897,6 +898,40 @@ describe("getAllOpenDialoguesForGM", () => {
     );
 
     expect(item?.lastMessageCharacterName).toBe("Own");
+  });
+
+  it("shows the active reservation holder in user and GM overviews", async () => {
+    const { entryId, ownUser, dialogue } = await setupTriDialogue();
+    await reserveDialogueReply(entryId, ownUser.id);
+
+    const status = await getDialogueLockStatus(entryId);
+    const dashboardItem = (await getDialoguesForUser(ownUser.id)).find(
+      (item) => item.slug === dialogue.slug,
+    );
+    const contentItem = (
+      await getDialoguesForUser(ownUser.id, "all")
+    ).find((item) => item.slug === dialogue.slug);
+    const gmItem = (await getAllOpenDialoguesForGM()).find(
+      (item) => item.slug === dialogue.slug,
+    );
+
+    expect(dashboardItem?.replyRightHolderName).toBe(status?.heldByName);
+    expect(contentItem?.replyRightHolderName).toBe(status?.heldByName);
+    expect(gmItem?.replyRightHolderName).toBe(status?.heldByName);
+
+    await sql`
+      UPDATE dialogue_reservations SET expires_at = NOW() - INTERVAL '1 minute'
+      WHERE archive_entry_id = ${entryId}
+    `;
+    const expiredDashboardItem = (
+      await getDialoguesForUser(ownUser.id)
+    ).find((item) => item.slug === dialogue.slug);
+    const expiredGmItem = (await getAllOpenDialoguesForGM()).find(
+      (item) => item.slug === dialogue.slug,
+    );
+
+    expect(expiredDashboardItem?.replyRightHolderName).toBeNull();
+    expect(expiredGmItem?.replyRightHolderName).toBeNull();
   });
 
   it("excludes closed dialogues", async () => {

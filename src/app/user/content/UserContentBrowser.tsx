@@ -6,6 +6,7 @@ import ChronoCard from "@/components/timeline/ChronoCard";
 import type { UserContentLog } from "@/lib/characters";
 import type { DialogueSummary } from "@/lib/dialoguesCore";
 import DialoguePartnerMeta from "@/components/DialoguePartnerMeta";
+import DialogueReservationMeta from "@/components/DialogueReservationMeta";
 import DialogueLastAuthorMeta from "@/components/DialogueLastAuthorMeta";
 import type { UserContentArchiveEntry } from "@/lib/archive";
 import { fmtDate, sessionLabel, periodLabel } from "@/lib/missionFormat";
@@ -279,9 +280,14 @@ function UserContentBrowserContent({
             <b>Status</b> {d.open ? "Offen" : "Abgeschlossen"}
           </span>
           {d.open && (
-            <DialogueLastAuthorMeta
-              characterName={d.lastMessageCharacterName}
-            />
+            <>
+              <DialogueLastAuthorMeta
+                characterName={d.lastMessageCharacterName}
+              />
+              <DialogueReservationMeta
+                holderName={d.replyRightHolderName}
+              />
+            </>
           )}
           <span>
             <b>Figur</b> {d.characterName}

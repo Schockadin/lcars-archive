@@ -598,11 +598,14 @@ export default function TutorialPage() {
                 jemand anderes reserviert hat, seht ihr, wer gerade dran ist,
                 und könnt euch optional per Mail/Push benachrichtigen lassen,
                 sobald die Sperre wieder endet (antwortet die reservierende
-                Person selbst, endet sie vorzeitig). Ein offenes Gespräch
-                aktualisiert sich dabei automatisch — neue Nachrichten und
-                Änderungen am Antwortrecht erscheinen von selbst, ohne dass du
-                die Seite neu laden musst. Bei aktiver Verbindung kommen diese
-                Aktualisierungen direkt über WebSockets. Dafür muss dein Browser
+                Person selbst, endet sie vorzeitig). Bei aktiver Reservierung
+                zeigen die Karten offener Gespräche im Dashboard, unter „Meine
+                Inhalte“ und in der GM-Übersicht zusätzlich, wer das
+                Antwortrecht hält. Ein offenes Gespräch aktualisiert sich
+                automatisch — neue Nachrichten und Änderungen am Antwortrecht
+                erscheinen von selbst, ohne dass du die Seite neu laden musst.
+                Bei aktiver Verbindung kommen diese Aktualisierungen direkt über
+                WebSockets. Dafür muss dein Browser
                 Ably Realtime erreichen können. Wenn dein Netzwerk die Verbindung
                 blockiert oder sie gestört ist, lade die Seite neu, um den
                 aktuellen Stand abzurufen. An jeder Nachrichtenkarte eines

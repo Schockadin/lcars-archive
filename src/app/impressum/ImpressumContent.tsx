@@ -157,7 +157,9 @@ export default function ImpressumContent() {
           durchsuchbare Auswahlliste hinzufügen. Die Einladungsfunktion ändert
           nichts an der Autorenschaft der Gesprächsbeiträge. In den Karten
           offener Gespräche werden alle übrigen Teilnehmenden als
-          Gesprächspartner angezeigt.
+          Gesprächspartner angezeigt. Bei aktiver Antwortrecht-Reservierung
+          zeigen diese Karten zusätzlich die reservierende Person; die
+          Spielleitung sieht sie auch in der offenen Gesprächsübersicht.
         </p>
         <p>
           Der Charakterbogen bildet den Personnel-File-Bogen aus{" "}

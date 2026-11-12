@@ -65,6 +65,7 @@ const dialogue: DialogueSummary = {
   title: "Abend in der Kantine",
   partnerNames: ["Kira", "Quark"],
   lastMessageCharacterName: "Spock",
+  replyRightHolderName: "Jean-Luc Picard",
   updatedAt: "2400-05-02",
   logDate: null,
   open: true,
@@ -163,6 +164,7 @@ describe("UserContentBrowser", () => {
     expect(screen.getByText("Zuletzt geschrieben von")).toBeInTheDocument();
     expect(screen.getByText("Spock")).toBeInTheDocument();
     expect(screen.getByText("Kira, Quark")).toBeInTheDocument();
+    expect(screen.getByText("Jean-Luc Picard")).toBeInTheDocument();
     firstRender.unmount();
 
     renderBrowser({
@@ -174,6 +176,8 @@ describe("UserContentBrowser", () => {
 
     expect(screen.queryByText("Zuletzt geschrieben von")).toBeNull();
     expect(screen.queryByText("Spock")).toBeNull();
+    expect(screen.queryByText("Antwortrecht reserviert von")).toBeNull();
+    expect(screen.queryByText("Jean-Luc Picard")).toBeNull();
   });
 
   it("führt eigene Events mit Bearbeiten-Aktion als Inhaltsart", () => {
