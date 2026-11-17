@@ -46,11 +46,18 @@ function decodeDataUrlImage(url: string): {
 } {
   const parsed = parseImageDataUrl(url);
   if (!parsed) {
-    throw new PortraitImportError("Die Data-URL enthält kein brauchbares Bild.");
+    throw new PortraitImportError(
+      "Die Data-URL enthält kein brauchbares Bild.",
+    );
+  }
+  if (parsed.base64.length > Math.ceil(MAX_ASSET_IMAGE_BYTES / 3) * 4) {
+    throw oversizedImage();
   }
   const buffer = Buffer.from(parsed.base64, "base64");
   if (buffer.byteLength === 0) {
-    throw new PortraitImportError("Die Data-URL enthält kein brauchbares Bild.");
+    throw new PortraitImportError(
+      "Die Data-URL enthält kein brauchbares Bild.",
+    );
   }
   return { buffer, mimeType: parsed.mimeType };
 }
@@ -59,72 +66,100 @@ async function fetchRemoteImage(
   rawUrl: string,
 ): Promise<{ buffer: Buffer; mimeType: string }> {
   let current = rawUrl.trim();
-
-  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    const target = await assertFetchableUrl(current);
-
-    const response = await fetchWithTimeout(target);
-    // Umleitungen selbst verfolgen statt sie fetch zu überlassen: nur so wird
-    // JEDES Ziel gegen dieselben Schranken geprüft.
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get("location");
-      if (!location) {
-        throw new PortraitImportError(
-          `Umleitung ohne Ziel (HTTP ${response.status}).`,
-        );
-      }
-      current = new URL(location, target).toString();
-      continue;
-    }
-
-    if (!response.ok) {
-      throw new PortraitImportError(
-        `Der Server antwortete mit HTTP ${response.status}.`,
-      );
-    }
-
-    const mimeType = (response.headers.get("content-type") ?? "")
-      .split(";")[0]
-      .trim()
-      .toLowerCase();
-    if (!mimeType.startsWith("image/")) {
-      throw new PortraitImportError(
-        `Die Adresse liefert kein Bild (${mimeType || "ohne Typ"}).`,
-      );
-    }
-
-    const buffer = Buffer.from(await response.arrayBuffer());
-    if (buffer.byteLength === 0) {
-      throw new PortraitImportError("Die Adresse liefert eine leere Datei.");
-    }
-    // Die Größe prüft assertImageAsset beim Hochladen noch einmal; hier geht es
-    // darum, einen absurd großen Download nicht erst komplett zu verarbeiten.
-    if (buffer.byteLength > MAX_ASSET_IMAGE_BYTES) {
-      throw new InvalidAssetError(
-        `Das Bild ist größer als ${Math.round(MAX_ASSET_IMAGE_BYTES / 1024 / 1024)} MB.`,
-      );
-    }
-    return { buffer, mimeType };
-  }
-
-  throw new PortraitImportError("Zu viele Umleitungen.");
-}
-
-async function fetchWithTimeout(url: URL): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    return await fetch(url, {
-      redirect: "manual",
-      signal: controller.signal,
-      headers: { accept: "image/*" },
-    });
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      const target = await assertFetchableUrl(current);
+      const response = await fetch(target, {
+        redirect: "manual",
+        signal: controller.signal,
+        headers: { accept: "image/*" },
+      });
+      // Umleitungen selbst verfolgen statt sie fetch zu überlassen: nur so wird
+      // JEDES Ziel gegen dieselben Schranken geprüft.
+      if (response.status >= 300 && response.status < 400) {
+        void response.body?.cancel().catch(() => {});
+        const location = response.headers.get("location");
+        if (!location) {
+          throw new PortraitImportError(
+            `Umleitung ohne Ziel (HTTP ${response.status}).`,
+          );
+        }
+        current = new URL(location, target).toString();
+        continue;
+      }
+
+      if (!response.ok) {
+        throw new PortraitImportError(
+          `Der Server antwortete mit HTTP ${response.status}.`,
+        );
+      }
+
+      const mimeType = (response.headers.get("content-type") ?? "")
+        .split(";")[0]
+        .trim()
+        .toLowerCase();
+      if (!mimeType.startsWith("image/")) {
+        throw new PortraitImportError(
+          `Die Adresse liefert kein Bild (${mimeType || "ohne Typ"}).`,
+        );
+      }
+
+      const buffer = await readImageBody(response, controller.signal);
+      if (buffer.byteLength === 0) {
+        throw new PortraitImportError("Die Adresse liefert eine leere Datei.");
+      }
+      return { buffer, mimeType };
+    }
+    throw new PortraitImportError("Zu viele Umleitungen.");
   } catch (err) {
+    if (err instanceof PortraitImportError || err instanceof InvalidAssetError)
+      throw err;
     throw new PortraitImportError(
       `Die Adresse ist nicht erreichbar: ${err instanceof Error ? err.message : String(err)}`,
     );
   } finally {
+    // Auch nach schnellen HTTP-Headern bleibt die Deadline bis zum letzten
+    // Body-Chunk aktiv. Bei Fehlern/Abbruch zugleich offene Downloads beenden.
+    controller.abort();
     clearTimeout(timer);
+  }
+}
+
+function oversizedImage(): InvalidAssetError {
+  return new InvalidAssetError(
+    `Das Bild ist größer als ${Math.round(MAX_ASSET_IMAGE_BYTES / 1024 / 1024)} MB.`,
+  );
+}
+
+async function readImageBody(
+  response: Response,
+  signal: AbortSignal,
+): Promise<Buffer> {
+  if (Number(response.headers.get("content-length")) > MAX_ASSET_IMAGE_BYTES) {
+    void response.body?.cancel().catch(() => {});
+    throw oversizedImage();
+  }
+  if (!response.body) return Buffer.alloc(0);
+  const reader = response.body.getReader();
+  const chunks: Buffer[] = [];
+  let bytes = 0;
+  try {
+    for (;;) {
+      signal.throwIfAborted();
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > MAX_ASSET_IMAGE_BYTES) {
+        await reader.cancel();
+        throw oversizedImage();
+      }
+      chunks.push(Buffer.from(value));
+    }
+    return Buffer.concat(chunks, bytes);
+  } finally {
+    reader.releaseLock();
   }
 }
 
@@ -196,7 +231,8 @@ export function isPrivateAddress(address: string): boolean {
 
 function isPrivateIpv4(address: string): boolean {
   const parts = address.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n))) return true;
+  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n)))
+    return true;
   const [a, b] = parts;
   if (a === 0 || a === 10 || a === 127) return true;
   if (a === 169 && b === 254) return true; // Link-local (Cloud-Metadaten!)

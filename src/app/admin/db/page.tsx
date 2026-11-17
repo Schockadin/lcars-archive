@@ -38,7 +38,7 @@ export default async function AdminDbPage() {
           {canBackup && (
             <section className="flex flex-col gap-[12px]">
               <h2 className="text-lcars-primary-ink">DB-Backup</h2>
-              <DbBackupPanel />
+              <DbBackupPanel canRestore={perms.has("users.manage")} />
             </section>
           )}
 

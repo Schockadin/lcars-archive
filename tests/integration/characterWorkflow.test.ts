@@ -39,6 +39,11 @@ vi.mock("@/lib/follows", () => ({
 
 import sql from "@/lib/db";
 import { createSession } from "@/lib/session";
+import {
+  invalidateOtherSessions,
+  setPassword,
+  setUserActive,
+} from "@/lib/users";
 import { insertUser, redirectedTo, formData } from "./helpers";
 import { createCharacterWizardAction } from "@/app/user/characters/_shared/wizardAction";
 import {
@@ -223,6 +228,41 @@ describe("Panels der Charakterseite", () => {
     );
     return { user, id: Number(url.split("/").pop()) };
   }
+
+  it.each([
+    {
+      name: "Kontodeaktivierung",
+      revoke: (id: number) => setUserActive(id, false),
+    },
+    {
+      name: "Passwortwechsel",
+      revoke: (id: number) => setPassword(id, "new-password-hash"),
+    },
+    {
+      name: "Abmelden anderer Geräte",
+      revoke: (id: number) => invalidateOtherSessions(id),
+    },
+  ])("weist einen direkten Action-Aufruf nach $name ab", async ({ revoke }) => {
+    const { user, id } = await setup();
+    await revoke(user.id);
+
+    const target = await redirectedTo(
+      updateCharacterBioAction(
+        {},
+        formData({
+          userId: String(user.id),
+          characterId: String(id),
+          bodyMarkdown: "Änderung mit widerrufenem Cookie",
+        }),
+      ),
+    );
+
+    expect(target).toBe("/login");
+    const [row] = await sql<{ source_md: string }[]>`
+      SELECT source_md FROM characters WHERE id = ${id}
+    `;
+    expect(row.source_md).toBe("## Herkunft\n\nGeboren auf Andoria.");
+  });
 
   it("speichert die Stammdaten, ohne die Biografie zu verlieren", async () => {
     const { user, id } = await setup();

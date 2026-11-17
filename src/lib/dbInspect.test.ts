@@ -17,10 +17,12 @@ const ALL: AdminQueryCapabilities = {
 
 describe("parseSingleSelectTable", () => {
   it("liefert die Tabelle einer einfachen Einzel-Tabellen-Query", () => {
-    expect(parseSingleSelectTable("SELECT * FROM characters")).toBe("characters");
-    expect(parseSingleSelectTable('SELECT * FROM "public"."missions" WHERE id = 1')).toBe(
-      "missions",
+    expect(parseSingleSelectTable("SELECT * FROM characters")).toBe(
+      "characters",
     );
+    expect(
+      parseSingleSelectTable('SELECT * FROM "public"."missions" WHERE id = 1'),
+    ).toBe("missions");
   });
   it("gibt null bei JOIN zurück", () => {
     expect(
@@ -28,9 +30,13 @@ describe("parseSingleSelectTable", () => {
     ).toBeNull();
   });
   it("gibt null bei Komma-Join zurück", () => {
-    expect(parseSingleSelectTable("SELECT * FROM characters, users")).toBeNull();
     expect(
-      parseSingleSelectTable("SELECT * FROM characters c, users u WHERE c.id = u.id"),
+      parseSingleSelectTable("SELECT * FROM characters, users"),
+    ).toBeNull();
+    expect(
+      parseSingleSelectTable(
+        "SELECT * FROM characters c, users u WHERE c.id = u.id",
+      ),
     ).toBeNull();
   });
 });
@@ -38,20 +44,41 @@ describe("parseSingleSelectTable", () => {
 describe("isSelectStarQuery", () => {
   it("true nur für SELECT * FROM …", () => {
     expect(isSelectStarQuery("SELECT * FROM characters")).toBe(true);
-    expect(isSelectStarQuery("  select   *   from characters where id=1")).toBe(true);
+    expect(isSelectStarQuery("  select   *   from characters where id=1")).toBe(
+      true,
+    );
   });
   it("false bei expliziter Spaltenliste oder Alias auf id", () => {
     expect(isSelectStarQuery("SELECT id, title FROM missions")).toBe(false);
-    expect(isSelectStarQuery("SELECT mission_id AS id FROM mission_logs")).toBe(false);
-    expect(isSelectStarQuery("WITH x AS (SELECT * FROM a) SELECT * FROM x")).toBe(false);
+    expect(isSelectStarQuery("SELECT mission_id AS id FROM mission_logs")).toBe(
+      false,
+    );
+    expect(
+      isSelectStarQuery("WITH x AS (SELECT * FROM a) SELECT * FROM x"),
+    ).toBe(false);
   });
 });
 
 describe("parseWriteTarget", () => {
+  it("erkennt ONLY als Modifikator statt als Tabelle", () => {
+    expect(
+      parseWriteTarget("UPDATE ONLY users SET role='admin' WHERE id=1"),
+    ).toBe("users");
+    expect(
+      parseWriteTarget('DELETE FROM ONLY "public"."roles" WHERE key=\'x\''),
+    ).toBe("roles");
+    expect(parseWriteTarget("UPDATE ONLY characters SET name='x'")).toBe(
+      "characters",
+    );
+  });
   it("erkennt INSERT/UPDATE/DELETE-Ziel", () => {
     expect(parseWriteTarget("INSERT INTO users (id) VALUES (1)")).toBe("users");
-    expect(parseWriteTarget("UPDATE roles SET permissions = '{}'")).toBe("roles");
-    expect(parseWriteTarget("DELETE FROM admin_audit_log")).toBe("admin_audit_log");
+    expect(parseWriteTarget("UPDATE roles SET permissions = '{}'")).toBe(
+      "roles",
+    );
+    expect(parseWriteTarget("DELETE FROM admin_audit_log")).toBe(
+      "admin_audit_log",
+    );
     expect(parseWriteTarget('UPDATE "public"."users" SET x = 1')).toBe("users");
   });
   it("gibt null bei SELECT zurück", () => {
@@ -61,10 +88,12 @@ describe("parseWriteTarget", () => {
     // Postgres behandelt /**/ als Whitespace → schreibt nach users. Ohne das
     // Kommentar-Entfernen lieferte der Positions-Parse null und die
     // Schutztabellen-Prüfung würde übersprungen (Rechte-Eskalation).
-    expect(parseWriteTarget("UPDATE/**/users SET role='admin' WHERE id=1")).toBe(
-      "users",
+    expect(
+      parseWriteTarget("UPDATE/**/users SET role='admin' WHERE id=1"),
+    ).toBe("users");
+    expect(parseWriteTarget("DELETE/**/FROM/**/roles WHERE id=1")).toBe(
+      "roles",
     );
-    expect(parseWriteTarget("DELETE/**/FROM/**/roles WHERE id=1")).toBe("roles");
     expect(parseWriteTarget("INSERT/**/INTO users (id) VALUES (1)")).toBe(
       "users",
     );
@@ -74,10 +103,12 @@ describe("parseWriteTarget", () => {
 describe("assertAdminQuery — Rechte", () => {
   it("erlaubt normale Inhalts-Queries entsprechend der Aktion", () => {
     expect(assertAdminQuery("SELECT * FROM characters", ALL)).toBe("read");
-    expect(assertAdminQuery("UPDATE characters SET name='x' WHERE id=1", ALL)).toBe(
-      "write",
+    expect(
+      assertAdminQuery("UPDATE characters SET name='x' WHERE id=1", ALL),
+    ).toBe("write");
+    expect(assertAdminQuery("DELETE FROM mission_logs WHERE id=1", ALL)).toBe(
+      "delete",
     );
-    expect(assertAdminQuery("DELETE FROM mission_logs WHERE id=1", ALL)).toBe("delete");
   });
   it("erzwingt die caps", () => {
     expect(() =>
@@ -92,9 +123,9 @@ describe("assertAdminQuery — Rechte", () => {
 
 describe("assertAdminQuery — Härtung (PR#53-Findings)", () => {
   it("sperrt Credential-Spalten (auch per Alias)", () => {
-    expect(() => assertAdminQuery("SELECT password_hash FROM users", ALL)).toThrow(
-      /password_hash/,
-    );
+    expect(() =>
+      assertAdminQuery("SELECT password_hash FROM users", ALL),
+    ).toThrow(/password_hash/);
     expect(() =>
       assertAdminQuery("SELECT password_hash AS x FROM users", ALL),
     ).toThrow(/password_hash/);
@@ -109,6 +140,11 @@ describe("assertAdminQuery — Härtung (PR#53-Findings)", () => {
   });
   it("sperrt Schreibzugriff auf Auth-/Sicherheits-Tabellen", () => {
     for (const q of [
+      "UPDATE ONLY users SET role='admin' WHERE id=1",
+      'UPDATE ONLY "public"."users" SET role=\'admin\' WHERE id=1',
+      "DELETE FROM ONLY roles WHERE key='x'",
+      "DELETE FROM ONLY (users) WHERE id=1",
+      "UPDATE ONLY/**/users SET role='admin' WHERE id=1",
       "UPDATE users SET role='admin' WHERE id=1",
       "DELETE FROM roles WHERE key='x'",
       "INSERT INTO users (id) VALUES (1)",
@@ -137,6 +173,19 @@ describe("assertAdminQuery — Härtung (PR#53-Findings)", () => {
     expect(
       assertAdminQuery("UPDATE/**/mission_logs SET title='x' WHERE id=1", ALL),
     ).toBe("write");
+    expect(assertAdminQuery("UPDATE ONLY characters SET name='x'", ALL)).toBe(
+      "write",
+    );
+  });
+  it("verweigert unbekannte und nicht unterstützte Ziel-Identifier", () => {
+    for (const query of [
+      "UPDATE unknown_table SET value=1",
+      "UPDATE U&\"us\\0065rs\" SET role='admin'",
+      "UPDATE other_schema.characters SET name='x'",
+      "UPDATE characters.users SET role='admin'",
+    ]) {
+      expect(() => assertAdminQuery(query, ALL)).toThrow(UnsafeQueryError);
+    }
   });
   it("erlaubt Lesen der users-Tabelle (ohne Secret-Spalte)", () => {
     // Lesen bleibt erlaubt — die Secret-Spalte wird separat im Ergebnis
@@ -167,12 +216,19 @@ describe("isProtectedWriteTable", () => {
 
 describe("assertAdminQuery — reguläre Lese-Queries bleiben zulässig", () => {
   it("blockiert legitime Queries ohne verdächtige Tokens NICHT", () => {
-    expect(assertAdminQuery("SELECT array_agg(name) FROM users", ALL)).toBe("read");
-    expect(assertAdminQuery("SELECT json_agg(id) FROM characters", ALL)).toBe("read");
+    expect(assertAdminQuery("SELECT array_agg(name) FROM users", ALL)).toBe(
+      "read",
+    );
+    expect(assertAdminQuery("SELECT json_agg(id) FROM characters", ALL)).toBe(
+      "read",
+    );
     expect(assertAdminQuery("SELECT id, name FROM users u", ALL)).toBe("read");
     // to_json ist keine verbotene Funktion und kein Secret-Name.
     expect(
-      assertAdminQuery("SELECT id, title FROM missions WHERE title <> 'x'", ALL),
+      assertAdminQuery(
+        "SELECT id, title FROM missions WHERE title <> 'x'",
+        ALL,
+      ),
     ).toBe("read");
   });
 
@@ -193,6 +249,17 @@ describe("assertAdminQuery — reguläre Lese-Queries bleiben zulässig", () => 
 // Fassung, die einen exakten Postgres-Tokenizer erfordern würde (E''-Escapes,
 // verschachtelte Kommentare, Dollar-Quotes …).
 describe("assertAdminQuery — nicht umgehbar (Rohtext-Prüfung)", () => {
+  it.each([
+    'SELECT "pg_advisory_lock"(1)',
+    "SELECT pg_catalog.\"set_config\"('statement_timeout', '0', false)",
+    "SELECT pg_advisory_lock/**/(1)",
+    'SELECT U&"pg\\005fadvisory_lock"(1)',
+    "SELECT query_to_xml('SELECT 1', true, false, '')",
+    "SELECT ts_stat('SELECT 1')",
+    "SELECT pg_read_binary_file('/proc/self/environ')",
+  ])("sperrt maskierte oder indirekte Funktionsaufrufe: %s", (query) => {
+    expect(() => assertAdminQuery(query, ALL)).toThrow(UnsafeQueryError);
+  });
   it("erkennt verkettete Statements (statement chaining)", () => {
     // Ohne diese Sperre würde das 2. Statement die PROTECTED_WRITE_TABLES-Prüfung
     // umgehen (die nur das 1. Statement parst).
@@ -218,7 +285,10 @@ describe("assertAdminQuery — nicht umgehbar (Rohtext-Prüfung)", () => {
       ),
     ).toThrow(/password_hash/);
     expect(() =>
-      assertAdminQuery("SELECT E'\\'' AS x, password_hash AS pw FROM users", ALL),
+      assertAdminQuery(
+        "SELECT E'\\'' AS x, password_hash AS pw FROM users",
+        ALL,
+      ),
     ).toThrow(/password_hash/);
   });
 });

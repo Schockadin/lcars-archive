@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import sql from "@/lib/db";
 import { insertUser, insertCharacter, insertMission } from "./helpers";
 import {
   uploadContentImage,
@@ -8,6 +9,7 @@ import {
   deleteContentImage,
   getContentAccessContext,
   canManageContentImages,
+  canViewContentImage,
   InvalidContentImageError,
 } from "@/lib/contentImages";
 import { makeViewer } from "@/lib/visibility";
@@ -29,14 +31,20 @@ const fakeBucket = vi.hoisted(
 // deleteObjectFromR2) teilt sich hier dieselbe In-Memory-Map, damit die
 // Fallback-Lesepfade ebenfalls funktionieren.
 vi.mock("@/lib/r2Backup", () => ({
-  uploadAssetObjectToR2: vi.fn(async (key: string, body: Buffer, contentType: string) => {
-    fakeBucket.set(key, { body, contentType });
-  }),
-  getAssetObjectBytesFromR2: vi.fn(async (key: string) => fakeBucket.get(key) ?? null),
+  uploadAssetObjectToR2: vi.fn(
+    async (key: string, body: Buffer, contentType: string) => {
+      fakeBucket.set(key, { body, contentType });
+    },
+  ),
+  getAssetObjectBytesFromR2: vi.fn(
+    async (key: string) => fakeBucket.get(key) ?? null,
+  ),
   deleteAssetObjectFromR2: vi.fn(async (key: string) => {
     fakeBucket.delete(key);
   }),
-  getObjectBytesFromR2: vi.fn(async (key: string) => fakeBucket.get(key) ?? null),
+  getObjectBytesFromR2: vi.fn(
+    async (key: string) => fakeBucket.get(key) ?? null,
+  ),
   deleteObjectFromR2: vi.fn(async (key: string) => {
     fakeBucket.delete(key);
   }),
@@ -131,7 +139,11 @@ describe("listContentImages / deleteContentImage", () => {
     const listed = await listContentImages("character", character.id);
     expect(listed.map((i) => i.id)).toEqual([first.id, second.id]);
 
-    const deleted = await deleteContentImage("character", character.id, first.id);
+    const deleted = await deleteContentImage(
+      "character",
+      character.id,
+      first.id,
+    );
     expect(deleted).toBe(true);
     expect(await getContentImageById(first.id)).toBeNull();
     expect(await getContentImageBytes(first.id)).toBeNull();
@@ -149,16 +161,40 @@ describe("listContentImages / deleteContentImage", () => {
       user.id,
     );
 
-    const deleted = await deleteContentImage("character", characterB.id, image.id);
+    const deleted = await deleteContentImage(
+      "character",
+      characterB.id,
+      image.id,
+    );
     expect(deleted).toBe(false);
     expect(await getContentImageById(image.id)).not.toBeNull();
   });
 });
 
 describe("getContentAccessContext", () => {
+  it("prüft bei Logbildern die Mission und entzieht Zugriff nach deren Löschen", async () => {
+    const mission = await insertMission();
+    const [log] = await sql<{ id: number }[]>`
+      INSERT INTO mission_logs (slug, title, mission_id, content, is_draft)
+      VALUES ('parent-gated-image-log', 'Log', ${mission.id}, '', false) RETURNING id
+    `;
+    await sql`UPDATE missions SET is_draft = true WHERE id = ${mission.id}`;
+    const access = await getContentAccessContext("mission_log", log.id);
+    expect(access).toMatchObject({ isDraft: false, parentIsDraft: true });
+    expect(canViewContentImage("mission_log", access!, null)).toBe(false);
+    expect(
+      canViewContentImage("mission_log", access!, makeViewer(1, ["gm"])),
+    ).toBe(true);
+    await sql`UPDATE missions SET deleted_at = NOW() WHERE id = ${mission.id}`;
+    expect(await getContentAccessContext("mission_log", log.id)).toBeNull();
+  });
+
   it("returns draft state + owner for a character", async () => {
     const user = await insertUser();
-    const character = await insertCharacter({ playerId: user.id, isDraft: true });
+    const character = await insertCharacter({
+      playerId: user.id,
+      isDraft: true,
+    });
 
     const access = await getContentAccessContext("character", character.id);
     expect(access).toEqual({ isDraft: true, ownerId: user.id });

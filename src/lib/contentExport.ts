@@ -13,7 +13,8 @@
 // Lesepfad offenzulegen.
 import "server-only";
 import sql from "@/lib/db";
-import { getViewer, canView, viewerHasPermission } from "@/lib/visibility";
+import { getViewer, canView, canViewMissionDraft, viewerHasPermission } from "@/lib/visibility";
+import { splitPrivate } from "@/lib/publicContent";
 import { getArchiveEntryBySlug } from "@/lib/archive";
 import { getMissionBySlug, getLogBySlug } from "@/lib/missions";
 import { getCharacterBySlug, getCharacterSourceBySlug } from "@/lib/characters";
@@ -101,10 +102,9 @@ async function loadArchiveEntryExport(slug: string): Promise<ExportableContent |
 }
 
 async function loadMissionExport(slug: string): Promise<ExportableContent | null> {
-  // Missionen haben keine eigene Sichtbarkeits-Sperre (immer öffentlich
-  // lesbar, siehe src/app/chronologie/mission/[missionSlug]/page.tsx).
   const mission = await getMissionBySlug(slug);
   if (!mission) return null;
+  if (!canViewMissionDraft(mission.isDraft, await getViewer())) return null;
 
   const frontmatter: Record<string, unknown> = {
     title: mission.title,
@@ -131,6 +131,8 @@ async function loadMissionLogExport(slug: string): Promise<ExportableContent | n
 
   const viewer = await getViewer();
   if (!canView(log.isDraft, log.ownerUserId, viewer)) return null;
+  const mission = await getMissionBySlug(log.mission_slug);
+  if (!mission || !canViewMissionDraft(mission.isDraft, viewer)) return null;
 
   const [row] = await sql<{ source_md: string | null }[]>`
     SELECT source_md FROM mission_logs WHERE slug = ${slug}
@@ -192,14 +194,20 @@ export async function loadExportableContent(
   type: ExportContentType,
   slug: string,
 ): Promise<ExportableContent | null> {
+  let content: ExportableContent | null;
   switch (type) {
     case "archive_entry":
-      return loadArchiveEntryExport(slug);
+      content = await loadArchiveEntryExport(slug);
+      break;
     case "mission":
-      return loadMissionExport(slug);
+      content = await loadMissionExport(slug);
+      break;
     case "mission_log":
-      return loadMissionLogExport(slug);
+      content = await loadMissionLogExport(slug);
+      break;
     case "character":
-      return loadCharacterExport(slug);
+      content = await loadCharacterExport(slug);
+      break;
   }
+  return content ? { ...content, bodyMarkdown: splitPrivate(content.bodyMarkdown) } : null;
 }

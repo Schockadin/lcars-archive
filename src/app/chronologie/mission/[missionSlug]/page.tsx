@@ -1,8 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import {
-  getLogsByMissionId,
-  getMissionBySlug,
-} from "@/lib/missions";
+import { getLogsByMissionId, getMissionBySlug } from "@/lib/missions";
 import { getCharactersForUser } from "@/lib/characters";
 import { stripHtml } from "@/lib/missionFormat";
 import {
@@ -117,7 +114,14 @@ export default async function MissionPage({ params, searchParams }: Props) {
         <ContentViewTracker contentType="mission" slug={mission.slug} />
       )}
       <MissionSynopsis
-        mission={mission}
+        mission={{
+          title: mission.title,
+          slug: mission.slug,
+          status: mission.status,
+          started_at: mission.started_at,
+          ended_at: mission.ended_at,
+          participants: mission.participants,
+        }}
       />
       <MissionLogOverview
         missionSlug={mission.slug}

@@ -76,11 +76,9 @@ export function revalidateArchiveEntry(slug: string): string[] {
 
 // Nach Upload/Löschen eines Bildes: die Übersichten zeigen seit v1.29.53 das
 // erste Bild eines Eintrags als Vorschaubild in der Karte (siehe ChronoCard).
-// Charakterliste und Datenbank sind zwischengespeichert ("use cache") — ohne
-// diese Invalidierung erschiene ein neues Bild dort erst mit der nächsten
-// inhaltlichen Änderung. Die Chronologie liest ungecacht (Sichtbarkeit hängt
-// an der betrachtenden Person); ihre aktuelle Karte wird nach einer
-// Bildänderung zusätzlich per router.refresh() neu geladen.
+// Auch die öffentliche Chronologie ist zwischengespeichert. Jede Bildänderung
+// muss ihren Tag verwerfen, einschließlich Missionen und Missionslogbüchern,
+// deren Bilder sonst in keiner gecachten Übersicht vorkommen.
 export function revalidateContentImageLists(
   contentType:
     | "character"
@@ -89,10 +87,10 @@ export function revalidateContentImageLists(
     | "archive_entry"
     | "timeline_event",
 ): string[] {
-  if (contentType === "character") return revalidate([cacheTags.characters]);
-  if (contentType === "archive_entry") return revalidate([cacheTags.archive]);
-  if (contentType === "timeline_event") return revalidate([cacheTags.timeline]);
-  return [];
+  const tags: string[] = [cacheTags.timeline];
+  if (contentType === "character") tags.push(cacheTags.characters);
+  if (contentType === "archive_entry") tags.push(cacheTags.archive);
+  return revalidate(tags);
 }
 
 // Invalidiert nur den timeline-Tag. Wird von Änderungen an Ereignissen sowie

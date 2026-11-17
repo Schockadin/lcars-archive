@@ -1340,6 +1340,9 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   User-Backup (nur Useraccounts, per Upsert über die E-Mail-Adresse statt
   vollem Restore) bietet denselben R2-Cloud-Weg unter einem eigenen Präfix
   (`user-backups/`) im gleichen Bucket.
+  Zum Wiederherstellen eines DB-Backups sind sowohl `db_backup` als auch
+  `users.manage` erforderlich, da die Datei Rollen und Recovery-Token enthält.
+  Export und Download bleiben mit `db_backup` möglich.
 - **Admin-Bereich** — eigene Unterseiten für Nutzerverwaltung (durchsuchbare/
   sortierbare Tabelle, Detailseite pro User für Rollen/Einzelrechte/Aktivierung/
   Löschen/Passwort-Reset), den Rollen-Editor `/admin/permissions` (Rollen anlegen/
@@ -2158,8 +2161,11 @@ das eingebettete Chatfeld frei für eigene Fragen:
    (volle 1536 Dimensionen) eingebettet und in der Tabelle
    **`content_embeddings`** (Extension **pgvector**) abgelegt. RBAC-Felder
    (`owner_id`/`is_draft`/`is_active`) sind auf der Embedding-Zeile
-   **denormalisiert**, damit die Suche ohne Join filtern kann (gleiche Logik wie
-   `canView()`). Die Vektoren werden als `'[…]'::vector`-Literal inline gecastet
+   **denormalisiert**. Zusätzlich prüft jeder Treffer den aktuellen Zustand und
+   Änderungsstand seiner Quellzeile; verspätete Embedding-Jobs können entzogene
+   Rechte dadurch nicht wieder freigeben. Text hinter `<!-- private -->` wird
+   vor Indexierung, öffentlicher API-Ausgabe, Suchvorschau und Export entfernt.
+   Die Vektoren werden als `'[…]'::vector`-Literal inline gecastet
    (kein pgvector-npm-Paket, `prepare:false`-kompatibel).
 2. **Aktualisierung.** Content-Mutationen (Anlegen/Bearbeiten/Veröffentlichen/
    Owner/Soft-Delete/Restore) stoßen ein **Fire-and-forget**-Re-Embedding an
@@ -2195,6 +2201,12 @@ das eingebettete Chatfeld frei für eigene Fragen:
   idempotent und nach Inhalts-/Chunking-Änderungen wiederholbar. Unter
   `/admin/rag` zeigt außerdem ein Panel die aktuelle OpenAI-Nutzung (Kosten des
   laufenden Monats, best-effort das Restguthaben).
+
+**Nach dem Update auf 2.10:** Den Index über „Embeddings“ unter `/admin/rag`
+oder `npm run embed:all` neu aufbauen. Ältere Chunks ohne die sichere
+Inhaltsversion werden nicht mehr als Kontext verwendet, weil sie private
+Textabschnitte enthalten können. Bis zum Neuaufbau bleiben solche Treffer aus.
+Eine Schema-Migration ist dafür nicht erforderlich.
 
 **Kosten:** Initial-Embedding der kleinen Fan-Datenbank < 0,10 $; Workers AI läuft
 für das erwartete Fragevolumen voraussichtlich im Free Tier.

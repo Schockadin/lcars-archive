@@ -1,4 +1,5 @@
 import { cacheTag, cacheLife } from "next/cache";
+import { splitPrivate } from "@/lib/publicContent";
 import sql from "@/lib/db";
 import { recordRevision } from "@/lib/contentRevisions";
 import { cacheTags } from "@/lib/cacheTags";
@@ -340,7 +341,7 @@ export async function getArchiveEntryBySlug(
         ORDER BY e.title ASC
       `;
 
-  return { ...parseMeta(entry), links, backlinks };
+  return { ...parseMeta(entry), sourceMarkdown: splitPrivate(entry.sourceMarkdown), links, backlinks };
 }
 
 export interface UserContentArchiveEntry {

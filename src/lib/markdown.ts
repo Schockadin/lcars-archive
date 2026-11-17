@@ -18,6 +18,8 @@ import type {
 import type { Handlers as MdastToHastHandlers } from "mdast-util-to-hast";
 import type { Root as HastRoot, Element as HastElement } from "hast";
 import { slug as githubSlug } from "github-slugger";
+import { splitPrivate } from "@/lib/publicContent";
+export { splitPrivate } from "@/lib/publicContent";
 import {
   opensQuote,
   GERMAN_QUOTE_OPEN,
@@ -234,10 +236,6 @@ function rehypeSafeUrls() {
 // Markdown bis zum private-Kommentar kürzen (GM-only-Inhalt danach entfernen).
 // Von markdownToHtml genutzt, aber auch vom Timeline-Ingest (scripts/ingest/
 // timeline.ts), der <!-- timeline -->-Marker nur im öffentlichen Teil sucht.
-export function splitPrivate(markdown: string): string {
-  return markdown.split("<!-- private -->")[0].trim();
-}
-
 // Markdown bis zum private-Kommentar kürzen und zu HTML konvertieren
 export async function markdownToHtml(markdown: string): Promise<string> {
   const publicContent = splitPrivate(markdown);

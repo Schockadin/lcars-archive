@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cardThumbnailSrc } from "@/lib/imageThumbnails";
 import {
   DEFAULT_CROP,
   previewStyle,
@@ -76,15 +77,14 @@ export default function ChronoCard({
         /* Der Kasten schneidet ab, das Bild darin trägt den gewählten
            Ausschnitt. Rein schmückend: Titel und Angaben stehen daneben,
            deshalb leeres alt und kein eigener Link (die ganze Karte ist
-           ohnehin anklickbar). <img> statt next/image wie überall bei
-           /api/content-images/… — die Größen sind unbekannt und die Route
-           liefert die Bytes direkt. */
+           ohnehin anklickbar). Die Bildroute liefert eine kleine Variante
+           mit derselben Zugriffskontrolle wie das Original. */
         <span className="timeline-card-thumb-box">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             className="timeline-card-thumb"
             style={previewStyle(thumbnailCrop ?? DEFAULT_CROP)}
-            src={thumbnailSrc}
+            src={cardThumbnailSrc(thumbnailSrc)}
             alt=""
             loading="lazy"
             decoding="async"

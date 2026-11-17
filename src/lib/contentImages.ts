@@ -11,6 +11,7 @@
 // funktionieren.
 import "server-only";
 import crypto from "node:crypto";
+import { cacheLife } from "next/cache";
 import sql from "@/lib/db";
 import {
   getObjectBytesFromR2,
@@ -19,7 +20,13 @@ import {
   getAssetObjectBytesFromR2,
   deleteAssetObjectFromR2,
 } from "@/lib/r2Backup";
-import { canView, viewerHasPermission, type Viewer } from "@/lib/visibility";
+import {
+  canView,
+  canViewMissionDraft,
+  viewerHasPermission,
+  type Viewer,
+} from "@/lib/visibility";
+import { imageThumbnailBytes } from "@/lib/imageThumbnailBytes";
 import {
   OWNER_CONTENT_TYPES,
   type OwnerContentTypeKey,
@@ -90,6 +97,20 @@ function mapRow(row: ContentImageRow): ContentImage {
 export interface ContentAccessContext {
   isDraft: boolean;
   ownerId: number | null;
+  parentIsDraft?: boolean;
+}
+
+export function canViewContentImage(
+  contentType: ContentImageType,
+  access: ContentAccessContext,
+  viewer: Viewer | null,
+): boolean {
+  return (
+    (contentType === "mission"
+      ? canViewMissionDraft(access.isDraft, viewer)
+      : canView(access.isDraft, access.ownerId, viewer)) &&
+    canViewMissionDraft(access.parentIsDraft ?? false, viewer)
+  );
 }
 
 // Owner-/Entwurfs-Kontext des Inhalts, für den ein Bild hochgeladen
@@ -121,12 +142,24 @@ export async function getContentAccessContext(
   }
   if (contentType === "mission_log") {
     const [row] = await sql<
-      { is_draft: boolean; owner_user_id: number | null }[]
+      {
+        is_draft: boolean;
+        owner_user_id: number | null;
+        parent_is_draft: boolean;
+      }[]
     >`
-      SELECT is_draft, owner_user_id FROM mission_logs
-      WHERE id = ${contentId} AND deleted_at IS NULL
+      SELECT ml.is_draft, ml.owner_user_id, m.is_draft AS parent_is_draft
+      FROM mission_logs ml
+      JOIN missions m ON m.id = ml.mission_id AND m.deleted_at IS NULL
+      WHERE ml.id = ${contentId} AND ml.deleted_at IS NULL
     `;
-    return row ? { isDraft: row.is_draft, ownerId: row.owner_user_id } : null;
+    return row
+      ? {
+          isDraft: row.is_draft,
+          ownerId: row.owner_user_id,
+          parentIsDraft: row.parent_is_draft,
+        }
+      : null;
   }
   if (contentType === "timeline_event") {
     const [row] = await sql<{ created_by: number | null }[]>`
@@ -240,12 +273,18 @@ export async function getFirstContentImageIdsBySlug(): Promise<
     FROM content_images i
     JOIN (
       SELECT 'character'::text     AS content_type, id, slug FROM characters
+      WHERE deleted_at IS NULL AND is_draft = false
       UNION ALL
       SELECT 'mission'::text       AS content_type, id, slug FROM missions
+      WHERE deleted_at IS NULL AND is_draft = false
       UNION ALL
-      SELECT 'mission_log'::text   AS content_type, id, slug FROM mission_logs
+      SELECT 'mission_log'::text   AS content_type, ml.id, ml.slug FROM mission_logs ml
+      JOIN missions m ON m.id = ml.mission_id AND m.deleted_at IS NULL AND m.is_draft = false
+      WHERE ml.deleted_at IS NULL AND ml.is_draft = false
       UNION ALL
       SELECT 'archive_entry'::text AS content_type, id, slug FROM archive_entries
+      WHERE deleted_at IS NULL AND is_draft = false
+        AND NOT (category = 'dialogue' AND dialogue_open)
     ) s ON s.content_type = i.content_type AND s.id = i.content_id
     ORDER BY i.content_type, s.slug, i.created_at ASC, i.id ASC
   `;
@@ -264,7 +303,9 @@ export async function getContentImageById(
   return row ? mapRow(row) : null;
 }
 
-export async function getContentImageStorageKey(id: number): Promise<string | null> {
+export async function getContentImageStorageKey(
+  id: number,
+): Promise<string | null> {
   const [row] = await sql<{ r2_key: string }[]>`
     SELECT r2_key FROM content_images WHERE id = ${id}
   `;
@@ -288,6 +329,18 @@ export async function getContentImageBytes(
     (await getObjectBytesFromR2(row.r2_key));
   if (!object) return null;
   return { body: object.body, contentType: row.content_mime };
+}
+
+// Die ID bezeichnet unveränderliche Bytes. Die Route prüft Inhalt/Viewer
+// frisch, bevor sie auf diese wiederverwendbare Variante zugreift; gelöschte
+// oder inzwischen private Inhalte werden dadurch nie aus dem Cache freigegeben.
+export async function getContentImageThumbnailBytes(
+  id: number,
+): Promise<Uint8Array | null> {
+  "use cache";
+  cacheLife("hours");
+  const object = await getContentImageBytes(id);
+  return object ? imageThumbnailBytes(object.body) : null;
 }
 
 export async function uploadContentImage(

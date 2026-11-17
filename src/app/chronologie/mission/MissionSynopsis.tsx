@@ -15,7 +15,10 @@ import { MISSION_PATH, characterHref } from "@/lib/contentRoutes";
 export default function MissionSynopsis({
   mission,
 }: {
-  mission: MissionDetail;
+  mission: Pick<
+    MissionDetail,
+    "title" | "slug" | "status" | "started_at" | "ended_at" | "participants"
+  >;
 }) {
   const cfg = STATUS_CONFIG[mission.status];
 
@@ -65,7 +68,6 @@ export default function MissionSynopsis({
           },
         ]}
       />
-
     </article>
   );
 }

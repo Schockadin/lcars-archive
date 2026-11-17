@@ -10,6 +10,8 @@ import type { CharacterStats } from "@/types/characterStats";
 import { parseCharacterStats } from "@/lib/characterStats";
 import { normalizeCharacterMetadata } from "@/lib/characterFormat";
 import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
+import { characterPortraitThumbnailSrc } from "@/lib/characterPortraitThumbnails";
+import { splitPrivate } from "@/lib/publicContent";
 // getCharacterSubscribers lebt in dialoguesCore.ts (ursprünglich für den
 // Dialog-Abschluss gebraucht, siehe dort) und wird hier für die
 // Charakter-Update-Benachrichtigung wiederverwendet — Import über den
@@ -55,15 +57,44 @@ function parseCharacter(
   );
 
   return {
-    ...row,
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    status: row.status,
+    player_id: row.player_id,
+    portrait: row.portrait,
+    joined_at: row.joined_at,
+    left_at: row.left_at,
+    bio: row.bio,
+    is_draft: row.is_draft,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    character_color: row.character_color,
     metadata: options?.keepStats ? metadata : stripStats(metadata),
   };
 }
 
 function stripStats(metadata: CharacterMetadata): CharacterMetadata {
-  if (metadata?.stats === undefined) return metadata;
-  const { stats: _stats, ...rest } = metadata;
-  return rest;
+  // Explizite Projektion: SQL-Zusatzspalten und freie Frontmatter-/Metadata-
+  // Schlüssel dürfen nicht über die öffentlichen APIs/RSC-Payloads entweichen.
+  return {
+    rank: metadata.rank,
+    species: metadata.species,
+    homeworld: metadata.homeworld,
+    age: metadata.age,
+    dateOfBirth: metadata.dateOfBirth,
+    portraitSource: metadata.portraitSource,
+    portraitCrop: metadata.portraitCrop,
+    affiliation: metadata.affiliation && {
+      factions: metadata.affiliation.factions,
+      ships: metadata.affiliation.ships,
+      division: metadata.affiliation.division,
+    },
+    player: metadata.player,
+    tags: metadata.tags,
+    aliases: metadata.aliases,
+    generation: metadata.generation,
+  };
 }
 
 // Schlanke Zeilen-Variante von getAllCharacters für Aufrufer, die nur die
@@ -150,7 +181,9 @@ export async function getCharacterListItems(): Promise<CharacterListItem[]> {
     return {
       ...row,
       metadata,
-      thumbnail: view.src ?? (image_id ? contentImageSrc(image_id) : null),
+      thumbnail: view.src
+        ? characterPortraitThumbnailSrc(row.slug, view.src)
+        : image_id ? contentImageSrc(image_id) : null,
       // Der Ausschnitt gehört zum Portrait — für ein Galeriebild als Ersatz
       // gilt die Bildmitte.
       thumbnailCrop: view.src ? view.crop : null,
@@ -168,7 +201,9 @@ export async function getAllCharacters(): Promise<Character[]> {
   cacheTag(cacheTags.characters);
   cacheLife("max");
   const rows = await sql<Character[]>`
-        SELECT *
+        SELECT id, slug, name, status, player_id, portrait, joined_at, left_at,
+               bio, metadata - 'stats' AS metadata, is_draft,
+               created_at, updated_at, character_color
         FROM characters
         WHERE deleted_at IS NULL AND is_draft = false
           AND NOT EXISTS (
@@ -335,7 +370,9 @@ export async function getCharacterBySlug(
   cacheTag(cacheTags.characters, cacheTags.character(slug));
   cacheLife("max");
   const rows = await sql<Character[]>`
-        SELECT *
+        SELECT id, slug, name, status, player_id, portrait, joined_at, left_at,
+               bio, metadata - 'stats' AS metadata, is_draft,
+               created_at, updated_at, character_color
         FROM characters
         WHERE slug = ${slug} AND deleted_at IS NULL
           AND NOT EXISTS (
@@ -1265,7 +1302,7 @@ export async function getCharacterBioMarkdown(
     WHERE id = ${characterId} AND deleted_at IS NULL
     LIMIT 1
   `;
-  return rows[0]?.sourceMd ?? null;
+  return rows[0]?.sourceMd == null ? null : splitPrivate(rows[0].sourceMd);
 }
 
 // Für die Header-Navigation (/api/session → HeaderUserNav): zeigt den

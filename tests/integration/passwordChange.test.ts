@@ -3,6 +3,10 @@ import sql from "@/lib/db";
 import { createSession } from "@/lib/session";
 import { getActiveUser } from "@/lib/dal";
 import { hashPassword } from "@/lib/password";
+import {
+  createPasswordSetupToken,
+  peekPasswordSetupToken,
+} from "@/lib/passwordSetupTokens";
 import { updatePasswordAction } from "@/app/user/passwordActions";
 import { insertUser, formData } from "./helpers";
 
@@ -12,7 +16,9 @@ const cookieStore = vi.hoisted(() => new Map<string, string>());
 vi.mock("next/headers", () => ({
   cookies: vi.fn(async () => ({
     get: (name: string) =>
-      cookieStore.has(name) ? { name, value: cookieStore.get(name)! } : undefined,
+      cookieStore.has(name)
+        ? { name, value: cookieStore.get(name)! }
+        : undefined,
     set: (name: string, value: string) => {
       cookieStore.set(name, value);
     },
@@ -20,7 +26,9 @@ vi.mock("next/headers", () => ({
       cookieStore.delete(name);
     },
   })),
-  headers: vi.fn(async () => new Headers({ "x-nf-client-connection-ip": "203.0.113.52" })),
+  headers: vi.fn(
+    async () => new Headers({ "x-nf-client-connection-ip": "203.0.113.52" }),
+  ),
 }));
 
 beforeEach(() => {
@@ -50,7 +58,11 @@ describe("updatePasswordAction", () => {
 
     const result = await updatePasswordAction(
       {},
-      formData({ currentPassword: ALT, newPassword: NEU, confirmPassword: NEU }),
+      formData({
+        currentPassword: ALT,
+        newPassword: NEU,
+        confirmPassword: NEU,
+      }),
     );
 
     expect(result).toEqual({ success: true });
@@ -66,7 +78,11 @@ describe("updatePasswordAction", () => {
 
     await updatePasswordAction(
       {},
-      formData({ currentPassword: ALT, newPassword: NEU, confirmPassword: NEU }),
+      formData({
+        currentPassword: ALT,
+        newPassword: NEU,
+        confirmPassword: NEU,
+      }),
     );
 
     const [row] = await sql<{ session_version: number }[]>`
@@ -88,5 +104,24 @@ describe("updatePasswordAction", () => {
     );
 
     expect(result.error).toMatch(/aktuelles passwort/i);
+  });
+
+  it("widerruft offene Reset-Links beim Passwortwechsel nur für das eigene Konto", async () => {
+    const user = await angemeldet();
+    const other = await insertUser();
+    const ownToken = await createPasswordSetupToken(user.id);
+    const otherToken = await createPasswordSetupToken(other.id);
+
+    await updatePasswordAction(
+      {},
+      formData({
+        currentPassword: ALT,
+        newPassword: NEU,
+        confirmPassword: NEU,
+      }),
+    );
+
+    expect(await peekPasswordSetupToken(ownToken)).toBeNull();
+    expect((await peekPasswordSetupToken(otherToken))?.userId).toBe(other.id);
   });
 });

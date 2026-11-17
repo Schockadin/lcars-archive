@@ -1,9 +1,14 @@
 import { notFound } from "next/navigation";
-import { getAuthorLogNav, getLogBySlug } from "@/lib/missions";
+import {
+  getAuthorLogNav,
+  getLogBySlug,
+  getMissionBySlug,
+} from "@/lib/missions";
 import { stripHtml } from "@/lib/missionFormat";
 import {
   getViewer,
   canView,
+  canViewMissionDraft,
   viewerHasPermission,
 } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
@@ -29,7 +34,11 @@ export async function generateMetadata({ params }: Props) {
     return { title: "Nicht gefunden" };
   }
   const viewerForMeta = await getViewer();
-  const visible = canView(log.isDraft, log.ownerUserId, viewerForMeta);
+  const mission = await getMissionBySlug(missionSlug);
+  const visible =
+    mission &&
+    canViewMissionDraft(mission.isDraft, viewerForMeta) &&
+    canView(log.isDraft, log.ownerUserId, viewerForMeta);
   if (!visible) return { title: "Nicht gefunden" };
 
   return {
@@ -43,10 +52,15 @@ export default async function LogPage({ params }: Props) {
   // Log und Betrachter parallel laden (getViewer liest nur die Session, nicht
   // den Log). Betrachter immer auflösen — der Owner-Block unten braucht die
   // Rechte unabhängig von der Sichtbarkeit dieses Logs.
-  const [log, viewer] = await Promise.all([getLogBySlug(logSlug), getViewer()]);
+  const [log, viewer, mission] = await Promise.all([
+    getLogBySlug(logSlug),
+    getViewer(),
+    getMissionBySlug(missionSlug),
+  ]);
 
   // Log muss existieren UND zur Mission im Pfad gehören (sonst 404).
-  if (!log || log.mission_slug !== missionSlug) notFound();
+  if (!log || !mission || log.mission_slug !== missionSlug) notFound();
+  if (!canViewMissionDraft(mission.isDraft, viewer)) notFound();
   if (!canView(log.isDraft, log.ownerUserId, viewer)) notFound();
 
   // Autor-Navigation und Owner-Auswahl sind voneinander unabhängig — parallel

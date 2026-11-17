@@ -1,5 +1,7 @@
 import "server-only";
+import { cacheLife, cacheTag } from "next/cache";
 import sql from "@/lib/db";
+import { cacheTags } from "@/lib/cacheTags";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { markdownToSafeHtml } from "@/lib/markdown";
 import { renderContentHtml } from "@/lib/autolink";
@@ -22,6 +24,8 @@ import {
 } from "@/lib/contentRoutes";
 import { getFirstContentImageIdsBySlug } from "@/lib/contentImages";
 import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
+import { characterPortraitThumbnailSrc } from "@/lib/characterPortraitThumbnails";
+import { splitPrivate } from "@/lib/publicContent";
 
 // Die Chronologie (/chronologie): alle Ereignisse der Kampagne in zeitlicher
 // Folge, aus gepflegten Angaben, Textmarken und freien Events
@@ -42,10 +46,10 @@ import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 // auseinander, und die Sichtbarkeit müsste doppelt gepflegt werden. Nur (3)
 // liegt in einer Tabelle.
 //
-// Bewusst OHNE "use cache": die Chronologie hängt an der Sichtbarkeit der
-// betrachtenden Person (nicht-öffentliche Logbücher) — dieselbe
-// Begründung wie bei der Missionsakte. Es sind fünf Abfragen für die ganze
-// Seite, nicht eine je Inhalt.
+// Das öffentliche Ergebnis ist für alle gleich. Die Inhalts-Tags decken
+// Änderungen an Quellen und Session-Blöcken ab; timeline deckt freie Events
+// und deren Bilder ab. Der Viewer und seine Bearbeitungsrechte bleiben beim
+// Aufrufer außerhalb des Caches.
 
 interface MissionRow {
   id: number;
@@ -118,7 +122,7 @@ interface InferredRow {
 // der Karte kein rohes ** oder [[…]] steht.
 function excerptOf(markdown: string | null): string | null {
   if (!markdown) return null;
-  const flat = markdown
+  const flat = splitPrivate(markdown)
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "$2")
@@ -163,7 +167,7 @@ function markerEvents(
   },
 ): TimelineEvent[] {
   if (!markdown) return [];
-  return parseTimelineMarkers(markdown).map((marker) => ({
+  return parseTimelineMarkers(splitPrivate(markdown)).map((marker) => ({
     id: eventId(ctx.sourceType, ctx.slug, `marker-${marker.anchor}`),
     date: marker.date,
     title: marker.title,
@@ -189,6 +193,15 @@ export async function getTimeline({
   // selbst lässt die Vorgabe an, damit Overlay und Session-Panels vollständig bleiben.
   renderManualDetails?: boolean;
 } = {}): Promise<TimelineEvent[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(
+    cacheTags.timeline,
+    cacheTags.characters,
+    cacheTags.missions,
+    cacheTags.missionLogs,
+    cacheTags.archive,
+  );
   const [
     missions,
     logs,
@@ -210,8 +223,8 @@ export async function getTimeline({
              ) AS participants
       FROM missions m
       LEFT JOIN mission_participants mp ON mp.mission_id = m.id
-      LEFT JOIN characters c ON c.id = mp.character_id AND c.deleted_at IS NULL
-      WHERE m.deleted_at IS NULL
+      LEFT JOIN characters c ON c.id = mp.character_id AND c.deleted_at IS NULL AND c.is_draft = false
+      WHERE m.deleted_at IS NULL AND m.is_draft = false
       GROUP BY m.id
     `,
     sql<LogRow[]>`
@@ -221,15 +234,15 @@ export async function getTimeline({
              m.slug AS mission_slug,
              c.name AS author_name
       FROM mission_logs ml
-      JOIN missions m ON m.id = ml.mission_id AND m.deleted_at IS NULL
-      LEFT JOIN characters c ON c.id = ml.author_id
-      WHERE ml.deleted_at IS NULL
+      JOIN missions m ON m.id = ml.mission_id AND m.deleted_at IS NULL AND m.is_draft = false
+      LEFT JOIN characters c ON c.id = ml.author_id AND c.deleted_at IS NULL AND c.is_draft = false
+      WHERE ml.deleted_at IS NULL AND ml.is_draft = false
     `,
     sql<ArchiveRow[]>`
       SELECT id, slug, title, category, metadata, source_md,
              owner_user_id, is_draft
       FROM archive_entries
-      WHERE deleted_at IS NULL
+      WHERE deleted_at IS NULL AND is_draft = false
         -- Ein LAUFENDES Gespräch gehört noch nicht in die Chronologie: es ist
         -- kein abgeschlossenes Ereignis, und seine Karte führte auf eine
         -- Seite, die für alle außer den Beteiligten auf /dialogues/<slug>
@@ -241,7 +254,7 @@ export async function getTimeline({
       SELECT id, slug, name, metadata, source_md, bio, portrait,
              player_id, is_draft
       FROM characters
-      WHERE deleted_at IS NULL
+      WHERE deleted_at IS NULL AND is_draft = false
     `,
     sql<InferredRow[]>`
       SELECT te.id, te.event_date::text AS event_date, te.title, te.teaser,
@@ -263,7 +276,7 @@ export async function getTimeline({
       SELECT ec.event_id AS "eventId", c.name
       FROM timeline_event_characters ec
       JOIN characters c ON c.id = ec.character_id
-      WHERE c.deleted_at IS NULL
+      WHERE c.deleted_at IS NULL AND c.is_draft = false
       ORDER BY c.name ASC
     `,
     // Das erste hochgeladene Bild je Inhalt („<Inhaltsart>:<Slug>" → Bild-Id)
@@ -271,7 +284,9 @@ export async function getTimeline({
     // Ereignisse; wer kein Bild hat, steht gar nicht in der Map und bekommt
     // auch keinen Platzhalter.
     getFirstContentImageIdsBySlug(),
-    sql<{ id: number; mission_id: number; ingame_date: string; body_md: string }[]>`
+    sql<
+      { id: number; mission_id: number; ingame_date: string; body_md: string }[]
+    >`
       SELECT b.id, b.mission_id, b.ingame_date::text AS ingame_date, b.body_md
       FROM mission_synopsis_blocks b
       JOIN missions m ON m.id = b.mission_id
@@ -305,7 +320,11 @@ export async function getTimeline({
     if (sourceType === "character") {
       const view = portraits.get(slug);
       // Portrait samt Ausschnitt — dieselbe Darstellung wie auf dem Bogen.
-      if (view?.src) return { src: view.src, crop: view.crop };
+      if (view?.src)
+        return {
+          src: characterPortraitThumbnailSrc(slug, view.src),
+          crop: view.crop,
+        };
     }
     const imageId = thumbnails.get(`${sourceType}:${slug}`);
     return {
@@ -438,7 +457,11 @@ export async function getTimeline({
   // ── Session-Zusammenfassungen ────────────────────────────────────────────
   // Öffentlich ist nur der Ingame-Bericht; Spieltermin, AP und GM-Verwaltung
   // werden hier nicht ausgeliefert. Die Mission bestimmt die Sichtbarkeit.
-  const missionsById = new Map(missions.filter((mission) => !mission.is_draft).map((mission) => [mission.id, mission]));
+  const missionsById = new Map(
+    missions
+      .filter((mission) => !mission.is_draft)
+      .map((mission) => [mission.id, mission]),
+  );
   for (const block of sessionBlocks) {
     const mission = missionsById.get(block.mission_id);
     if (!mission) continue;
@@ -448,7 +471,9 @@ export async function getTimeline({
       date: block.ingame_date,
       title: fmtDate(block.ingame_date),
       detail: excerptOf(block.body_md),
-      fullDetailHtml: renderManualDetails ? await renderContentHtml(block.body_md) : null,
+      fullDetailHtml: renderManualDetails
+        ? await renderContentHtml(block.body_md)
+        : null,
       category: "session",
       origin: "metadata",
       sourceType: "mission",

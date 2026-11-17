@@ -1,5 +1,6 @@
 import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
+import { splitPrivate } from "@/lib/publicContent";
 import { recordRevision } from "@/lib/contentRevisions";
 // Logbücher können an einer Session hängen; verschwindet/kehrt eines zurück,
 // muss die automatische Logbuch-AP dieser Session nachgezogen werden.
@@ -240,7 +241,7 @@ export async function getMissionBySlug(
   if (!rows[0]) return null;
   const mission = parseMeta(rows[0]);
   const participants = await getMissionParticipants(mission.id);
-  return { ...mission, participants };
+  return { ...mission, sourceMarkdown: splitPrivate(mission.sourceMarkdown ?? ""), participants };
 }
 
 // Eine Mission per numerischer ID — für den Admin/GM-Editier-Weg

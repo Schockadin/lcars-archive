@@ -24,6 +24,11 @@
 import sql from "@/lib/db";
 import { stripHtml } from "@/lib/missionFormat";
 import {
+  PUBLIC_CONTENT_INDEX_VERSION,
+  splitPrivate,
+} from "@/lib/publicContent";
+import { embeddingSourceFingerprint } from "@/lib/embeddingSource";
+import {
   chunkContent,
   embedTexts,
   upsertEmbeddings,
@@ -51,6 +56,7 @@ interface FetchedRecord {
   title: string | null;
   slug: string | null;
   href: string | null;
+  sourceFingerprint: string;
 }
 
 // Lädt einen einzelnen Inhalt in der Form, die embeddings.chunkContent() +
@@ -75,11 +81,13 @@ async function fetchRecord(
           player_id: number | null;
           is_draft: boolean;
           deleted_at: Date | null;
+          source_fingerprint: string;
         }[]
       >`
         SELECT slug, name, species, rank, status, bio, source_md,
-               player_id, is_draft, deleted_at
-        FROM characters WHERE id = ${contentId}
+               player_id, is_draft, deleted_at,
+               ${embeddingSourceFingerprint(client, "character")} AS source_fingerprint
+        FROM characters c WHERE id = ${contentId}
       `;
       if (!row) return null;
       return {
@@ -100,6 +108,7 @@ async function fetchRecord(
         title: row.name,
         slug: row.slug,
         href: characterHref(row.slug),
+        sourceFingerprint: row.source_fingerprint,
       };
     }
     case "mission": {
@@ -114,11 +123,13 @@ async function fetchRecord(
           owner_user_id: number | null;
           is_draft: boolean;
           deleted_at: Date | null;
+          source_fingerprint: string;
         }[]
       >`
         SELECT slug, title, status, started_at::text, ended_at::text,
-               source_md, owner_user_id, is_draft, deleted_at
-        FROM missions WHERE id = ${contentId}
+               source_md, owner_user_id, is_draft, deleted_at,
+               ${embeddingSourceFingerprint(client, "mission")} AS source_fingerprint
+        FROM missions m WHERE id = ${contentId}
       `;
       if (!row) return null;
       return {
@@ -138,6 +149,7 @@ async function fetchRecord(
         title: row.title,
         slug: row.slug,
         href: missionHref(row.slug),
+        sourceFingerprint: row.source_fingerprint,
       };
     }
     case "mission_log": {
@@ -155,12 +167,14 @@ async function fetchRecord(
           mission_slug: string;
           mission_title: string;
           author_name: string | null;
+          source_fingerprint: string;
         }[]
       >`
         SELECT ml.slug, ml.title, ml.content, ml.source_md, ml.session_nr,
                ml.log_date::text, ml.owner_user_id, ml.is_draft,
                ml.deleted_at, m.slug AS mission_slug, m.title AS mission_title,
-               ch.name AS author_name
+               ch.name AS author_name,
+               ${embeddingSourceFingerprint(client, "mission_log")} AS source_fingerprint
         FROM mission_logs ml
         JOIN missions m ON m.id = ml.mission_id
         LEFT JOIN characters ch ON ch.id = ml.author_id
@@ -177,7 +191,9 @@ async function fetchRecord(
             sessionNr: row.session_nr,
             logDate: row.log_date,
             sourceMd: row.source_md,
-            fallbackText: row.content ? stripHtml(row.content) : null,
+            fallbackText: row.content
+              ? stripHtml(splitPrivate(row.content))
+              : null,
           },
         },
         ownerId: row.owner_user_id,
@@ -186,6 +202,7 @@ async function fetchRecord(
         title: row.title,
         slug: row.slug,
         href: missionLogHref(row.mission_slug, row.slug),
+        sourceFingerprint: row.source_fingerprint,
       };
     }
     case "archive_entry": {
@@ -202,12 +219,14 @@ async function fetchRecord(
           owner_user_id: number | null;
           is_draft: boolean;
           deleted_at: Date | null;
+          source_fingerprint: string;
         }[]
       >`
         SELECT slug, title, category, content, source_md,
                metadata->>'setting' AS setting,
-               owner_user_id, is_draft, deleted_at
-        FROM archive_entries
+               owner_user_id, is_draft, deleted_at,
+               ${embeddingSourceFingerprint(client, "archive_entry")} AS source_fingerprint
+        FROM archive_entries a
         WHERE id = ${contentId} AND category <> 'dialogue'
       `;
       if (!row) return null;
@@ -219,7 +238,9 @@ async function fetchRecord(
             category: row.category,
             setting: row.setting,
             sourceMd: row.source_md,
-            fallbackText: row.content ? stripHtml(row.content) : null,
+            fallbackText: row.content
+              ? stripHtml(splitPrivate(row.content))
+              : null,
           },
         },
         ownerId: row.owner_user_id,
@@ -228,6 +249,7 @@ async function fetchRecord(
         title: row.title,
         slug: row.slug,
         href: archiveHref(row.slug),
+        sourceFingerprint: row.source_fingerprint,
       };
     }
     case "dialogue": {
@@ -245,13 +267,15 @@ async function fetchRecord(
           owner_user_id: number | null;
           is_draft: boolean;
           deleted_at: Date | null;
+          source_fingerprint: string;
         }[]
       >`
         SELECT slug, title, content, source_md,
                metadata->>'setting' AS setting,
                metadata->'participants' AS participants,
-               owner_user_id, is_draft, deleted_at
-        FROM archive_entries
+               owner_user_id, is_draft, deleted_at,
+               ${embeddingSourceFingerprint(client, "dialogue")} AS source_fingerprint
+        FROM archive_entries a
         WHERE id = ${contentId} AND category = 'dialogue'
           AND dialogue_open = FALSE
       `;
@@ -269,7 +293,9 @@ async function fetchRecord(
             setting: row.setting,
             participants,
             sourceMd: row.source_md,
-            fallbackText: row.content ? stripHtml(row.content) : null,
+            fallbackText: row.content
+              ? stripHtml(splitPrivate(row.content))
+              : null,
           },
         },
         ownerId: row.owner_user_id,
@@ -278,6 +304,7 @@ async function fetchRecord(
         title: row.title,
         slug: row.slug,
         href: archiveHref(row.slug),
+        sourceFingerprint: row.source_fingerprint,
       };
     }
   }
@@ -317,6 +344,10 @@ export async function embedOne(
     title: rec.title,
     slug: rec.slug,
     href: rec.href,
+    metadata: {
+      publicContentVersion: PUBLIC_CONTENT_INDEX_VERSION,
+      sourceFingerprint: rec.sourceFingerprint,
+    },
   });
   return "embedded";
 }
@@ -347,11 +378,26 @@ export async function listEmbeddableTargets(
     `,
   ]);
   return [
-    ...characters.map((r) => ({ contentType: "character" as const, contentId: r.id })),
-    ...missions.map((r) => ({ contentType: "mission" as const, contentId: r.id })),
-    ...logs.map((r) => ({ contentType: "mission_log" as const, contentId: r.id })),
-    ...archive.map((r) => ({ contentType: "archive_entry" as const, contentId: r.id })),
-    ...dialogues.map((r) => ({ contentType: "dialogue" as const, contentId: r.id })),
+    ...characters.map((r) => ({
+      contentType: "character" as const,
+      contentId: r.id,
+    })),
+    ...missions.map((r) => ({
+      contentType: "mission" as const,
+      contentId: r.id,
+    })),
+    ...logs.map((r) => ({
+      contentType: "mission_log" as const,
+      contentId: r.id,
+    })),
+    ...archive.map((r) => ({
+      contentType: "archive_entry" as const,
+      contentId: r.id,
+    })),
+    ...dialogues.map((r) => ({
+      contentType: "dialogue" as const,
+      contentId: r.id,
+    })),
   ];
 }
 
@@ -399,8 +445,8 @@ export function syncEmbeddingActive(
   contentId: number,
   isActive: boolean,
 ): void {
-  void updateEmbeddingActive(sql, contentType, contentId, isActive).catch((err) =>
-    logEmbeddingError(`active:${contentType}:${contentId}`, err),
+  void updateEmbeddingActive(sql, contentType, contentId, isActive).catch(
+    (err) => logEmbeddingError(`active:${contentType}:${contentId}`, err),
   );
 }
 
