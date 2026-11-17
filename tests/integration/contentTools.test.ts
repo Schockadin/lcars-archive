@@ -9,7 +9,7 @@ import {
   previewWikilinkCleanupAction,
 } from "@/app/actions/contentTools";
 import { createArchiveEntry } from "@/lib/archive";
-import { insertCharacter, insertUser } from "./helpers";
+import { insertCharacter, insertMission, insertUser } from "./helpers";
 
 // Gleiches Muster wie adminEditActions.test.ts: cookies() per In-Memory-Store,
 // damit createSession() und die Rechteprüfung der Aktionen im echten
@@ -74,6 +74,35 @@ async function entryMentioning(ownerId: number) {
 }
 
 describe("Content-Werkzeuge: wer darf sie anwenden", () => {
+  it.each(["mission", "archiveEntry"] as const)(
+    "erhält private Originalnotizen beim Verlinken und Entlinken von %s",
+    async (contentType) => {
+      const owner = await login("player");
+      const privateSuffix = "<!-- private -->\r\nGM: [[Tuvok]] und Tuvok.\n  ";
+      const source = `Tuvok war dabei.\n\n${privateSuffix}`;
+      let content: { id: number; slug: string };
+      if (contentType === "mission") {
+        await insertCharacter({ name: "Tuvok" });
+        content = await insertMission({ ownerUserId: owner.id });
+        await sql`UPDATE missions SET source_md = ${source} WHERE id = ${content.id}`;
+      } else {
+        content = await entryMentioning(owner.id);
+        await sql`UPDATE archive_entries SET source_md = ${source} WHERE id = ${content.id}`;
+      }
+      const readSource = async () => {
+        const [row] = contentType === "mission"
+          ? await sql<{ source_md: string }[]>`SELECT source_md FROM missions WHERE id = ${content.id}`
+          : await sql<{ source_md: string }[]>`SELECT source_md FROM archive_entries WHERE id = ${content.id}`;
+        return row.source_md;
+      };
+
+      expect(await applyAutolinkAction(contentType, content.slug)).toEqual({ matchCount: 1 });
+      expect(await readSource()).toBe(`[[Tuvok]] war dabei.\n\n${privateSuffix}`);
+      expect(await applyWikilinkCleanupAction(contentType, content.slug)).toEqual({ removedCount: 1 });
+      expect(await readSource()).toBe(source);
+    },
+  );
+
   it("lässt den Owner seinen eigenen Inhalt verlinken", async () => {
     const owner = await login("player");
     const entry = await entryMentioning(owner.id);

@@ -173,11 +173,12 @@ async function runSearchQueries(
   const mayNegate = q.includes("-");
 
   // Die gespeicherten Vektoren älterer Datenbanken enthalten auch den Text
-  // nach dem private-Marker. Für gewöhnliche Zeilen bleibt der indizierte
-  // Vektor unverändert nutzbar; nur markierte Quellen bekommen einen neu
-  // berechneten öffentlichen Vektor mit denselben Gewichten.
+  // nach dem private-Marker. HTML-Fallbacks können außerdem alte Hovertexte
+  // in ihren Attributen tragen. Für gewöhnliche Quellen bleibt der indizierte
+  // Vektor unverändert nutzbar; markierte Quellen und HTML-Fallbacks bekommen
+  // einen neu berechneten öffentlichen Vektor mit denselben Gewichten.
   //
-  // Bei markierten Quellen darf der alte Vektor nicht einmal Kandidaten
+  // Bei solchen Quellen darf der alte Vektor nicht einmal Kandidaten
   // ausschließen: "Gespräch -Geheimwort" muss dieselben Treffer liefern,
   // egal ob das Geheimwort in einer privaten Notiz vorkommt oder nicht.
   const searchFields = (
@@ -192,7 +193,18 @@ async function runSearchQueries(
       ? sql`coalesce(${col("source_md")}, ${col(fallback)}, '')`
       : sql`coalesce(${col("source_md")}, '')`;
     const hasPrivate = sql`strpos(${source}, '<!-- private -->') > 0`;
-    const publicBody = sql`split_part(${source}, '<!-- private -->', 1)`;
+    const hasHtmlFallback = fallback
+      ? sql`(${col("source_md")} IS NULL AND strpos(${source}, '<') > 0)`
+      : sql`false`;
+    const needsPublicVector = sql`(${hasPrivate} OR ${hasHtmlFallback})`;
+    const publicSource = sql`split_part(${source}, '<!-- private -->', 1)`;
+    // Dieselbe Textbasis wie stripHtml() für Snippets: HTML-Attribute sind
+    // keine öffentlichen Suchwörter, auch wenn source_md ganz fehlt.
+    const publicBody = fallback
+      ? sql`CASE WHEN ${col("source_md")} IS NULL
+          THEN regexp_replace(${publicSource}, '<[^>]*>', ' ', 'g')
+          ELSE ${publicSource} END`
+      : publicSource;
     const bodyVector = sql`to_tsvector('german', ${publicBody})`;
     const publicVector = title
       ? sql`(
@@ -205,13 +217,13 @@ async function runSearchQueries(
       match: includeContent
         ? mayNegate
           ? sql`(
-              (NOT (${hasPrivate}) AND ${stored} @@ ${ts})
-              OR (${hasPrivate} AND ${publicVector} @@ ${ts})
+              (NOT (${needsPublicVector}) AND ${stored} @@ ${ts})
+              OR (${needsPublicVector} AND ${publicVector} @@ ${ts})
             )`
-          : sql`(${stored} @@ ${ts} AND (NOT (${hasPrivate}) OR ${publicVector} @@ ${ts}))`
+          : sql`(${stored} @@ ${ts} AND (NOT (${needsPublicVector}) OR ${publicVector} @@ ${ts}))`
         : sql`${stored} @@ ${ts}`,
       rank: includeContent
-        ? sql`ts_rank_cd(CASE WHEN ${hasPrivate} THEN ${publicVector} ELSE ${stored} END, ${ts})`
+        ? sql`ts_rank_cd(CASE WHEN ${needsPublicVector} THEN ${publicVector} ELSE ${stored} END, ${ts})`
         : sql`ts_rank_cd(${stored}, ${ts})`,
       // Ein älteres gerendertes HTML kann private Notizen noch enthalten.
       // Sobald die Quelle einen Marker hat, gilt auch für ILIKE allein der

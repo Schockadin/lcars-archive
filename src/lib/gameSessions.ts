@@ -9,6 +9,7 @@ import {
   type SessionSynopsisBlockInput,
 } from "@/lib/sessionSynopsis";
 import type { AdvancementRules } from "@/lib/advancement";
+import { splitPrivate } from "@/lib/publicContent";
 
 // Client-Parameter für Aufrufe innerhalb einer bestehenden Transaktion —
 // dasselbe Muster wie in src/lib/users.ts und src/lib/dialoguesCore.ts.
@@ -183,6 +184,17 @@ export async function listMissionSynopsisBlocks(
       bodyHtml: await renderContentHtml(row.body_md),
     })),
   );
+}
+
+// Die öffentliche Chronik übergibt diese DTOs an eine Client-Komponente.
+// GM-Formulare verwenden weiterhin listMissionSynopsisBlocks mit Rohtext.
+export async function listPublicMissionSynopsisBlocks(
+  missionId: number,
+): Promise<MissionSynopsisBlock[]> {
+  return (await listMissionSynopsisBlocks(missionId)).map((block) => ({
+    ...block,
+    body: splitPrivate(block.body),
+  }));
 }
 
 export interface SessionMissionOption {

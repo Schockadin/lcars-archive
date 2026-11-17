@@ -8,6 +8,7 @@ import {
   revalidateLog,
   revalidateArchiveEntry,
   revalidateTimeline,
+  revalidateAllContent,
 } from "./revalidate";
 
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
@@ -24,6 +25,7 @@ describe("Invalidierung der öffentlichen Chronologie", () => {
   ] as const)("erneuert Vorschaubilder für %s", (type) => {
     const tags = revalidateContentImageLists(type);
     expect(tags).toContain(cacheTags.timeline);
+    expect(tags).toContain(cacheTags.contentImages);
     expect(revalidateTag).toHaveBeenCalledWith(cacheTags.timeline, {
       expire: 0,
     });
@@ -37,5 +39,12 @@ describe("Invalidierung der öffentlichen Chronologie", () => {
     expect(revalidateLog(1, "log")).toContain(cacheTags.missionLogs);
     expect(revalidateArchiveEntry("ort")).toContain(cacheTags.archive);
     expect(revalidateTimeline()).toContain(cacheTags.timeline);
+  });
+
+  it("verwirft bei einem vollständigen DB-Restore auch Bildvarianten und negative Bild-Caches", () => {
+    expect(revalidateAllContent()).toContain(cacheTags.contentImages);
+    expect(revalidateTag).toHaveBeenCalledWith(cacheTags.contentImages, {
+      expire: 0,
+    });
   });
 });

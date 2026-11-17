@@ -1,5 +1,6 @@
 import "server-only";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
+import { cacheTags } from "@/lib/cacheTags";
 import { getAssetObjectBytesFromR2 } from "@/lib/r2Backup";
 import { ownPortraitAssetKey } from "@/lib/imageThumbnails";
 import { imageThumbnailBytes } from "@/lib/imageThumbnailBytes";
@@ -22,8 +23,10 @@ export async function getCharacterPortraitThumbnailBytes(
 ): Promise<Uint8Array | null> {
   "use cache";
   cacheLife("hours");
+  cacheTag(cacheTags.contentImages);
   if (!/^character-portraits\/[0-9a-f-]{36}\.(?:jpg|png|webp|gif)$/i.test(key))
     return null;
   const object = await getAssetObjectBytesFromR2(key);
+  if (!object) cacheLife("seconds");
   return object ? imageThumbnailBytes(object.body) : null;
 }

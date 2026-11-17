@@ -25,6 +25,11 @@ const PROTECTED_RE = /```[\s\S]*?```|`[^`\n]*`|!\[[^\]]*\]\([^)]*\)/g;
 // Vault-Ingest aufgelöste [[...]]-Syntax dadurch überflüssig bzw.
 // fehleranfällig (dauerhaft "missing", falls das Ziel fehlt) wird.
 export function stripWikilinks(sourceMd: string): WikilinkCleanupResult {
+  const privateStart = sourceMd.indexOf("<!-- private -->");
+  if (privateStart >= 0) {
+    const result = stripWikilinks(sourceMd.slice(0, privateStart));
+    return { ...result, sourceMd: result.sourceMd + sourceMd.slice(privateStart) };
+  }
   const protectedRanges: ProtectedRange[] = [];
   PROTECTED_RE.lastIndex = 0;
   let pm: RegExpExecArray | null;

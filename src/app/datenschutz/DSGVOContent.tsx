@@ -236,6 +236,13 @@ export default function DSGVOContent({ year }: { year: number }) {
           Kopien werden auch beim Löschen des Accounts entfernt.
         </p>
         <p>
+          Für Inhaltsbilder und eigene gespeicherte Portraits erzeugt die
+          Anwendung verkleinerte WebP-Vorschaubilder. Die Vorschau-Endpunkte
+          prüfen vor der Auslieferung die aktuelle Sichtbarkeit des zugehörigen
+          Inhalts. Die öffentliche Asset-Adresse eines Originalbildes bleibt
+          davon unabhängig.
+        </p>
+        <p>
           Von Hand eingetragene <strong>Chronologie-Ereignisse</strong>{" "}
           speichern Datum, Titel, Kategorie, Teaser, Volltext, beteiligte
           Figuren und den anlegenden Account; hochgeladene Ereignisbilder werden

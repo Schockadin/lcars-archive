@@ -482,6 +482,15 @@ export default function TutorialPage() {
                 „Meine Inhalte“ bzw. „Charaktere“, dort deutlich markiert.
               </p>
               <p>
+                <strong>Interne Textabschnitte.</strong>{" "}
+                Text hinter <code>{"<!-- private -->"}</code> wird in der
+                öffentlichen Ansicht, in Link-Vorschauen und Suchergebnissen,
+                beim Markdown-/PDF-Export und im Datenbank-Assistenten
+                ausgelassen. Im Bearbeitungsformular bleibt er erhalten;
+                automatisches Verlinken und Entfernen von Verlinkungen lassen
+                diesen Abschnitt unverändert.
+              </p>
+              <p>
                 <strong>Änderungen im Editor werden automatisch gesichert.</strong>{" "}
                 Beim Bearbeiten einer bestehenden Mission, eines Logbuchs,
                 Datenbank-Eintrags oder Chronologie-Ereignisses, beim

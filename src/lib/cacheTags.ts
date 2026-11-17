@@ -23,6 +23,9 @@ export const cacheTags = {
 
   timeline: "timeline",
 
+  // Bildvarianten nach Upload/Löschen und vollständigem DB-Restore verwerfen.
+  contentImages: "content-images",
+
   stats: "stats",
 
   // Kampagnen-Einstellungen (Ingame-Jahr). Wird u.a. von Mission-Log-Änderungen

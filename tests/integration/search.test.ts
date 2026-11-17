@@ -196,6 +196,53 @@ describe("öffentliche Suchquelle vor dem private-Marker", () => {
     expect(JSON.stringify(results)).not.toContain(SECRET);
   });
 
+  async function htmlFallbacksWithPrivatePreviews() {
+    const character = await insertCharacter({ name: "Alte Personenakte" });
+    const mission = await insertMission({ title: "Andere Mission" });
+    const publicHtml = PUBLIC_TEXT.replace("Gespräch", "<b>Gespräch</b>");
+    const html = `<p>${publicHtml} <a href="/chronologie/mission/ziel" data-preview="${SECRET}" title="${SECRET}">Verweis</a></p>`;
+    await sql`UPDATE characters SET source_md = NULL, bio = ${html} WHERE id = ${character.id}`;
+    await sql`
+      INSERT INTO mission_logs (slug, title, mission_id, content, source_md, is_draft)
+      VALUES ('preview-fallback-log', 'Alte Logakte', ${mission.id}, ${html}, NULL, false)
+    `;
+    await sql`
+      INSERT INTO archive_entries (slug, title, category, content, source_md, is_draft)
+      VALUES ('preview-fallback-archive', 'Alte Archivakte', 'location', ${html}, NULL, false)
+    `;
+    return [
+      character.slug,
+      "preview-fallback-log",
+      "preview-fallback-archive",
+    ].sort();
+  }
+
+  it("wertet alte private Hoverattribute bei fehlender Markdownquelle nicht als Suchtext", async () => {
+    await htmlFallbacksWithPrivatePreviews();
+    expect(await searchFull(SECRET, null)).toEqual([]);
+    expect(await searchFull("noberkie", null)).toEqual([]);
+    expect(await searchFull(`Gespräche ${SECRET}`, null)).toEqual([]);
+  });
+
+  it("findet öffentliche HTML-Fallbacktexte auch mit negierten privaten Hoverwörtern", async () => {
+    const slugs = await htmlFallbacksWithPrivatePreviews();
+    for (const query of [
+      "Gespräche",
+      '"leises Gespräch"',
+      `Gespräche -${SECRET}`,
+    ]) {
+      const results = await searchFull(query, null);
+      expect(results.map((result) => result.slug).sort()).toEqual(slugs);
+      expect(JSON.stringify(results)).not.toContain(SECRET);
+      for (const result of results.filter(
+        (entry) => entry.type !== "character",
+      )) {
+        expect(result.snippet).toContain("Gespräch");
+      }
+    }
+    expect(await searchFull("Gespräche -Observatorium", null)).toEqual([]);
+  });
+
   it("fällt bei leerem öffentlichem Quellteil nicht auf veraltetes HTML zurück", async () => {
     await sql`
       INSERT INTO archive_entries (slug, title, category, content, source_md, is_draft)

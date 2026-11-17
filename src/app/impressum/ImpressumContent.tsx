@@ -94,6 +94,15 @@ export default function ImpressumContent() {
           Anhänge und Portraitdateien sind nicht enthalten.
         </p>
 
+        <p>
+          Freigegebene Kampagneninhalte können öffentlich gelesen, durchsucht
+          und als Markdown oder PDF exportiert werden. Interne Textabschnitte
+          hinter der Markierung <code>{"<!-- private -->"}</code> werden in
+          öffentlichen Ansichten, Link-Vorschauen, Suchergebnissen, Exporten
+          und dem Datenbank-Assistenten ausgelassen. In autorisierten
+          Bearbeitungsformularen bleibt der vollständige Text erhalten.
+        </p>
+
         <h2>Haftung für Inhalte</h2>
         <p>
           Als Diensteanbieter bin ich gemäß § 7 Abs. 1 TMG für eigene Inhalte

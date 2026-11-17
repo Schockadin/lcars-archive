@@ -30,6 +30,7 @@ export function revalidateAllContent(): string[] {
     cacheTags.archive,
     cacheTags.timeline,
     cacheTags.stats,
+    cacheTags.contentImages,
   ]);
 }
 
@@ -87,7 +88,7 @@ export function revalidateContentImageLists(
     | "archive_entry"
     | "timeline_event",
 ): string[] {
-  const tags: string[] = [cacheTags.timeline];
+  const tags: string[] = [cacheTags.timeline, cacheTags.contentImages];
   if (contentType === "character") tags.push(cacheTags.characters);
   if (contentType === "archive_entry") tags.push(cacheTags.archive);
   return revalidate(tags);

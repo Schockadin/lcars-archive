@@ -11,6 +11,7 @@ import {
 import { stripWikilinks, type WikilinkRemoval } from "@/lib/wikilinkCleanup";
 import {
   getMissionBySlug,
+  getMissionById,
   getMissionLogSourceBySlug,
   updateMissionSynopsisWithHtml,
   updateMissionLogSourceMd,
@@ -95,7 +96,14 @@ async function getContentAccessor(
 ): Promise<ContentAccessor | { error: string }> {
   switch (contentType) {
     case "mission": {
-      const mission = await getMissionBySlug(slug);
+      const visibleMission = await getMissionBySlug(slug);
+      if (!visibleMission) return { error: "Mission nicht gefunden." };
+      if (!(await mayUseContentTools(visibleMission.ownerUserId))) {
+        return { error: NO_ACCESS };
+      }
+      // Der öffentliche DTO enthält absichtlich keine privaten Notizen.
+      // Erst nach dem Rechte-Gate den vollständigen Text zum Speichern lesen.
+      const mission = await getMissionById(visibleMission.id);
       if (!mission) return { error: "Mission nicht gefunden." };
       if (!mission.sourceMarkdown) {
         return { error: "Kein Markdown-Quelltext vorhanden." };

@@ -5,12 +5,13 @@
 // contentExport.ts). <img src="/api/content-images/{id}"> statt next/image,
 // da die Bilder aus derselben Origin kommen (kein images.remotePatterns
 // nötig) und die Anzahl pro Inhalt klein bleibt.
+import { createHash } from "node:crypto";
 import { getViewer } from "@/lib/visibility";
 import { CARD_THUMBNAIL_WIDTH } from "@/lib/imageThumbnails";
 import {
-  getContentImageById,
+  getContentImageForServing,
   getContentAccessContext,
-  getContentImageBytes,
+  getContentImageBytesByStorageKey,
   getContentImageThumbnailBytes,
   canViewContentImage,
 } from "@/lib/contentImages";
@@ -29,10 +30,11 @@ export async function GET(
   }
   const thumbnail = width !== null;
 
-  const image = await getContentImageById(id);
-  if (!image) {
+  const serving = await getContentImageForServing(id);
+  if (!serving) {
     return new Response("Bild nicht gefunden.", { status: 404 });
   }
+  const { image, storageKey } = serving;
 
   const access = await getContentAccessContext(
     image.contentType,
@@ -47,13 +49,11 @@ export async function GET(
     return new Response("Kein Zugriff.", { status: 404 });
   }
 
-  // Die Bytes zu einer Bild-ID sind unveränderlich (ein neuer Upload bekommt
-  // eine neue Zeile/ID, siehe buildContentImageKey in contentImages.ts) — die
-  // ID taugt daher als stabiler, starker ETag. Die Sichtbarkeitsprüfung oben
-  // ist bereits erfolgt; passt der If-None-Match-Wert des Browsers, sparen wir
-  // uns den R2-Fetch komplett und antworten mit 304. `immutable` verhindert
-  // zusätzlich unnötige Revalidierungen innerhalb der max-age-Spanne.
-  const etag = `"content-image-${id}${thumbnail ? "-thumb-156-webp-v1" : ""}"`;
+  // Ein Restore kann dieselbe ID einem anderen Objekt zuordnen. Der Digest
+  // bindet auch HTTP-Validatoren an die aktuellen Bytes, ohne den internen
+  // Storage-Key preiszugeben. Die ACL-Prüfung erfolgt vor jeder 304-Antwort.
+  const storageIdentity = createHash("sha256").update(storageKey).digest("hex");
+  const etag = `"content-image-${id}-${storageIdentity}${thumbnail ? "-thumb-156-webp-v1" : ""}"`;
   const cacheControl =
     access.isDraft || access.parentIsDraft
       ? "private, no-store"
@@ -67,7 +67,7 @@ export async function GET(
 
   if (thumbnail) {
     try {
-      const body = await getContentImageThumbnailBytes(id);
+      const body = await getContentImageThumbnailBytes(storageKey);
       if (!body) return new Response("Bild nicht gefunden.", { status: 404 });
       return new Response(new Uint8Array(body), {
         headers: {
@@ -86,14 +86,14 @@ export async function GET(
     }
   }
 
-  const object = await getContentImageBytes(id);
+  const object = await getContentImageBytesByStorageKey(storageKey);
   if (!object) {
     return new Response("Bild nicht gefunden.", { status: 404 });
   }
 
   return new Response(new Uint8Array(object.body), {
     headers: {
-      "Content-Type": object.contentType,
+      "Content-Type": image.contentMime,
       "Cache-Control": cacheControl,
       ETag: etag,
       Vary: "Cookie",

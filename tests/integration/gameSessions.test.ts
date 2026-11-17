@@ -20,6 +20,7 @@ import {
   listCharactersForSessionEdit,
   listActiveSessionMissions,
   listMissionSynopsisBlocks,
+  listPublicMissionSynopsisBlocks,
   listSessionMissions,
   syncSessionLogbookAp,
 } from "@/lib/gameSessions";
@@ -133,6 +134,28 @@ describe("Sessions", () => {
     const missions = await listActiveSessionMissions();
     expect(missions.some((mission) => mission.id === active.id)).toBe(true);
     expect(missions.some((mission) => mission.id === completed.id)).toBe(false);
+  });
+
+  it("hält private Blocknotizen aus öffentlichen DTOs und bewahrt den GM-Rohtext", async () => {
+    const gm = await insertUser({ role: "gm" });
+    const mission = await insertMission();
+    const source = "Die Crew kommt an.\n\n<!-- private -->\nGM-Geheimnis";
+    const sessionId = await createGameSession({
+      sessionDate: "2399-01-01",
+      missionId: mission.id,
+      synopsisBlocks: [{ ingameDate: "2399-01-01", body: source }],
+      sessionAp: 0,
+      bonusAp: 0,
+      characterIds: [],
+      createdByUserId: gm.id,
+    });
+
+    const publicBlocks = await listPublicMissionSynopsisBlocks(mission.id);
+    expect(publicBlocks[0].body).toBe("Die Crew kommt an.");
+    expect(publicBlocks[0].bodyHtml).toContain("Die Crew kommt an.");
+    expect(JSON.stringify(publicBlocks)).not.toContain("GM-Geheimnis");
+    expect((await listMissionSynopsisBlocks(mission.id))[0].body).toBe(source);
+    expect((await getGameSession(sessionId))?.synopsisBlocks[0].body).toBe(source);
   });
 
   it("nummeriert Summary-Blöcke fortlaufend über die Sessions einer Mission", async () => {

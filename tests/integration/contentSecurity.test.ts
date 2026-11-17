@@ -21,13 +21,47 @@ vi.mock("next/server", async (original) => ({
 import sql from "@/lib/db";
 import { loadExportableContent } from "@/lib/contentExport";
 import { makeViewer } from "@/lib/visibility";
-import { getCharacterBioMarkdown } from "@/lib/characters";
-import { getMissionById, getMissionBySlug } from "@/lib/missions";
+import { getAllCharacters, getCharacterBioMarkdown, getCharacterBySlug, getOwnCharacterForEdit } from "@/lib/characters";
+import { getAllMissions, getLogBySlug, getMissionById, getMissionBySlug } from "@/lib/missions";
+import { getArchiveEntryBySlug } from "@/lib/archive";
 import { GET as listCharacters } from "@/app/api/characters/route";
 import { GET as getCharacter } from "@/app/api/characters/[slug]/route";
 import { insertCharacter, insertMission, insertUser } from "./helpers";
 
 describe("öffentliche Content-Projektionen", () => {
+  it("entfernt alte private Hovervorschauen aus allen öffentlichen HTML-DTOs", async () => {
+    const owner = await insertUser();
+    const character = await insertCharacter({ playerId: owner.id });
+    const mission = await insertMission();
+    const html = '<p>Öffentlich. <a href="/chronologie/mission/ziel" data-preview="GM-Geheimnis" title="GM-Geheimnis">Ziel</a></p>';
+    const source = "Eigener Text. <!-- private --> Eigene Notizen";
+    await sql`UPDATE characters SET bio = ${html}, source_md = ${source} WHERE id = ${character.id}`;
+    await sql`UPDATE missions SET metadata = jsonb_set(metadata, '{body}', to_jsonb(${html}::text)) WHERE id = ${mission.id}`;
+    await sql`INSERT INTO archive_entries (slug, title, category, content)
+      VALUES ('alte-vorschau', 'Archiv', 'location', ${html})`;
+    await sql`INSERT INTO mission_logs (slug, title, mission_id, content)
+      VALUES ('alte-log-vorschau', 'Log', ${mission.id}, ${html})`;
+
+    const values = [
+      await getCharacterBySlug(character.slug),
+      await getAllCharacters(),
+      await getMissionBySlug(mission.slug),
+      await getAllMissions(),
+      await getArchiveEntryBySlug("alte-vorschau"),
+      await getLogBySlug("alte-log-vorschau"),
+    ];
+    for (const value of values) {
+      const serialized = JSON.stringify(value);
+      expect(serialized).toContain("/chronologie/mission/ziel");
+      expect(serialized).not.toContain("GM-Geheimnis");
+      expect(serialized).not.toContain("data-preview");
+    }
+    const editableCharacter = await getOwnCharacterForEdit(owner.id, character.id);
+    expect(editableCharacter?.sourceMarkdown).toBe(source);
+    expect(editableCharacter?.bioHtml).toContain("/chronologie/mission/ziel");
+    expect(editableCharacter?.bioHtml).not.toContain("GM-Geheimnis");
+  });
+
   it("gibt weder Rohtext, Frontmatter noch freie Metadaten über Character-APIs aus", async () => {
     state.viewer = null;
     const character = await insertCharacter();

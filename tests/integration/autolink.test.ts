@@ -45,6 +45,13 @@ describe("applyAutolinks", () => {
     ]);
   });
 
+  it("keeps the private suffix byte-for-byte and out of the match plan", () => {
+    const suffix = "<!-- private -->\nDesmond Hobbes and [[Die Mission]]  \n";
+    const result = applyAutolinks("Desmond Hobbes.\n" + suffix, targets);
+    expect(result.sourceMd).toBe("[[Desmond Hobbes]].\n" + suffix);
+    expect(result.matches).toHaveLength(1);
+  });
+
   it("uses the alias form when the matched alias differs from the canonical name", () => {
     const result = applyAutolinks("Wir trafen Desmond gestern.", targets);
 
@@ -138,6 +145,42 @@ describe("getAutolinkTargets", () => {
 });
 
 describe("resolveAllWikilinks", () => {
+  it("never uses private suffixes in new or stored previews for public targets", async () => {
+    const character = await insertCharacter({ name: "Public Person" });
+    const mission = await insertMission({ title: "Public Mission" });
+    const user = await insertUser();
+    const entry = await createArchiveEntry({
+      title: "Public Entry", category: "other", tags: [], summary: null,
+      aliases: [], attributeValues: {}, referenceValues: {},
+      bodyMarkdown: "Public archive.\n<!-- private -->\nSECRET ARCHIVE",
+      ownerUserId: user.id, isDraft: false,
+    });
+    await sql`UPDATE characters SET source_md = 'Public biography.\n<!-- private -->\nSECRET CHARACTER' WHERE id = ${character.id}`;
+    await sql`UPDATE missions SET source_md = 'Public synopsis.\n<!-- private -->\nSECRET MISSION' WHERE id = ${mission.id}`;
+
+    const html = await renderContentHtml("[[Public Person]] [[Public Mission]] [[Public Entry]]");
+    const targets = await getAutolinkTargets();
+    const previews = targets.filter(t => [character.slug, mission.slug, entry.slug].includes(t.slug)).map(t => t.preview);
+    expect(previews).toEqual(expect.arrayContaining(["Public biography.", "Public synopsis.", "Public archive."]));
+    expect(html).toContain('data-preview="Public synopsis."');
+    expect(html).not.toContain("SECRET");
+
+    const stored = await addStoredContentLinkPreviews(
+      `<a href="/chronologie/mission/${mission.slug}" data-preview="SECRET OLD" title="SECRET OLD">Mission</a>` +
+      `<a href="/archive/${entry.slug}" data-preview="SECRET OLD" title="SECRET OLD">Entry</a>` +
+      `<a href="/characters/${character.slug}" data-preview="SECRET OLD" title="SECRET OLD">Person</a>`,
+    );
+    expect(stored).toContain('data-preview="Public synopsis."');
+    expect(stored).toContain('data-preview="Public archive."');
+    expect(stored).toContain('data-preview="Public biography."');
+    expect(stored).not.toContain("SECRET");
+
+    await sql`UPDATE missions SET is_draft = true WHERE id = ${mission.id}`;
+    const hidden = await addStoredContentLinkPreviews(stored);
+    expect(hidden).not.toContain("Public synopsis.");
+    expect(hidden).not.toContain("SECRET");
+  });
+
   it("übernimmt keine Vorschautexte aus Entwürfen und hält die öffentliche Auflösung frei davon", async () => {
     const character = await insertCharacter({ name: "Verborgene Person", isDraft: true });
     const mission = await insertMission({ title: "Verborgene Mission" });

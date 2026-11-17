@@ -940,8 +940,12 @@ auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
   Listen holen die Bild-Id in ihrer bestehenden Abfrage mit (`LEFT JOIN
 LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
   Inhaltsarten (`getFirstContentImageIdsBySlug`) und bei eigenen Ereignissen
-  direkt über deren ID; ausgeliefert werden die Bytes wie überall
-  über `/api/content-images/<id>` (`contentImageSrc`).
+  direkt über deren ID. Inhaltsbilder werden über
+  `/api/content-images/<id>?width=156` als kleine WebP-Vorschau ausgeliefert;
+  eigene gespeicherte Portraits verwenden einen entsprechenden Vorschau-Endpunkt.
+  Beide prüfen vor der Auslieferung die aktuelle Sichtbarkeit des Inhalts.
+  Der Server-Cache verwendet den unveränderlichen Objekt-Key, damit ein
+  DB-Restore mit wiederverwendeten IDs keine alten Bilder zuordnet.
 - **Chronologie (`/chronologie`)** — die Kampagne als Zeitstrahl nach ihrer
   eigenen Zeitrechnung (In-Story-Datum), nicht nach Bearbeitungszeit. Sie ist
   zugleich die **Missions-Übersicht**: in der Vorgabe (`TIMELINE_SCOPES`,
@@ -2164,7 +2168,9 @@ das eingebettete Chatfeld frei für eigene Fragen:
    **denormalisiert**. Zusätzlich prüft jeder Treffer den aktuellen Zustand und
    Änderungsstand seiner Quellzeile; verspätete Embedding-Jobs können entzogene
    Rechte dadurch nicht wieder freigeben. Text hinter `<!-- private -->` wird
-   vor Indexierung, öffentlicher API-Ausgabe, Suchvorschau und Export entfernt.
+   vor Indexierung, öffentlicher API-Ausgabe, Link- und Suchvorschau sowie Export
+   entfernt. Autorisierte Bearbeitungs- und Verlinkungswerkzeuge behalten den
+   vollständigen Originaltext einschließlich interner Notizen.
    Die Vektoren werden als `'[…]'::vector`-Literal inline gecastet
    (kein pgvector-npm-Paket, `prepare:false`-kompatibel).
 2. **Aktualisierung.** Content-Mutationen (Anlegen/Bearbeiten/Veröffentlichen/

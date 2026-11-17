@@ -11,7 +11,8 @@
 // funktionieren.
 import "server-only";
 import crypto from "node:crypto";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
+import { cacheTags } from "@/lib/cacheTags";
 import sql from "@/lib/db";
 import {
   getObjectBytesFromR2,
@@ -303,6 +304,20 @@ export async function getContentImageById(
   return row ? mapRow(row) : null;
 }
 
+// Nur für die Auslieferungsroute: Metadaten und Objektschlüssel stammen aus
+// derselben frischen Zeile. Der Schlüssel bleibt serverseitig und gehört
+// ausdrücklich nicht zum ContentImage-DTO für Browser/Server Actions.
+export async function getContentImageForServing(id: number): Promise<{
+  image: ContentImage;
+  storageKey: string;
+} | null> {
+  const [row] = await sql<ContentImageRow[]>`
+    SELECT id, content_type, content_id, r2_key, content_mime, size_bytes, uploaded_by, created_at
+    FROM content_images WHERE id = ${id}
+  `;
+  return row ? { image: mapRow(row), storageKey: row.r2_key } : null;
+}
+
 export async function getContentImageStorageKey(
   id: number,
 ): Promise<string | null> {
@@ -324,22 +339,31 @@ export async function getContentImageBytes(
   if (!row) return null;
   // Asset-Bucket zuerst, dann Fallback auf den Backup-Bucket (Objekte, die
   // noch nicht migriert wurden, siehe Datei-Kommentar oben).
-  const object =
-    (await getAssetObjectBytesFromR2(row.r2_key)) ??
-    (await getObjectBytesFromR2(row.r2_key));
+  const object = await getContentImageBytesByStorageKey(row.r2_key);
   if (!object) return null;
   return { body: object.body, contentType: row.content_mime };
 }
 
-// Die ID bezeichnet unveränderliche Bytes. Die Route prüft Inhalt/Viewer
-// frisch, bevor sie auf diese wiederverwendbare Variante zugreift; gelöschte
-// oder inzwischen private Inhalte werden dadurch nie aus dem Cache freigegeben.
+// Aufrufer lesen den Schlüssel aus einer autorisierten DB-Zeile; niemals
+// eine Browseradresse laden. Beide Speicherorte unterstützen den Altbestand.
+export async function getContentImageBytesByStorageKey(storageKey: string) {
+  return (
+    (await getAssetObjectBytesFromR2(storageKey)) ??
+    (await getObjectBytesFromR2(storageKey))
+  );
+}
+
+// DB-IDs können nach einem Restore andere Objekte bezeichnen. Nur der beim
+// Upload erzeugte UUID-Schlüssel bezeichnet unveränderliche Bildbytes.
+// Zugriff/Existenz prüft die Route frisch, bevor sie den Schlüssel übergibt.
 export async function getContentImageThumbnailBytes(
-  id: number,
+  storageKey: string,
 ): Promise<Uint8Array | null> {
   "use cache";
   cacheLife("hours");
-  const object = await getContentImageBytes(id);
+  cacheTag(cacheTags.contentImages);
+  const object = await getContentImageBytesByStorageKey(storageKey);
+  if (!object) cacheLife("seconds");
   return object ? imageThumbnailBytes(object.body) : null;
 }
 

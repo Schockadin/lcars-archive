@@ -22,6 +22,7 @@ import { listNotes } from "@/lib/contentNotes";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import { missionLogHref } from "@/lib/contentRoutes";
 import ContentViewTracker from "@/components/ContentViewTracker";
+import { addStoredContentLinkPreviews } from "@/lib/autolink";
 
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
@@ -52,16 +53,20 @@ export default async function LogPage({ params }: Props) {
   // Log und Betrachter parallel laden (getViewer liest nur die Session, nicht
   // den Log). Betrachter immer auflösen — der Owner-Block unten braucht die
   // Rechte unabhängig von der Sichtbarkeit dieses Logs.
-  const [log, viewer, mission] = await Promise.all([
+  const [storedLog, viewer, mission] = await Promise.all([
     getLogBySlug(logSlug),
     getViewer(),
     getMissionBySlug(missionSlug),
   ]);
 
   // Log muss existieren UND zur Mission im Pfad gehören (sonst 404).
-  if (!log || !mission || log.mission_slug !== missionSlug) notFound();
+  if (!storedLog || !mission || storedLog.mission_slug !== missionSlug) notFound();
   if (!canViewMissionDraft(mission.isDraft, viewer)) notFound();
-  if (!canView(log.isDraft, log.ownerUserId, viewer)) notFound();
+  if (!canView(storedLog.isDraft, storedLog.ownerUserId, viewer)) notFound();
+  const log = {
+    ...storedLog,
+    content: await addStoredContentLinkPreviews(storedLog.content),
+  };
 
   // Autor-Navigation und Owner-Auswahl sind voneinander unabhängig — parallel
   // laden statt nacheinander. nav: Vor-/Zurück zwischen Logs desselben Autors

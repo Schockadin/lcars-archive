@@ -19,11 +19,12 @@ import { listNotes } from "@/lib/contentNotes";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import MissionBookLink from "./MissionBookLink";
 import { missionHref } from "@/lib/contentRoutes";
-import { listMissionSynopsisBlocks } from "@/lib/gameSessions";
+import { listPublicMissionSynopsisBlocks } from "@/lib/gameSessions";
 import HelpButton from "@/components/help/HelpButton";
 import { PublicChronologyGuide } from "@/components/help/guides/PublicGuides";
 import ContentActionsPanel from "@/components/ContentActionsPanel";
 import ContentViewTracker from "@/components/ContentViewTracker";
+import { addStoredContentLinkPreviews } from "@/lib/autolink";
 interface Props {
   params: Promise<{ missionSlug: string }>;
   searchParams: Promise<{ activateFollow?: string }>;
@@ -48,12 +49,23 @@ export default async function MissionPage({ params, searchParams }: Props) {
   const { missionSlug } = await params;
   // Mission und Betrachter sind voneinander unabhängig — parallel laden statt
   // nacheinander (getViewer liest nur Cookies/Session, nicht die Mission).
-  const [mission, viewer] = await Promise.all([
+  const [storedMission, viewer] = await Promise.all([
     getMissionBySlug(missionSlug),
     getViewer(),
   ]);
-  if (!mission) notFound();
-  if (!canViewMissionDraft(mission.isDraft, viewer)) notFound();
+  if (!storedMission) notFound();
+  if (!canViewMissionDraft(storedMission.isDraft, viewer)) notFound();
+  // Vorschauen außerhalb des Missionscaches auflösen, damit Änderungen an
+  // verlinkten Inhalten sofort sichtbar sind und keine privaten Alttexte bleiben.
+  const mission = {
+    ...storedMission,
+    metadata: {
+      ...storedMission.metadata,
+      body: storedMission.metadata.body == null
+        ? null
+        : await addStoredContentLinkPreviews(storedMission.metadata.body),
+    },
+  };
 
   // Aktivierungslink aus der Teilnehmer-Benachrichtigung (missionAction,
   // src/app/user/missions/_shared/contentAction.ts) — die Mission wird
@@ -100,7 +112,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
     // Die Logbücher dieser Mission — bis zum Redesign lagen sie im Layout,
     // das die schmale Navigationsschiene daneben gerendert hat.
     getLogsByMissionId(mission.id),
-    listMissionSynopsisBlocks(mission.id),
+    listPublicMissionSynopsisBlocks(mission.id),
     viewer ? getCharactersForUser(viewer.userId) : Promise.resolve([]),
   ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));

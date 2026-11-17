@@ -1,6 +1,6 @@
 import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
-import { splitPrivate } from "@/lib/publicContent";
+import { splitPrivate, stripStoredContentLinkPreviews } from "@/lib/publicContent";
 import { recordRevision } from "@/lib/contentRevisions";
 // Logbücher können an einer Session hängen; verschwindet/kehrt eines zurück,
 // muss die automatische Logbuch-AP dieser Session nachgezogen werden.
@@ -42,12 +42,15 @@ import {
 // metadata kommt als JSONB-String aus der DB — wie bei den Charakteren
 // (vgl. parseCharacter) muss sie zum Objekt geparst werden.
 function parseMeta<T extends { metadata: MissionMetaData }>(row: T): T {
+  const metadata = typeof row.metadata === "string"
+    ? (JSON.parse(row.metadata) as MissionMetaData)
+    : row.metadata;
   return {
     ...row,
-    metadata:
-      typeof row.metadata === "string"
-        ? (JSON.parse(row.metadata) as MissionMetaData)
-        : row.metadata,
+    metadata: {
+      ...metadata,
+      body: metadata.body == null ? metadata.body : stripStoredContentLinkPreviews(metadata.body),
+    },
   };
 }
 
@@ -724,7 +727,9 @@ export async function getLogBySlug(
         WHERE ml.slug = ${slug} AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
         LIMIT 1
       `;
-  return rows[0] ?? null;
+  return rows[0]
+    ? { ...rows[0], content: stripStoredContentLinkPreviews(rows[0].content) }
+    : null;
 }
 
 // Vor-/Zurück-Navigation zwischen den Logs desselben Autors. Sortiert

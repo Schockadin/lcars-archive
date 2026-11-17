@@ -11,7 +11,7 @@ import { parseCharacterStats } from "@/lib/characterStats";
 import { normalizeCharacterMetadata } from "@/lib/characterFormat";
 import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 import { characterPortraitThumbnailSrc } from "@/lib/characterPortraitThumbnails";
-import { splitPrivate } from "@/lib/publicContent";
+import { splitPrivate, stripStoredContentLinkPreviews } from "@/lib/publicContent";
 // getCharacterSubscribers lebt in dialoguesCore.ts (ursprünglich für den
 // Dialog-Abschluss gebraucht, siehe dort) und wird hier für die
 // Charakter-Update-Benachrichtigung wiederverwendet — Import über den
@@ -65,7 +65,7 @@ function parseCharacter(
     portrait: row.portrait,
     joined_at: row.joined_at ?? null,
     left_at: row.left_at ?? null,
-    bio: row.bio,
+    bio: row.bio == null ? row.bio : stripStoredContentLinkPreviews(row.bio),
     is_draft: row.is_draft,
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -878,7 +878,7 @@ export async function getOwnCharacterForEdit(
     portraitSource: metadata.portraitSource ?? null,
     portraitCrop: metadata.portraitCrop ?? null,
     sourceMarkdown: row.sourceMarkdown,
-    bioHtml: row.bioHtml,
+    bioHtml: row.bioHtml == null ? row.bioHtml : stripStoredContentLinkPreviews(row.bioHtml),
     isDraft: row.isDraft,
     npcSlug: row.npcSlug,
     rank: metadata.rank,

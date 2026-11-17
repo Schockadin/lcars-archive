@@ -2,6 +2,15 @@ import { describe, it, expect } from "vitest";
 import { stripWikilinks } from "./wikilinkCleanup";
 
 describe("stripWikilinks", () => {
+  it("leaves the complete private suffix unchanged and out of the removal plan", () => {
+    const suffix = "<!-- private -->\n[[Secret|Private alias]]\n  [[Other]]  \n";
+    const result = stripWikilinks("[[Public]].\n" + suffix);
+    expect(result.sourceMd).toBe("Public.\n" + suffix);
+    expect(result.removed).toEqual([
+      { original: "[[Public]]", replacement: "Public" },
+    ]);
+  });
+
   it("replaces a plain wikilink with its target text", () => {
     const result = stripWikilinks("Ein Treffen mit [[Desmond Hobbes]].");
     expect(result.sourceMd).toBe("Ein Treffen mit Desmond Hobbes.");
