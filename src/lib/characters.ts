@@ -63,8 +63,8 @@ function parseCharacter(
     status: row.status,
     player_id: row.player_id,
     portrait: row.portrait,
-    joined_at: row.joined_at,
-    left_at: row.left_at,
+    joined_at: row.joined_at ?? null,
+    left_at: row.left_at ?? null,
     bio: row.bio,
     is_draft: row.is_draft,
     created_at: row.created_at,
@@ -201,7 +201,7 @@ export async function getAllCharacters(): Promise<Character[]> {
   cacheTag(cacheTags.characters);
   cacheLife("max");
   const rows = await sql<Character[]>`
-        SELECT id, slug, name, status, player_id, portrait, joined_at, left_at,
+        SELECT id, slug, name, status, player_id, portrait,
                bio, metadata - 'stats' AS metadata, is_draft,
                created_at, updated_at, character_color
         FROM characters
@@ -370,7 +370,7 @@ export async function getCharacterBySlug(
   cacheTag(cacheTags.characters, cacheTags.character(slug));
   cacheLife("max");
   const rows = await sql<Character[]>`
-        SELECT id, slug, name, status, player_id, portrait, joined_at, left_at,
+        SELECT id, slug, name, status, player_id, portrait,
                bio, metadata - 'stats' AS metadata, is_draft,
                created_at, updated_at, character_color
         FROM characters

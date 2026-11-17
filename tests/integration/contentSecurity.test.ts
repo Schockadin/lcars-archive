@@ -36,12 +36,17 @@ describe("öffentliche Content-Projektionen", () => {
       metadata = '{"stats":{"secret":1},"gm":"Geheimnis","species":["Mensch"]}'
       WHERE id = ${character.id}`;
 
-    const list = await (await listCharacters()).json();
-    const detail = await (
-      await getCharacter(new Request("https://example.test"), {
+    const listResponse = await listCharacters();
+    const detailResponse = await getCharacter(
+      new Request("https://example.test"),
+      {
         params: Promise.resolve({ slug: character.slug }),
-      })
-    ).json();
+      },
+    );
+    expect(listResponse.status).toBe(200);
+    expect(detailResponse.status).toBe(200);
+    const list = await listResponse.json();
+    const detail = await detailResponse.json();
     for (const value of [list[0], detail]) {
       expect(value.bio).toBe("<p>Öffentlich.</p>");
       expect(value.metadata.species).toEqual(["Mensch"]);
