@@ -9,6 +9,10 @@ const mocks = vi.hoisted(() => ({
   cacheTag: vi.fn(),
 }));
 vi.mock("@/lib/db", () => ({ default: mocks.sql }));
+// Der Serving-Test liest keinen Viewer. Den User-Zweig der Visibility-
+// Abhängigkeit isolieren, damit dessen ORM keinen echten Postgres-Client
+// aus dem bewusst schmalen SQL-Mock initialisiert.
+vi.mock("@/lib/users", () => ({ getUserById: vi.fn() }));
 vi.mock("next/cache", () => ({
   cacheLife: mocks.cacheLife,
   cacheTag: mocks.cacheTag,
