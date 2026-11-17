@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { canManageContentImages } from "./contentImages";
+import { canManageContentImages, canViewContentImage } from "./contentImages";
 import type { Viewer } from "./visibility";
 
 // Baut einen minimalen Viewer mit exakt den angegebenen Rechten — der
@@ -7,6 +7,58 @@ import type { Viewer } from "./visibility";
 function viewer(userId: number, permissions: Viewer["permissions"]): Viewer {
   return { userId, role: "player", permissions };
 }
+
+describe("canViewContentImage", () => {
+  it("erlaubt ein veröffentlichtes Bild, aber keinen fremden Entwurf", () => {
+    expect(
+      canViewContentImage("character", { isDraft: false, ownerId: 7 }, null),
+    ).toBe(true);
+    expect(
+      canViewContentImage(
+        "character",
+        { isDraft: true, ownerId: 7 },
+        viewer(8, []),
+      ),
+    ).toBe(false);
+    expect(
+      canViewContentImage(
+        "character",
+        { isDraft: true, ownerId: 7 },
+        viewer(7, []),
+      ),
+    ).toBe(true);
+  });
+
+  it("wendet auf Missionsentwürfe das GM-Gate statt Owner-Freigabe an", () => {
+    const access = { isDraft: true, ownerId: 7 };
+    expect(canViewContentImage("mission", access, viewer(7, []))).toBe(false);
+    expect(
+      canViewContentImage("mission", access, viewer(8, ["missions.manage"])),
+    ).toBe(true);
+  });
+
+  it("verlangt für Log-Bilder beide Gates einschließlich der übergeordneten Mission", () => {
+    const access = { isDraft: false, ownerId: 7, parentIsDraft: true };
+    expect(canViewContentImage("mission_log", access, null)).toBe(false);
+    expect(canViewContentImage("mission_log", access, viewer(7, []))).toBe(
+      false,
+    );
+    expect(
+      canViewContentImage(
+        "mission_log",
+        access,
+        viewer(8, ["missions.manage"]),
+      ),
+    ).toBe(true);
+    expect(
+      canViewContentImage(
+        "mission_log",
+        { ...access, isDraft: true },
+        viewer(8, ["missions.manage"]),
+      ),
+    ).toBe(false);
+  });
+});
 
 describe("canManageContentImages", () => {
   it("erlaubt dem Owner die Verwaltung bei jedem Inhaltstyp", () => {

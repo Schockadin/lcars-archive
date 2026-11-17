@@ -8,6 +8,17 @@ vi.mock("@/lib/db", () => ({ default: () => Promise.resolve([]) }));
 const { wikilinkTargets, wikilinkPointsTo } = await import("./mentions");
 
 describe("wikilinkTargets", () => {
+  it("veröffentlicht keine Verweise aus privaten Textabschnitten", () => {
+    expect(
+      wikilinkTargets("[[Öffentlich]] <!-- private --> [[Geheime Verbindung]]"),
+    ).toEqual(["Öffentlich"]);
+    expect(
+      wikilinkPointsTo("<!-- private --> [[Geheim]]", {
+        slug: "geheim",
+        name: "Geheim",
+      }),
+    ).toBe(false);
+  });
   it("liest einfache Wikilinks als Slug", () => {
     expect(wikilinkTargets("Siehe [[Tuvok]] dazu.")).toEqual(["Tuvok"]);
   });

@@ -3,10 +3,10 @@
 import { redirect } from "next/navigation";
 import { publishContentChanged } from "@/lib/realtimeServer";
 import { createSession } from "@/lib/session";
-import { getUserById, recordLogin, setPassword } from "@/lib/users";
+import { getUserById, recordLogin } from "@/lib/users";
 import { hashPassword, validatePassword } from "@/lib/password";
 import {
-  markPasswordSetupTokenUsed,
+  setPasswordWithSetupToken,
   peekPasswordSetupToken,
 } from "@/lib/passwordSetupTokens";
 
@@ -57,12 +57,16 @@ export async function activateAccount(
   // trägt noch den alten Stand, und ein damit signiertes Cookie würde von
   // getCurrentUser/getActiveSession sofort wieder verworfen: die Person
   // landete unmittelbar nach dem Setzen ihres Passworts erneut auf /login.
-  const sessionVersion = await setPassword(user.id, await hashPassword(password));
-  await markPasswordSetupTokenUsed(setupToken.id);
+  const result = await setPasswordWithSetupToken(
+    token,
+    await hashPassword(password),
+  );
+  if (!result) {
+    return { error: "Dieser Link ist ungültig oder abgelaufen." };
+  }
   await publishContentChanged();
 
   await recordLogin(user.id);
-  await createSession({ ...user, session_version: sessionVersion });
+  await createSession({ ...user, session_version: result.sessionVersion });
   redirect("/");
 }
-

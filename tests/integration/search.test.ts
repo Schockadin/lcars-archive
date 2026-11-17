@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import sql from "@/lib/db";
-import { searchFull, searchLive, buildSnippet, stripMarkdown } from "@/lib/search";
+import {
+  searchFull,
+  searchLive,
+  buildSnippet,
+  stripMarkdown,
+} from "@/lib/search";
 import { createDialogue } from "@/lib/dialoguesCore";
 import { insertUser, insertCharacter, insertMission } from "./helpers";
 
@@ -8,13 +13,16 @@ describe("stripMarkdown", () => {
   it("strips code blocks, images, wikilinks, links and heading markers", () => {
     const md =
       "# Titel\n\n```\ncode block\n```\n\n`inline` und ![alt](bild.png) und [[Ziel|Alias]] und [Text](url) Ende.";
-    expect(stripMarkdown(md)).toBe("Titel inline und alt und Alias und Text Ende.");
+    expect(stripMarkdown(md)).toBe(
+      "Titel inline und alt und Alias und Text Ende.",
+    );
   });
 });
 
 describe("buildSnippet", () => {
   it("returns a centered excerpt around the first match", () => {
-    const text = "Ein langer Text ".repeat(5) + "GESUCHT" + " weiterer Text".repeat(5);
+    const text =
+      "Ein langer Text ".repeat(5) + "GESUCHT" + " weiterer Text".repeat(5);
     const result = buildSnippet(text, "GESUCHT", 10);
     expect(result).toContain("GESUCHT");
     expect(result?.startsWith("…")).toBe(true);
@@ -61,14 +69,17 @@ describe("searchFull", () => {
   it("annotates results the given user has already bookmarked", async () => {
     const character = await insertCharacter({
       name: "Bookmarked Character",
-      });
+    });
     const user = await insertUser();
     await sql`
       INSERT INTO content_follows (user_id, target_type, target_slug, bookmarked_at)
       VALUES (${user.id}, 'character', ${character.slug}, NOW())
     `;
 
-    const result = await searchFull("Bookmarked", { userId: user.id, isGm: false });
+    const result = await searchFull("Bookmarked", {
+      userId: user.id,
+      isGm: false,
+    });
 
     expect(result[0].saved).toBe(true);
   });
@@ -79,6 +90,184 @@ describe("searchFull", () => {
     const result = await searchFull("Anonymous Search Target", null);
 
     expect(result[0].saved).toBeUndefined();
+  });
+});
+
+describe("öffentliche Suchquelle vor dem private-Marker", () => {
+  const PUBLIC_TEXT = "Ein leises Gespräch im Observatorium.";
+  const SECRET = "Zinnoberkiesel";
+
+  async function publicSourcesWithPrivateNotes() {
+    const user = await insertUser();
+    const character = await insertCharacter({ name: "Akte Alpha" });
+    const mission = await insertMission({ title: "Akte Beta" });
+    const source = `${PUBLIC_TEXT}\n<!-- private -->\n${SECRET}`;
+    // Absichtlich altes, noch nicht bereinigtes HTML: auch der ILIKE-Pfad
+    // darf den Privattext nicht als Treffer oder Snippet herausgeben.
+    const legacyHtml = `<p>${PUBLIC_TEXT} ${SECRET}</p>`;
+    await sql`UPDATE characters SET source_md = ${source}, bio = ${legacyHtml} WHERE id = ${character.id}`;
+    await sql`UPDATE missions SET source_md = ${source} WHERE id = ${mission.id}`;
+    await sql`
+      INSERT INTO mission_logs (slug, title, mission_id, content, source_md, is_draft)
+      VALUES ('private-source-log', 'Akte Gamma', ${mission.id}, ${legacyHtml}, ${source}, false)
+    `;
+    await sql`
+      INSERT INTO archive_entries (slug, title, category, content, source_md, is_draft)
+      VALUES ('private-source-archive', 'Akte Delta', 'location', ${legacyHtml}, ${source}, false)
+    `;
+    const [dialogue] = await sql<{ id: number }[]>`
+      INSERT INTO archive_entries (slug, title, category, content, is_draft, dialogue_open)
+      VALUES ('private-source-dialogue', 'Akte Epsilon', 'dialogue', '', false, false)
+      RETURNING id
+    `;
+    await sql`
+      INSERT INTO dialogue_messages (archive_entry_id, character_id, author_user_id, content, source_md)
+      VALUES (${dialogue.id}, ${character.id}, ${user.id}, ${legacyHtml}, ${source})
+    `;
+    return [
+      character.slug,
+      mission.slug,
+      "private-source-log",
+      "private-source-archive",
+      "private-source-dialogue",
+    ].sort();
+  }
+
+  it("verweigert private Volltext- und Teilworttreffer für sämtliche Inhaltstypen", async () => {
+    await publicSourcesWithPrivateNotes();
+    expect(await searchFull(SECRET, null)).toEqual([]);
+    expect(await searchFull("noberkie", null)).toEqual([]);
+    expect(await searchFull(`Gespräche ${SECRET}`, null)).toEqual([]);
+  });
+
+  it("findet öffentliche Wortformen weiterhin und schneidet private Snippets ab", async () => {
+    const slugs = await publicSourcesWithPrivateNotes();
+    const results = await searchFull("Gespräche", null);
+    expect(results.map((result) => result.slug).sort()).toEqual(slugs);
+    expect(JSON.stringify(results)).not.toContain(SECRET);
+    for (const result of results.filter(
+      (entry) =>
+        entry.type === "log" ||
+        entry.type === "archive" ||
+        entry.type === "dialogue_message",
+    )) {
+      expect(result.snippet).toContain("Gespräch");
+    }
+  });
+
+  it("wertet Negation ausschließlich gegen öffentliche Wörter aus", async () => {
+    const slugs = await publicSourcesWithPrivateNotes();
+    // Der gespeicherte Vollvektor lehnt diese Zeilen wegen des Privatwortes
+    // ab. Er darf markierte Quellen daher nicht als Kandidatenfilter sperren.
+    expect(
+      (await searchFull(`Gespräche -${SECRET}`, null))
+        .map((result) => result.slug)
+        .sort(),
+    ).toEqual(slugs);
+    expect(await searchFull("Gespräche -Observatorium", null)).toEqual([]);
+  });
+
+  it("beeinflusst Relevanz und Reihenfolge nicht durch private Worthäufigkeiten", async () => {
+    for (const [title, privateText] of [
+      ["Alphazeug", SECRET],
+      ["Betazeug", "Gespräch ".repeat(50)],
+    ] as const) {
+      await sql`
+        INSERT INTO archive_entries (slug, title, category, content, source_md, is_draft)
+        VALUES (${title.toLowerCase()}, ${title}, 'location', '',
+                ${`${PUBLIC_TEXT}\n<!-- private -->\n${privateText}`}, false)
+      `;
+    }
+    expect(
+      (await searchFull("Gespräche", null)).map((result) => result.label),
+    ).toEqual(["Alphazeug", "Betazeug"]);
+  });
+
+  it("verwendet bei NULL-source_md nur das HTML vor dem Marker", async () => {
+    await sql`
+      INSERT INTO archive_entries (slug, title, category, content, source_md, is_draft)
+      VALUES ('html-fallback-private', 'Alte Akte', 'location',
+              ${`<p>${PUBLIC_TEXT}</p><!-- private --><p>${SECRET}</p>`}, NULL, false)
+    `;
+    expect(await searchFull(SECRET, null)).toEqual([]);
+    const results = await searchFull("Gespräche", null);
+    expect(results).toHaveLength(1);
+    expect(results[0].snippet).toContain("Gespräch");
+    expect(JSON.stringify(results)).not.toContain(SECRET);
+  });
+
+  async function htmlFallbacksWithPrivatePreviews() {
+    const character = await insertCharacter({ name: "Alte Personenakte" });
+    const mission = await insertMission({ title: "Andere Mission" });
+    const publicHtml = PUBLIC_TEXT.replace("Gespräch", "<b>Gespräch</b>");
+    const html = `<p>${publicHtml} <a href="/chronologie/mission/ziel" data-preview="${SECRET}" title="${SECRET}">Verweis</a></p>`;
+    await sql`UPDATE characters SET source_md = NULL, bio = ${html} WHERE id = ${character.id}`;
+    await sql`
+      INSERT INTO mission_logs (slug, title, mission_id, content, source_md, is_draft)
+      VALUES ('preview-fallback-log', 'Alte Logakte', ${mission.id}, ${html}, NULL, false)
+    `;
+    await sql`
+      INSERT INTO archive_entries (slug, title, category, content, source_md, is_draft)
+      VALUES ('preview-fallback-archive', 'Alte Archivakte', 'location', ${html}, NULL, false)
+    `;
+    return [
+      character.slug,
+      "preview-fallback-log",
+      "preview-fallback-archive",
+    ].sort();
+  }
+
+  it("wertet alte private Hoverattribute bei fehlender Markdownquelle nicht als Suchtext", async () => {
+    await htmlFallbacksWithPrivatePreviews();
+    expect(await searchFull(SECRET, null)).toEqual([]);
+    expect(await searchFull("noberkie", null)).toEqual([]);
+    expect(await searchFull(`Gespräche ${SECRET}`, null)).toEqual([]);
+  });
+
+  it("findet öffentliche HTML-Fallbacktexte auch mit negierten privaten Hoverwörtern", async () => {
+    const slugs = await htmlFallbacksWithPrivatePreviews();
+    for (const query of [
+      "Gespräche",
+      '"leises Gespräch"',
+      `Gespräche -${SECRET}`,
+    ]) {
+      const results = await searchFull(query, null);
+      expect(results.map((result) => result.slug).sort()).toEqual(slugs);
+      expect(JSON.stringify(results)).not.toContain(SECRET);
+      for (const result of results.filter(
+        (entry) => entry.type !== "character",
+      )) {
+        expect(result.snippet).toContain("Gespräch");
+      }
+    }
+    expect(await searchFull("Gespräche -Observatorium", null)).toEqual([]);
+  });
+
+  it("fällt bei leerem öffentlichem Quellteil nicht auf veraltetes HTML zurück", async () => {
+    await sql`
+      INSERT INTO archive_entries (slug, title, category, content, source_md, is_draft)
+      VALUES ('empty-public-source', 'Ein Gespräch', 'location',
+              ${`<p>${SECRET} Gespräch</p>`}, ${`<!-- private --> ${SECRET}`}, false)
+    `;
+    const results = await searchFull("Gespräche", null);
+    expect(results).toHaveLength(1);
+    expect(results[0].snippet).toBeUndefined();
+    expect(JSON.stringify(results)).not.toContain(SECRET);
+  });
+
+  it("schließt auch veröffentlichte Logs einer Entwurfsmission aus", async () => {
+    const mission = await insertMission({ title: "Andere Akte" });
+    await sql`UPDATE missions SET is_draft = true WHERE id = ${mission.id}`;
+    await sql`
+      INSERT INTO mission_logs (slug, title, mission_id, content, source_md, is_draft)
+      VALUES ('draft-parent-search', 'IndizierteBeta', ${mission.id}, 'Chronolith', 'Chronolith', false)
+    `;
+    expect(await searchLive("IndizierteBeta")).toEqual([]);
+    expect(await searchFull("Chronolith", null)).toEqual([]);
+    await sql`UPDATE missions SET is_draft = false WHERE id = ${mission.id}`;
+    expect(
+      (await searchFull("Chronolith", null)).map((result) => result.slug),
+    ).toEqual(["draft-parent-search"]);
   });
 });
 
@@ -102,7 +291,10 @@ describe("searchFull – Gesprochenes", () => {
     // Teilnehmenden, und dieses hier hat keine eingetragenen (metadata '{}').
     // Geprüft wird die Darstellung des Treffers, nicht die Schranke davor —
     // die hat ihre eigenen Fälle weiter unten.
-    const result = await searchFull("Raktajino", { userId: user.id, isGm: true });
+    const result = await searchFull("Raktajino", {
+      userId: user.id,
+      isGm: true,
+    });
 
     expect(result).toHaveLength(1);
     expect(result[0].type).toBe("dialogue_message");
@@ -129,7 +321,10 @@ describe("searchFull – Gesprochenes", () => {
       `;
     }
 
-    const result = await searchFull("Warpkern", { userId: user.id, isGm: true });
+    const result = await searchFull("Warpkern", {
+      userId: user.id,
+      isGm: true,
+    });
     expect(result.filter((r) => r.type === "dialogue_message")).toHaveLength(1);
   });
 
@@ -163,7 +358,6 @@ describe("searchFull – Gesprochenes", () => {
     ).toHaveLength(0);
   });
 });
-
 
 // Ein laufendes Gespräch gehört seinen Teilnehmenden: /dialogues/[slug]
 // antwortet allen anderen mit forbidden(). Die Volltextsuche ist dagegen ohne

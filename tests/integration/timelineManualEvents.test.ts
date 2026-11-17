@@ -24,6 +24,39 @@ vi.mock("next/cache", () => ({
 }));
 
 describe("freie Chronologie-Ereignisse", () => {
+  it("liest nur veröffentlichte Quellen und keine Logbücher unter Entwurfsmissionen", async () => {
+    const mission = await insertMission();
+    const draftMission = await insertMission();
+    await sql`UPDATE missions SET is_draft = true WHERE id = ${draftMission.id}`;
+    await sql`
+      INSERT INTO mission_logs (slug, title, mission_id, content, source_md, is_draft)
+      VALUES ('public-timeline-log', 'Öffentlich', ${mission.id}, '', 'Öffentlich', false),
+             ('draft-timeline-log', 'Log-Entwurf', ${mission.id}, '', 'Geheim', true),
+             ('draft-parent-log', 'Entwurfsmission', ${draftMission.id}, '', 'Geheim', false)
+    `;
+    const titles = (await getTimeline()).map((event) => event.title);
+    expect(titles).toContain("Öffentlich");
+    expect(titles).not.toContain("Log-Entwurf");
+    expect(titles).not.toContain("Entwurfsmission");
+  });
+
+  it("veröffentlicht weder private Textmarken noch private Teaser", async () => {
+    const mission = await insertMission();
+    const markdown =
+      "Öffentlicher Bericht.\n<!-- private -->\nNur für mich.\n<!-- timeline: 2401-01-02 | Geheime Absprache | political -->";
+    await sql`
+      INSERT INTO mission_logs (slug, title, mission_id, content, source_md, is_draft)
+      VALUES ('private-timeline-markers', 'Bericht', ${mission.id}, '', ${markdown}, false)
+    `;
+    const events = await getTimeline();
+    const report = events.find((event) => event.title === "Bericht");
+    expect(report?.detail).toBe("Öffentlicher Bericht.");
+    expect(events.some((event) => event.title === "Geheime Absprache")).toBe(
+      false,
+    );
+    expect(JSON.stringify(events)).not.toContain("Nur für mich");
+  });
+
   it("erscheinen in der Chronologie, ohne Quelle und ohne Link", async () => {
     const user = await insertUser();
     await createManualEvent(
@@ -237,18 +270,24 @@ describe("Chronologie: Umfang der Quellen", () => {
       await sql`INSERT INTO mission_synopsis_blocks (mission_id, ingame_date, body_md)
         VALUES (${mission.id}, '2401-03-07', ${"Kontakt mit **Beteiligten**.\n\n<script>alert('xss')</script>"})`;
     }
-    const blocks = (await getTimeline()).filter((entry) => entry.sessionBlockId != null);
+    const blocks = (await getTimeline()).filter(
+      (entry) => entry.sessionBlockId != null,
+    );
     expect(blocks).toHaveLength(1);
     expect(blocks[0]).toMatchObject({
-      category: "session", date: "2401-03-07", title: "07.03.2401",
-      sourceTitle: "Öffentliche Mission", origin: "metadata",
+      category: "session",
+      date: "2401-03-07",
+      title: "07.03.2401",
+      sourceTitle: "Öffentliche Mission",
+      origin: "metadata",
       href: `/chronologie/mission/${published.slug}#mission-synopsis-${blocks[0].sessionBlockId}`,
     });
     expect(blocks[0].fullDetailHtml).toContain("<strong>Beteiligten</strong>");
     expect(blocks[0].fullDetailHtml).not.toContain("<script");
     expect(blocks[0].contentId).toBeUndefined();
-    const compact = (await getTimeline({ renderManualDetails: false }))
-      .find((entry) => entry.id === blocks[0].id);
+    const compact = (await getTimeline({ renderManualDetails: false })).find(
+      (entry) => entry.id === blocks[0].id,
+    );
     expect(compact?.fullDetailHtml).toBeNull();
   });
 

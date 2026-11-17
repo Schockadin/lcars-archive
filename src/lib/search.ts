@@ -2,6 +2,7 @@ import sql from "@/lib/db";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import { stripHtml } from "@/lib/missionFormat";
 import { WIKILINK_RE } from "@/lib/markdown";
+import { splitPrivate } from "@/lib/publicContent";
 import type { ArchiveCategory } from "@/types/archive";
 import type { SearchResult, SearchResultType } from "@/types/search";
 import type { FollowTargetType } from "@/lib/follows";
@@ -166,21 +167,84 @@ async function runSearchQueries(
   //         Wort-Tokenisierung der FTS vorbeigeht — und trägt die Live-Suche,
   //         die schon nach zwei Buchstaben etwas anzeigen soll.
   const ts = sql`websearch_to_tsquery('german', ${q})`;
+  // Konservativ: auch ein Bindestrich in einem zitierten Namen nimmt den
+  // sicheren Negationspfad. So müssen wir PostgreSQLs Suchsyntax nicht selbst
+  // parsen; Anfragen ohne '-' behalten den gewöhnlichen GIN-Kandidatenfilter.
+  const mayNegate = q.includes("-");
 
-  // Welcher Vektor befragt wird, hängt am Modus: Die Live-Suche (Dropdown)
-  // vergleicht wie bisher NUR Titel/Namen — sonst würde sie plötzlich auch
-  // Fließtext treffen. Die Volltextsuche nutzt den vollen Vektor (Titel +
-  // Inhalt). Beide sind eigene, indizierte Spalten (siehe schema.sql).
-  const vec = (col: string) =>
-    includeContent
-      ? sql`${sql(col)}.search_vector`
-      : sql`${sql(col)}.title_vector`;
+  // Die gespeicherten Vektoren älterer Datenbanken enthalten auch den Text
+  // nach dem private-Marker. HTML-Fallbacks können außerdem alte Hovertexte
+  // in ihren Attributen tragen. Für gewöhnliche Quellen bleibt der indizierte
+  // Vektor unverändert nutzbar; markierte Quellen und HTML-Fallbacks bekommen
+  // einen neu berechneten öffentlichen Vektor mit denselben Gewichten.
+  //
+  // Bei solchen Quellen darf der alte Vektor nicht einmal Kandidaten
+  // ausschließen: "Gespräch -Geheimwort" muss dieselben Treffer liefern,
+  // egal ob das Geheimwort in einer privaten Notiz vorkommt oder nicht.
+  const searchFields = (
+    alias: string,
+    title: "name" | "title" | null,
+    fallback: "bio" | "content" | null,
+    characterFields = false,
+  ) => {
+    const col = (name: string) => sql`${sql(alias)}.${sql(name)}`;
+    const stored = includeContent ? col("search_vector") : col("title_vector");
+    const source = fallback
+      ? sql`coalesce(${col("source_md")}, ${col(fallback)}, '')`
+      : sql`coalesce(${col("source_md")}, '')`;
+    const hasPrivate = sql`strpos(${source}, '<!-- private -->') > 0`;
+    const hasHtmlFallback = fallback
+      ? sql`(${col("source_md")} IS NULL AND strpos(${source}, '<') > 0)`
+      : sql`false`;
+    const needsPublicVector = sql`(${hasPrivate} OR ${hasHtmlFallback})`;
+    const publicSource = sql`split_part(${source}, '<!-- private -->', 1)`;
+    // Dieselbe Textbasis wie stripHtml() für Snippets: HTML-Attribute sind
+    // keine öffentlichen Suchwörter, auch wenn source_md ganz fehlt.
+    const publicBody = fallback
+      ? sql`CASE WHEN ${col("source_md")} IS NULL
+          THEN regexp_replace(${publicSource}, '<[^>]*>', ' ', 'g')
+          ELSE ${publicSource} END`
+      : publicSource;
+    const bodyVector = sql`to_tsvector('german', ${publicBody})`;
+    const publicVector = title
+      ? sql`(
+          setweight(to_tsvector('german', coalesce(${col(title)}, '')), 'A')
+          || setweight(${bodyVector}, 'B')
+          ${characterFields ? sql`|| setweight(to_tsvector('german', coalesce(${col("species")}, '') || ' ' || coalesce(${col("rank")}, '')), 'C')` : sql``}
+        )`
+      : bodyVector;
+    return {
+      match: includeContent
+        ? mayNegate
+          ? sql`(
+              (NOT (${needsPublicVector}) AND ${stored} @@ ${ts})
+              OR (${needsPublicVector} AND ${publicVector} @@ ${ts})
+            )`
+          : sql`(${stored} @@ ${ts} AND (NOT (${needsPublicVector}) OR ${publicVector} @@ ${ts}))`
+        : sql`${stored} @@ ${ts}`,
+      rank: includeContent
+        ? sql`ts_rank_cd(CASE WHEN ${needsPublicVector} THEN ${publicVector} ELSE ${stored} END, ${ts})`
+        : sql`ts_rank_cd(${stored}, ${ts})`,
+      // Ein älteres gerendertes HTML kann private Notizen noch enthalten.
+      // Sobald die Quelle einen Marker hat, gilt auch für ILIKE allein der
+      // öffentliche Quelltext; der HTML-Fallback gilt nur bei NULL-source_md.
+      // Der bisherige HTML-Trigrammindex bleibt als Kandidatenfilter
+      // erhalten. Die zusätzliche Prüfung entscheidet gegen den öffentlichen
+      // Quelltext, damit auch ältere HTML-Versionen nichts verraten.
+      bodyMatch: sql`(${col(fallback ?? "source_md")} ILIKE ${like} AND ${publicBody} ILIKE ${like})`,
+    };
+  };
+  const characterFields = searchFields("characters", "name", "bio", true);
+  const missionFields = searchFields("missions", "title", null);
+  const logFields = searchFields("ml", "title", "content");
+  const archiveFields = searchFields("archive_entries", "title", "content");
+  const messageFields = searchFields("dm", null, "content");
 
   const [chars, missions, logs, archive, dialogueMessages] = await Promise.all([
     sql<CharacterRow[]>`
       SELECT name, slug
       FROM characters
-      WHERE (name ILIKE ${like} OR ${vec("characters")} @@ ${ts})
+      WHERE (name ILIKE ${like} OR ${characterFields.match})
         AND deleted_at IS NULL
         AND is_draft = false
         AND NOT EXISTS (
@@ -188,17 +252,17 @@ async function runSearchQueries(
           WHERE conversion.character_id = characters.id
         )
       ORDER BY (name ILIKE ${prefix}) DESC,
-               ts_rank_cd(${vec("characters")}, ${ts}) DESC,
+               ${characterFields.rank} DESC,
                name ASC
       LIMIT ${limit}
     `,
     sql<MissionRow[]>`
       SELECT title, slug
       FROM missions
-      WHERE (title ILIKE ${like} OR ${vec("missions")} @@ ${ts})
+      WHERE (title ILIKE ${like} OR ${missionFields.match})
         AND deleted_at IS NULL AND is_draft = false
       ORDER BY (title ILIKE ${prefix}) DESC,
-               ts_rank_cd(${vec("missions")}, ${ts}) DESC,
+               ${missionFields.rank} DESC,
                title ASC
       LIMIT ${limit}
     `,
@@ -209,12 +273,13 @@ async function runSearchQueries(
       JOIN missions m ON m.id = ml.mission_id
       WHERE (
           ml.title ILIKE ${like}
-          ${includeContent ? sql`OR ml.content ILIKE ${like}` : sql``}
-          OR ${vec("ml")} @@ ${ts}
+          ${includeContent ? sql`OR ${logFields.bodyMatch}` : sql``}
+          OR ${logFields.match}
         )
         AND ml.deleted_at IS NULL AND m.deleted_at IS NULL AND ml.is_draft = false
+        AND m.is_draft = false
       ORDER BY (ml.title ILIKE ${prefix}) DESC,
-               ts_rank_cd(${vec("ml")}, ${ts}) DESC,
+               ${logFields.rank} DESC,
                ml.title ASC
       LIMIT ${limit}
     `,
@@ -224,14 +289,14 @@ async function runSearchQueries(
       FROM archive_entries
       WHERE (
           title ILIKE ${like}
-          ${includeContent ? sql`OR content ILIKE ${like}` : sql``}
+          ${includeContent ? sql`OR ${archiveFields.bodyMatch}` : sql``}
           OR (category = 'dialogue' AND metadata->>'setting' ILIKE ${like})
-          OR ${vec("archive_entries")} @@ ${ts}
+          OR ${archiveFields.match}
         )
         AND NOT (category = 'dialogue' AND dialogue_open)
         AND deleted_at IS NULL AND is_draft = false
       ORDER BY (title ILIKE ${prefix}) DESC,
-               ts_rank_cd(${vec("archive_entries")}, ${ts}) DESC,
+               ${archiveFields.rank} DESC,
                title ASC
       LIMIT ${limit}
     `,
@@ -256,12 +321,12 @@ async function runSearchQueries(
           JOIN archive_entries ae ON ae.id = dm.archive_entry_id
           LEFT JOIN characters c ON c.id = dm.character_id
           LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
-          WHERE (dm.content ILIKE ${like} OR dm.search_vector @@ ${ts})
+          WHERE (${messageFields.bodyMatch} OR ${messageFields.match})
             AND dm.deleted_at IS NULL
             AND ae.deleted_at IS NULL AND ae.is_draft = false
             AND ${openDialogueVisibleSql(viewer)}
           ORDER BY dm.archive_entry_id,
-                   ts_rank_cd(dm.search_vector, ${ts}) DESC,
+                   ${messageFields.rank} DESC,
                    dm.created_at ASC
           LIMIT ${limit}
         `
@@ -292,7 +357,7 @@ function toTextFragment(text: string): string {
 // aufgelöst wird wie beim Rendern), normale Links, Überschriften-/Zitat-/
 // Listen-Marker, Betonung, Trennlinien.
 export function stripMarkdown(md: string): string {
-  return md
+  return splitPrivate(md)
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/`([^`]*)`/g, "$1")
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
@@ -397,8 +462,8 @@ function plainTextFor(row: {
   content?: string;
   source_md?: string | null;
 }): string {
-  if (row.source_md) return stripMarkdown(row.source_md);
-  return row.content ? stripHtml(row.content) : "";
+  if (row.source_md != null) return stripMarkdown(row.source_md);
+  return row.content ? stripHtml(splitPrivate(row.content)) : "";
 }
 
 function mapResults(

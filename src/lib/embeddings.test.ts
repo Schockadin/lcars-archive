@@ -97,6 +97,14 @@ describe("splitMarkdownByHeadings", () => {
 });
 
 describe("chunkContent — Charakter", () => {
+  it("indexiert keine privaten Notizen aus dem Markdown", () => {
+    const chunks = chunkContent({
+      type: "character",
+      record: { name: "Kirk", sourceMd: "Öffentlich. <!-- private --> GM-Geheimnis" },
+    });
+    expect(chunks[0].text).toContain("Öffentlich.");
+    expect(JSON.stringify(chunks)).not.toContain("GM-Geheimnis");
+  });
   it("erzeugt genau einen Chunk mit Metadaten-Header", () => {
     const chunks = chunkContent({
       type: "character",

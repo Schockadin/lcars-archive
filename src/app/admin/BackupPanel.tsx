@@ -39,6 +39,7 @@ export default function BackupPanel<S>({
   confirmImportMessage,
   confirmLocalImport = false,
   columns = false,
+  canImport = true,
   actions,
   renderSummary,
 }: {
@@ -54,6 +55,7 @@ export default function BackupPanel<S>({
   confirmLocalImport?: boolean;
   // Export und Import nebeneinander statt untereinander.
   columns?: boolean;
+  canImport?: boolean;
   actions: BackupPanelActions<S>;
   renderSummary: (summary: S) => ReactNode;
 }) {
@@ -220,8 +222,17 @@ export default function BackupPanel<S>({
 
         <div className="flex flex-col gap-[6px]">
           <p className="lcars-eyebrow">Import</p>
+          {!canImport && (
+            <p className="text-lcars-ink-dim text-[13px]">
+              Zum Wiederherstellen ist zusätzlich die Berechtigung
+              „Nutzerverwaltung“ erforderlich.
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-[12px]">
-            <label className={BUTTON_CLASSNAMES} title="Lokale Datei einspielen">
+            <label
+              className={BUTTON_CLASSNAMES}
+              title="Lokale Datei einspielen"
+            >
               <UploadIcon />
               {importing ? "Import läuft…" : "Datei einspielen"}
               <input
@@ -229,7 +240,7 @@ export default function BackupPanel<S>({
                 type="file"
                 accept=".enc,.json,application/json,application/octet-stream"
                 className="hidden"
-                disabled={importing}
+                disabled={importing || !canImport}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) handleImportLocal(file);
@@ -241,7 +252,7 @@ export default function BackupPanel<S>({
               <button
                 type="button"
                 onClick={loadR2Backups}
-                disabled={r2Listing}
+                disabled={r2Listing || !canImport}
                 className={BUTTON_CLASSNAMES}
                 title="Aus R2-Bucket importieren"
               >
@@ -279,7 +290,7 @@ export default function BackupPanel<S>({
                   <button
                     type="button"
                     onClick={handleImportFromR2}
-                    disabled={r2Importing}
+                    disabled={r2Importing || !canImport}
                     className="lcars-pill-btn--outline self-start disabled:opacity-50"
                     title="Dieses Backup einspielen"
                   >
@@ -306,7 +317,9 @@ export default function BackupPanel<S>({
         </p>
       )}
 
-      {summary && <p className="text-lcars-primary-ink">{renderSummary(summary)}</p>}
+      {summary && (
+        <p className="text-lcars-primary-ink">{renderSummary(summary)}</p>
+      )}
     </div>
   );
 }

@@ -658,15 +658,26 @@ export async function getPasswordHash(userId: number): Promise<string | null> {
 export async function setPassword(
   userId: number,
   passwordHash: string,
+  transaction?: postgres.TransactionSql,
 ): Promise<number> {
-  const [row] = await sql<{ session_version: number }[]>`
-    UPDATE users
-    SET password_hash = ${passwordHash}, requires_activation = false,
-        session_version = session_version + 1
-    WHERE id = ${userId}
-    RETURNING session_version
-  `;
-  return row.session_version;
+  // Alle Passwort-/Token-Mutationen sperren zuerst dieselbe users-Zeile.
+  // Damit kann weder ein paralleler Reset noch die Link-Erstellung zwischen
+  // Passwortwechsel und Widerruf noch gültige Recovery-Links hinterlassen.
+  const update = async (tx: postgres.TransactionSql): Promise<number> => {
+    const [row] = await tx<{ session_version: number }[]>`
+      UPDATE users
+      SET password_hash = ${passwordHash}, requires_activation = false,
+          session_version = session_version + 1
+      WHERE id = ${userId}
+      RETURNING session_version
+    `;
+    await tx`
+      UPDATE password_setup_tokens SET used_at = NOW()
+      WHERE user_id = ${userId} AND used_at IS NULL
+    `;
+    return row.session_version;
+  };
+  return transaction ? update(transaction) : sql.begin((tx) => update(tx));
 }
 
 // Self-Service-Pendant zu setPassword oben, aber ohne Passwortänderung: für

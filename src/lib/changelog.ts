@@ -147,6 +147,11 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.10",
+    title: "Sicherheits- und Performancekorrekturen",
+    items: [],
+  },
+  {
     version: "2.9",
     title: "Übersicht offener Gespräche",
     items: [],

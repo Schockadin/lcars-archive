@@ -1,5 +1,6 @@
 import "server-only";
 import sql from "@/lib/db";
+import { splitPrivate } from "@/lib/publicContent";
 
 // Die Missionsakte: EINE Mission mit ihrer Beschreibung, allen veröffentlichten
 // Logbüchern und den datierten GM-Log-Einträgen — die Datenseite dazu (das Layout steht in
@@ -135,21 +136,20 @@ export async function getMissionBook(
 
   // Die Akte führt nur veröffentlichte Logbücher (is_draft = false in der
   // Abfrage oben) — dieselbe Grenze wie die Logbuch-Seite.
-  const logs = logRows
-    .map((row) => ({
-      slug: row.slug,
-      title: row.title,
-      sessionNr: row.session_nr,
-      logDate: row.log_date,
-      authorName: row.author_name,
-      sourceMarkdown: row.source_md ?? "",
-    }));
+  const logs = logRows.map((row) => ({
+    slug: row.slug,
+    title: row.title,
+    sessionNr: row.session_nr,
+    logDate: row.log_date,
+    authorName: row.author_name,
+    sourceMarkdown: splitPrivate(row.source_md ?? ""),
+  }));
   const sessionLogs = sessionLogRows.map((row) => ({
     id: row.id,
     sessionNr: row.session_nr,
     missionBlockNumber: row.mission_block_number,
     ingameDate: row.ingame_date,
-    sourceMarkdown: row.source_md ?? "",
+    sourceMarkdown: splitPrivate(row.source_md ?? ""),
   }));
 
   return {
@@ -159,7 +159,7 @@ export async function getMissionBook(
     status: mission.status,
     startedAt: mission.started_at,
     endedAt: mission.ended_at,
-    sourceMarkdown: mission.source_md ?? "",
+    sourceMarkdown: splitPrivate(mission.source_md ?? ""),
     isDraft: mission.is_draft,
     participants: participantRows.map((row) => row.name),
     logs,

@@ -1,4 +1,5 @@
 "use server";
+import { revalidateTag } from "next/cache";
 import { revalidatePathAndNotify } from "@/lib/realtimeServer";
 import { requirePermission } from "@/lib/dal";
 import { revalidateAllContent } from "@/lib/revalidate";
@@ -75,6 +76,7 @@ async function parseAndImportDbBackup(
     // Ingest, hier zusätzlich noch der Router-Cache selbst für Seiten ohne
     // eigenen Content-Tag, z.B. das Dashboard).
     revalidateAllContent();
+    revalidateTag("roles", { expire: 0 });
     await revalidatePathAndNotify("/", "layout");
     return { summary };
   } catch (err) {
@@ -98,6 +100,9 @@ export async function importDbBackupAction(
   json: string,
 ): Promise<ImportDbBackupResult> {
   await requirePermission("db_backup");
+  // Ein Restore kann Rollen und Reset-Token ersetzen und ist damit auch
+  // eine Kontenverwaltungsoperation. Exportrechte allein reichen nicht.
+  await requirePermission("users.manage");
   return parseAndImportDbBackup(json);
 }
 
@@ -160,6 +165,7 @@ export async function importDbBackupFromR2Action(
   key: string,
 ): Promise<ImportDbBackupResult> {
   await requirePermission("db_backup");
+  await requirePermission("users.manage");
 
   let json: string;
   try {

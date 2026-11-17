@@ -14,8 +14,10 @@ import {
 
 // React cache() dedupliziert wiederholte Aufrufe innerhalb eines
 // Render-Durchlaufs (siehe Next.js-Doku zur Data Access Layer).
+// Auch direkte Server-Action-Aufrufe müssen deaktivierte Konten und
+// widerrufene Cookies ablehnen; ein vorheriger Seitenaufruf ist kein Gate.
 export const verifySession = cache(async (): Promise<SessionPayload> => {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) {
     redirect("/login");
   }
@@ -70,30 +72,10 @@ function isSessionFresh(
 }
 
 export const getCurrentUser = cache(async (): Promise<User> => {
-  const session = await verifySession();
-  const user = await getUserById(session.userId);
+  const user = await getActiveUser();
   if (!user) {
-    // Session verweist auf einen inzwischen gelöschten User.
-    redirect("/login");
-  }
-  // is_active wird sonst nur beim Login geprüft (siehe login/actions.ts) —
-  // ohne diesen Check würde ein bereits ausgestelltes Session-Cookie eine
-  // nachträglich deaktivierte Person bis zum natürlichen Ablauf (30 Tage)
-  // weiterhin durch jedes DAL-Gate lassen (Deaktivieren wäre wirkungslos,
-  // bis das Cookie abläuft). Das Cookie selbst wird hier NICHT gelöscht —
-  // cookies().delete() ist während des Renderns nicht erlaubt, nur in
-  // Server Actions/Route Handlern; der Redirect allein reicht, da jeder
-  // weitere Aufruf denselben Check erneut durchläuft.
-  if (!user.is_active) {
-    redirect("/login");
-  }
-  // Passwortänderung (setPassword) erhöht session_version — ein Cookie, das
-  // vor dieser Änderung ausgestellt wurde (z.B. gestohlen oder auf einem
-  // anderen Gerät), trägt noch den alten Wert und wird hier verworfen,
-  // statt bis zum natürlichen Ablauf (30 Tage) gültig zu bleiben. Gleiches
-  // Render-Constraint wie beim is_active-Check oben: kein deleteSession()
-  // hier, der Redirect allein reicht.
-  if (session.sessionVersion !== user.session_version) {
+    // Cookie fehlt, Konto wurde deaktiviert/gelöscht oder die Sitzung
+    // widerrufen. Während des Renderns darf das Cookie nicht gelöscht werden.
     redirect("/login");
   }
   return user;

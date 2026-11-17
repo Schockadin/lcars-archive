@@ -83,7 +83,9 @@ describe("CharacterPage", () => {
   it("trägt je Karte das Rang-Kürzel", () => {
     const { container } = render(<CharacterPage characters={CHARACTERS} />);
     expect(
-      [...container.querySelectorAll(".timeline-tag")].map((tag) => tag.textContent),
+      [...container.querySelectorAll(".timeline-tag")].map(
+        (tag) => tag.textContent,
+      ),
     ).toEqual(["LTC", "CDR"]);
   });
 
@@ -113,7 +115,7 @@ describe("CharacterPage", () => {
     const { container } = render(<CharacterPage characters={CHARACTERS} />);
     const thumbs = [...container.querySelectorAll("img.timeline-card-thumb")];
     expect(thumbs.map((img) => img.getAttribute("src"))).toEqual([
-      "/api/content-images/7",
+      "/api/content-images/7?width=156",
     ]);
     // Ohne Bild bleibt die Karte leer — kein Platzhalter.
     expect(container.querySelectorAll(".timeline-card")).toHaveLength(3);

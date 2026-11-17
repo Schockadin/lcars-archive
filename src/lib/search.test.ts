@@ -4,7 +4,14 @@ import {
   searchTerms,
   findSnippetMatch,
   buildSnippet,
+  stripMarkdown,
 } from "./search";
+
+it("entfernt private Notizen vor der Snippet-Erzeugung", () => {
+  const text = stripMarkdown("Öffentlicher Treffer. <!-- private --> Vertraulicher Treffer.");
+  expect(buildSnippet(text, "Treffer")).toBe("Öffentlicher Treffer.");
+  expect(buildSnippet(text, "Vertraulicher")).toBeUndefined();
+});
 
 describe("escapeLikePattern", () => {
   it("maskiert Prozent, Unterstrich und Backslash", () => {

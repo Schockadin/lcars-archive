@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import sql from "@/lib/db";
 import { createSession } from "@/lib/session";
-import { getActiveSession, getActiveUser } from "@/lib/dal";
-import { setUserActive, setPassword } from "@/lib/users";
-import { insertUser } from "./helpers";
+import { getActiveSession, getActiveUser, verifySession } from "@/lib/dal";
+import {
+  setUserActive,
+  setPassword,
+  invalidateOtherSessions,
+} from "@/lib/users";
+import { insertUser, redirectedTo } from "./helpers";
 
 // Gleiches Muster wie tests/integration/visibility.test.ts: next/headers'
 // cookies() per In-Memory-Store, damit createSession() und die Gates im
@@ -13,7 +17,9 @@ const cookieStore = vi.hoisted(() => new Map<string, string>());
 vi.mock("next/headers", () => ({
   cookies: vi.fn(async () => ({
     get: (name: string) =>
-      cookieStore.has(name) ? { name, value: cookieStore.get(name)! } : undefined,
+      cookieStore.has(name)
+        ? { name, value: cookieStore.get(name)! }
+        : undefined,
     set: (name: string, value: string) => {
       cookieStore.set(name, value);
     },
@@ -124,6 +130,41 @@ describe("getActiveUser", () => {
     });
 
     expect(await getActiveUser()).toBeNull();
+  });
+});
+
+describe("verifySession", () => {
+  it("liefert dieselbe aktive Sitzung wie das nicht umleitende Gate", async () => {
+    const user = await insertUser();
+    await createSession({
+      id: user.id,
+      email: user.email,
+      role: "player",
+      session_version: 0,
+    });
+    expect((await verifySession()).userId).toBe(user.id);
+  });
+
+  it.each([
+    { name: "Deaktivieren", revoke: (id: number) => setUserActive(id, false) },
+    {
+      name: "Passwortwechsel",
+      revoke: (id: number) => setPassword(id, "new-hash"),
+    },
+    {
+      name: "Abmelden anderer Geräte",
+      revoke: (id: number) => invalidateOtherSessions(id),
+    },
+  ])("verwirft das ursprüngliche Cookie nach $name", async ({ revoke }) => {
+    const user = await insertUser();
+    await createSession({
+      id: user.id,
+      email: user.email,
+      role: "player",
+      session_version: 0,
+    });
+    await revoke(user.id);
+    expect(await redirectedTo(verifySession())).toBe("/login");
   });
 });
 

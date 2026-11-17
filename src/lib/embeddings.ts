@@ -28,6 +28,8 @@ import type { Sql } from "postgres";
 // tatsächlichen Embedden gebraucht wird — siehe getOpenAI() unten.
 import type OpenAI from "openai";
 import { stripMarkdown } from "@/lib/search";
+import { splitPrivate } from "@/lib/publicContent";
+import { embeddingSourceGuard } from "@/lib/embeddingSource";
 
 // Ein postgres.js-Client ODER eine Transaktion (sql.begin(tx => …)). Beide
 // tragen dasselbe Tagged-Template-Interface. Gleiches Muster wie der
@@ -115,7 +117,9 @@ export interface Chunk {
 // gibt dem Embedding (und später dem LLM-Kontext) Aufhänger, die im reinen
 // Fließtext fehlen (z.B. „welche Mission", „welcher Autor"). Leere Felder
 // werden ausgelassen.
-function buildHeader(lines: Array<[string, string | null | undefined]>): string {
+function buildHeader(
+  lines: Array<[string, string | null | undefined]>,
+): string {
   const parts = lines
     .filter(([, value]) => value != null && String(value).trim() !== "")
     .map(([label, value]) => `${label}: ${String(value).trim()}`);
@@ -275,8 +279,9 @@ function narrativeMd(record: {
   sourceMd?: string | null;
   fallbackText?: string | null;
 }): string {
-  if (record.sourceMd && record.sourceMd.trim()) return record.sourceMd;
-  return record.fallbackText?.trim() ?? "";
+  if (record.sourceMd && record.sourceMd.trim())
+    return splitPrivate(record.sourceMd);
+  return splitPrivate(record.fallbackText ?? "");
 }
 
 // Baut die Chunks für einen Inhalt. REIN (keine DB, kein Netz) — Kern der
@@ -506,6 +511,15 @@ export async function upsertEmbeddings(
     href,
     metadata = {},
   } = params;
+  const sourceGuard =
+    typeof metadata.sourceFingerprint === "string"
+      ? embeddingSourceGuard(
+          client,
+          contentType,
+          contentId,
+          metadata.sourceFingerprint,
+        )
+      : client`TRUE`;
 
   // Ohne Chunks (Inhalt ohne Text) alle bestehenden Zeilen entfernen.
   if (chunks.length === 0) {
@@ -518,6 +532,7 @@ export async function upsertEmbeddings(
     DELETE FROM content_embeddings
     WHERE content_type = ${contentType} AND content_id = ${contentId}
       AND chunk_index >= ${chunks.length}
+      AND ${sourceGuard}
   `;
 
   for (const chunk of chunks) {
@@ -526,13 +541,13 @@ export async function upsertEmbeddings(
         content_type, content_id, chunk_index, chunk_text, embedding,
         owner_id, is_draft, is_active, title, slug, href,
         metadata, updated_at
-      ) VALUES (
+      ) SELECT
         ${contentType}, ${contentId}, ${chunk.index}, ${chunk.text},
         ${toVectorLiteral(chunk.embedding)}::vector,
         ${ownerId}, ${isDraft}, ${isActive},
         ${title}, ${slug}, ${href},
         ${client.json(metadata as ReturnType<typeof JSON.parse>)}, NOW()
-      )
+      WHERE ${sourceGuard}
       ON CONFLICT (content_type, content_id, chunk_index) DO UPDATE SET
         chunk_text = EXCLUDED.chunk_text,
         embedding  = EXCLUDED.embedding,

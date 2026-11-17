@@ -1,6 +1,7 @@
 import "server-only";
 import sql from "@/lib/db";
 import { WIKILINK_RE } from "@/lib/markdown";
+import { splitPrivate } from "@/lib/publicContent";
 import { slugifyBase, normalizeWikilinkTarget } from "@/lib/slug";
 import {
   archiveHref,
@@ -60,10 +61,11 @@ interface CandidateRow {
 // Die rohen Ziele aller Wikilinks eines Markdown-Textes ([[Ziel|Text]] und
 // [[Ziel#Abschnitt]] → "Ziel"). Nutzt dieselbe Regex wie die Render-Pipeline.
 export function wikilinkTargets(sourceMd: string): string[] {
+  const publicSource = splitPrivate(sourceMd);
   const out: string[] = [];
   WIKILINK_RE.lastIndex = 0;
   let m: RegExpExecArray | null;
-  while ((m = WIKILINK_RE.exec(sourceMd))) {
+  while ((m = WIKILINK_RE.exec(publicSource))) {
     const target = m[1]?.trim();
     if (target) out.push(target);
   }

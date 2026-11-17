@@ -100,7 +100,7 @@ export class UnsafeQueryError extends Error {}
 // Text-Check kann z.B. eine in einen Kommentar oder String-Literal
 // eingebettete Umgehung nicht zuverlässig ausschließen.
 const FORBIDDEN_FUNCTION_CALL =
-  /\b(nextval|setval|pg_advisory_(?:xact_)?lock(?:_shared)?|pg_try_advisory_(?:xact_)?lock(?:_shared)?|pg_advisory_unlock(?:_all|_shared)?|lo_(?:import|export|creat|create|write|put|unlink)|dblink(?:_exec)?|pg_sleep(?:_for|_until)?|pg_terminate_backend|pg_cancel_backend|set_config|pg_reload_conf)\s*\(/i;
+  /\b(nextval|setval|pg_advisory_(?:xact_)?lock(?:_shared)?|pg_try_advisory_(?:xact_)?lock(?:_shared)?|pg_advisory_unlock(?:_all|_shared)?|lo_(?:import|export|creat|create|write|put|unlink)|dblink(?:_[a-z_]+)?|pg_sleep(?:_for|_until)?|pg_terminate_backend|pg_cancel_backend|set_config|pg_reload_conf|pg_read_(?:binary_)?file|pg_ls_dir|pg_stat_file|query_to_xml(?:schema|_and_xmlschema)?|ts_stat)\b/i;
 
 // Aktion einer Query anhand ihres Leitworts. read = SELECT/WITH (wird in einer
 // READ ONLY-Transaktion ausgeführt, die auch schreibende CTEs wie
@@ -186,7 +186,7 @@ export function parseWriteTarget(query: string): string | null {
     .replace(/--[^\n]*(\n|$)/g, " ")
     .trim();
   const m = q.match(
-    /^(?:insert\s+into|update|delete\s+from)\s+(?:"?public"?\s*\.\s*)?"?([a-zA-Z_][a-zA-Z0-9_]*)"?/i,
+    /^(?:insert\s+into|update|delete\s+from)\s+(?:only\s+)?(?:"?public"?\s*\.\s*)?"?([a-zA-Z_][a-zA-Z0-9_]*)"?(?=\s|\(|$)/i,
   );
   return m ? m[1].toLowerCase() : null;
 }
@@ -212,6 +212,13 @@ export function assertQueryShape(query: string): void {
   if (!trimmed) {
     throw new UnsafeQueryError("Bitte eine Query eingeben.");
   }
+  // Unicode-Escape-Identifier könnten jeden gesperrten Namen verschleiern.
+  // Diese seltene SQL-Schreibweise gehört nicht zur erlaubten Teilmenge.
+  if (/\bu\s*&\s*"/i.test(query)) {
+    throw new UnsafeQueryError(
+      "Unicode-Escape-Identifier sind im SQL-Panel nicht erlaubt.",
+    );
+  }
   const withoutTrailingSemicolon = trimmed.replace(/;\s*$/, "");
   if (withoutTrailingSemicolon.includes(";")) {
     throw new UnsafeQueryError("Nur eine einzelne Anweisung ist erlaubt.");
@@ -228,7 +235,10 @@ export function assertQueryShape(query: string): void {
 // blendet sie über die Spalten-Whitelist (dbTables) ohnehin aus, das freie Panel tat
 // das bisher nicht. runAdminQuery entfernt sie zusätzlich aus jedem Ergebnis
 // (fängt SELECT * ab, das die Spalte nicht namentlich nennt).
-export const SECRET_COLUMNS: readonly string[] = ["password_hash", "token_hash"];
+export const SECRET_COLUMNS: readonly string[] = [
+  "password_hash",
+  "token_hash",
+];
 
 // Tabellen, die im freien Panel gar nicht referenziert werden dürfen (enthalten
 // ausschließlich Geheimnisse). Nur die wirklich sensiblen aus HIDDEN_FROM_VIEW
@@ -335,6 +345,16 @@ export function assertAdminQuery(
   // Schreibzugriff auf Auth-/Sicherheits-Tabellen verhindern (Eskalations-/
   // Audit-Manipulations-Schutz). Ziel-Tabelle am Statement-Anfang geparst.
   if (action === "write" || action === "delete") {
+    // Nicht nur das erste erkannte Ziel prüfen: ONLY, Unterabfragen und
+    // weitere SQL-Syntax dürfen die Auth-Tabellensperre nicht umgehen.
+    // Wie bei Secret-Spalten bewusst konservativ gegen den Rohtext prüfen.
+    for (const table of PROTECTED_WRITE_TABLES) {
+      if (identifierRegex(table).test(query)) {
+        throw new UnsafeQueryError(
+          `Schreibende Queries mit „${table}“ sind im SQL-Panel gesperrt.`,
+        );
+      }
+    }
     const target = parseWriteTarget(query);
     // Fail-closed: lässt sich die Ziel-Tabelle NICHT eindeutig bestimmen (z.B.
     // durch Kommentar-/Quoting-Tricks zwischen Schlüsselwort und Tabellenname),
@@ -349,6 +369,14 @@ export function assertAdminQuery(
     if (isProtectedWriteTable(target)) {
       throw new UnsafeQueryError(
         `Schreibzugriff auf „${target}“ ist im SQL-Panel gesperrt.`,
+      );
+    }
+    // Nur bekannte, sichtbare Tabellen zulassen. Nicht unterstützte
+    // Identifier-/Schema-Syntax muss scheitern, statt als harmloser Name
+    // interpretiert zu werden (z.B. Unicode-Escape-Identifier).
+    if (!isViewableTable(target)) {
+      throw new UnsafeQueryError(
+        "Schreibzugriff nur auf bekannte Tabellen erlaubt.",
       );
     }
   }

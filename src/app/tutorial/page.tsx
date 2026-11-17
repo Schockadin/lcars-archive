@@ -293,7 +293,8 @@ export default function TutorialPage() {
                 jederzeit selbst einen neuen Aktivierungslink zuschicken lassen.
                 Der neue Link macht dabei einen eventuell noch offenen älteren
                 ungültig — es funktioniert also immer nur der zuletzt
-                angeforderte.
+                angeforderte. Ein Link lässt sich nur einmal verwenden;
+                auch ein Passwortwechsel macht offene Links ungültig.
               </p>
               <p>
                 Änderst du dein Passwort später im Profil, bleibst du auf dem
@@ -479,6 +480,15 @@ export default function TutorialPage() {
                 (Ausnahme: Missionen sehen alle aus der Spielleitung, da sie
                 kein Einzel-Owner-Modell haben), erscheint aber bereits unter
                 „Meine Inhalte“ bzw. „Charaktere“, dort deutlich markiert.
+              </p>
+              <p>
+                <strong>Interne Textabschnitte.</strong>{" "}
+                Text hinter <code>{"<!-- private -->"}</code> wird in der
+                öffentlichen Ansicht, in Link-Vorschauen und Suchergebnissen,
+                beim Markdown-/PDF-Export und im Datenbank-Assistenten
+                ausgelassen. Im Bearbeitungsformular bleibt er erhalten;
+                automatisches Verlinken und Entfernen von Verlinkungen lassen
+                diesen Abschnitt unverändert.
               </p>
               <p>
                 <strong>Änderungen im Editor werden automatisch gesichert.</strong>{" "}
@@ -1304,6 +1314,9 @@ export default function TutorialPage() {
                   Fassungen, Bilder und Rollen). Nutzerkonten haben eine eigene,
                   separate Sicherung. Neue Sicherungsdateien sind verschlüsselt;
                   zum Wiederherstellen wird derselbe Backup-Schlüssel benötigt.
+                  Dafür brauchst du sowohl DB-Backup-Rechte als auch die
+                  Berechtigung zur Nutzerverwaltung, weil die Sicherung Rollen
+                  und Aktivierungslinks enthält.
                 </li>
                 <li>
                   Unter <strong>„Datenbank → DB-Backup“</strong> findest du

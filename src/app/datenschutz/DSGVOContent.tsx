@@ -75,7 +75,7 @@ export default function DSGVOContent({ year }: { year: number }) {
           <code>/forgot-password</code>, oder ausgelöst durch die
           Administration) wird ein einmaliger, zeitlich befristeter Link per
           E-Mail verschickt. Der Link selbst wird nur als Hash gespeichert,
-          verliert nach Benutzung, nach 7 Tagen oder sobald ein neuer Link für
+          verliert nach Benutzung, einem Passwortwechsel, nach 7 Tagen oder sobald ein neuer Link für
           dasselbe Konto angefordert wird seine Gültigkeit (Rechtsgrundlage:
           Art. 6 Abs. 1 lit. b DSGVO). Fordert ein Account selbst einen Reset
           an, wird die Administration zusätzlich per E-Mail über die anfragende
@@ -234,6 +234,13 @@ export default function DSGVOContent({ year }: { year: number }) {
           Löschen eines Inhalts bleiben Kopien in der persönlichen Bibliothek
           bestehen, bis die Person sie dort selbst löscht. Die gespeicherten
           Kopien werden auch beim Löschen des Accounts entfernt.
+        </p>
+        <p>
+          Für Inhaltsbilder und eigene gespeicherte Portraits erzeugt die
+          Anwendung verkleinerte WebP-Vorschaubilder. Die Vorschau-Endpunkte
+          prüfen vor der Auslieferung die aktuelle Sichtbarkeit des zugehörigen
+          Inhalts. Die öffentliche Asset-Adresse eines Originalbildes bleibt
+          davon unabhängig.
         </p>
         <p>
           Von Hand eingetragene <strong>Chronologie-Ereignisse</strong>{" "}
@@ -486,7 +493,9 @@ export default function DSGVOContent({ year }: { year: number }) {
           <strong>OpenAI</strong> (OpenAI, L.L.C., San Francisco, USA) wandelt
           die Frage und die Inhaltstexte über die OpenAI-API in numerische
           Vektoren („Embeddings“) um, die die semantische Suche ermöglichen.
-          Übermittelt wird der jeweilige Text; nach Angaben von OpenAI werden
+          Textabschnitte hinter der Markierung <code>{"<!-- private -->"}</code>
+          werden vor der Indexierung entfernt. Übermittelt wird der verbleibende
+          Text; nach Angaben von OpenAI werden
           über die API gesendete Daten nicht zum Training der Modelle verwendet.
           Mehr Informationen:{" "}
           <a

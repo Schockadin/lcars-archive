@@ -4,12 +4,13 @@ import { generateEmbedding, toVectorLiteral } from "@/lib/embeddings";
 import type { EmbeddingContentType } from "@/lib/embeddings";
 import { escapeLikePattern } from "@/lib/search";
 import type { Viewer } from "@/lib/visibility";
+import { PUBLIC_CONTENT_INDEX_VERSION } from "@/lib/publicContent";
+import { embeddingSourceFingerprint } from "@/lib/embeddingSource";
 
 // Retrieval- + Generation-Pipeline des RAG-Systems.
 //   1. Frage → OpenAI-Embedding (dieselben 1536 Dimensionen wie der Index).
 //   2. Vektorsuche in content_embeddings mit Cosine-Distance (<=>) + RBAC-
-//      Vorfilter (spiegelt canView() aus src/lib/visibility.ts auf den
-//      denormalisierten Feldern der Embedding-Zeile).
+//      Vorfilter auf der aktuellen Quellzeile und ihrem Inhalts-Fingerprint.
 //   3. Prompt aus System-Prompt + Kontext-Chunks + Frage bauen.
 //   4. Cloudflare Workers AI (Open-Weight-LLM) mit Streaming aufrufen.
 //
@@ -60,8 +61,8 @@ function cloudflareAccountId(): string | undefined {
 export function hasRagConfig(): boolean {
   return Boolean(
     process.env.OPENAI_API_KEY &&
-      cloudflareAccountId() &&
-      process.env.CLOUDFLARE_AI_API_TOKEN,
+    cloudflareAccountId() &&
+    process.env.CLOUDFLARE_AI_API_TOKEN,
   );
 }
 
@@ -98,18 +99,50 @@ export function chunkAllowedForViewer(
 // Retrieval (hybrid: Vektor + Keyword)
 // ---------------------------------------------------------------------------
 
-// Gemeinsame RBAC-WHERE-Klausel für Vektor- UND Keyword-Suche — entspricht
-// 1:1 chunkAllowedForViewer() oben. Als Fragment, damit beide Queries exakt
-// dieselbe Sichtbarkeits-Logik nutzen.
+// Der Index ist asynchron und damit keine Autorisierungsquelle. Jede Suche
+// prüft den aktuellen Inhalt und seinen Stand: ein verspätetes Embedding darf
+// weder entzogene Rechte noch inzwischen entfernten Text wieder freigeben.
 function rbacFilter(viewer: Viewer | null) {
   const viewerId = viewer?.userId ?? -1;
   const canViewAll = viewer?.permissions.includes("content.view_all") ?? false;
-  return sql`
-    is_active = TRUE
+  const canManageMissions =
+    viewer?.permissions.includes("missions.manage") ?? false;
+  const current = (alias: string, owner: string) => sql`
+    ${sql(alias)}.deleted_at IS NULL
     AND (
-      is_draft = FALSE
-      OR ${canViewAll}
-      OR (owner_id IS NOT NULL AND owner_id = ${viewerId})
+      ${sql(alias)}.is_draft = FALSE OR ${canViewAll}
+      OR ${sql(alias)}.${sql(owner)} = ${viewerId}
+    )
+  `;
+  return sql`
+    e.metadata->>'publicContentVersion' = ${String(PUBLIC_CONTENT_INDEX_VERSION)}
+    AND (
+      (e.content_type = 'character' AND EXISTS (
+        SELECT 1 FROM characters c
+        WHERE c.id = e.content_id AND ${current("c", "player_id")}
+          AND e.metadata->>'sourceFingerprint' = ${embeddingSourceFingerprint(sql, "character")}
+      ))
+      OR (e.content_type = 'mission' AND EXISTS (
+        SELECT 1 FROM missions m
+        WHERE m.id = e.content_id AND ${current("m", "owner_user_id")}
+          AND e.metadata->>'sourceFingerprint' = ${embeddingSourceFingerprint(sql, "mission")}
+      ))
+      OR (e.content_type = 'mission_log' AND EXISTS (
+        SELECT 1 FROM mission_logs ml JOIN missions m ON m.id = ml.mission_id
+        WHERE ml.id = e.content_id AND ${current("ml", "owner_user_id")}
+          AND e.metadata->>'sourceFingerprint' = ${embeddingSourceFingerprint(sql, "mission_log")}
+          AND m.deleted_at IS NULL
+          AND (m.is_draft = FALSE OR ${canViewAll} OR ${canManageMissions})
+      ))
+      OR (e.content_type IN ('archive_entry', 'dialogue') AND EXISTS (
+        SELECT 1 FROM archive_entries a
+        WHERE a.id = e.content_id AND ${current("a", "owner_user_id")}
+          AND e.metadata->>'sourceFingerprint' = ${embeddingSourceFingerprint(sql, "archive_entry")}
+          AND (
+            (e.content_type = 'archive_entry' AND a.category <> 'dialogue')
+            OR (e.content_type = 'dialogue' AND a.category = 'dialogue' AND a.dialogue_open = FALSE)
+          )
+      ))
     )
   `;
 }
@@ -117,13 +150,70 @@ function rbacFilter(viewer: Viewer | null) {
 // Kleine deutsche Stoppwortliste — die Keyword-Suche soll auf inhaltstragende
 // Begriffe (Namen, Spezies, Orte …) zielen, nicht auf Frage-Floskeln.
 const GERMAN_STOPWORDS = new Set([
-  "oder", "und", "der", "die", "das", "was", "wie", "wer", "wo", "wann",
-  "warum", "wir", "ihr", "sie", "ein", "eine", "einen", "einem", "eines",
-  "dem", "den", "des", "mit", "für", "von", "aus", "ist", "sind", "war",
-  "waren", "hat", "habe", "haben", "über", "unter", "zum", "zur", "bei",
-  "nicht", "auch", "noch", "nur", "mehr", "kann", "könnt", "können", "gibt",
-  "welche", "welcher", "welches", "wissen", "weiß", "etwas", "alles", "man",
-  "dass", "als", "wenn", "dann", "diese", "dieser", "dieses", "ihre", "sein",
+  "oder",
+  "und",
+  "der",
+  "die",
+  "das",
+  "was",
+  "wie",
+  "wer",
+  "wo",
+  "wann",
+  "warum",
+  "wir",
+  "ihr",
+  "sie",
+  "ein",
+  "eine",
+  "einen",
+  "einem",
+  "eines",
+  "dem",
+  "den",
+  "des",
+  "mit",
+  "für",
+  "von",
+  "aus",
+  "ist",
+  "sind",
+  "war",
+  "waren",
+  "hat",
+  "habe",
+  "haben",
+  "über",
+  "unter",
+  "zum",
+  "zur",
+  "bei",
+  "nicht",
+  "auch",
+  "noch",
+  "nur",
+  "mehr",
+  "kann",
+  "könnt",
+  "können",
+  "gibt",
+  "welche",
+  "welcher",
+  "welches",
+  "wissen",
+  "weiß",
+  "etwas",
+  "alles",
+  "man",
+  "dass",
+  "als",
+  "wenn",
+  "dann",
+  "diese",
+  "dieser",
+  "dieses",
+  "ihre",
+  "sein",
 ]);
 
 // Zieht inhaltstragende Suchbegriffe aus der Frage (≥4 Zeichen, keine
@@ -170,7 +260,7 @@ export async function retrieveChunks(
   const vectorRows = await sql<RetrievalRow[]>`
     SELECT id, content_type, content_id, chunk_text, title, slug, href,
            embedding <=> ${vec}::vector AS distance
-    FROM content_embeddings
+    FROM content_embeddings e
     WHERE ${rbac}
     ORDER BY embedding <=> ${vec}::vector ASC
     LIMIT ${VECTOR_LIMIT}
@@ -183,7 +273,7 @@ export async function retrieveChunks(
     keywordRows = await sql<RetrievalRow[]>`
       SELECT id, content_type, content_id, chunk_text, title, slug, href,
              embedding <=> ${vec}::vector AS distance
-      FROM content_embeddings
+      FROM content_embeddings e
       WHERE ${rbac}
         AND chunk_text ILIKE ANY(${patterns})
       ORDER BY similarity(chunk_text, ${question}) DESC
@@ -251,7 +341,8 @@ export interface ChatMessage {
 
 // Baut die Kontext-Sektion aus den Chunks (mit Quellen-Titel als Überschrift).
 export function buildContextText(chunks: RetrievedChunk[]): string {
-  if (chunks.length === 0) return "(Kein passender Datenbank-Eintrag gefunden.)";
+  if (chunks.length === 0)
+    return "(Kein passender Datenbank-Eintrag gefunden.)";
   return chunks
     .map((c, i) => {
       const label = c.title ? `[${i + 1}] ${c.title}` : `[${i + 1}]`;

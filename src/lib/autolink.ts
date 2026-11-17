@@ -4,6 +4,7 @@ import { markdownToHtml } from "@/lib/markdown";
 import { slugifyBase, normalizeWikilinkTarget } from "@/lib/slug";
 import { isRangeProtected, type ProtectedRange } from "@/lib/protectedRanges";
 import { aliasGenitives } from "@/lib/autolinkPhrases";
+import { splitPrivate, stripStoredContentLinkPreviews } from "@/lib/publicContent";
 import {
   archiveHref,
   characterHref,
@@ -70,6 +71,11 @@ export function applyAutolinks(
   sourceMd: string,
   targets: AutolinkTarget[],
 ): AutolinkResult {
+  const privateStart = sourceMd.indexOf("<!-- private -->");
+  if (privateStart >= 0) {
+    const result = applyAutolinks(sourceMd.slice(0, privateStart), targets);
+    return { ...result, sourceMd: result.sourceMd + sourceMd.slice(privateStart) };
+  }
   const phraseToTarget = new Map<string, AutolinkTarget>();
   const phraseSet = new Set<string>();
 
@@ -637,7 +643,7 @@ export async function resolvePublicWikilinks(html: string): Promise<string> {
 
 function previewText(source: string | null | undefined): string | null {
   if (!source) return null;
-  const text = source
+  const text = splitPrivate(source)
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/\[[^\]]*\]\([^)]*\)/g, " ")
@@ -654,16 +660,19 @@ function previewText(source: string | null | undefined): string | null {
 // Imports enthalten dagegen schon direkte hrefs. Es werden ausschliesslich
 // die im HTML referenzierten, veroeffentlichten Ziele nachgeladen.
 export async function addStoredContentLinkPreviews(html: string): Promise<string> {
-  const slugs = { characters: new Set<string>(), archive: new Set<string>() };
-  const hrefs = new Map<string, { type: "characters" | "archive"; slug: string }>();
+  html = stripStoredContentLinkPreviews(html);
+  const slugs = { characters: new Set<string>(), archive: new Set<string>(), missions: new Set<string>() };
+  const hrefs = new Map<string, { type: keyof typeof slugs; slug: string }>();
 
   for (const match of html.matchAll(/<a\b[^>]*\bhref="([^"]+)"[^>]*>/gi)) {
     const href = match[1].replace(/&amp;/g, "&");
     const target = href.match(
-      /^\/(characters|archive)\/([a-z0-9-]+)(?:\/(?:sheet|logs))?(?:[?#].*)?$/i,
+      /^\/(characters|archive|chronologie\/mission)\/([a-z0-9-]+)(?:\/(?:sheet|logs))?(?:[?#].*)?$/i,
     );
     if (!target) continue;
-    const type = target[1].toLowerCase() as "characters" | "archive";
+    const type = target[1].toLowerCase() === "chronologie/mission"
+      ? "missions"
+      : target[1].toLowerCase() as "characters" | "archive";
     const slug = target[2];
     slugs[type].add(slug);
     hrefs.set(href, { type, slug });
@@ -671,7 +680,7 @@ export async function addStoredContentLinkPreviews(html: string): Promise<string
 
   if (hrefs.size === 0) return html;
 
-  const [characters, archiveEntries] = await Promise.all([
+  const [characters, archiveEntries, missions] = await Promise.all([
     slugs.characters.size > 0
       ? sql<
           { slug: string; name: string; bio: string | null; source_md: string | null }[]
@@ -697,6 +706,13 @@ export async function addStoredContentLinkPreviews(html: string): Promise<string
             AND category != 'dialogue'
         `
       : Promise.resolve([]),
+    slugs.missions.size > 0
+      ? sql<{ slug: string; title: string; source_md: string | null }[]>`
+          SELECT slug, title, source_md FROM missions
+          WHERE slug = ANY(${[...slugs.missions]})
+            AND is_draft = false AND deleted_at IS NULL
+        `
+      : Promise.resolve([]),
   ]);
 
   const previews = new Map<string, string>();
@@ -720,17 +736,17 @@ export async function addStoredContentLinkPreviews(html: string): Promise<string
       previewText(entry.summary || entry.source_md) ?? entry.title,
     );
   }
+  for (const mission of missions) {
+    previews.set(missionHref(mission.slug), previewText(mission.source_md) ?? mission.title);
+  }
 
   return html.replace(/<a\b[^>]*\bhref="([^"]+)"[^>]*>/gi, (tag, rawHref: string) => {
     const href = rawHref.replace(/&amp;/g, "&");
     const target = hrefs.get(href);
     if (!target) return tag;
-    // Gespeicherte Vorschauen dürfen nach dem Zurückziehen eines Ziels nicht
-    // weiter dessen Text verraten. Öffentliche Ziele erhalten den aktuellen Text.
-    if (/\bdata-preview=/i.test(tag)) {
-      tag = tag.replace(/\sdata-preview="[^"]*"/gi, "").replace(/\stitle="[^"]*"/gi, "");
-    }
-    const baseHref = `/${target.type}/${target.slug}`;
+    const baseHref = target.type === "missions"
+      ? missionHref(target.slug)
+      : `/${target.type}/${target.slug}`;
     const preview = previews.get(href) ?? previews.get(baseHref);
     if (!preview) return tag;
 

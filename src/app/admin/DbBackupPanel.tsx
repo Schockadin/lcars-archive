@@ -29,10 +29,11 @@ const CONFIRM_IMPORT_MESSAGE =
 //
 // Ablauf und Bedienelemente stecken in BackupPanel.tsx, das sich dieses
 // Panel mit dem User-Backup teilt.
-export default function DbBackupPanel() {
+export default function DbBackupPanel({ canRestore }: { canRestore: boolean }) {
   return (
     <>
       <BackupPanel<RestoreDbSummary>
+        canImport={canRestore}
         description={
           <>
             Exportiert den kompletten Datenbankinhalt außer Useraccounts
