@@ -143,6 +143,8 @@ export default function DSGVOContent({ year }: { year: number }) {
         </p>
         <p>
           Zum Charakter einer Person gehören neben der Akte auch ihre{" "}
+          freiwilligen Angaben zur Größe, zum Gewicht und zu Haar-, Augen- und
+          Hautfarbe der Spielfigur sowie ihre{" "}
           <strong>Charakterwerte</strong> (Attribute, Disziplinen, Talente,
           Schwerpunkte, ausgewählte Spezies und Species Abilities, die Rolle,
           ihr Role Bonus und die weiteren Angaben des Bogens; dazu zählen auch

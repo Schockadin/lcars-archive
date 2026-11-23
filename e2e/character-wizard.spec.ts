@@ -53,10 +53,18 @@ test.describe("Charakter-Assistent", () => {
   test("kann zwischen Tabs wechseln ohne Eingaben zu verlieren", async ({ page }) => {
     await page.getByRole("tab", { name: "Persönliche Daten" }).click();
     await page.locator("#wizard-name").fill("T'Rel");
+    const appearance = { height: "182.5", weight: "76.25", hairColor: "weiß", eyeColor: "grün", skinColor: "blau" };
+    for (const [key, value] of Object.entries(appearance)) {
+      await page.locator(`#wizard-${key}`).fill(value);
+      expect(await page.locator(`#wizard-${key}`).evaluate((el: HTMLInputElement) => el.checkValidity())).toBe(true);
+    }
     await page.getByRole("tab", { name: "Werte" }).click();
     await page.getByRole("tab", { name: "Persönliche Daten" }).click();
     await expect(page.locator("#wizard-name")).toBeVisible();
     await expect(page.locator("#wizard-name")).toHaveValue("T'Rel");
+    for (const [key, value] of Object.entries(appearance)) {
+      await expect(page.locator(`#wizard-${key}`)).toHaveValue(value);
+    }
   });
 
   test("behält Eingaben beim Vor- und Zurückblättern", async ({ page }) => {

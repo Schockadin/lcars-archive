@@ -29,6 +29,23 @@ beforeEach(() => {
   uploadCharacterPortraitImage.mockClear();
 });
 
+describe("readCharacterHead — Aussehen", () => {
+  it("liest optionale Maße und Farben", async () => {
+    expect(await readCharacterHead(form({ height: "182.5", weight: "76.25", hairColor: " weiß ", eyeColor: "grün", skinColor: "blau" }))).toMatchObject({
+      head: { height: 182.5, weight: 76.25, hairColor: "weiß", eyeColor: "grün", skinColor: "blau" },
+    });
+    expect(await readCharacterHead(form({}))).toMatchObject({
+      head: { height: null, weight: null, hairColor: null, eyeColor: null, skinColor: null },
+    });
+  });
+
+  it.each(["height", "weight"])("lehnt ungültige Werte für %s ab", async (field) => {
+    for (const value of ["0", "-1", "NaN", "Infinity", "1e999"]) {
+      expect(await readCharacterHead(form({ [field]: value }))).toHaveProperty("error");
+    }
+  });
+});
+
 describe("readCharacterHead — Portrait", () => {
   it("liest mehrere ausgewählte Spezies und unterstützt kommaseparierte Altwerte", async () => {
     const data = form({});

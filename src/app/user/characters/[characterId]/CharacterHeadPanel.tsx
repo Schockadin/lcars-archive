@@ -85,6 +85,11 @@ export default function CharacterHeadPanel({
               />
               <Row label="Rang" value={character.rank} />
               <Row label="Heimatwelt" value={character.homeworld} />
+              <Row label="Größe" value={character.height == null ? null : `${character.height.toLocaleString("de-DE")} cm`} />
+              <Row label="Gewicht" value={character.weight == null ? null : `${character.weight.toLocaleString("de-DE")} kg`} />
+              <Row label="Haarfarbe" value={character.hairColor} />
+              <Row label="Augenfarbe" value={character.eyeColor} />
+              <Row label="Hautfarbe" value={character.skinColor} />
               <Row label="Aliase" value={list(character.aliases)} />
               <Row label="Geburtsdatum" value={character.dateOfBirth} />
               <Row
@@ -132,6 +137,11 @@ export default function CharacterHeadPanel({
                           status: character.status,
                           rank: character.rank ?? undefined,
                           homeworld: character.homeworld ?? undefined,
+                          height: character.height ?? undefined,
+                          weight: character.weight ?? undefined,
+                          hairColor: character.hairColor ?? undefined,
+                          eyeColor: character.eyeColor ?? undefined,
+                          skinColor: character.skinColor ?? undefined,
                           aliases: character.aliases.join(", "),
                           age: character.age ?? undefined,
                           dateOfBirth: character.dateOfBirth ?? undefined,

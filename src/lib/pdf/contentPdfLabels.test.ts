@@ -32,6 +32,11 @@ describe("frontmatterLabel", () => {
   it("übersetzt bekannte Schlüssel ins Deutsche", () => {
     expect(frontmatterLabel("started_at")).toBe("Beginn");
     expect(frontmatterLabel("session_nr")).toBe("Session");
+    expect(frontmatterLabel("height")).toBe("Größe (cm)");
+    expect(frontmatterLabel("weight")).toBe("Gewicht (kg)");
+    expect(frontmatterLabel("hairColor")).toBe("Haarfarbe");
+    expect(frontmatterLabel("eyeColor")).toBe("Augenfarbe");
+    expect(frontmatterLabel("skinColor")).toBe("Hautfarbe");
   });
 
   it("lässt unbekannte Schlüssel stehen, statt sie zu verschlucken", () => {

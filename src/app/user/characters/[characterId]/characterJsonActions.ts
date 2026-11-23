@@ -334,6 +334,11 @@ export async function importCharacterJsonAction(
     current.rank !== imported.rank ||
     !sameJson(current.species, imported.species) ||
     current.homeworld !== imported.homeworld ||
+    (imported.height !== undefined && current.height !== imported.height) ||
+    (imported.weight !== undefined && current.weight !== imported.weight) ||
+    (imported.hairColor !== undefined && current.hairColor !== imported.hairColor) ||
+    (imported.eyeColor !== undefined && current.eyeColor !== imported.eyeColor) ||
+    (imported.skinColor !== undefined && current.skinColor !== imported.skinColor) ||
     !sameJson(current.aliases, imported.aliases) ||
     current.age !== imported.age ||
     current.dateOfBirth !== imported.dateOfBirth ||
@@ -351,6 +356,11 @@ export async function importCharacterJsonAction(
     rank: imported.rank,
     species: imported.species,
     homeworld: imported.homeworld,
+    height: imported.height,
+    weight: imported.weight,
+    hairColor: imported.hairColor,
+    eyeColor: imported.eyeColor,
+    skinColor: imported.skinColor,
     aliases: imported.aliases,
     age: imported.age,
     dateOfBirth: imported.dateOfBirth,

@@ -21,6 +21,11 @@ export const characterHeadFields: HeadField[] = [
 ];
 
 export const characterMetadataFields: HeadField[] = [
+  { kind: "number", name: "height", label: "Größe (cm)", min: 0, step: "any" },
+  { kind: "number", name: "weight", label: "Gewicht (kg)", min: 0, step: "any" },
+  { kind: "text", name: "hairColor", label: "Haarfarbe" },
+  { kind: "text", name: "eyeColor", label: "Augenfarbe" },
+  { kind: "text", name: "skinColor", label: "Hautfarbe" },
   {
     kind: "date",
     name: "dateOfBirth",

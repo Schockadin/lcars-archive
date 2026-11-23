@@ -13,6 +13,11 @@ const character = {
   rank: "Lieutenant",
   species: ["Vulkanier"],
   homeworld: "Vulkan",
+  height: 182.5,
+  weight: 76.25,
+  hairColor: "schwarz",
+  eyeColor: "braun",
+  skinColor: "hell",
   aliases: ["T'Vel"],
   age: 32,
   dateOfBirth: "2394-03-12",
@@ -65,5 +70,21 @@ describe("character JSON transfer format", () => {
       },
     };
     expect(parseCharacterJsonFile(JSON.stringify(invalidStats))).toHaveProperty("error");
+  });
+
+  it("akzeptiert alte Dateien ohne Angaben und lehnt ungültige Maße ab", () => {
+    const file = createCharacterJsonFile({ character, stats: EMPTY_CHARACTER_STATS });
+    const legacy = { ...file.character };
+    delete legacy.height;
+    delete legacy.weight;
+    delete legacy.hairColor;
+    delete legacy.eyeColor;
+    delete legacy.skinColor;
+    const result = parseCharacterJsonFile(JSON.stringify({ ...file, character: legacy }));
+    expect(result).toHaveProperty("character");
+    if ("character" in result) expect(result.character.height).toBeUndefined();
+    for (const invalid of [0, -2, "groß"]) {
+      expect(parseCharacterJsonFile(JSON.stringify({ ...file, character: { ...file.character, height: invalid } }))).toHaveProperty("error");
+    }
   });
 });

@@ -47,6 +47,12 @@ export default function CharacterCreationGuide() {
           Eingaben bleiben dabei erhalten. Gespeichert wird alles erst mit{" "}
           <strong>„Fertig“</strong> — brichst du vorher ab, ist nichts angelegt.
         </p>
+        <p>
+          Unter persönlichen Daten kannst du freiwillig Größe in Zentimetern,
+          Gewicht in Kilogramm sowie Haar-, Augen- und Hautfarbe erfassen und
+          später in der Personalakte ändern. Die Angaben erscheinen auch in der
+          Charakterakte und ihrem Markdown- und PDF-Export.
+        </p>
       </GuideSection>
 
       <GuideSection

@@ -9,7 +9,7 @@ import {
   parsePortraitCrop,
   type PortraitCrop,
 } from "@/lib/portraitCrop";
-import type { Character } from "@/types/character";
+import type { Character, CharacterAppearance } from "@/types/character";
 
 // Die Stammdaten der Charakter-Akte aus einem Formular lesen — geteilt vom
 // Anlege-Assistenten (wizardAction.ts) und dem Stammdaten-Panel der
@@ -28,7 +28,7 @@ export interface CharacterPortraitInput {
   portraitCrop: PortraitCrop | null;
 }
 
-export interface CharacterHeadInput extends CharacterPortraitInput {
+export interface CharacterHeadInput extends CharacterPortraitInput, Required<CharacterAppearance> {
   name: string;
   status: Character["status"];
   rank: string | null;
@@ -144,6 +144,13 @@ export async function readCharacterHead(
     return { error: "Ungültiger Status." };
   }
 
+  const heightRaw = String(formData.get("height") ?? "").trim();
+  const weightRaw = String(formData.get("weight") ?? "").trim();
+  const height = heightRaw ? Number(heightRaw) : null;
+  const weight = weightRaw ? Number(weightRaw) : null;
+  if (height !== null && (!Number.isFinite(height) || height <= 0)) return { error: "Bitte eine gültige Größe größer als 0 cm angeben." };
+  if (weight !== null && (!Number.isFinite(weight) || weight <= 0)) return { error: "Bitte ein gültiges Gewicht größer als 0 kg angeben." };
+
   const portraitResult = await readCharacterPortrait(formData, current, ownerId);
   if ("error" in portraitResult) return portraitResult;
 
@@ -172,6 +179,11 @@ export async function readCharacterHead(
         new Set(formData.getAll("species").flatMap((entry) => parseList(entry))),
       ),
       homeworld: String(formData.get("homeworld") ?? "").trim() || null,
+      height,
+      weight,
+      hairColor: String(formData.get("hairColor") ?? "").trim() || null,
+      eyeColor: String(formData.get("eyeColor") ?? "").trim() || null,
+      skinColor: String(formData.get("skinColor") ?? "").trim() || null,
       aliases: parseList(formData.get("aliases")),
       age,
       dateOfBirth: dobRaw || null,

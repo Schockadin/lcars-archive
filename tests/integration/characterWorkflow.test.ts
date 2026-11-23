@@ -113,6 +113,11 @@ function wizardForm(
     status: "active",
     species: "Andorianer",
     rank: "Lieutenant",
+    height: "182.5",
+    weight: "76.25",
+    hairColor: "weiß",
+    eyeColor: "blaugrün",
+    skinColor: "hellblau",
     statsJson: JSON.stringify(stats),
     bodyMarkdown: "## Herkunft\n\nGeboren auf Andoria.",
     ...extra,
@@ -142,6 +147,14 @@ describe("createCharacterWizardAction", () => {
     expect(row.name).toBe("Sh’Ranor th’Zarath");
     expect(row.player_id).toBe(user.id);
     expect(row.source_md).toContain("Geboren auf Andoria");
+
+    expect(row.metadata).toMatchObject({
+      height: 182.5,
+      weight: 76.25,
+      hairColor: "weiß",
+      eyeColor: "blaugrün",
+      skinColor: "hellblau",
+    });
 
     // Die Werte stehen im SELBEN Datensatz — nicht in einem zweiten Schritt
     // nachgereicht.
@@ -277,6 +290,11 @@ describe("Panels der Charakterseite", () => {
         species: "Andorianer",
         rank: "Commander",
         homeworld: "Andoria",
+        height: "183",
+        weight: "78.5",
+        hairColor: "silberweiß",
+        eyeColor: "grün",
+        skinColor: "blau",
       }),
     );
     expect(result.success).toBeTruthy();
@@ -287,6 +305,13 @@ describe("Panels der Charakterseite", () => {
       SELECT source_md, metadata FROM characters WHERE id = ${id}
     `;
     expect(row.metadata.rank).toBe("Commander");
+    expect(row.metadata).toMatchObject({
+      height: 183,
+      weight: 78.5,
+      hairColor: "silberweiß",
+      eyeColor: "grün",
+      skinColor: "blau",
+    });
     // Die Biografie hat ihr eigenes Panel — sie darf hier nicht wegfallen.
     expect(row.source_md).toContain("Geboren auf Andoria");
   });
@@ -312,6 +337,13 @@ describe("Panels der Charakterseite", () => {
     expect(row.source_md).toBe("Ganz neue Biografie.");
     expect(row.name).toBe("Sh’Ranor th’Zarath");
     expect(row.metadata.rank).toBe("Lieutenant");
+    expect(row.metadata).toMatchObject({
+      height: 182.5,
+      weight: 76.25,
+      hairColor: "weiß",
+      eyeColor: "blaugrün",
+      skinColor: "hellblau",
+    });
   });
 
   it("speichert die Werte und lässt fremde Charaktere unangetastet", async () => {

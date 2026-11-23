@@ -5,7 +5,7 @@ import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
 import { contentImageSrc } from "@/lib/contentRoutes";
-import { Character, CharacterMetadata } from "@/types/character";
+import { Character, CharacterMetadata, type CharacterAppearance } from "@/types/character";
 import type { CharacterStats } from "@/types/characterStats";
 import { parseCharacterStats } from "@/lib/characterStats";
 import { normalizeCharacterMetadata } from "@/lib/characterFormat";
@@ -81,6 +81,11 @@ function stripStats(metadata: CharacterMetadata): CharacterMetadata {
     rank: metadata.rank,
     species: metadata.species,
     homeworld: metadata.homeworld,
+    height: metadata.height ?? null,
+    weight: metadata.weight ?? null,
+    hairColor: metadata.hairColor ?? null,
+    eyeColor: metadata.eyeColor ?? null,
+    skinColor: metadata.skinColor ?? null,
     age: metadata.age,
     dateOfBirth: metadata.dateOfBirth,
     portraitSource: metadata.portraitSource,
@@ -721,7 +726,7 @@ function buildAffiliation(input: {
 // siehe assignCharacterAction in src/app/admin/actions.ts). player_id wird
 // direkt auf den anlegenden User gesetzt (sofortige Verknüpfung).
 // player (Anzeigename, ingest-only) bleibt null — das Formular deckt nur Spieler-relevante Felder ab.
-export async function createCharacter(input: {
+export async function createCharacter(input: CharacterAppearance & {
   name: string;
   status: Character["status"];
   portrait: string | null;
@@ -769,6 +774,11 @@ export async function createCharacter(input: {
     rank: input.rank,
     species: input.species,
     homeworld: input.homeworld,
+    height: input.height ?? null,
+    weight: input.weight ?? null,
+    hairColor: input.hairColor ?? null,
+    eyeColor: input.eyeColor ?? null,
+    skinColor: input.skinColor ?? null,
     age: input.age,
     dateOfBirth: input.dateOfBirth ?? null,
     affiliation: buildAffiliation(input),
@@ -795,7 +805,7 @@ export async function createCharacter(input: {
   return row;
 }
 
-export interface OwnCharacterForEdit {
+export interface OwnCharacterForEdit extends Required<CharacterAppearance> {
   id: number;
   slug: string;
   name: string;
@@ -884,6 +894,11 @@ export async function getOwnCharacterForEdit(
     rank: metadata.rank,
     species: metadata.species,
     homeworld: metadata.homeworld,
+    height: metadata.height ?? null,
+    weight: metadata.weight ?? null,
+    hairColor: metadata.hairColor ?? null,
+    eyeColor: metadata.eyeColor ?? null,
+    skinColor: metadata.skinColor ?? null,
     aliases: metadata.aliases,
     age: metadata.age,
     dateOfBirth: metadata.dateOfBirth ?? null,
@@ -932,7 +947,7 @@ export interface UpdateOwnCharacterResult {
 export async function updateOwnCharacterContent(
   userId: number,
   characterId: number,
-  input: {
+  input: CharacterAppearance & {
     name: string;
     status: Character["status"];
     portrait: string | null;
@@ -983,6 +998,11 @@ export async function updateOwnCharacterContent(
     rank: input.rank,
     ...(!input.preserveSpecies ? { species: input.species } : {}),
     homeworld: input.homeworld,
+    ...(input.height !== undefined ? { height: input.height } : {}),
+    ...(input.weight !== undefined ? { weight: input.weight } : {}),
+    ...(input.hairColor !== undefined ? { hairColor: input.hairColor } : {}),
+    ...(input.eyeColor !== undefined ? { eyeColor: input.eyeColor } : {}),
+    ...(input.skinColor !== undefined ? { skinColor: input.skinColor } : {}),
     aliases: input.aliases,
     age: input.age,
     dateOfBirth: input.dateOfBirth ?? null,

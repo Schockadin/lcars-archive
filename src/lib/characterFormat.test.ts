@@ -21,6 +21,11 @@ describe("normalizeCharakterMetadata", () => {
 
     expect(metadata.rank).toBeNull();
     expect(metadata.homeworld).toBeNull();
+    expect(metadata.height).toBeNull();
+    expect(metadata.weight).toBeNull();
+    expect(metadata.hairColor).toBeNull();
+    expect(metadata.eyeColor).toBeNull();
+    expect(metadata.skinColor).toBeNull();
     expect(metadata.age).toBeNull();
     expect(metadata.dateOfBirth).toBeNull();
     expect(metadata.affiliation).toBeNull();
@@ -40,6 +45,11 @@ describe("normalizeCharakterMetadata", () => {
       tags: ["Brücke"],
       generation: [2],
       homeworld: "Andoria",
+      height: 182.5,
+      weight: 76.25,
+      hairColor: "weiß",
+      eyeColor: "blaugrün",
+      skinColor: "hellblau",
       age: 34,
       dateOfBirth: "2361-04-02",
       affiliation: { factions: ["Sternenflotte"], ships: [], division: null },

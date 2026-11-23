@@ -59,7 +59,8 @@ export default function ImpressumContent() {
           <a href="/datenschutz">Datenschutzerklärung</a>.
         </p>
         <p>
-          Die Plattform verwaltet außerdem Charakterwerte und Talente. Bei
+          Die Plattform verwaltet außerdem Charakterwerte und Talente sowie
+          freiwillige Angaben zum Aussehen der Spielfiguren. Bei
           Technomage-Charakteren können Spieler:innen Schulen und Spells
           festlegen. Stufe, Spellkapazität und Power-Point-Maximum folgen der
           STA-2e-AP-Formel und den Attributmodifikatoren. Die Spielleitung kann

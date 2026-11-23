@@ -47,6 +47,7 @@ export function CharacterTextInput({
   disabled = false,
   type = "text",
   min,
+  step,
   required = false,
 }: {
   id?: string;
@@ -60,6 +61,7 @@ export function CharacterTextInput({
   disabled?: boolean;
   type?: "text" | "search" | "date" | "number";
   min?: number;
+  step?: number | "any";
   required?: boolean;
 }) {
   const labelId = useContext(CharacterFieldLabelContext);
@@ -75,6 +77,7 @@ export function CharacterTextInput({
       value={value}
       defaultValue={defaultValue}
       min={type === "number" ? min : undefined}
+      step={type === "number" ? step : undefined}
       required={required}
       placeholder={placeholder}
       disabled={disabled}

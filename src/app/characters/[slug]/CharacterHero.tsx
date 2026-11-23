@@ -242,6 +242,27 @@ export default function CharacterHero({
               {metadata.homeworld && (
                 <FileField label="Heimatwelt" value={metadata.homeworld} />
               )}
+              {metadata.height != null && (
+                <FileField
+                  label="Größe"
+                  value={`${metadata.height.toLocaleString("de-DE")} cm`}
+                />
+              )}
+              {metadata.weight != null && (
+                <FileField
+                  label="Gewicht"
+                  value={`${metadata.weight.toLocaleString("de-DE")} kg`}
+                />
+              )}
+              {metadata.hairColor && (
+                <FileField label="Haarfarbe" value={metadata.hairColor} />
+              )}
+              {metadata.eyeColor && (
+                <FileField label="Augenfarbe" value={metadata.eyeColor} />
+              )}
+              {metadata.skinColor && (
+                <FileField label="Hautfarbe" value={metadata.skinColor} />
+              )}
               {displayAge != null && (
                 <FileField label="Alter" value={displayAge} />
               )}
