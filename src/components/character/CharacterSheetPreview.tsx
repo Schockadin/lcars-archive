@@ -8,6 +8,7 @@ import {
   type Talent,
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
+import type { CharacterAppearance } from "@/types/character";
 import { CORE_RULES } from "@/lib/coreRules";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
 import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
@@ -83,6 +84,7 @@ export interface CharacterSheetPreviewInput {
   characterName: string;
   rank: string | null;
   species: string | null;
+  appearance?: CharacterAppearance;
   // Das Portrait-ORIGINAL und der darauf gewählte Ausschnitt (siehe
   // src/lib/portraitCrop.ts).
   portrait: string | null;
@@ -335,6 +337,7 @@ export default function CharacterSheetPreview({
         species={input.species}
         portrait={input.portrait}
         portraitCrop={input.portraitCrop}
+        appearance={input.appearance}
         stats={input.stats}
         // Das umgebende Fenster bzw. der Assistent ist bereits die
         // Vollansicht — ein zweiter Vollbild-Knopf säße nur im Weg.

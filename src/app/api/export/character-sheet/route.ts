@@ -58,6 +58,7 @@ export async function GET(request: Request) {
     name: character.name,
     rank: character.rank,
     species: character.species,
+    appearance: character.appearance,
     portrait: character.portrait,
     portraitCrop: character.portraitCrop,
     stats: character.stats,

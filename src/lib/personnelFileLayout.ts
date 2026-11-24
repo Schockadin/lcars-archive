@@ -58,13 +58,35 @@ export const HEAD_BOXES = {
   characterRole: { left: 272, top: 186, width: 363, height: 37 },
   reputation: { left: 642, top: 186, width: 129, height: 37 },
   traits: { left: 272, top: 229, width: 499, height: 36 },
-  environment: { left: 272, top: 274, width: 243, height: 68 },
-  upbringing: { left: 523, top: 274, width: 248, height: 68 },
-  careerPath: { left: 272, top: 353, width: 243, height: 69 },
-  experience: { left: 523, top: 353, width: 248, height: 69 },
-  careerEvent1: { left: 272, top: 431, width: 243, height: 69 },
-  careerEvent2: { left: 523, top: 431, width: 248, height: 69 },
+  environment: { left: 272, top: 274, width: 243, height: 39 },
+  upbringing: { left: 523, top: 274, width: 248, height: 39 },
+  careerPath: { left: 272, top: 319, width: 243, height: 39 },
+  experience: { left: 523, top: 319, width: 248, height: 39 },
+  careerEvent1: { left: 272, top: 364, width: 243, height: 39 },
+  careerEvent2: { left: 523, top: 364, width: 248, height: 39 },
+  height: { left: 272, top: 409, width: 160, height: 39 },
+  weight: { left: 440, top: 409, width: 160, height: 39 },
+  hairColor: { left: 608, top: 409, width: 163, height: 39 },
+  eyeColor: { left: 272, top: 454, width: 243, height: 39 },
+  skinColor: { left: 523, top: 454, width: 248, height: 39 },
 } as const satisfies Record<string, Box>;
+
+// Weißer Bereich über den alten, höheren Kästen der Grafik. Die neuen Rahmen
+// und Beschriftungen werden in HTML und PDF aus denselben Koordinaten gebaut.
+export const HEAD_REDESIGN_BACKGROUND: Box = { left: 270, top: 272, width: 503, height: 229 };
+export const HEAD_REDESIGN_FIELDS = [
+  { key: "environment", label: "ENVIRONMENT" },
+  { key: "upbringing", label: "UPBRINGING" },
+  { key: "careerPath", label: "CAREER PATH" },
+  { key: "experience", label: "EXPERIENCE" },
+  { key: "careerEvent1", label: "CAREER EVENT 1" },
+  { key: "careerEvent2", label: "CAREER EVENT 2" },
+  { key: "height", label: "HEIGHT (CM)" },
+  { key: "weight", label: "WEIGHT (KG)" },
+  { key: "hairColor", label: "HAIR COLOR" },
+  { key: "eyeColor", label: "EYE COLOR" },
+  { key: "skinColor", label: "SKIN COLOR" },
+] as const;
 
 // Attribute (linker Block) und Disziplinen (rechter Block) — die Reihenfolge
 // auf dem Bogen ist spaltenweise, nicht alphabetisch.

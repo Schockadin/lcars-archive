@@ -181,10 +181,17 @@ test.describe("Charakter-Assistent", () => {
     await page.getByRole("tab", { name: "Persönliche Daten" }).click();
     await page.locator("#wizard-name").fill("T'Rel");
     await page.locator("#wizard-rank").fill("Lieutenant");
+    for (const [key, value] of Object.entries({ height: "182.5", weight: "76.25", hairColor: "weiß", eyeColor: "grün", skinColor: "blau" })) {
+      await page.locator(`#wizard-${key}`).fill(value);
+    }
     await page.getByRole("tab", { name: "Dateien" }).click();
 
     const preview = page.locator("#character-wizard .pf-preview");
     await expect(preview).toBeVisible();
+    const firstPage = preview.locator(".pf-sheet");
+    for (const [label, value] of [["Größe", "182,5 cm"], ["Gewicht", "76,25 kg"], ["Haarfarbe", "weiß"], ["Augenfarbe", "grün"], ["Hautfarbe", "blau"]]) {
+      await expect(firstPage.getByLabel(label, { exact: true })).toHaveText(value);
+    }
     // Blatt 1 Personalakte, Blatt 2 Spickzettel, Blatt 3 Regeln, Blatt 4
     // Biografie. Die Blattnamen stehen im Titelreiter der STA-Kopfzeile
     // (.pf-doc-tab); Blatt 1 trägt seinen Reiter in der gedruckten Grafik.

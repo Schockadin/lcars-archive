@@ -149,7 +149,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: "2.11",
     title: "Aussehen der Charaktere",
-    items: [{ text: "In der Personalakte lassen sich Größe, Gewicht sowie Haar-, Augen- und Hautfarbe festhalten.", category: "charaktere", tutorial: "charaktererschaffung" }],
+    items: [{ text: "In der Personalakte lassen sich Größe, Gewicht sowie Haar-, Augen- und Hautfarbe festhalten; diese Angaben erscheinen auch auf der ersten Seite des Charakterbogens und im PDF.", category: "charaktere", tutorial: "charaktererschaffung" }],
   },
   {
     version: "2.10",

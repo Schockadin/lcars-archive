@@ -33,6 +33,7 @@ import { getSpeciesLabel } from "@/lib/sta2eCharacterOptions";
 import { moduleSupportsCharacterRole, type RuleModuleDefinition } from "@/lib/ruleModuleTypes";
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
 import type { CharacterStats } from "@/types/characterStats";
+import type { CharacterAppearance } from "@/types/character";
 import type { AdvancementRules } from "@/lib/advancement";
 import type { Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
@@ -61,6 +62,7 @@ interface HeadSnapshot {
   name: string;
   rank: string | null;
   species: string[];
+  appearance: CharacterAppearance;
   portrait: string | null;
   portraitCrop: PortraitCrop | null;
 }
@@ -106,6 +108,13 @@ export default function CharacterWizard({
       name: String(data.get("name") ?? "").trim(),
       rank: text("rank"),
       species: data.getAll("species").map(String).map((value) => value.trim()).filter(Boolean),
+      appearance: {
+        height: text("height") ? Number(text("height")) : null,
+        weight: text("weight") ? Number(text("weight")) : null,
+        hairColor: text("hairColor"),
+        eyeColor: text("eyeColor"),
+        skinColor: text("skinColor"),
+      },
       portrait,
       portraitCrop: parsePortraitCrop(safeJson(text("portraitCrop"))),
     };
@@ -313,6 +322,7 @@ export default function CharacterWizard({
                 characterName: head.name,
                 rank: head.rank,
                 species: head.species.map(getSpeciesLabel).join(", ") || null,
+                appearance: head.appearance,
                 portrait: head.portrait,
                 portraitCrop: head.portraitCrop,
                 stats,

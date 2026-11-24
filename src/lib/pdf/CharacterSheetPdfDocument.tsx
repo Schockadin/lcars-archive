@@ -46,6 +46,8 @@ import {
   DEPARTMENT_BOXES,
   DETERMINATION_POINTS,
   HEAD_BOXES,
+  HEAD_REDESIGN_BACKGROUND,
+  HEAD_REDESIGN_FIELDS,
   LIST_BOXES,
   PHOTO_BOX,
   RESISTANCE_BOX,
@@ -66,6 +68,8 @@ import {
   type Talent,
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
+import type { CharacterAppearance } from "@/types/character";
+import { characterAppearanceLines } from "@/lib/characterAppearance";
 import {
   DEFAULT_CROP,
   pdfCropBox,
@@ -138,6 +142,19 @@ const styles = StyleSheet.create({
     paddingTop: pt(15),
     paddingLeft: pt(7),
     paddingRight: pt(7),
+  },
+  redesignedBox: {
+    borderWidth: pt(0.8),
+    borderColor: "#a0a0a0",
+    borderRadius: pt(3),
+    paddingTop: pt(4),
+    paddingLeft: pt(7),
+  },
+  redesignedLabel: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: pt(7.5),
+    letterSpacing: pt(0.25),
+    color: "#3f84b5",
   },
   // Attribute/Disziplinen: rechtsbündig neben der gedruckten Beschriftung.
   stat: {
@@ -360,7 +377,7 @@ function experienceLabel(stats: CharacterStats): string {
 function Field({ box, value }: { box: Box; value: string | null }) {
   if (!value) return null;
   return (
-    <View style={boxStyle(box)}>
+    <View style={{ ...boxStyle(box), overflow: "hidden" }}>
       <Text style={styles.field}>{value}</Text>
     </View>
   );
@@ -385,6 +402,7 @@ export interface CharacterSheetPdfInput {
   name: string;
   rank: string | null;
   species: string | null;
+  appearance?: CharacterAppearance;
   portrait: string | null;
   // Der auf dem Original gewählte Ausschnitt (siehe src/lib/portraitCrop.ts).
   portraitCrop?: PortraitCrop | null;
@@ -518,6 +536,7 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
   const attributes = stats.attributes as unknown as Record<string, number | null>;
   const departments = stats.departments as unknown as Record<string, number | null>;
   const maxStress = computeStress(stats);
+  const appearanceValues = new Map(characterAppearanceLines(input.appearance).map(({ label, value }) => [label, value]));
 
   return (
     <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.page}>
@@ -529,6 +548,13 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
       {input.portrait && (
         <Portrait src={input.portrait} crop={input.portraitCrop} />
       )}
+
+      <View style={{ ...boxStyle(HEAD_REDESIGN_BACKGROUND), backgroundColor: "white" }} />
+      {HEAD_REDESIGN_FIELDS.map(({ key, label }) => (
+        <View key={key} style={{ ...boxStyle(HEAD_BOXES[key]), ...styles.redesignedBox }}>
+          <Text style={styles.redesignedLabel}>{label}</Text>
+        </View>
+      ))}
 
       <Field box={HEAD_BOXES.name} value={input.name} />
       <Field box={HEAD_BOXES.pronouns} value={stats.pronouns} />
@@ -549,6 +575,11 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
       <Field box={HEAD_BOXES.experience} value={experienceLabel(stats) || null} />
       <Field box={HEAD_BOXES.careerEvent1} value={stats.careerEvents[0] ? careerEventTitle(stats.careerEvents[0]) : null} />
       <Field box={HEAD_BOXES.careerEvent2} value={stats.careerEvents[1] ? careerEventTitle(stats.careerEvents[1]) : null} />
+      <Field box={HEAD_BOXES.height} value={appearanceValues.get("Größe") ?? null} />
+      <Field box={HEAD_BOXES.weight} value={appearanceValues.get("Gewicht") ?? null} />
+      <Field box={HEAD_BOXES.hairColor} value={appearanceValues.get("Haarfarbe") ?? null} />
+      <Field box={HEAD_BOXES.eyeColor} value={appearanceValues.get("Augenfarbe") ?? null} />
+      <Field box={HEAD_BOXES.skinColor} value={appearanceValues.get("Hautfarbe") ?? null} />
 
       {ATTRIBUTE_FIELDS.map((field) => {
         const value = attributes[field.key];
@@ -801,7 +832,7 @@ function RulesPage({ input }: { input: CharacterSheetPdfInput }) {
 }
 
 // Letztes Blatt: die Biografie im Look der übrigen. Fehlt sie, fällt das
-// Blatt weg — ein leeres Blatt im Ausdruck wäre nur Papierverschwendung.
+// Blatt ohne Biografie weglassen, damit kein leeres Blatt gedruckt wird.
 function BiographyPage({ input }: { input: CharacterSheetPdfInput }) {
   const blocks = toPdfBlocks(input.bioMarkdown ?? "");
   if (blocks.length === 0) return null;

@@ -19,7 +19,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   blinkende Statuspunkte) im klassischen Star-Trek-Stil, inkl. Live-Stardate.
 - **Charakter-Datenbank** — Profile mit Rang, Spezies, Heimatwelt, Größe,
   Gewicht, Haar-, Augen- und Hautfarbe sowie Zugehörigkeiten,
-  Aliassen und Status (`active` / `retired` / `deceased`).
+  Aliassen und Status (`active` / `retired` / `deceased`). Die Angaben zum
+  Aussehen stehen auch auf der ersten Seite des Charakterbogens und im PDF.
 - **Charaktererschaffung mit Talentvarianten** — Bold, Cautious und Collaboration
   wählen je ein noch freies Departement; Augmented Ability wählt ein Attribut,
   Dedicated Focus X einen vorhandenen Schwerpunkt und setzt ein Departement

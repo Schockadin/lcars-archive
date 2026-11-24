@@ -60,7 +60,8 @@ export default function ImpressumContent() {
         </p>
         <p>
           Die Plattform verwaltet außerdem Charakterwerte und Talente sowie
-          freiwillige Angaben zum Aussehen der Spielfiguren. Bei
+          freiwillige Angaben zum Aussehen der Spielfiguren, die auch auf dem
+          Charakterbogen und in dessen PDF erscheinen. Bei
           Technomage-Charakteren können Spieler:innen Schulen und Spells
           festlegen. Stufe, Spellkapazität und Power-Point-Maximum folgen der
           STA-2e-AP-Formel und den Attributmodifikatoren. Die Spielleitung kann
