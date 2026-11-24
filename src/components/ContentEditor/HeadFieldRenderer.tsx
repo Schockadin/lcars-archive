@@ -57,6 +57,7 @@ export default function HeadFieldRenderer({
           type={field.kind}
           required={field.required}
           min={field.kind === "number" ? field.min : undefined}
+          step={field.kind === "number" ? field.step : undefined}
           placeholder={field.kind === "text" ? field.placeholder : undefined}
           defaultValue={
             (defaultValue as string | number | undefined) ?? undefined

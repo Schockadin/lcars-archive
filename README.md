@@ -17,7 +17,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 
 - **LCARS-Oberfläche** — eigene UI-Komponenten (Sidebar, Header, Elbow-Bars, Data-Rows,
   blinkende Statuspunkte) im klassischen Star-Trek-Stil, inkl. Live-Stardate.
-- **Charakter-Datenbank** — Profile mit Rang, Spezies, Heimatwelt, Zugehörigkeiten,
+- **Charakter-Datenbank** — Profile mit Rang, Spezies, Heimatwelt, Größe,
+  Gewicht, Haar-, Augen- und Hautfarbe sowie Zugehörigkeiten,
   Aliassen und Status (`active` / `retired` / `deceased`).
 - **Charaktererschaffung mit Talentvarianten** — Bold, Cautious und Collaboration
   wählen je ein noch freies Departement; Augmented Ability wählt ein Attribut,

@@ -1,4 +1,4 @@
-import type { Character } from "@/types/character";
+import type { Character, CharacterAppearance } from "@/types/character";
 import type { CharacterStats } from "@/types/characterStats";
 import { parseStatsPayload } from "@/lib/characterStatsPayload";
 
@@ -6,7 +6,7 @@ export const CHARACTER_JSON_FORMAT = "lcars-archive.character";
 export const CHARACTER_JSON_VERSION = 1;
 export const MAX_CHARACTER_JSON_BYTES = 900_000;
 
-export interface CharacterJsonData {
+export interface CharacterJsonData extends CharacterAppearance {
   name: string;
   status: Character["status"];
   rank: string | null;
@@ -122,6 +122,21 @@ export function parseCharacterJsonFile(raw: string): CharacterJsonParseResult {
 
   const rank = readOptionalText(source.rank, 1_000);
   const homeworld = readOptionalText(source.homeworld, 1_000);
+  const appearance: CharacterAppearance = {};
+  for (const key of ["height", "weight"] as const) {
+    const value = source[key];
+    if (value === undefined) continue;
+    if (value !== null && (typeof value !== "number" || !Number.isFinite(value) || value <= 0)) {
+      return { error: "Ein Maß der Personalakte ist ungültig." };
+    }
+    appearance[key] = value;
+  }
+  for (const key of ["hairColor", "eyeColor", "skinColor"] as const) {
+    if (source[key] === undefined) continue;
+    const value = readOptionalText(source[key], 1_000);
+    if (value === undefined) return { error: "Eine Farbangabe der Personalakte ist ungültig." };
+    appearance[key] = value || null;
+  }
   const division = readOptionalText(source.division, 1_000);
   if (rank === undefined || homeworld === undefined || division === undefined) {
     return { error: "Ein Feld der Personalakte enthält ungültige Textdaten." };
@@ -171,6 +186,7 @@ export function parseCharacterJsonFile(raw: string): CharacterJsonParseResult {
       rank,
       species,
       homeworld,
+      ...appearance,
       aliases,
       age,
       dateOfBirth,

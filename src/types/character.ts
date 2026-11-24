@@ -4,7 +4,17 @@ export interface CharacterAffiliation {
   division: string | null;
 }
 
-export interface CharacterMetadata {
+// Optional, weil ältere Akten diese Angaben noch nicht in metadata haben.
+export interface CharacterAppearance {
+  // Größe in Zentimetern, Gewicht in Kilogramm.
+  height?: number | null;
+  weight?: number | null;
+  hairColor?: string | null;
+  eyeColor?: string | null;
+  skinColor?: string | null;
+}
+
+export interface CharacterMetadata extends CharacterAppearance {
   rank: string | null;
   species: string[];
   homeworld: string | null;

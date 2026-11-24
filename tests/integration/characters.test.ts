@@ -6,6 +6,7 @@ import {
   setCharacterDraft,
   assignCharacterToUser,
   getCharactersForParticipantPicker,
+  getOwnCharacterForEdit,
 } from "@/lib/characters";
 import { insertUser, insertCharacter } from "./helpers";
 
@@ -75,6 +76,19 @@ describe("createCharacter", () => {
 });
 
 describe("updateOwnCharacterContent", () => {
+  it("lädt das Aussehen zum Bearbeiten und erlaubt das Leeren aller Angaben", async () => {
+    const owner = await insertUser();
+    const appearance = {
+      height: 182.5, weight: 76.25, hairColor: "weiß", eyeColor: "grün", skinColor: "blau",
+    };
+    const character = await createCharacter(baseCharacterInput({ ownerUserId: owner.id, ...appearance }));
+    expect(await getOwnCharacterForEdit(owner.id, character.id)).toMatchObject(appearance);
+
+    const cleared = { height: null, weight: null, hairColor: null, eyeColor: null, skinColor: null };
+    await updateOwnCharacterContent(owner.id, character.id, baseCharacterInput(cleared));
+    expect(await getOwnCharacterForEdit(owner.id, character.id)).toMatchObject(cleared);
+  });
+
   it("updates a character when the requesting user is the owner", async () => {
     const owner = await insertUser();
     const character = await insertCharacter({ playerId: owner.id });

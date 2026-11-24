@@ -26,6 +26,11 @@ const character = {
   rank: "Lieutenant",
   species: ["Vulkanier"],
   homeworld: "Vulkan",
+  height: 182.5,
+  weight: 76.25,
+  hairColor: "schwarz",
+  eyeColor: "braun",
+  skinColor: "hell",
   aliases: [],
   age: 32,
   dateOfBirth: null,
@@ -63,7 +68,7 @@ describe("GET /api/export/character-json", () => {
     expect(file).toMatchObject({
       format: "lcars-archive.character",
       version: 1,
-      character: { name: "T'Vel", bodyMarkdown: "Biografie" },
+      character: { name: "T'Vel", bodyMarkdown: "Biografie", height: 182.5, weight: 76.25, hairColor: "schwarz", eyeColor: "braun", skinColor: "hell" },
     });
     expect(JSON.stringify(file)).not.toContain("player_id");
     expect(JSON.stringify(file)).not.toContain("documents");

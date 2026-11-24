@@ -379,6 +379,12 @@ export default function CharacterWizard({
       ref={formRef}
       action={formAction}
       className="character-wizard flex flex-col gap-[16px]"
+      onInvalidCapture={(event) => {
+        const target = event.target as HTMLInputElement;
+        if (target.name === "height" || target.name === "weight") {
+          setActiveTabId("personal");
+        }
+      }}
       onKeyDown={(event) => {
         if (event.key === "Enter" && activeTabId !== "files") {
           const target = event.target as HTMLElement;

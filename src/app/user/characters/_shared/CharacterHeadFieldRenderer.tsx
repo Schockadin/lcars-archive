@@ -11,6 +11,11 @@ const HEAD_FIELD_LABELS: Record<string, string> = {
   status: "Status",
   rank: "Rank",
   homeworld: "Homeworld",
+  height: "Height (cm)",
+  weight: "Weight (kg)",
+  hairColor: "Hair Color",
+  eyeColor: "Eye Color",
+  skinColor: "Skin Color",
   aliases: "Aliases",
   dateOfBirth: "Date of Birth",
   age: "Age",
@@ -67,6 +72,7 @@ export default function CharacterHeadFieldRenderer({
           placeholder={field.kind === "text" ? field.placeholder : undefined}
           type={field.kind}
           min={field.kind === "number" ? field.min : undefined}
+          step={field.kind === "number" ? field.step : undefined}
           required={field.required}
         />
       )}
