@@ -9,6 +9,8 @@ import {
   computeStress,
 } from "@/lib/characterStats";
 import type { CharacterStats } from "@/types/characterStats";
+import type { CharacterAppearance } from "@/types/character";
+import { characterAppearanceLines } from "@/lib/characterAppearance";
 import { parseTalentEntry } from "@/lib/talentCatalog";
 import { getRoleBonusEntries, getRoleLabel, getSpeciesListLabel } from "@/lib/sta2eCharacterOptions";
 import { careerEventTitle } from "@/lib/sta2eCareerEvents";
@@ -22,6 +24,8 @@ import {
   DEPARTMENT_BOXES,
   DETERMINATION_POINTS,
   HEAD_BOXES,
+  HEAD_REDESIGN_BACKGROUND,
+  HEAD_REDESIGN_FIELDS,
   LIST_BOXES,
   PHOTO_BOX,
   RESISTANCE_BOX,
@@ -80,6 +84,7 @@ export default function PersonnelFileView({
   species,
   portrait,
   portraitCrop,
+  appearance,
   stats,
   expandable = true,
 }: {
@@ -91,6 +96,7 @@ export default function PersonnelFileView({
   // wie `object-fit: cover` es immer getan hat.
   portrait: string | null;
   portraitCrop?: PortraitCrop | null;
+  appearance?: CharacterAppearance;
   stats: CharacterStats;
   // Der Vollbild-Knopf gehört zur Einzelansicht des Bogens. In der
   // mehrblättrigen Vorschau (CharacterSheetPreview) ist das Fenster selbst
@@ -109,6 +115,7 @@ export default function PersonnelFileView({
     EXPERIENCE_OPTIONS.find((option) => option.value === stats.experience)
       ?.label ?? "";
   const traits = [getSpeciesListLabel(species), stats.traits].filter(Boolean).join(" · ");
+  const appearanceValues = new Map(characterAppearanceLines(appearance).map(({ label, value }) => [label, value]));
 
   return (
     <div className={expanded ? "pf-page pf-page--expanded" : "pf-page"}>
@@ -159,6 +166,12 @@ export default function PersonnelFileView({
           )}
 
           {/* ── Kopfbereich ───────────────────────────────────────── */}
+          <div className="pf-head-redesign-bg" style={boxStyle(HEAD_REDESIGN_BACKGROUND)} aria-hidden="true" />
+          {HEAD_REDESIGN_FIELDS.map(({ key, label }) => (
+            <div key={key} className="pf-head-redesign-box" style={boxStyle(HEAD_BOXES[key])} aria-hidden="true">
+              <span>{label}</span>
+            </div>
+          ))}
           <StaticField box={HEAD_BOXES.name} value={characterName} label="Name" />
           <StaticField
             box={HEAD_BOXES.pronouns}
@@ -219,6 +232,11 @@ export default function PersonnelFileView({
             value={stats.careerEvents[1] ? careerEventTitle(stats.careerEvents[1]) : ""}
             label="Karriere-Ereignis 2"
           />
+          <StaticField box={HEAD_BOXES.height} label="Größe" value={appearanceValues.get("Größe") ?? ""} />
+          <StaticField box={HEAD_BOXES.weight} label="Gewicht" value={appearanceValues.get("Gewicht") ?? ""} />
+          <StaticField box={HEAD_BOXES.hairColor} label="Haarfarbe" value={appearanceValues.get("Haarfarbe") ?? ""} />
+          <StaticField box={HEAD_BOXES.eyeColor} label="Augenfarbe" value={appearanceValues.get("Augenfarbe") ?? ""} />
+          <StaticField box={HEAD_BOXES.skinColor} label="Hautfarbe" value={appearanceValues.get("Hautfarbe") ?? ""} />
 
           {/* ── Entschlossenheit, Schutz, Stress ──────────────────── */}
           {DETERMINATION_POINTS.map((point, index) => (

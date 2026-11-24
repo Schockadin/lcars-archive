@@ -30,16 +30,17 @@ describe("Charakterbogen — Aussehen", () => {
         }}
       />,
     );
-    const appearance = within(screen.getByRole("region", { name: "Aussehen" }));
-    for (const value of ["182,5 cm", "76,25 kg", "weiß", "grün", "blau"]) {
-      expect(appearance.getByText(value, { exact: false })).toBeInTheDocument();
+    const page = within(document.querySelector(".pf-sheet")! as HTMLElement);
+    for (const [label, value] of [["Größe", "182,5 cm"], ["Gewicht", "76,25 kg"], ["Haarfarbe", "weiß"], ["Augenfarbe", "grün"], ["Hautfarbe", "blau"]]) {
+      expect(page.getByLabelText(label)).toHaveTextContent(value);
     }
+    expect(screen.queryByRole("region", { name: "Aussehen" })).not.toBeInTheDocument();
   });
 
-  it("zeigt bei fehlenden Angaben keinen leeren Abschnitt", () => {
+  it("zeigt bei fehlenden Angaben leere Felder auf der ersten Seite", () => {
     render(<CharacterSheetPreview input={input} />);
-    expect(
-      screen.queryByRole("region", { name: "Aussehen" }),
-    ).not.toBeInTheDocument();
+    for (const label of ["Größe", "Gewicht", "Haarfarbe", "Augenfarbe", "Hautfarbe"]) {
+      expect(screen.getByLabelText(label)).toBeEmptyDOMElement();
+    }
   });
 });

@@ -82,6 +82,23 @@
   inset: 0;
 }
 
+.pf-head-redesign-bg {
+  position: absolute;
+  z-index: 1;
+  background: white;
+}
+
+.pf-head-redesign-box {
+  position: absolute;
+  z-index: 1;
+  border: calc(0.8 * var(--pf-unit)) solid #a0a0a0;
+  border-radius: calc(3 * var(--pf-unit));
+  padding: calc(4 * var(--pf-unit)) calc(7 * var(--pf-unit));
+  font: bold calc(7.5 * var(--pf-unit)) / 1 var(--pf-hand);
+  letter-spacing: calc(0.25 * var(--pf-unit));
+  color: var(--pf-accent);
+}
+
 /* Portrait im Bildkasten des Bogens — passt sich ein, ohne die gedruckte
    Umrandung zu überdecken. */
 /* Portrait im Photo-Kasten der Vorlage.
@@ -473,16 +490,6 @@
 /* Der eigentliche Blattinhalt wächst, die Fußzeile bleibt unten. */
 .pf-doc-content {
   flex: 1;
-}
-
-.pf-doc-appearance {
-  margin-bottom: calc(var(--pf-unit) * 20);
-  font-size: calc(var(--pf-unit) * 15);
-  line-height: 1.55;
-}
-
-.pf-doc-appearance p {
-  margin: 0;
 }
 
 /* Markenzeile am Blattfuß — dieselbe wie auf dem gedruckten Bogen, damit die

@@ -52,7 +52,7 @@ export default function CharacterCreationGuide() {
           Gewicht in Kilogramm sowie Haar-, Augen- und Hautfarbe erfassen und
           später in der Personalakte ändern. Die Angaben erscheinen auch in der
           Charakterakte und ihrem Markdown- und PDF-Export. Im Charakterbogen
-          und dessen PDF stehen sie auf dem Biografieblatt.
+          und dessen PDF stehen sie auf der ersten Seite.
         </p>
       </GuideSection>
 

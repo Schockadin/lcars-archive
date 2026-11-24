@@ -188,9 +188,9 @@ test.describe("Charakter-Assistent", () => {
 
     const preview = page.locator("#character-wizard .pf-preview");
     await expect(preview).toBeVisible();
-    const appearance = preview.getByRole("region", { name: "Aussehen" });
-    for (const value of ["182,5 cm", "76,25 kg", "weiß", "grün", "blau"]) {
-      await expect(appearance).toContainText(value);
+    const firstPage = preview.locator(".pf-sheet");
+    for (const [label, value] of [["Größe", "182,5 cm"], ["Gewicht", "76,25 kg"], ["Haarfarbe", "weiß"], ["Augenfarbe", "grün"], ["Hautfarbe", "blau"]]) {
+      await expect(firstPage.getByLabel(label, { exact: true })).toHaveText(value);
     }
     // Blatt 1 Personalakte, Blatt 2 Spickzettel, Blatt 3 Regeln, Blatt 4
     // Biografie. Die Blattnamen stehen im Titelreiter der STA-Kopfzeile

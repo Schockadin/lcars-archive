@@ -46,6 +46,8 @@ import {
   DEPARTMENT_BOXES,
   DETERMINATION_POINTS,
   HEAD_BOXES,
+  HEAD_REDESIGN_BACKGROUND,
+  HEAD_REDESIGN_FIELDS,
   LIST_BOXES,
   PHOTO_BOX,
   RESISTANCE_BOX,
@@ -140,6 +142,19 @@ const styles = StyleSheet.create({
     paddingTop: pt(15),
     paddingLeft: pt(7),
     paddingRight: pt(7),
+  },
+  redesignedBox: {
+    borderWidth: pt(0.8),
+    borderColor: "#a0a0a0",
+    borderRadius: pt(3),
+    paddingTop: pt(4),
+    paddingLeft: pt(7),
+  },
+  redesignedLabel: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: pt(7.5),
+    letterSpacing: pt(0.25),
+    color: "#3f84b5",
   },
   // Attribute/Disziplinen: rechtsbündig neben der gedruckten Beschriftung.
   stat: {
@@ -362,7 +377,7 @@ function experienceLabel(stats: CharacterStats): string {
 function Field({ box, value }: { box: Box; value: string | null }) {
   if (!value) return null;
   return (
-    <View style={boxStyle(box)}>
+    <View style={{ ...boxStyle(box), overflow: "hidden" }}>
       <Text style={styles.field}>{value}</Text>
     </View>
   );
@@ -521,6 +536,7 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
   const attributes = stats.attributes as unknown as Record<string, number | null>;
   const departments = stats.departments as unknown as Record<string, number | null>;
   const maxStress = computeStress(stats);
+  const appearanceValues = new Map(characterAppearanceLines(input.appearance).map(({ label, value }) => [label, value]));
 
   return (
     <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.page}>
@@ -532,6 +548,13 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
       {input.portrait && (
         <Portrait src={input.portrait} crop={input.portraitCrop} />
       )}
+
+      <View style={{ ...boxStyle(HEAD_REDESIGN_BACKGROUND), backgroundColor: "white" }} />
+      {HEAD_REDESIGN_FIELDS.map(({ key, label }) => (
+        <View key={key} style={{ ...boxStyle(HEAD_BOXES[key]), ...styles.redesignedBox }}>
+          <Text style={styles.redesignedLabel}>{label}</Text>
+        </View>
+      ))}
 
       <Field box={HEAD_BOXES.name} value={input.name} />
       <Field box={HEAD_BOXES.pronouns} value={stats.pronouns} />
@@ -552,6 +575,11 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
       <Field box={HEAD_BOXES.experience} value={experienceLabel(stats) || null} />
       <Field box={HEAD_BOXES.careerEvent1} value={stats.careerEvents[0] ? careerEventTitle(stats.careerEvents[0]) : null} />
       <Field box={HEAD_BOXES.careerEvent2} value={stats.careerEvents[1] ? careerEventTitle(stats.careerEvents[1]) : null} />
+      <Field box={HEAD_BOXES.height} value={appearanceValues.get("Größe") ?? null} />
+      <Field box={HEAD_BOXES.weight} value={appearanceValues.get("Gewicht") ?? null} />
+      <Field box={HEAD_BOXES.hairColor} value={appearanceValues.get("Haarfarbe") ?? null} />
+      <Field box={HEAD_BOXES.eyeColor} value={appearanceValues.get("Augenfarbe") ?? null} />
+      <Field box={HEAD_BOXES.skinColor} value={appearanceValues.get("Hautfarbe") ?? null} />
 
       {ATTRIBUTE_FIELDS.map((field) => {
         const value = attributes[field.key];
@@ -804,11 +832,10 @@ function RulesPage({ input }: { input: CharacterSheetPdfInput }) {
 }
 
 // Letztes Blatt: die Biografie im Look der übrigen. Fehlt sie, fällt das
-// Blatt nur bei fehlender Biografie und fehlenden Angaben zum Aussehen weg.
+// Blatt ohne Biografie weglassen, damit kein leeres Blatt gedruckt wird.
 function BiographyPage({ input }: { input: CharacterSheetPdfInput }) {
   const blocks = toPdfBlocks(input.bioMarkdown ?? "");
-  const appearanceLines = characterAppearanceLines(input.appearance);
-  if (blocks.length === 0 && appearanceLines.length === 0) return null;
+  if (blocks.length === 0) return null;
 
   return (
     <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.cheatPage}>
@@ -825,15 +852,6 @@ function BiographyPage({ input }: { input: CharacterSheetPdfInput }) {
       <Text style={styles.cheatFooter} fixed>
         {SHEET_FOOTER}
       </Text>
-
-      {appearanceLines.length > 0 && (
-        <View>
-          <Text style={styles.bioHeading}>AUSSEHEN / APPEARANCE</Text>
-          {appearanceLines.map(({ label, value }) => (
-            <Text key={label} style={styles.bioParagraph}>{label}: {value}</Text>
-          ))}
-        </View>
-      )}
 
       {blocks.map((block, index) => {
         if (block.kind === "heading") {
