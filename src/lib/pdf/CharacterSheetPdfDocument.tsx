@@ -66,6 +66,8 @@ import {
   type Talent,
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
+import type { CharacterAppearance } from "@/types/character";
+import { characterAppearanceLines } from "@/lib/characterAppearance";
 import {
   DEFAULT_CROP,
   pdfCropBox,
@@ -385,6 +387,7 @@ export interface CharacterSheetPdfInput {
   name: string;
   rank: string | null;
   species: string | null;
+  appearance?: CharacterAppearance;
   portrait: string | null;
   // Der auf dem Original gewählte Ausschnitt (siehe src/lib/portraitCrop.ts).
   portraitCrop?: PortraitCrop | null;
@@ -801,10 +804,11 @@ function RulesPage({ input }: { input: CharacterSheetPdfInput }) {
 }
 
 // Letztes Blatt: die Biografie im Look der übrigen. Fehlt sie, fällt das
-// Blatt weg — ein leeres Blatt im Ausdruck wäre nur Papierverschwendung.
+// Blatt nur bei fehlender Biografie und fehlenden Angaben zum Aussehen weg.
 function BiographyPage({ input }: { input: CharacterSheetPdfInput }) {
   const blocks = toPdfBlocks(input.bioMarkdown ?? "");
-  if (blocks.length === 0) return null;
+  const appearanceLines = characterAppearanceLines(input.appearance);
+  if (blocks.length === 0 && appearanceLines.length === 0) return null;
 
   return (
     <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.cheatPage}>
@@ -821,6 +825,15 @@ function BiographyPage({ input }: { input: CharacterSheetPdfInput }) {
       <Text style={styles.cheatFooter} fixed>
         {SHEET_FOOTER}
       </Text>
+
+      {appearanceLines.length > 0 && (
+        <View>
+          <Text style={styles.bioHeading}>AUSSEHEN / APPEARANCE</Text>
+          {appearanceLines.map(({ label, value }) => (
+            <Text key={label} style={styles.bioParagraph}>{label}: {value}</Text>
+          ))}
+        </View>
+      )}
 
       {blocks.map((block, index) => {
         if (block.kind === "heading") {

@@ -475,6 +475,16 @@
   flex: 1;
 }
 
+.pf-doc-appearance {
+  margin-bottom: calc(var(--pf-unit) * 20);
+  font-size: calc(var(--pf-unit) * 15);
+  line-height: 1.55;
+}
+
+.pf-doc-appearance p {
+  margin: 0;
+}
+
 /* Markenzeile am Blattfuß — dieselbe wie auf dem gedruckten Bogen, damit die
    Zusatzblätter erkennbar zum selben Dokument gehören. */
 .pf-doc-footer {

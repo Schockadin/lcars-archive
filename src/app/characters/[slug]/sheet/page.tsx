@@ -108,6 +108,7 @@ export default async function CharacterSheetPage({ params }: Props) {
             characterName: sheet.name,
             rank: sheet.rank,
             species: sheet.species,
+            appearance: sheet.appearance,
             portrait: sheet.portrait,
             portraitCrop: sheet.portraitCrop,
             stats: sheet.stats,

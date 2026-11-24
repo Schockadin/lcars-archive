@@ -51,7 +51,7 @@ import {
   updateCharacterBioAction,
   saveCharacterStatsAction,
 } from "@/app/user/characters/_shared/panelActions";
-import { getOwnCharacterStats } from "@/lib/characters";
+import { getCharacterStatsForGm, getOwnCharacterStats } from "@/lib/characters";
 import {
   advanceOwnCharacter,
   awardAp,
@@ -159,6 +159,9 @@ describe("createCharacterWizardAction", () => {
     // Die Werte stehen im SELBEN Datensatz — nicht in einem zweiten Schritt
     // nachgereicht.
     const sheet = await getOwnCharacterStats(user.id, id);
+    const appearance = { height: 182.5, weight: 76.25, hairColor: "weiß", eyeColor: "blaugrün", skinColor: "hellblau" };
+    expect(sheet?.appearance).toEqual(appearance);
+    expect((await getCharacterStatsForGm(id))?.appearance).toEqual(appearance);
     expect(sheet?.stats.attributes.fitness).toBe(11);
     expect(sheet?.stats.departments.security).toBe(4);
     // Die Erschaffung ist danach offen: abgeschlossen wird sie ausdrücklich.

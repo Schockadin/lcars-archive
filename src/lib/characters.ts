@@ -1067,6 +1067,7 @@ export interface OwnCharacterStats {
   species: string | null;
   // Rang der Akte — steht auf dem Bogen, wird aber dort nicht bearbeitet.
   rank: string | null;
+  appearance?: CharacterAppearance;
   stats: CharacterStats;
 }
 
@@ -1086,6 +1087,7 @@ export async function getOwnCharacterStats(
       portrait_crop: unknown;
       species: string | null;
       rank: string | null;
+      appearance: CharacterAppearance;
       stats: unknown;
     }[]
   >`
@@ -1109,6 +1111,9 @@ export async function getOwnCharacterStats(
              ),
              species
            ) AS species,
+           jsonb_build_object('height', metadata -> 'height', 'weight', metadata -> 'weight',
+             'hairColor', metadata -> 'hairColor', 'eyeColor', metadata -> 'eyeColor',
+             'skinColor', metadata -> 'skinColor') AS appearance,
            metadata -> 'stats' AS stats
     FROM characters
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
@@ -1135,6 +1140,7 @@ export async function getOwnCharacterStats(
     portraitCrop: portraitView.crop,
     species: row.species,
     rank: row.rank,
+    appearance: row.appearance,
     // metadata->'stats' kommt je nach Treiber als Objekt ODER als JSON-String
     // an (wie metadata selbst, siehe parseCharacter oben).
     stats: parseCharacterStats(
@@ -1161,6 +1167,7 @@ export async function getCharacterStatsForGm(
       portrait_crop: unknown;
       species: string | null;
       rank: string | null;
+      appearance: CharacterAppearance;
       stats: unknown;
     }[]
   >`
@@ -1184,6 +1191,9 @@ export async function getCharacterStatsForGm(
              ),
              species
            ) AS species,
+           jsonb_build_object('height', metadata -> 'height', 'weight', metadata -> 'weight',
+             'hairColor', metadata -> 'hairColor', 'eyeColor', metadata -> 'eyeColor',
+             'skinColor', metadata -> 'skinColor') AS appearance,
            metadata -> 'stats' AS stats
     FROM characters
     WHERE id = ${characterId} AND deleted_at IS NULL
@@ -1210,6 +1220,7 @@ export async function getCharacterStatsForGm(
     portraitCrop: portraitView.crop,
     species: row.species,
     rank: row.rank,
+    appearance: row.appearance,
     stats: parseCharacterStats(
       typeof row.stats === "string" ? JSON.parse(row.stats) : row.stats,
     ),

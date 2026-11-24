@@ -8,6 +8,8 @@ import {
   type Talent,
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
+import type { CharacterAppearance } from "@/types/character";
+import { characterAppearanceLines } from "@/lib/characterAppearance";
 import { CORE_RULES } from "@/lib/coreRules";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
 import type { RuleModuleDefinition } from "@/lib/ruleModuleTypes";
@@ -83,6 +85,7 @@ export interface CharacterSheetPreviewInput {
   characterName: string;
   rank: string | null;
   species: string | null;
+  appearance?: CharacterAppearance;
   // Das Portrait-ORIGINAL und der darauf gewählte Ausschnitt (siehe
   // src/lib/portraitCrop.ts).
   portrait: string | null;
@@ -302,12 +305,23 @@ function CampaignRulesSection({ rules }: { rules: CampaignRule[] }) {
 function BioSheet({
   characterName,
   bioHtml,
+  appearance,
 }: {
   characterName: string;
   bioHtml: string | null;
+  appearance?: CharacterAppearance;
 }) {
+  const appearanceLines = characterAppearanceLines(appearance);
   return (
     <DocSheet title="Biography" subtitle={`Biografie · ${characterName}`}>
+      {appearanceLines.length > 0 && (
+        <section className="pf-doc-appearance" aria-label="Aussehen">
+          <h3 className="pf-doc-heading">Aussehen <span className="pf-doc-heading-original">Appearance</span></h3>
+          {appearanceLines.map(({ label, value }) => (
+            <p key={label}><strong>{label}:</strong> {value}</p>
+          ))}
+        </section>
+      )}
       {bioHtml ? (
         // Das HTML stammt aus markdownToHtml und ist dort bereits bereinigt
         // (rehype-sanitize) — dieselbe Quelle wie die Charakterseite.
@@ -352,7 +366,7 @@ export default function CharacterSheetPreview({
         characterName={input.characterName}
         campaignRules={input.campaignRules}
       />
-      <BioSheet characterName={input.characterName} bioHtml={input.bioHtml} />
+      <BioSheet characterName={input.characterName} bioHtml={input.bioHtml} appearance={input.appearance} />
     </div>
   );
 }
